@@ -1033,9 +1033,8 @@
                    :agr subj-agr})
         english-infinitive (ref :top)
         italian-infinitive (ref :top)]
-     {:root
-      {:italian italian-infinitive
-       :english english-infinitive}
+    {
+
       :synsem {:cat :verb}
       :italian {:agr subj-agr
                 :infinitive italian-infinitive}
@@ -1175,9 +1174,13 @@
    ;; (unify {:root fare-do}
    ;;           trans-present-tense-verb)
 
-   (unify {:italian (fs/get-in dovere '(:italian))
-           :english (fs/get-in dovere '(:english))}
-          trans-present-tense-verb-smaller)
+   (merge 
+    (fs/copy trans-present-tense-verb-smaller)
+    (fs/copy dovere))
+;    {:root {:italian (fs/get-in dovere '(:italian))
+;            :english (fs/get-in dovere '(:english))}})
+          
+
 
    (unify {:root fare-make}
           trans-present-tense-verb)
