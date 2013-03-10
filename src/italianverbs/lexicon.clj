@@ -789,32 +789,36 @@
                           :essere false}}}}))
 
 (def dovere
-  (unify
-   infinitive
-   (let [obj-sem (ref :top)]
-     {:synsem {:sem {:obj obj-sem}
-               :subcat {:2 {:sem obj-sem
-                            :cat :verb
-                            :infl :infinitive}}}})
-
-   {:italian {:infinitive "dovere"
-              :irregular {:present {:1sing "devo"
-                                    :2sing "devi"
-                                    :3sing "deve"
-                                    :1plur "dobbiamo"
-                                    :2plur "dovete"
-                                    :3plur "devono"}}}
-    :english {:infinitive "must"
-              :irregular {:past "had"
-                          :present {:1sing "have"
-                                    :2sing "have"
-                                    :3sing "has"
-                                    :1plur "have"
-                                    :2plur "have"
-                                    :3plur "have"}}}
-    :synsem {:sem {:pred :dovere
-                   :subj {:human true} ;; TODO: relax this constraint: non-human things can be subject of dovere.
-                   :obj {:pred :top}}}})) ; dovere's object is a verb.
+  (let [subject (ref {:human true})] ;; TODO: relax this constraint: non-human things can be subject of dovere.
+    (unify
+     infinitive
+     (let [obj-sem (ref :top)]
+       {:synsem {:sem {:obj obj-sem}
+                 :subcat {:2 {:sem obj-sem
+                              :cat :verb
+                              :infl :infinitive}}}})
+     
+     {:italian {:infinitive "dovere"
+                :irregular {:present {:1sing "devo"
+                                      :2sing "devi"
+                                      :3sing "deve"
+                                      :1plur "dobbiamo"
+                                      :2plur "dovete"
+                                      :3plur "devono"}}}
+      :english {:infinitive "have to"
+                :irregular {:past "had"
+                            :present {:1sing "have"
+                                      :2sing "have"
+                                      :3sing "has"
+                                      :1plur "have"
+                                        :2plur "have"
+                                      :3plur "have"}}}
+      :synsem {:subcat {:1 subject
+                        :2 {:cat :verb
+                            :infl :infinitive}}
+               :sem {:pred :dovere
+                     :subj subject
+                     :obj {:pred :top}}}}))) ; dovere's object is a verb.
 
 
 (def essere-common
@@ -1013,20 +1017,37 @@
         italian-infinitive (ref :top)]
      {:root
       {:italian italian-infinitive
-       :english english-infinitive
-       :synsem {:cat cat
-                :sem root-sem
-                :subcat subcat}}
+       :english english-infinitive}
       :synsem {:sem root-sem
                :cat cat
                :subcat subcat}
       :italian {:agr subj-agr
                 :infinitive italian-infinitive}
       :english {:agr subj-agr
-                :infinitive english-infinitive}}))
+               :infinitive english-infinitive}}))
+
+(def finite-verb-smaller
+  (let [subj-sem (ref :top)
+        subj-agr (ref :top)
+        subj (ref {:sem subj-sem
+                   :agr subj-agr})
+        english-infinitive (ref :top)
+        italian-infinitive (ref :top)]
+     {:root
+      {:italian italian-infinitive
+       :english english-infinitive}
+      :synsem {:cat :verb}
+      :italian {:agr subj-agr
+                :infinitive italian-infinitive}
+      :english {:agr subj-agr
+               :infinitive english-infinitive}}))
 
 (def present-tense-verb
   (unify finite-verb
+         {:synsem {:infl :present}}))
+
+(def present-tense-verb-smaller
+  (unify finite-verb-smaller
          {:synsem {:infl :present}}))
 
 (def future-tense-verb
@@ -1055,6 +1076,14 @@
            {:root
             {:synsem {:subcat {:2 obj}}}
             :synsem {:sem {:obj obj-sem}}})))
+
+(def trans-present-tense-verb-smaller
+  (unify present-tense-verb-smaller
+         (let [obj-sem (ref :top)
+               obj (ref {:sem obj-sem})]
+           (unify
+            {:synsem {:subcat {:2 obj}
+                      :sem {:obj obj-sem}}}))))
 
 (def trans-future-tense-verb
   (unify future-tense-verb
@@ -1146,8 +1175,9 @@
    ;; (unify {:root fare-do}
    ;;           trans-present-tense-verb)
 
-   (unify {:root dovere}
-          trans-present-tense-verb)
+   (unify {:italian (fs/get-in dovere '(:italian))
+           :english (fs/get-in dovere '(:english))}
+          trans-present-tense-verb-smaller)
 
    (unify {:root fare-make}
           trans-present-tense-verb)
