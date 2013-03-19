@@ -211,4 +211,4 @@
 
  ;(dotimes [n 200] (time (random-sentence)))
 
-;;(take 20 (repeatedly #(formattare (random-sentence))))
+;;(take 20 (repeatedly #(fo (random-sentence))))

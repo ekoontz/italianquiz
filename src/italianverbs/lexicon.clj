@@ -27,6 +27,7 @@
                    {:artifact false
                     :mass false
                     :physical-object true
+                    :part-of-human-body false
                     :drinkable false
                     :speakable false
                     :place false}{})
@@ -73,10 +74,12 @@
                   :physical-object true
                   :edible false
                   :animate true
+                  :part-of-human-body false
                   :drinkable false}{})
          inanimate (if (= (fs/get-in input '(:animate))
                            false)
-                      {:human false}{})
+                     {:human false
+                      :part-of-human-body false}{})
 
          ;; legible(x) => artifact(x),drinkable(x,false),edible(x,false),human(x,false)
          legible
@@ -84,6 +87,7 @@
            {:artifact true
             :drinkable false
             :human false
+            :part-of-human-body false
             :edible false})
 
          ;; artifact(x,false) => legible(x,false)
@@ -91,10 +95,20 @@
          (if (= (fs/get-in input '(:artifact)) false)
            {:legible false})
 
+         part-of-human-body
+         (if (= (fs/get-in input '(:part-of-human-body)) true)
+           {:speakable false
+            :animate false
+            :edible false
+            :drinkable false
+            :legible false
+            :artifact false})
+
          ;; we don't eat pets (unless things get so desperate that they aren't pets anymore)
          pets (if (= (fs/get-in input '(:pet))
                      true)
                 {:edible false
+                 :buyable true
                  :physical-object true
                  })
 
@@ -111,7 +125,7 @@
      (let [merged (fs/merge animate artifact consumable-false drinkable
                             drinkable-xor-edible-1 drinkable-xor-edible-2
                             edible human inanimate
-                            legible not-legible-if-not-artifact pets place
+                            legible not-legible-if-not-artifact part-of-human-body pets place
                             input
                             )]
        (if (not (= merged input))
@@ -221,6 +235,16 @@
                                    :animate false
                                    :pred :acqua}}}})
 
+     (unify noun-conjugator
+            {:root (unify agreement
+                          common-noun
+                          countable-noun
+                          masculine
+                          {:synsem {:sem {:pred :amico
+                                          :human true}}
+                           :italian "amico"
+                           :english "friend"})})
+
      (unify drinkable
             feminine
             {:root {:italian "birra"
@@ -233,10 +257,11 @@
                           common-noun
                           countable-noun
                           masculine
-                          {:synsem {:sem {:pred :amico
-                                          :human true}}
-                           :italian "amico"
-                           :english "friend"})})
+                          {:synsem {:sem {:pred :braccio
+                                          :part-of-human-body true}}
+                           :italian "braccio"
+                           :english "arm"})})
+
 
      (unify noun-conjugator
             {:root (unify agreement
@@ -969,6 +994,35 @@
     :synsem {:sem {:pred :pensare
                    :subj {:human true}}}}))
 
+
+(def potere
+  (unify
+   infinitive
+   (let [obj-sem (ref :top)]
+     {:synsem {:sem {:obj obj-sem}
+               :subcat {:2 {:sem obj-sem
+                            :cat :verb
+                            :infl :infinitive}}}})
+
+   {:italian {:infinitive "potere"
+              :irregular {:present {:1sing "posso"
+                                    :2sing "puoi"
+                                    :3sing "può"
+                                    :1plur "possiamo"
+                                    :2plur "potete"
+                                    :3plur "possono"}}}
+    :english {:infinitive "to be able"
+              :irregular {:past "could"
+                          :present {:1sing "can"
+                                    :2sing "can"
+                                    :3sing "can"
+                                    :1plur "can"
+                                    :2plur "can"
+                                    :3plur "can"}}}
+    :synsem {:sem {:pred :potere
+                   :subj {:animate true}
+                   :obj {:pred :top}}}})) ; volere's object is a verb.
+
 (def ridere
   (unify
    intransitive
@@ -1174,6 +1228,8 @@
   (list
    (unify {:root dovere}
           trans-present-tense-verb)
+   (unify {:root potere}
+          trans-present-tense-verb)
    (unify {:root volare}
           trans-present-tense-verb)))
 
@@ -1296,6 +1352,7 @@
    present-verbs
    past-verbs
    future-verbs
+   present-modal-verbs
    ;; infinitives:
    infinitive-intransitive-verbs
    infinitive-transitive-verbs))
@@ -1378,6 +1435,15 @@
               :cat :adjective}
     :english {:english "tall"
               :cat :adjective}}
+
+
+   {:synsem {:cat :adjective
+             :sem {:pred :bello
+                   :mod :top}} ;; for now, no restrictions on what can be beautiful
+    :italian {:italian "bello"
+              :cat :adjective}
+    :english {:english "beautiful"
+              :cat :adjective}}
    
    {:synsem {:cat :adjective
              :sem {:pred :bianco
@@ -1388,6 +1454,14 @@
                           :fem {:plur "bianche"}}
               :cat :adjective}
     :english {:english "white"
+              :cat :adjective}}
+
+   {:synsem {:cat :adjective
+             :sem {:pred :brutto
+                   :mod :top}} ;; for now, no restrictions on what can be ugly.
+    :italian {:italian "brutto"
+              :cat :adjective}
+    :english {:english "ugly"
               :cat :adjective}}
    
    {:synsem {:cat :adjective
@@ -1440,7 +1514,19 @@
     :italian {:italian "rosso"
               :cat :adjective}
     :english {:english "red"
-              :cat :adjective}}))
+              :cat :adjective}}
+
+
+
+   {:synsem {:cat :adjective
+             :sem {:pred :semplice
+                   :mod {:human true}}}
+    :italian {:italian "semplice"
+              :cat :adjective}
+    :english {:english "naive"
+              :cat :adjective}}
+
+   ))
 
 
 (def lookup-in
