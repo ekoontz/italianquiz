@@ -41,9 +41,9 @@
 ;    [:div
 ;     (if (= relative-url "/search/") {:class "selected"})
 ;     [:a {:href "/italian/search/"} "Search"  ] ]
-    [:div
-     (if (= relative-url "/workbook/") {:class "selected"})
-     [:a {:href "/italian/workbook/"} "Workbook"  ] ]
+;    [:div
+;     (if (= relative-url "/workbook/") {:class "selected"})
+;     [:a {:href "/italian/workbook/"} "Workbook"  ] ]
 
     [:div
      (if (= relative-url "/about/") {:class "selected"})
