@@ -100,6 +100,7 @@
           (alter val1
                  (fn [x] (unify @val1 val2))))
          ;; alternative to the above (not tested yet):  (fn [x] (unify (fs/copy @val1) val2))))
+         ;; TODO: why is this false-disabled? (document and test) or remove
          (if (and false (fail? @val1)) :fail
          val1))
      (and 
@@ -109,6 +110,7 @@
           (alter val2
                  (fn [x] (unify val1 @val2))))
          ;; alternative to the above (not tested yet): (fn [x] (unify val1 (fs/copy @val2)))))
+         ;; TODO: why is this false-disabled? (document and test) or remove.
          (if (and false (fail? @val2)) :fail
          val2))
 
@@ -182,6 +184,20 @@
      val2
 
      (= val1 val2) val1
+
+     ;; The follow two 2 rules allow values of :english and :italian that
+     ;; are strings to over-ride values that are maps (in which
+     ;; case they are specs of how to compute a string: agreement
+     ;; information such as gender and number.
+     (and
+      (map? val1)
+      (string? val2))
+     val2
+
+     (and
+      (string? val1)
+      (map? val2))
+     val1
 
      :else ;; fail.
      (do

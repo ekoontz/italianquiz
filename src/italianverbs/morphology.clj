@@ -11,17 +11,18 @@
   (if (> (.length string) 1)
     (get string (- (.length string) 2))))
 
-(defn conjugate-it [arg category]
+(defn conjugate-it [arg category & [ infl ]]
   "conjugate an italian expression."
   (do
-    (log/debug (str "==="))
-    (log/debug (str "=>conjugate-it: arg=" arg  " ; category=" category))
-    (log/debug (str "arg: " arg))
-    (log/debug (str "category: " category))
-    (log/debug (str "infl: " (fs/get-in arg '(:infl))))
-    (log/debug (str "agreement: " (fs/get-in arg '(:agr))))
-    (log/debug (str "futuro? " (= (fs/get-in arg '(:infl)) :futuro)))
-    (log/debug (str ":cat of arg:" (fs/get-in arg '(:cat)))))
+    (log/info (str "=conjugate-it=="))
+    (log/info (str "=>conjugate-it: arg=" arg  " ; category=" category))
+    (log/info (str "arg: " arg))
+    (log/info (str "category: " category))
+    (log/info (str "arg's infl: " (fs/get-in arg '(:infl))))
+    (log/info (str "infl: " infl))
+    (log/info (str "agreement: " (fs/get-in arg '(:agr))))
+    (log/info (str "futuro? " (= (fs/get-in arg '(:infl)) :futuro)))
+    (log/info (str ":cat of arg:" (fs/get-in arg '(:cat)))))
 
   (let [retval
         (cond (nil? arg) ""
@@ -31,8 +32,8 @@
               (and (map? arg)
                    (contains? (set (keys arg)) :1)
                    (contains? (set (keys arg)) :2))
-              (let [result1 (conjugate-it (:1 arg) category)
-                    result2 (conjugate-it (:2 arg) category)]
+              (let [result1 (conjugate-it (:1 arg) category infl)
+                    result2 (conjugate-it (:2 arg) category infl)]
                 (if (and (= (type result1) java.lang.String)
                          (= (type result2) java.lang.String))
                   (string/join " " (list result1 result2))
@@ -44,529 +45,538 @@
                    (contains? (set (keys arg)) :agr)
                    (contains? (set (keys arg)) :infinitive)
                    ;; TODO: check (= :present) rather than (not (= :past)): requires that we have (:infl :present)
-             ;; explicitly rather than implicitly (i.e. it is the default)
-             (not (= :past (fs/get-in arg '(:infl))))
-             (not (= :futuro (fs/get-in arg '(:infl))))
-             (map? (fs/get-in arg '(:infinitive :irregular :present))))
-        (let [root (fs/get-in arg '(:infinitive))
-              person (fs/get-in arg '(:agr :person) :notfound)
-              number (fs/get-in arg '(:agr :number) :notfound)
-              present (fs/get-in arg '(:infinitive :irregular :present))]
-          (log/debug "it:1 +agr +infinitive")
-          (log/debug (str "it:1 person: " person "; number: " number))
-          (cond
-           (and (= person :1st)
-                (= number :sing))
-           (fs/get-in present '(:1sing))
-           (and (= person :2nd)
-                (= number :sing))
-           (fs/get-in present '(:2sing))
-           (and (= person :3rd)
-                (= number :sing))
-           (fs/get-in present '(:3sing))
-           (and (= person :1st)
-                (= number :plur))
-           (fs/get-in present '(:1plur))
-           (and (= person :2nd)
-                (= number :plur))
-           (fs/get-in present '(:2plur))
-           (and (= person :3rd)
-                (= number :plur))
-           (fs/get-in present '(:3plur))
+                   ;; explicitly rather than implicitly (i.e. it is the default)
+                   (not (= :past (fs/get-in arg '(:infl))))
+                   (not (= :futuro (fs/get-in arg '(:infl))))
+                   (map? (fs/get-in arg '(:infinitive :irregular :present))))
+              (let [root (fs/get-in arg '(:infinitive))
+                    person (fs/get-in arg '(:agr :person) :notfound)
+                    number (fs/get-in arg '(:agr :number) :notfound)
+                    present (fs/get-in arg '(:infinitive :irregular :present))]
+                (log/info "it:1 +agr +infinitive")
+                (log/info (str "it:1 person: " person "; number: " number))
+                (cond
+                 (and (= person :1st)
+                      (= number :sing))
+                 (fs/get-in present '(:1sing))
+                 (and (= person :2nd)
+                      (= number :sing))
+                 (fs/get-in present '(:2sing))
+                 (and (= person :3rd)
+                      (= number :sing))
+                 (fs/get-in present '(:3sing))
+                 (and (= person :1st)
+                      (= number :plur))
+                 (fs/get-in present '(:1plur))
+                 (and (= person :2nd)
+                      (= number :plur))
+                 (fs/get-in present '(:2plur))
+                 (and (= person :3rd)
+                      (= number :plur))
+                 (fs/get-in present '(:3plur))
+                 
+                 :else
+                 ;; nothing in the supplied agr is enough to tell us how to inflect this present-tense
+                 ;; verb. Sometimes this should be treated as an error, sometimes not, as it's too soon
+                 ;; in the generation process (e.g. generation of a vp) to say the situtation is an error.
+                 ;; For now, hardwired to never be an error.
+                 (let [error-on-unspecified false]
+                   (if error-on-unspecified
+                     {:error "no conjugation specified."
+                      :num number
+                      :person person
+                      :arg arg}
+                     (do
+                       (log/warn (str "no conjugation specified in: " arg))
+                       arg)))))
 
-           :else
-           ;; nothing in the supplied agr is enough to tell us how to inflect this present-tense
-           ;; verb. Sometimes this should be treated as an error, sometimes not, as it's too soon
-           ;; in the generation process (e.g. generation of a vp) to say the situtation is an error.
-           ;; For now, hardwired to never be an error.
-           (let [error-on-unspecified false]
-             (if error-on-unspecified
-               {:error "no conjugation specified."
-                :num number
-                :person person
-                :arg arg}
-               (do
-                 (log/warn (str "no conjugation specified in: " arg))
-                 arg)))))
-
-        (= (type arg) clojure.lang.Keyword)
-        (throw (Exception. (str "cannot conjugate: " arg)))
-
-        ;; <deprecated: use :italian instead of :root>
-        (and (map? arg)
-             (contains? arg :root)
-             (contains? arg :agr)
-             (= (fs/get-in arg '(:agr :gender)) :fem)
-             (= (fs/get-in arg '(:agr :number)) :sing))
-        (do
-          (log/debug "it:2 +root +fem +sing")
-          (fs/get-in arg '(:root)))
-
-        ;; irregular noun: plural
-        (and (map? arg)
-             (not (= :notfound (fs/get-in arg '(:root :irregular :plur) :notfound)))
-             (= (fs/get-in arg '(:agr :number)) :plur))
-        (do
-          (log/debug "it:3 +root +irreg +plur")
-          (fs/get-in arg '(:root :irregular :plur)))
-
-        ;; irregular noun: singular
-        (and (map? arg)
-             (not (= :notfound (fs/get-in arg '(:root :irregular :plur) :notfound)))
-             (= (fs/get-in arg '(:agr :number)) :sing))
-        (do
-          (log/debug "it:4 +root +irreg +sing")
-          (fs/get-in arg '(:root :italian)))
-
-        (and (map? arg)
-             (contains? arg :root)
-             (contains? arg :agr)
-             (= (fs/get-in arg '(:agr :gender)) :masc)
-             (= (fs/get-in arg '(:agr :number)) :sing))
-        (do
-          (log/debug "it:5 +root +agr +masc +sing")
-          (fs/get-in arg '(:root)))
-        
-        ;; regular masculine noun pluralization
-        (and (map? arg)
-             (= :notfound (fs/get-in arg '(:italian :irregular :plur) :notfound))
-             (contains? arg :root)
-             (contains? arg :agr)
-             (= (fs/get-in arg '(:agr :gender)) :masc)
-             (= (fs/get-in arg '(:agr :number)) :plur))
-        (do
-          (log/debug "it:6 +root +agr +masc +plur")
-          (string/replace (fs/get-in arg '(:root))
-                          #"[eo]$" "i")) ;; dottore => dottori; medico => medici
-
-        ;; feminine noun pluralization
-        (and (map? arg)
-             (= :notfound (fs/get-in arg '(:italian :irregular :plur) :notfound))
-             (contains? arg :root)
-             (contains? arg :agr)
-             (= (fs/get-in arg '(:agr :gender)) :fem)
-             (= (fs/get-in arg '(:agr :number)) :plur))
-        (do
-          (log/debug "it:7 +root +agr +fem +plur +regular +deprecated")
-          (string/replace (fs/get-in arg '(:root))
-                          #"a$" "e"))
-
-        ;; </deprecated: use :italian instead of :root>
-
-        ;; <replace with>
-
-        ;; irregular noun: masc plural
-        (and (map? arg)
-             (not (= :notfound (fs/get-in arg '(:irregular :masc :plur) :notfound)))
-             (= (fs/get-in arg '(:agr :number)) :plur)
-             (= (fs/get-in arg '(:agr :gender)) :masc))
-        (do
-          (log/debug "it:8 +map +irreg +plur +masc")
-          (fs/get-in arg '(:irregular :masc :plur)))
-
-        ;; irregular noun: fem plural
-        (and (map? arg)
-             (not (= :notfound (fs/get-in arg '(:irregular :fem :plur) :notfound)))
-             (= (fs/get-in arg '(:agr :number)) :plur)
-             (= (fs/get-in arg '(:agr :gender)) :fem))
-        (do
-          (log/debug "it:9 +map +irreg +plur +fem")
-          (fs/get-in arg '(:irregular :fem :plur)))
-
-        ;; regular noun: masc sing
-        (and (map? arg)
-             (contains? arg :italian)
-             (contains? arg :agr)
-             (= (fs/get-in arg '(:agr :gender)) :masc)
-             (= (fs/get-in arg '(:agr :number)) :sing))
-        (do
-          (log/debug "it:11 +masc +sing")
-          (fs/get-in arg '(:italian)))
-
-        ;; regular masculine noun pluralization
-        (and (map? arg)
-             (contains? arg :italian)
-             (contains? arg :agr)
-             (= (fs/get-in arg '(:agr :gender)) :masc)
-             (= (fs/get-in arg '(:agr :number)) :plur))
-        (do
-          (log/debug "it:12 +masc +plur")
-          (string/replace (fs/get-in arg '(:italian))
-                          #"[eo]$" "i")) ;; dottore => dottori; medico => medici
-        
-        ;; regular feminine noun pluralization
-        (and (map? arg)
-             (or (= category :noun)
-                 (= (fs/get-in arg '(:cat)) :noun))
-             (contains? arg :italian)
-             (contains? arg :agr)
-             (= (fs/get-in arg '(:agr :gender)) :fem)
-             (= (fs/get-in arg '(:agr :number)) :plur))
-        (do
-          (log/debug "it:13 +fem +plur +regular")
-          (string/replace (fs/get-in arg '(:italian))
-                          #"[ao]$" "e"))
-        ;; </replace with>
-
-        
-        ;; masculine adjective agreement: singular
-        (and (map? arg)
-             (or (= category :adjective)
-                 (= (fs/get-in arg '(:cat)) :adjective))
-             (contains? arg :italian)
-             (contains? arg :agr)
-             (= (fs/get-in arg '(:agr :gender)) :masc)
-             (= (fs/get-in arg '(:agr :number)) :sing))
-        (do
-          (log/debug "it:14 +sing +adj +italian +masc")
-          (fs/get-in arg '(:italian)))
-
-        ;; masculine irregular plural adjective agreement.
-        (and (map? arg)
-             (or (= category :adjective)
-                 (= (fs/get-in arg '(:cat)) :adjective)
-                 (= category :noun)
-                 (= (fs/get-in arg '(:cat)) :noun))
-             (contains? arg :italian)
-             (contains? arg :agr)
-             (= (fs/get-in arg '(:agr :gender)) :masc)
-             (= (fs/get-in arg '(:agr :number)) :plur)
-             (not (= (fs/get-in arg '(:irregular :masc :plur) :notfound) :notfound)))
-        (do
-          (log/debug "it:15 +irreg +plur +masc +(adj|noun)")
-          (fs/get-in arg '(:irregular :masc :plur)))
-
-        ;; feminine irregular plural adjective agreement.
-        (and (map? arg)
-             (or (= category :adjective)
-                 (= (fs/get-in arg '(:cat)) :adjective)
-                 (= category :noun)
-                 (= (fs/get-in arg '(:cat)) :noun))
-             (contains? arg :italian)
-             (contains? arg :agr)
-             (= (fs/get-in arg '(:agr :gender)) :fem)
-             (= (fs/get-in arg '(:agr :number)) :plur)
-             (not (= (fs/get-in arg '(:irregular :fem :plur) :notfound) :notfound)))
-        (do
-          (log/debug "it:16 +fem +plur +(adj|noun)")
-          (fs/get-in arg '(:irregular :fem :plur)))
-
-        ;; masculine adjective agreement: plural
-        (and (map? arg)
-             (or (= category :adjective)
-                 (= (fs/get-in arg '(:cat)) :adjective))
-             (contains? arg :italian)
-             (contains? arg :agr)
-             (= (fs/get-in arg '(:agr :gender)) :masc)
-             (= (fs/get-in arg '(:agr :number)) :plur))
-        (do
-          (log/debug "it:17 +masc +plur +adj")
-          (string/replace (fs/get-in arg '(:italian))
-                          #"[eo]$" "i")) ;; adjectives ending in "e" or "o" pluralize to "i"
-
-        ;; feminine adjective agreement: singular
-        (and (map? arg)
-             (or (= category :adjective)
-                 (= (fs/get-in arg '(:cat)) :adjective)
-                 (= category :noun)
-                 (= (fs/get-in arg '(:cat)) :noun))
-             (contains? arg :italian)
-             (contains? arg :agr)
-             (= (fs/get-in arg '(:agr :gender)) :fem)
-             (= (fs/get-in arg '(:agr :number)) :sing))
-        (do
-          (log/debug "it:18 +fem +sing +(adj|noun) +regular")
-          (string/replace (fs/get-in arg '(:italian))
-                          #"o$" "a"))
-
-        ;; feminine adjective agreement: plural with adjective ending in "e": change to "i".
-        (and (map? arg)
-             (or (= category :adjective)
-                 (= (fs/get-in arg '(:cat)) :adjective))
-             (contains? arg :italian)
-             (contains? arg :agr)
-             (= (fs/get-in arg '(:agr :gender)) :fem)
-             (= (fs/get-in arg '(:agr :number)) :plur)
-             (= (final-char-of (fs/get-in arg '(:italian))) "e"))
-        (do
-          (log/debug "it:19 +fem +plur +adj")
-          (string/replace (fs/get-in arg '(:italian))
-                          #"e$" "i"))
-
-        ;; feminine adjective agreement: plural with adjective ending in "o": change to "e".
-        (and (map? arg)
-             (or (= category :adjective)
-                 (= (fs/get-in arg '(:cat)) :adjective)
-                 (= category :noun)
-                 (= (fs/get-in arg '(:cat)) :noun))
-             (contains? arg :italian)
-             (contains? arg :agr)
-             (= (fs/get-in arg '(:agr :gender)) :fem)
-             (= (fs/get-in arg '(:agr :number)) :plur))
-        (do
-          (log/debug "it:20 +(adj|noun) +fem +plur")
-          (string/replace (fs/get-in arg '(:italian))
-                          #"o$" "e"))
-
-
-        ;; feminine noun or adjective: underspecified number.
-        (and (map? arg)
-             (contains? arg :agr)
-             (or (= category :adjective)
-                 (= category :noun))
-             (= (fs/get-in arg '(:agr :gender)) :fem))
-        (do
-          (log/debug "it:21 +(:adj|:noun) +fem UNDERSPEC1")
-          arg)
-
-        ;; masculine adjective agreement: singular
-        (and (map? arg)
-             (= category :adjective)
-             (contains? arg :italian)
-             (contains? arg :agr)
-             (= (fs/get-in arg '(:agr :gender)) :masc)
-             (= (fs/get-in arg '(:agr :number)) :sing))
-        (do
-          (log/debug "it:22 +:adj(cat) +masc +sing")
-          (fs/get-in arg '(:italian)))
-        
-        ;; masculine adjective agreement: plural
-        (and (map? arg)
-             (= category :adjective)
-             (contains? arg :italian)
-             (contains? arg :agr)
-             (= (fs/get-in arg '(:agr :gender)) :masc)
-             (= (fs/get-in arg '(:agr :number)) :plur))
-        (do
-          (log/debug "it:23 +italian +agr +masc +plur")
-          (string/replace (fs/get-in arg '(:italian))
-                          #"o$" "i"))
-
-
-        ;; masculine noun or adjective: underspecified number.
-        (and (map? arg)
-             (contains? arg :agr)
-             (or (= category :adjective)
-                 (= category :noun))
-             (= (fs/get-in arg '(:agr :gender)) :masc))
-        (do
-          (log/debug "it:24 +agr +(adj|noun) +masc")
-          arg)
-
-
-        ;; irregular passato prossimo: essere case: agrees with number and gender, but number
-        ;; (and likely gender, though we don't currently check) are not specified.
-        (and (map? arg)
-             (contains? arg :infl)
-             (= (fs/get-in arg '(:infl)) :past)
-             (not (= (fs/get-in arg '(:infinitive :irregular :passato) :notfound)
-                     :notfound))
-             (= (fs/get-in arg '(:infinitive :essere)) true)
-             (= :notfound (fs/get-in arg '(:agr :number) :notfound)))
-        arg
-
-        ;; irregular passato prossimo: essere case: agrees with number and gender.
-        (and (map? arg)
-             (contains? arg :infl)
-             (= (fs/get-in arg '(:infl)) :past)
-             (not (= (fs/get-in arg '(:infinitive :irregular :passato) :notfound)
-                     :notfound))
-             (= (fs/get-in arg '(:infinitive :essere)) true))
-        ;; TODO: handle number and gender agreement for essere-true passato forms.
-        (let [canonical (fs/get-in arg '(:infinitive :irregular :passato))
-              but-last (string/join "" (butlast canonical))
-              suffix (cond
-                      (and (= (fs/get-in arg '(:agr :gender)) :fem)
-                           (= (fs/get-in arg '(:agr :number)) :sing)
-                           (= (fs/get-in arg '(:infinitive :essere)) true))
-                      "a"
-
-                      (and (= (fs/get-in arg '(:agr :gender)) :fem)
-                           (= (fs/get-in arg '(:agr :number)) :plur)
-                           (= (fs/get-in arg '(:infinitive :essere)) true))
-                      "e"
-
-                      (and (= (fs/get-in arg '(:agr :number)) :plur)
-                           (= (fs/get-in arg '(:infinitive :essere)) true))
-                      "i"
-
-                      true
-                      "o")]
-          (str but-last suffix))
-        ;; irregular passato prossimo: non-essere case.
-        (and (map? arg)
-             (contains? arg :infl)
-             (= (fs/get-in arg '(:infl)) :past)
-             (not (= (fs/get-in arg '(:infinitive :irregular :passato) :notfound)
-                     :notfound)))
-        (do
-          (str (fs/get-in arg '(:infinitive :irregular :passato))))
-
-        (and (map? arg)
-             false
-             (= :past (fs/get-in arg '(:infl)))
-             (map? (fs/get-in arg '(:infinitive))))
-        (do
-          (throw (Exception. (str "Argument is a verb: " arg " with infinitive: "
-                                  (fs/get-in arg '(:infinitive)) ","
-                                  "but morph/conjugate-it doesn't know how to conjugate"
-                                  "it. Needs more lexical information or morphological code to do so."))))
-
-        (and (map? arg)
-             (contains? arg :infl)
-             (= (fs/get-in arg '(:infl)) :past)
-             (not (= (fs/get-in arg '(:agr :number) :not-found) :not-found)))
-        ;; regular past inflection
-        (let [root (fs/get-in arg '(:infinitive))
-              root (if (map? root)
-                     (fs/get-in root '(:infinitive))
-                     root)
-              root (if root root (str "(no-root-found: in" arg))
-              are-type (try (re-find #"are$" root)
-                            (catch Exception e
-                              (throw (Exception. (str "Can't regex-find on non-string: " root)))))
-              ere-type (re-find #"ere$" root)
-              ire-type (re-find #"ire$" root)
-              stem (string/replace root #"[iae]re$" "")
-              last-stem-char-is-i (re-find #"i$" stem)
-              suffix (cond
-                      (and (= (fs/get-in arg '(:agr :gender)) :fem)
-                           (= (fs/get-in arg '(:agr :number)) :sing)
-                           (= (fs/get-in arg '(:infinitive :essere)) true))
-                      "a"
-
-                      (and (= (fs/get-in arg '(:agr :gender)) :fem)
-                           (= (fs/get-in arg '(:agr :number)) :plur)
-                           (= (fs/get-in arg '(:infinitive :essere)) true))
-                      "e"
-
-                      (and (= (fs/get-in arg '(:agr :number)) :plur)
-                           (= (fs/get-in arg '(:infinitive :essere)) true))
-                      "i"
-
-                      true
-                      "o")
-
-              ]
-          (log/debug "regular past inflection")
-          (cond
-           (or are-type ere-type)
-           (str stem "at" suffix) ;; "ato" or "ati"
-           (or are-type ire-type)
-           (str stem "it" suffix) ;; "ito" or "iti"
-           true
-           (str "(regpast:TODO):" stem)))
-
-        ;; not used yet...
-        (= (fs/get-in arg '(:infl)) :infinitive)
-        (fs/get-in arg '(:infinitive))
-
-        ;; .. used instead.
-        (and (= :notfound (fs/get-in arg '(:infl) :notfound))
-             (= :notfound (fs/get-in arg '(:agr) :notfound))
-             (string? (fs/get-in arg '(:infinitive))))
-        (fs/get-in arg '(:infinitive))
-        
-        (= (fs/get-in arg '(:infl)) :futuro)
-        (do
-          (log/debug "futuro")
-          (let [root (fs/get-in arg '(:infinitive))
-                root (if (map? root)
-                       (fs/get-in arg '(:infinitive :infinitive))
-                       root)
-                person (fs/get-in arg '(:agr :person))
-                number (fs/get-in arg '(:agr :number))
-                stem (string/replace root #"e$" "")]
-            (cond
-             (and (= person :1st) (= number :sing))
-             (str stem "ò")
-
-             (and (= person :2nd) (= number :sing))
-             (str stem "ai")
-
-             (and (= person :3rd) (= number :sing))
-             (str stem "à")
-
-             (and (= person :1st) (= number :plur))
-             (str stem "emo")
-
-             (and (= person :2nd) (= number :plur))
-             (str stem "ete")
-
-             (and (= person :3rd) (= number :plur))
-             (str stem "anno")
-
-             :else
-             arg)))
-
-        (or (= category :noun)
-            (= (fs/get-in arg '(:cat)) :noun)
-            (= category :adjective)
-            (= (fs/get-in arg '(:cat)) :adjective))
-        arg
-        
-        :else
-        ;; assume present tense verb with map with keys (:root and :agr).
-        (let [root (fs/get-in arg '(:infinitive))
-              root (if (not (= (type root) java.lang.String))
-                     (fs/get-in arg '(:infinitive :infinitive))
-                     root)
-              root-check (if (nil? root)
-                           (do
-                             (log/error (str "Expected to find :infinitive in: " arg " with category: " category))
-                             (throw (Exception. (str "Expected to find :infinitive in: " arg "."))))
+              (= (type arg) clojure.lang.Keyword)
+              (throw (Exception. (str "cannot conjugate: " arg)))
+              
+              ;; <deprecated: use :italian instead of :root>
+              (and (map? arg)
+                   (contains? arg :root)
+                   (contains? arg :agr)
+                   (= (fs/get-in arg '(:agr :gender)) :fem)
+                   (= (fs/get-in arg '(:agr :number)) :sing))
+              (do
+                (log/info "it:2 +root +fem +sing")
+                (fs/get-in arg '(:root)))
+              
+              ;; irregular noun: plural
+              (and (map? arg)
+                   (not (= :notfound (fs/get-in arg '(:root :irregular :plur) :notfound)))
+                   (= (fs/get-in arg '(:agr :number)) :plur))
+              (do
+                (log/info "it:3 +root +irreg +plur")
+                (fs/get-in arg '(:root :irregular :plur)))
+              
+              ;; irregular noun: singular
+              (and (map? arg)
+                   (not (= :notfound (fs/get-in arg '(:root :irregular :plur) :notfound)))
+                   (= (fs/get-in arg '(:agr :number)) :sing))
+              (do
+                (log/info "it:4 +root +irreg +sing")
+                (fs/get-in arg '(:root :italian)))
+              
+              (and (map? arg)
+                   (contains? arg :root)
+                   (contains? arg :agr)
+                   (= (fs/get-in arg '(:agr :gender)) :masc)
+                   (= (fs/get-in arg '(:agr :number)) :sing))
+              (do
+                (log/info "it:5 +root +agr +masc +sing")
+                (fs/get-in arg '(:root)))
+              
+              ;; regular masculine noun pluralization
+              (and (map? arg)
+                   (= :notfound (fs/get-in arg '(:italian :irregular :plur) :notfound))
+                   (contains? arg :root)
+                   (contains? arg :agr)
+                   (= (fs/get-in arg '(:agr :gender)) :masc)
+                   (= (fs/get-in arg '(:agr :number)) :plur))
+              (do
+                (log/info "it:6 +root +agr +masc +plur")
+                (string/replace (fs/get-in arg '(:root))
+                                #"[eo]$" "i")) ;; dottore => dottori; medico => medici
+              
+              ;; feminine noun pluralization
+              (and (map? arg)
+                   (= :notfound (fs/get-in arg '(:italian :irregular :plur) :notfound))
+                   (contains? arg :root)
+                   (contains? arg :agr)
+                   (= (fs/get-in arg '(:agr :gender)) :fem)
+                   (= (fs/get-in arg '(:agr :number)) :plur))
+              (do
+                (log/info "it:7 +root +agr +fem +plur +regular +deprecated")
+                (string/replace (fs/get-in arg '(:root))
+                                #"a$" "e"))
+              
+              ;; </deprecated: use :italian instead of :root>
+              
+              ;; <replace with>
+              
+              ;; irregular noun: masc plural
+              (and (map? arg)
+                   (not (= :notfound (fs/get-in arg '(:irregular :masc :plur) :notfound)))
+                   (= (fs/get-in arg '(:agr :number)) :plur)
+                   (= (fs/get-in arg '(:agr :gender)) :masc))
+              (do
+                (log/info "it:8 +map +irreg +plur +masc")
+                (fs/get-in arg '(:irregular :masc :plur)))
+              
+              ;; irregular noun: fem plural
+              (and (map? arg)
+                   (not (= :notfound (fs/get-in arg '(:irregular :fem :plur) :notfound)))
+                   (= (fs/get-in arg '(:agr :number)) :plur)
+                   (= (fs/get-in arg '(:agr :gender)) :fem))
+              (do
+                (log/info "it:9 +map +irreg +plur +fem")
+                (fs/get-in arg '(:irregular :fem :plur)))
+              
+              ;; regular noun: masc sing
+              (and (map? arg)
+                   (contains? arg :italian)
+                   (contains? arg :agr)
+                   (= (fs/get-in arg '(:agr :gender)) :masc)
+                   (= (fs/get-in arg '(:agr :number)) :sing))
+              (do
+                (log/info "it:11 +masc +sing")
+                (fs/get-in arg '(:italian)))
+              
+              ;; regular masculine noun pluralization
+              (and (map? arg)
+                   (contains? arg :italian)
+                   (contains? arg :agr)
+                   (= (fs/get-in arg '(:agr :gender)) :masc)
+                   (= (fs/get-in arg '(:agr :number)) :plur))
+              (do
+                (log/info "it:12 +masc +plur")
+                (string/replace (fs/get-in arg '(:italian))
+                                #"[eo]$" "i")) ;; dottore => dottori; medico => medici
+              
+              ;; regular feminine noun pluralization
+              (and (map? arg)
+                   (or (= category :noun)
+                       (= (fs/get-in arg '(:cat)) :noun))
+                   (contains? arg :italian)
+                   (contains? arg :agr)
+                   (= (fs/get-in arg '(:agr :gender)) :fem)
+                   (= (fs/get-in arg '(:agr :number)) :plur))
+              (do
+                (log/info "it:13 +fem +plur +regular")
+                (string/replace (fs/get-in arg '(:italian))
+                                #"[ao]$" "e"))
+              ;; </replace with>
+              
+              
+              ;; masculine adjective agreement: singular
+              (and (map? arg)
+                   (or (= category :adjective)
+                       (= (fs/get-in arg '(:cat)) :adjective))
+                   (contains? arg :italian)
+                   (contains? arg :agr)
+                   (= (fs/get-in arg '(:agr :gender)) :masc)
+                   (= (fs/get-in arg '(:agr :number)) :sing))
+              (do
+                (log/info "it:14 +sing +adj +italian +masc")
+                (fs/get-in arg '(:italian)))
+              
+              ;; masculine irregular plural adjective agreement.
+              (and (map? arg)
+                   (or (= category :adjective)
+                       (= (fs/get-in arg '(:cat)) :adjective)
+                       (= category :noun)
+                       (= (fs/get-in arg '(:cat)) :noun))
+                   (contains? arg :italian)
+                   (contains? arg :agr)
+                   (= (fs/get-in arg '(:agr :gender)) :masc)
+                   (= (fs/get-in arg '(:agr :number)) :plur)
+                   (not (= (fs/get-in arg '(:irregular :masc :plur) :notfound) :notfound)))
+              (do
+                (log/info "it:15 +irreg +plur +masc +(adj|noun)")
+                (fs/get-in arg '(:irregular :masc :plur)))
+              
+              ;; feminine irregular plural adjective agreement.
+              (and (map? arg)
+                   (or (= category :adjective)
+                       (= (fs/get-in arg '(:cat)) :adjective)
+                       (= category :noun)
+                       (= (fs/get-in arg '(:cat)) :noun))
+                   (contains? arg :italian)
+                   (contains? arg :agr)
+                   (= (fs/get-in arg '(:agr :gender)) :fem)
+                   (= (fs/get-in arg '(:agr :number)) :plur)
+                   (not (= (fs/get-in arg '(:irregular :fem :plur) :notfound) :notfound)))
+              (do
+                (log/info "it:16 +fem +plur +(adj|noun)")
+                (fs/get-in arg '(:irregular :fem :plur)))
+              
+              ;; masculine adjective agreement: plural
+              (and (map? arg)
+                   (or (= category :adjective)
+                       (= (fs/get-in arg '(:cat)) :adjective))
+                   (contains? arg :italian)
+                   (contains? arg :agr)
+                   (= (fs/get-in arg '(:agr :gender)) :masc)
+                   (= (fs/get-in arg '(:agr :number)) :plur))
+              (do
+                (log/info "it:17 +masc +plur +adj")
+                (string/replace (fs/get-in arg '(:italian))
+                                #"[eo]$" "i")) ;; adjectives ending in "e" or "o" pluralize to "i"
+              
+              ;; feminine adjective agreement: singular
+              (and (map? arg)
+                   (or (= category :adjective)
+                       (= (fs/get-in arg '(:cat)) :adjective)
+                       (= category :noun)
+                       (= (fs/get-in arg '(:cat)) :noun))
+                   (contains? arg :italian)
+                   (contains? arg :agr)
+                   (= (fs/get-in arg '(:agr :gender)) :fem)
+                   (= (fs/get-in arg '(:agr :number)) :sing))
+              (do
+                (log/info "it:18 +fem +sing +(adj|noun) +regular")
+                (string/replace (fs/get-in arg '(:italian))
+                                #"o$" "a"))
+              
+              ;; feminine adjective agreement: plural with adjective ending in "e": change to "i".
+              (and (map? arg)
+                   (or (= category :adjective)
+                       (= (fs/get-in arg '(:cat)) :adjective))
+                   (contains? arg :italian)
+                   (contains? arg :agr)
+                   (= (fs/get-in arg '(:agr :gender)) :fem)
+                   (= (fs/get-in arg '(:agr :number)) :plur)
+                   (= (final-char-of (fs/get-in arg '(:italian))) "e"))
+              (do
+                (log/info "it:19 +fem +plur +adj")
+                (string/replace (fs/get-in arg '(:italian))
+                                #"e$" "i"))
+              
+              ;; feminine adjective agreement: plural with adjective ending in "o": change to "e".
+              (and (map? arg)
+                   (or (= category :adjective)
+                       (= (fs/get-in arg '(:cat)) :adjective)
+                       (= category :noun)
+                       (= (fs/get-in arg '(:cat)) :noun))
+                   (contains? arg :italian)
+                   (contains? arg :agr)
+                   (= (fs/get-in arg '(:agr :gender)) :fem)
+                   (= (fs/get-in arg '(:agr :number)) :plur))
+              (do
+                (log/info "it:20 +(adj|noun) +fem +plur")
+                (string/replace (fs/get-in arg '(:italian))
+                                #"o$" "e"))
+              
+              
+              ;; feminine noun or adjective: underspecified number.
+              (and (map? arg)
+                   (contains? arg :agr)
+                   (or (= category :adjective)
+                       (= category :noun))
+                   (= (fs/get-in arg '(:agr :gender)) :fem))
+              (do
+                (log/info "it:21 +(:adj|:noun) +fem UNDERSPEC1")
+                arg)
+              
+              ;; masculine adjective agreement: singular
+              (and (map? arg)
+                   (= category :adjective)
+                   (contains? arg :italian)
+                   (contains? arg :agr)
+                   (= (fs/get-in arg '(:agr :gender)) :masc)
+                   (= (fs/get-in arg '(:agr :number)) :sing))
+              (do
+                (log/info "it:22 +:adj(cat) +masc +sing")
+                (fs/get-in arg '(:italian)))
+              
+              ;; masculine adjective agreement: plural
+              (and (map? arg)
+                   (= category :adjective)
+                   (contains? arg :italian)
+                   (contains? arg :agr)
+                   (= (fs/get-in arg '(:agr :gender)) :masc)
+                   (= (fs/get-in arg '(:agr :number)) :plur))
+              (do
+                (log/info "it:23 +italian +agr +masc +plur")
+                (string/replace (fs/get-in arg '(:italian))
+                                #"o$" "i"))
+              
+              
+              ;; masculine noun or adjective: underspecified number.
+              (and (map? arg)
+                   (contains? arg :agr)
+                   (or (= category :adjective)
+                       (= category :noun))
+                   (= (fs/get-in arg '(:agr :gender)) :masc))
+              (do
+                (log/info "it:24 +agr +(adj|noun) +masc")
+                arg)
+              
+              
+              ;; irregular passato prossimo: essere case: agrees with number and gender, but number
+              ;; (and likely gender, though we don't currently check) are not specified.
+              (and (map? arg)
+                   (contains? arg :infl)
+                   (= (fs/get-in arg '(:infl)) :past)
+                   (not (= (fs/get-in arg '(:infinitive :irregular :passato) :notfound)
+                           :notfound))
+                   (= (fs/get-in arg '(:infinitive :essere)) true)
+                   (= :notfound (fs/get-in arg '(:agr :number) :notfound)))
+              arg
+              
+              ;; irregular passato prossimo: essere case: agrees with number and gender.
+              (and (map? arg)
+                   (contains? arg :infl)
+                   (= (fs/get-in arg '(:infl)) :past)
+                   (not (= (fs/get-in arg '(:infinitive :irregular :passato) :notfound)
+                           :notfound))
+                   (= (fs/get-in arg '(:infinitive :essere)) true))
+              ;; TODO: handle number and gender agreement for essere-true passato forms.
+              (let [canonical (fs/get-in arg '(:infinitive :irregular :passato))
+                    but-last (string/join "" (butlast canonical))
+                    suffix (cond
+                            (and (= (fs/get-in arg '(:agr :gender)) :fem)
+                                 (= (fs/get-in arg '(:agr :number)) :sing)
+                                 (= (fs/get-in arg '(:infinitive :essere)) true))
+                            "a"
+                            
+                            (and (= (fs/get-in arg '(:agr :gender)) :fem)
+                                 (= (fs/get-in arg '(:agr :number)) :plur)
+                                 (= (fs/get-in arg '(:infinitive :essere)) true))
+                            "e"
+                            
+                            (and (= (fs/get-in arg '(:agr :number)) :plur)
+                                 (= (fs/get-in arg '(:infinitive :essere)) true))
+                            "i"
+                            
+                            true
+                            "o")]
+                (str but-last suffix))
+              ;; irregular passato prossimo: non-essere case.
+              (and (map? arg)
+                   (contains? arg :infl)
+                   (= (fs/get-in arg '(:infl)) :past)
+                   (not (= (fs/get-in arg '(:infinitive :irregular :passato) :notfound)
+                           :notfound)))
+              (do
+                (str (fs/get-in arg '(:infinitive :irregular :passato))))
+              
+              (and (map? arg)
+                   false
+                   (= :past (fs/get-in arg '(:infl)))
+                   (map? (fs/get-in arg '(:infinitive))))
+              (do
+                (throw (Exception. (str "Argument is a verb: " arg " with infinitive: "
+                                        (fs/get-in arg '(:infinitive)) ","
+                                        "but morph/conjugate-it doesn't know how to conjugate"
+                                        "it. Needs more lexical information or morphological code to do so."))))
+              
+              (and (map? arg)
+                   (contains? arg :infl)
+                   (= (fs/get-in arg '(:infl)) :past)
+                   (not (= (fs/get-in arg '(:agr :number) :not-found) :not-found)))
+              ;; regular past inflection
+              (let [root (fs/get-in arg '(:infinitive))
+                    root (if (map? root)
+                           (fs/get-in root '(:infinitive))
                            root)
-
-              person (fs/get-in arg '(:agr :person))
-              number (fs/get-in arg '(:agr :number))
-              stem (string/replace root #"[iae]re$" "")
-              are-type (re-find #"are$" root)
-              ere-type (re-find #"ere$" root)
-              ire-type (re-find #"ire$" root)
-              last-stem-char-is-i (re-find #"i$" stem)]
-          (log/debug "it: :else")
-          (cond
-
-           (and (= person :1st) (= number :sing))
-           (str stem "o")
-
-           (and (= person :2nd) (= number :sing)
-                last-stem-char-is-i)
-           (str stem)
-
-           (and (= person :2nd) (= number :sing))
-           (str stem "i")
-
-           (and (= person :3rd) (= number :sing) (or ire-type ere-type))
-           (str stem "e")
-
-           (and (= person :3rd) (= number :sing) are-type)
-           (str stem "a") 
-
-           (and (= person :1st) (= number :plur)
-                last-stem-char-is-i)
-           (str stem "amo")
-
-           (and (= person :1st) (= number :plur))
-           (str stem "iamo")
-
-           (and (= person :2nd) (= number :plur) are-type)
-           (str stem "ate")
-
-           (and (= person :2nd) (= number :plur) ere-type)
-           (str stem "ete")
-
-           (and (= person :2nd) (= number :plur) ire-type)
-           (str stem "ite")
-
-           (and (= person :3rd) (= number :plur))
-           (str stem "ano")
-           :else
-           arg)))]
-    (log/debug (str "<= conjugate-it: " retval))
+                    root (if root root (str "(no-root-found: in" arg))
+                    are-type (try (re-find #"are$" root)
+                                  (catch Exception e
+                                    (throw (Exception. (str "Can't regex-find on non-string: " root)))))
+                    ere-type (re-find #"ere$" root)
+                    ire-type (re-find #"ire$" root)
+                    stem (string/replace root #"[iae]re$" "")
+                    last-stem-char-is-i (re-find #"i$" stem)
+                    suffix (cond
+                            (and (= (fs/get-in arg '(:agr :gender)) :fem)
+                                 (= (fs/get-in arg '(:agr :number)) :sing)
+                                 (= (fs/get-in arg '(:infinitive :essere)) true))
+                            "a"
+                            
+                            (and (= (fs/get-in arg '(:agr :gender)) :fem)
+                                 (= (fs/get-in arg '(:agr :number)) :plur)
+                                 (= (fs/get-in arg '(:infinitive :essere)) true))
+                            "e"
+                            
+                            (and (= (fs/get-in arg '(:agr :number)) :plur)
+                                 (= (fs/get-in arg '(:infinitive :essere)) true))
+                            "i"
+                            
+                            true
+                            "o")
+                    
+                    ]
+                (log/info "regular past inflection")
+                (cond
+                 (or are-type ere-type)
+                 (str stem "at" suffix) ;; "ato" or "ati"
+                 (or are-type ire-type)
+                 (str stem "it" suffix) ;; "ito" or "iti"
+                 true
+                 (str "(regpast:TODO):" stem)))
+              
+              ;; not used yet...
+              (= (fs/get-in arg '(:infl)) :infinitive)
+              (do
+                (log/info "GOT HERE.")
+                (fs/get-in arg '(:infinitive)))
+              
+              ;; .. used instead.
+              (and (= :notfound (fs/get-in arg '(:infl) :notfound))
+                   (= :notfound (fs/get-in arg '(:agr) :notfound))
+                   (string? (fs/get-in arg '(:infinitive)))
+                   (not (= infl :present)))
+              (do
+                (log/info "GOT HERE(2)")
+                (fs/get-in arg '(:infinitive)))
+              
+              (= (fs/get-in arg '(:infl)) :futuro)
+              (do
+                (log/info "futuro")
+                (log/info (str "arg: " arg))
+                (let [root (fs/get-in arg '(:infinitive))
+                      root (if (map? root)
+                             (fs/get-in arg '(:infinitive :infinitive))
+                             (if (nil? root) "" root))
+                      person (fs/get-in arg '(:agr :person))
+                      number (fs/get-in arg '(:agr :number))
+                      stem (string/replace root #"e$" "")]
+                  (cond
+                   (and (= person :1st) (= number :sing))
+                   (str stem "ò")
+                   
+                   (and (= person :2nd) (= number :sing))
+                   (str stem "ai")
+                   
+                   (and (= person :3rd) (= number :sing))
+                   (str stem "à")
+                   
+                   (and (= person :1st) (= number :plur))
+                   (str stem "emo")
+                   
+                   (and (= person :2nd) (= number :plur))
+                   (str stem "ete")
+                   
+                   (and (= person :3rd) (= number :plur))
+                   (str stem "anno")
+                   
+                   :else
+                   arg)))
+              
+              (or (= category :noun)
+                  (= (fs/get-in arg '(:cat)) :noun)
+                  (= category :adjective)
+                  (= (fs/get-in arg '(:cat)) :adjective))
+              arg
+              
+              (nil? (fs/get-in arg '(:infinitive)))
+              arg
+              
+              :else
+              ;; assume present tense verb with map with keys (:root and :agr).
+              (let [root (fs/get-in arg '(:infinitive))
+                    root (if (not (= (type root) java.lang.String))
+                           (fs/get-in arg '(:infinitive :infinitive))
+                           root)
+                    root-check (if (nil? root)
+                                 (do
+                                   (log/error (str "Expected to find :infinitive in: " arg " with category: " category))
+                                   (throw (Exception. (str "Expected to find :infinitive in: " arg "."))))
+                                 root)
+                    
+                    person (fs/get-in arg '(:agr :person))
+                    number (fs/get-in arg '(:agr :number))
+                    stem (string/replace root #"[iae]re$" "")
+                    are-type (re-find #"are$" root)
+                    ere-type (re-find #"ere$" root)
+                    ire-type (re-find #"ire$" root)
+                    last-stem-char-is-i (re-find #"i$" stem)]
+                (log/info "it: :else")
+                (cond
+                 
+                 (and (= person :1st) (= number :sing))
+                 (str stem "o")
+                 
+                 (and (= person :2nd) (= number :sing)
+                      last-stem-char-is-i)
+                 (str stem)
+                 
+                 (and (= person :2nd) (= number :sing))
+                 (str stem "i")
+                 
+                 (and (= person :3rd) (= number :sing) (or ire-type ere-type))
+                 (str stem "e")
+                 
+                 (and (= person :3rd) (= number :sing) are-type)
+                 (str stem "a") 
+                 
+                 (and (= person :1st) (= number :plur)
+                      last-stem-char-is-i)
+                 (str stem "amo")
+                 
+                 (and (= person :1st) (= number :plur))
+                 (str stem "iamo")
+                 
+                 (and (= person :2nd) (= number :plur) are-type)
+                 (str stem "ate")
+                 
+                 (and (= person :2nd) (= number :plur) ere-type)
+                 (str stem "ete")
+                 
+                 (and (= person :2nd) (= number :plur) ire-type)
+                 (str stem "ite")
+                 
+                 (and (= person :3rd) (= number :plur))
+                 (str stem "ano")
+                 :else
+                 arg)))]
+    (log/info (str "<= conjugate-it: " retval))
     retval))
 
-(defn conjugate-en [arg category]
+(defn conjugate-en [arg category & [ infl ] ]
   (log/debug (str "==="))
   (log/debug (str "arg: " arg))
   (log/debug (str "cat: " category))
@@ -835,7 +845,8 @@
         (let [root (fs/get-in arg '(:infinitive))
               root (if (map? root)
                      (fs/get-in root '(:infinitive))
-                     root)
+                     (if (nil? root) ""
+                         root))
               stem (string/replace root #"^to " "")]
           (log/debug "+futuro")
           (str "will " stem))
@@ -891,14 +902,696 @@
            (str stem "")
            :else arg))))
 
-(defn get-italian [a b & [ a-category b-category ]]
+(defn suffix-of [word]
+  "compute the final character given a lexical entry and agreement info in :agr."
+  (let [suffix (cond
+
+                (and (= (fs/get-in word '(:agr :gender)) :fem)
+                     (= (fs/get-in word '(:agr :number)) :sing)
+                     (= (fs/get-in word '(:essere)) true))
+                "a"
+
+                (and (= (fs/get-in word '(:agr :gender)) :fem)
+                     (= (fs/get-in word '(:agr :number)) :plur)
+                     (= (fs/get-in word '(:essere)) true))
+                "e"
+
+                (and (= (fs/get-in word '(:agr :number)) :plur)
+                     (= (fs/get-in word '(:essere)) true))
+                "i"
+
+                true
+                "o"
+
+                )]
+    suffix))
+
+(declare get-italian-stub)
+
+(defn stem-per-futuro [infinitive]
+  "_infinitive_ should be a string (italian verb infinitive form)"
+  (string/replace infinitive #"^(.*)([aei])(re)$" (fn [[_ prefix vowel suffix]] (str prefix (if (= vowel "a") "e" vowel) "r"))))
+
+(defn get-italian-stub-1 [word]
+  (cond
+
+   (and (= :infinitive (fs/get-in word '(:infl)))
+        (string? (fs/get-in word '(:infinitive))))
+   (fs/get-in word '(:infinitive))
+
+   (and
+    (= (fs/get-in word '(:infl)) :futuro)
+    (map? (fs/get-in word '(:irregular :futuro))))
+   (let [infinitive (fs/get-in word '(:infinitive))
+         person (fs/get-in word '(:agr :person))
+         number (fs/get-in word '(:agr :number))]
+     (cond
+      (and (= person :1st) (= number :sing))
+      (fs/get-in word '(:irregular :futuro :1sing))
+      (and (= person :2nd) (= number :sing))
+      (fs/get-in word '(:irregular :futuro :2sing))
+      (and (= person :3rd) (= number :sing))
+      (fs/get-in word '(:irregular :futuro :3sing))
+      (and (= person :1st) (= number :plur))
+      (fs/get-in word '(:irregular :futuro :1plur))
+      (and (= person :2nd) (= number :plur))
+      (fs/get-in word '(:irregular :futuro :2plur))
+      (and (= person :3rd) (= number :plur))
+      (fs/get-in word '(:irregular :futuro :3plur))
+      true
+      word))
+   
+   (and (= (fs/get-in word '(:infl)) :futuro)
+        (fs/get-in word '(:infinitive)))
+   (let [infinitive (fs/get-in word '(:infinitive))
+         person (fs/get-in word '(:agr :person))
+         number (fs/get-in word '(:agr :number))
+         stem (stem-per-futuro infinitive)]
+     (cond
+      (and (= person :1st) (= number :sing))
+      (str stem "ò")
+      
+      (and (= person :2nd) (= number :sing))
+      (str stem "ai")
+      
+      (and (= person :3rd) (= number :sing))
+      (str stem "à")
+      
+      (and (= person :1st) (= number :plur))
+      (str stem "emo")
+      
+      (and (= person :2nd) (= number :plur))
+      (str stem "ete")
+      
+      (and (= person :3rd) (= number :plur))
+      (str stem "anno")
+      
+      :else
+      word))
+
+   
+   (and
+    (= :past (fs/get-in word '(:infl)))
+    (string? (fs/get-in word '(:irregular :past))))
+   (fs/get-in word '(:irregular :past))
+
+   ;; irregular passato prossimo and essere-verb => NEI (not enough information): defer conjugatation and keep as a map.
+   (and (= :past (fs/get-in word '(:infl)))
+        (fs/get-in word '(:irregular :passato))
+        (fs/get-in word '(:essere) true)
+        (or (= :notfound (fs/get-in word '(:agr :number) :notfound))
+            (= :top (fs/get-in word '(:agr :number)))))
+   word
+
+   ;; regular passato prossimo and essere-verb => NEI (not enough information): defer conjugation and keep as a map.
+   (and (= :past (fs/get-in word '(:infl)))
+        (fs/get-in word '(:essere) true)
+        (or (= :notfound (fs/get-in word '(:agr :number) :notfound))
+            (= :top (fs/get-in word '(:agr :number)))))
+   word
+
+  ;; conjugate irregular passato
+   (and (= :past (fs/get-in word '(:infl)))
+        (fs/get-in word '(:irregular :passato)))
+   (let [irregular-passato (fs/get-in word '(:irregular :passato))
+         butlast (nth (re-find #"(.*).$" irregular-passato) 1)]
+     (str butlast (suffix-of word)))
+
+   ;; conjugate regular passato
+   (= :past (fs/get-in word '(:infl)))
+   (let [infinitive (fs/get-in word '(:infinitive))
+         are-type (try (re-find #"are$" infinitive)
+                       (catch Exception e
+                         (throw (Exception. (str "Can't regex-find on non-string: " infinitive)))))
+         ere-type (re-find #"ere$" infinitive)
+         ire-type (re-find #"ire$" infinitive)
+         stem (string/replace infinitive #"[iae]re$" "")
+         last-stem-char-is-i (re-find #"i$" stem)
+
+         ;; for passato prossimo, the last char depends on gender and number, if an essere-verb.
+         suffix (suffix-of word)]
+
+     (cond
+
+      (or are-type ere-type)
+      (str stem "at" suffix) ;; "ato" or "ati"
+
+      (or are-type ire-type)
+      (str stem "it" suffix) ;; "ito" or "iti"
+
+      true
+      (str "(regpast:TODO):" stem)))
+
+   (and
+    (= (fs/get-in word '(:infl)) :present)
+    (string? (fs/get-in word '(:infinitive))))
+   (let [infinitive (fs/get-in word '(:infinitive))
+         are-type (try (re-find #"are$" infinitive)
+                       (catch Exception e
+                         (throw (Exception. (str "Can't regex-find on non-string: " infinitive " from word: " word)))))
+         ere-type (re-find #"ere$" infinitive)
+         ire-type (re-find #"ire$" infinitive)
+         stem (string/replace infinitive #"[iae]re$" "")
+         last-stem-char-is-i (re-find #"i$" stem)
+         person (fs/get-in word '(:agr :person))
+         number (fs/get-in word '(:agr :number))]
+     (cond
+
+      (and (= person :1st) (= number :sing)
+           (string? (fs/get-in word '(:irregular :present :1sing))))
+      (fs/get-in word '(:irregular :present :1sing))
+      (and (= person :2nd) (= number :sing)
+           (string? (fs/get-in word '(:irregular :present :2sing))))
+      (fs/get-in word '(:irregular :present :2sing))
+      (and (= person :3rd) (= number :sing)
+           (string? (fs/get-in word '(:irregular :present :3sing))))
+      (fs/get-in word '(:irregular :present :3sing))
+
+      (and (= person :1st) (= number :plur)
+           (string? (fs/get-in word '(:irregular :present :1plur))))
+      (fs/get-in word '(:irregular :present :1plur))
+      (and (= person :2nd) (= number :plur)
+           (string? (fs/get-in word '(:irregular :present :2plur))))
+      (fs/get-in word '(:irregular :present :2plur))
+      (and (= person :3rd) (= number :plur)
+           (string? (fs/get-in word '(:irregular :present :3plur))))
+      (fs/get-in word '(:irregular :present :3plur))
+      
+      (and (= person :1st) (= number :sing))
+      (str stem "o")
+
+      (and (= person :2nd) (= number :sing)
+           last-stem-char-is-i)
+      (str stem)
+
+      (and (= person :2nd) (= number :sing))
+      (str stem "i")
+
+      (and (= person :3rd) (= number :sing) (or ire-type ere-type))
+      (str stem "e")
+      
+      (and (= person :3rd) (= number :sing) are-type)
+      (str stem "a") 
+
+      (and (= person :1st) (= number :plur)
+           last-stem-char-is-i)
+      (str stem "amo")
+
+      (and (= person :1st) (= number :plur))
+      (str stem "iamo")
+
+      (and (= person :2nd) (= number :plur) are-type)
+      (str stem "ate")
+
+      (and (= person :2nd) (= number :plur) ere-type)
+      (str stem "ete")
+
+      (and (= person :2nd) (= number :plur) ire-type)
+      (str stem "ite")
+
+      (and (= person :3rd) (= number :plur))
+      (str stem "ano")
+      :else
+      word))
+
+   ;; TODO: move this down to other adjectives.
+   ;; this was moved up here to avoid
+   ;; another rule from matching it.
+   ;; handle lexical exceptions (plural feminine adjectives):
+   (and
+    (= (fs/get-in word '(:agr :number)) :plur)
+    (= (fs/get-in word '(:agr :gender)) :fem)
+    (= (fs/get-in word '(:cat)) :adjective)
+    (string? (fs/get-in word '(:irregular :fem :plur))))
+   (fs/get-in word '(:irregular :fem :plur))
+
+   
+   ;; TODO: move this down to other adjectives.
+   ;; this was moved up here to avoid
+   ;; another rule from matching it.
+   (and
+    (= (fs/get-in word '(:agr :gender)) :fem)
+    (= (fs/get-in word '(:agr :number)) :plur)
+    (= (fs/get-in word '(:cat)) :adjective))
+   (string/replace (fs/get-in word '(:italian))
+                   #"[eo]$" "e") ;; nero => nere
+   
+   (and
+    (fs/get-in word '(:a))
+    (fs/get-in word '(:b)))
+   (get-italian-stub 
+    (fs/get-in word '(:a))
+    (fs/get-in word '(:b)))
+
+   ;; TODO: remove support for deprecated :root.
+   (and
+    (= (fs/get-in word '(:agr :gender)) :masc)
+    (= (fs/get-in word '(:agr :number)) :sing)
+    (= (fs/get-in word '(:cat)) :noun)
+    (fs/get-in word '(:root)))
+   (fs/get-in word '(:root))
+
+   (and
+    (= (fs/get-in word '(:agr :gender)) :fem)
+    (= (fs/get-in word '(:agr :number)) :sing)
+    (= (fs/get-in word '(:cat)) :noun))
+   (fs/get-in word '(:italian))
+
+   ;; handle lexical exceptions (plural nouns):
+   (and
+    (= (fs/get-in word '(:agr :number)) :plur)
+    (= (fs/get-in word '(:cat)) :noun)
+    (string? (fs/get-in word '(:irregular :plur))))
+   (fs/get-in word '(:irregular :plur))
+
+   ;; handle lexical exceptions (plural masculine adjectives):
+   (and
+    (= (fs/get-in word '(:agr :number)) :plur)
+    (= (fs/get-in word '(:agr :gender)) :masc)
+    (= (fs/get-in word '(:cat)) :adjective)
+    (string? (fs/get-in word '(:irregular :masc :plur))))
+   (fs/get-in word '(:irregular :masc :plur))
+
+   
+   (and
+    (= (fs/get-in word '(:agr :gender)) :masc)
+    (= (fs/get-in word '(:agr :number)) :plur)
+    (= (fs/get-in word '(:cat) :noun))
+    (fs/get-in word '(:italian)))
+   (string/replace (fs/get-in word '(:italian))
+                   #"[eo]$" "i") ;; dottore => dottori; medico => medici
+
+   ;; deprecated: remove support for :root.
+   (and
+    (= (fs/get-in word '(:agr :gender)) :masc)
+    (= (fs/get-in word '(:agr :number)) :plur)
+    (= (fs/get-in word '(:cat) :noun))
+    (fs/get-in word '(:root)))
+   (string/replace (fs/get-in word '(:root))
+                   #"[eo]$" "i") ;; dottore => dottori; medico => medici
+   
+
+   (and
+    (= (fs/get-in word '(:agr :gender)) :fem)
+    (= (fs/get-in word '(:agr :number)) :plur)
+    (= (fs/get-in word '(:cat) :noun))
+    (fs/get-in word '(:italian)))
+   (string/replace (fs/get-in word '(:italian))
+                   #"[a]$" "e") ;; donna => donne
+
+   (and
+    (= (fs/get-in word '(:agr :gender)) :fem)
+    (= (fs/get-in word '(:agr :number)) :plur)
+    (= (fs/get-in word '(:cat)) :noun)
+    (fs/get-in word '(:root)))
+   (string/replace (fs/get-in word '(:root))
+                   #"[a]$" "e") ;; donna => donne
+
+
+   ;; deprecated: remove support for :root.
+   (and
+    (= (fs/get-in word '(:agr :gender)) :fem)
+    (= (fs/get-in word '(:agr :number)) :sing)
+    (= (fs/get-in word '(:cat)) :noun)
+    (string? (fs/get-in word '(:root))))
+   (fs/get-in word '(:root))
+
+   (and
+    (= (fs/get-in word '(:agr :gender)) :masc)
+    (= (fs/get-in word '(:agr :number)) :sing)
+    (= (fs/get-in word '(:cat) :adjective)))
+   (fs/get-in word '(:italian)) ;; nero
+
+   (and
+    (= (fs/get-in word '(:agr :gender)) :masc)
+    (= (fs/get-in word '(:agr :number)) :plur)
+    (= (fs/get-in word '(:cat)) :adjective)
+    ;; handle lexical exceptions.
+    (string? (fs/get-in word '(:irregular :masc :plur))))
+   (fs/get-in word '(:irregular :masc :plur))
+
+   (and
+    (= (fs/get-in word '(:agr :gender)) :masc)
+    (= (fs/get-in word '(:agr :number)) :plur)
+    (= (fs/get-in word '(:cat)) :adjective))
+   (string/replace (fs/get-in word '(:italian))
+                   #"[eo]$" "i") ;; nero => neri
+
+   (and
+    (= (fs/get-in word '(:agr :gender)) :fem)
+    (= (fs/get-in word '(:agr :number)) :sing)
+    (= (fs/get-in word '(:cat)) :adjective))
+   (string/replace (fs/get-in word '(:italian))
+                   #"[eo]$" "a") ;; nero => nera
+
+
+   (and
+    (= (fs/get-in word '(:agr :gender)) :fem)
+    (= (fs/get-in word '(:agr :number)) :plur)
+    (= (fs/get-in word '(:cat)) :adjective)
+    ;; handle lexical exceptions.
+    (string? (fs/get-in word '(:irregular :fem :plur))))
+   (fs/get-in word '(:irregular :fem :plur))
+
+   :else
+  word))
+
+(defn get-italian-stub [a b]
+  (let [a (get-italian-stub-1 a)
+        b (get-italian-stub-1 b)]
+    (cond
+
+
+     (and (= a "di i")
+          (string? b)
+          (re-find #"^[aeiou]" b))
+     (str "degli " b)
+
+
+     (and (= a "di i")
+          (string? b))
+     (str "dei " b)
+     (and (= a "di il")
+          (string? b))
+     (str "del " b)
+     (and (= a "di la")
+          (string? b))
+     (str "della " b)
+     (and (= a "di le")
+          (string? b))
+     (str "delle " b)
+
+     (and (= a "i")
+          (string? b)
+          (re-find #"^[aeiou]" b))
+     (str "gli " b)
+
+     (and (= a "i")
+          (string? b)
+          (re-find #"^s[t]" b))
+     (str "gli " b)
+
+     (and (= a "un")
+          (re-find #"^s[t]" b))
+     (str "uno " b)
+
+     (and (= a "una")
+          (re-find #"^[aeiou]" b))
+     (str "un'" b)
+     
+     (and (= a "il")
+          (string? b)
+          (re-find #"^[aeiou]" b))
+     (str "l'" b)
+
+     (and (= a "il")
+          (string? b)
+          (re-find #"^s[t]" b))
+     (str "lo " b)
+
+     (and (= a "la")
+          (string? b)
+          (re-find #"^[aeiou]" b))
+     (str "l'" b)
+
+     ;; prepositional phrases
+     (and (= a "a")
+          (string? b)
+          (re-find #"^il " b))
+     (str "al " (string/replace b #"^il " ""))
+     
+     (and (string? a) (string? b))
+     (str a " " b)
+
+     (and (string? a) (string? (fs/get-in b '(:italian))))
+     (str a " " (fs/get-in b '(:italian)))
+
+     (and (string? (fs/get-in a '(:italian)))
+          (string? b))
+     (str (fs/get-in a '(:italian)) " " b)
+     
+     true
+     {:a (if (nil? a) :top a)
+      :b (if (nil? b) :top b)})))
+
+(declare get-english-stub)
+
+(defn get-english-stub-1 [word]
+  (log/debug (str "GET-ENGLISH-STUB-1: " word))
+  (log/debug (str ":A :INFL: " (fs/get-in word '(:a :infl))))
+  (log/debug (str ":B :INFL: " (fs/get-in word '(:b :infl))))
+  (cond
+
+
+   (and
+    (fs/get-in word '(:a))
+    (fs/get-in word '(:b)))
+   (get-english-stub
+    (get-english-stub-1 (fs/get-in word '(:a)))
+    (get-english-stub-1 (fs/get-in word '(:b))))
+
+   (and (= :infinitive (fs/get-in word '(:infl)))
+        (string? (fs/get-in word '(:infinitive))))
+   (fs/get-in word '(:infinitive))
+
+   (= true (fs/get-in word '(:hidden)))
+   ""
+
+   (and
+    (= true (fs/get-in word '(:a :hidden)))
+    (= true (fs/get-in word '(:b :hidden))))
+   ""
+
+   (= true (fs/get-in word '(:a :hidden)))
+   (get-english-stub-1 (fs/get-in word '(:b)))
+
+   (= true (fs/get-in word '(:b :hidden)))
+   (get-english-stub-1 (fs/get-in word '(:a)))
+
+   (and (= (fs/get-in word '(:infl)) :futuro)
+        (fs/get-in word '(:infinitive))
+        (not (nil? (fs/get-in word '(:agr :number))))
+        (not (nil? (fs/get-in word '(:agr :person)))))
+   (let [infinitive (fs/get-in word '(:infinitive))
+         stem (string/replace infinitive #"^to " "")]
+     (str "will " stem))
+   
+   ;; irregular past
+   (and (= :past (fs/get-in word '(:infl)))
+        (string? (fs/get-in word '(:irregular :past))))
+   (fs/get-in word '(:irregular :past))
+
+   ;; regular past
+   (and (= :past (fs/get-in word '(:infl)))
+        (string? (fs/get-in word '(:infinitive))))
+   (let [infinitive (fs/get-in word '(:infinitive))
+         stem (string/replace infinitive #"^to " "")
+         stem-minus-one (nth (re-find #"(.*).$" stem) 1)
+         penultimate-stem-char (nth (re-find #"(.).$" stem) 1)
+         last-stem-char (re-find #".$" stem)
+         last-stem-char-is-e (re-find #"e$" stem)]
+     (cond last-stem-char-is-e
+           (str stem-minus-one penultimate-stem-char "en")
+           true
+           (str stem "en")))
+   
+   (and
+    (= :present (fs/get-in word '(:infl)))
+    (string? (fs/get-in word '(:infinitive))))
+   (let [root (fs/get-in word '(:infinitive))
+         ;; TODO: throw exception rather than encoding error "nilrootz" as part
+         ;; of the english string.
+         root (if (nil? root) "(nilrootz)" root)
+         root (if (not (= (type root) java.lang.String))
+                (fs/get-in word '(:infinitive :infinitive))
+                root)
+         person (fs/get-in word '(:agr :person))
+         number (fs/get-in word '(:agr :number))
+         stem (string/replace root #"^to " "")
+         last-stem-char-is-e (re-find #"e$" stem)
+         last-stem-char-is-vowel (re-find #"[aeiou]$" stem)]
+     (log/debug "+else")
+     (log/debug (str "(english):word: " word))
+     (cond
+
+      (and (= person :1st) (= number :sing)
+           (string? (fs/get-in word '(:irregular :present :1sing))))
+      (fs/get-in word '(:irregular :present :1sing))
+      (and (= person :2nd) (= number :sing)
+           (string? (fs/get-in word '(:irregular :present :2sing))))
+      (fs/get-in word '(:irregular :present :2sing))
+      (and (= person :3rd) (= number :sing)
+           (string? (fs/get-in word '(:irregular :present :3sing))))
+      (fs/get-in word '(:irregular :present :3sing))
+
+      (and (= person :1st) (= number :plur)
+           (string? (fs/get-in word '(:irregular :present :1plur))))
+      (fs/get-in word '(:irregular :present :1plur))
+      (and (= person :2nd) (= number :plur)
+           (string? (fs/get-in word '(:irregular :present :2plur))))
+      (fs/get-in word '(:irregular :present :2plur))
+      (and (= person :3rd) (= number :plur)
+           (string? (fs/get-in word '(:irregular :present :3plur))))
+      (fs/get-in word '(:irregular :present :3plur))
+
+      (and (= person :1st) (= number :sing))
+      (str stem "")
+
+      (and (= person :2nd) (= number :sing))
+      (str stem "")
+
+      (and (= person :3rd) (= number :sing)
+           (= last-stem-char-is-vowel "o"))
+      (str stem "es")
+
+      (and (= person :3rd) (= number :sing))
+      (str stem "s")
+
+      (and (= person :1st) (= number :plur))
+      (str stem "")
+
+      (and (= person :2nd) (= number :plur))
+      (str stem "")
+
+      (and (= person :3rd) (= number :plur))
+      (str stem "")
+      :else word))
+   (and
+    (fs/get-in word '(:irregular :plur))
+    (= (fs/get-in word '(:agr :number)) :plur)
+    (= (fs/get-in word '(:cat) :noun)))
+   (fs/get-in word '(:irregular :plur))
+
+   ;; TODO: remove support for deprecated :root - use :irregular instead (as immediately above).
+   (and
+    (fs/get-in word '(:root :irregular :plur))
+    (= (fs/get-in word '(:agr :number)) :plur)
+    (= (fs/get-in word '(:cat) :noun)))
+   (fs/get-in word '(:root :irregular :plur))
+   
+   ;; TODO: remove support for deprecated :root - use :irregular instead.
+   (and
+    (= (fs/get-in word '(:agr :number)) :sing)
+    (= (fs/get-in word '(:cat) :noun))
+    (string? (fs/get-in word '(:root))))
+   (fs/get-in word '(:root))
+
+   (and
+    (= (fs/get-in word '(:agr :number)) :sing)
+    (= (fs/get-in word '(:cat) :noun))
+    (string? (fs/get-in word '(:english))))
+   (str (fs/get-in word '(:english))
+        (if (fs/get-in word '(:note))
+          (fs/get-in word '(:note))))
+        
+
+   ;; TODO: remove support for deprecated :root - use :irregular instead.
+   (and
+    (= (fs/get-in word '(:agr :number)) :sing)
+    (= (fs/get-in word '(:cat) :noun))
+    (string? (fs/get-in word '(:root :english))))
+   (fs/get-in word '(:root :english))
+
+   (and
+    (= (fs/get-in word '(:agr :number)) :sing)
+    (= (fs/get-in word '(:cat) :noun))
+    (string? (fs/get-in word '(:english :english))))
+   (str
+    (fs/get-in word '(:english :english))
+    (if (fs/get-in word '(:note))
+      (fs/get-in word '(:note))))
+
+   ;; TODO: remove support for deprecated :root - use :irregular instead.
+   (and (= (fs/get-in word '(:agr :number)) :plur)
+        (= (fs/get-in word '(:cat)) :noun)
+        (string? (fs/get-in word '(:root))))
+   (str (fs/get-in word '(:root)) "s")
+
+   (and (= (fs/get-in word '(:agr :number)) :plur)
+        (= (fs/get-in word '(:cat)) :noun)
+        (string? (fs/get-in word '(:english))))
+   (str (fs/get-in word '(:english)) "s"
+        (if (fs/get-in word '(:note))
+          (fs/get-in word '(:note))))
+
+   (and (= (fs/get-in word '(:agr :number)) :plur)
+        (= (fs/get-in word '(:cat)) :noun)
+        (string? (fs/get-in word '(:english :english))))
+   (str (fs/get-in word '(:english :english))
+        "s"
+        (if (fs/get-in word '(:english :note))
+          (str (fs/get-in word '(:english :note)))))
+
+
+   (and (= (fs/get-in word '(:cat)) :adjective)
+        (string? (fs/get-in word '(:english))))
+   (fs/get-in word '(:english))
+
+   (and (string? (fs/get-in word '(:english :english)))
+        (= (.size (keys word)) 1))
+   (fs/get-in word '(:english :english))
+   
+   (map? word)
+   (merge {:morphology-is-done false}
+          word)
+   
+   :else
+   word))
+
+(defn get-english-stub [a b]
+  (let [re-a (get-english-stub-1 a)
+        re-b (get-english-stub-1 b)]
+    (log/debug (str "GET-ENGLISH-STUB-1 a: " a " => " re-a))
+    (log/debug (str "GET-ENGLISH-STUB-1 b: " b " => " re-b))
+    (cond
+
+     (and (string? re-a)
+          (map? re-b)
+          (not (nil? (fs/get-in re-b '(:a))))
+          (not (nil? (fs/get-in re-b '(:b)))))
+     {:a re-a
+      :b re-b}
+
+     (and (map? a)
+          (= (fs/get-in a '(:modal)) true)
+          (string? re-b))
+     {:a a
+      :b (string/replace re-b #"^to " "")}
+     
+     (and
+      (= (fs/get-in a '(:cat)) :noun)
+      (= (fs/get-in b '(:cat)) :adjective))
+     ;; If a is a noun, and b is a adj, reverse a and b in string,
+     ;;  so that italian word order is reversed to english word order.
+     {:a b
+      :b a}
+          
+     (and (string? re-a) (string? re-b)
+          (= re-a "a")
+          (re-find #"^[aeiou]" re-b))
+     (str "an " re-b)
+
+     (and (string? re-a) (string? re-b))
+     (str re-a " " re-b)
+
+     (and (string? re-a) (string? (fs/get-in re-b '(:english))))
+     (str re-a " " (fs/get-in re-b '(:english)))
+
+     
+     :else
+     {:a (if (nil? a) :top a)
+      :b (if (nil? b) :top b)})))
+
+(defn get-italian [a b & [ a-category b-category a-infl b-infl]]
   (log/debug (str "<get-italian>"))
   (log/debug (str "get-italian: a : " a))
   (log/debug (str "get-italian: b : " b))
   (log/debug (str "get-italian: cat-a : " a-category))
   (log/debug (str "get-italian: cat-b : " b-category))
-  (let [conjugated-a (conjugate-it a a-category)
-        conjugated-b (if (not (nil? b)) (conjugate-it b b-category) "..")]
+  (log/debug (str "get-italian: infl-a : " a-infl))
+  (log/debug (str "get-italian: infl-b : " b-infl))
+  (let [conjugated-a (conjugate-it a a-category a-infl)
+        conjugated-b (if (not (nil? b)) (conjugate-it b b-category b-infl) "..")]
     (log/debug (str "conjugated-a: " conjugated-a))
     (log/debug (str "conjugated-b: " conjugated-b))
     (if (and
@@ -970,60 +1663,6 @@
         (string/trim (str conjugated-a " " conjugated-b))))
       {:1 conjugated-a
        :2 conjugated-b})))
-
-(defn get-english [a b & [ a-category b-category ]]
-  "Take two constituents and combine them.
-   The two category params may reverse word order
-     (e.g.: get-english 'cat' 'black' 'noun' 'adj' => 'black cat')"
-
-  (log/debug (str "get-english: a : " a))
-  (log/debug (str "get-english: b : " b))
-  (log/debug (str "get-english: cat-a : " a-category))
-  (log/debug (str "get-english: cat-b : " b-category))
-
-  ;; TODO: sometimes ".." is being added necessarily (e.g.
-  ;; (formattare (over s1 pronouns (over vp-present present-aux-verbs (over vp-past "andare"))))))
-  ;; )
-  (let [conjugated-a (conjugate-en a a-category)
-        conjugated-b (if (not (nil? b)) (conjugate-en b b-category) "..")]
-    (log/debug (str "conjugated-a: " conjugated-a))
-    (log/debug (str "conjugated-b: " conjugated-b))
-    (cond
-     ;; "<to be> + past participle => past participle (e.g. "is went" => "went")
-     (and (= a-category :verb)
-          (= b-category :verb)
-          (map? a)
-          (= (fs/get-in a '(:infinitive :infinitive)) "to be"))
-     conjugated-b
-     
-     ;; in english, order of noun + adjective is reversed: (adjective + noun)
-     (and
-      (= (type conjugated-a) java.lang.String)
-      (= (type conjugated-b) java.lang.String)
-      (= a-category :noun)
-      (= b-category :adjective))
-     (string/trim (str conjugated-b " " conjugated-a))
-
-     (and
-      (= (type conjugated-a) java.lang.String)
-      (= (type conjugated-b) java.lang.String))
-     (string/trim (str conjugated-a " " conjugated-b))
-
-     ;; in english, order of noun + adjective is reversed: (adjective + noun)
-     (and
-      (= a-category :noun)
-      (= b-category :adjective))
-     {:1 conjugated-b
-      :2 conjugated-a}
-
-     ;; "can" + "to X" => "can X"
-     (= (fs/get-in conjugated-a '(:infinitive :infinitive)) "to be able")
-     {:1 conjugated-a
-      :2 (string/replace conjugated-b #"^to " "")}
-
-     true
-     {:1 conjugated-a
-      :2 conjugated-b})))
 
 (defn remove-to [english-verb-phrase]
   (let [english (get english-verb-phrase :english)]
@@ -1454,10 +2093,6 @@
       (list #"\bsu le " "sulle ")
       )
      concat)))
-
-(defn stem-per-futuro [infinitive]
-  "_infinitive_ should be a string (italian verb infinitive form)"
-  (string/replace infinitive #"^(.*)([aei])(re)$" (fn [[_ prefix vowel suffix]] (str prefix (if (= vowel "a") "e" vowel) "r"))))
 
 (defn stem-per-passato-prossimo [infinitive]
   "_infinitive_ should be a string (italian verb infinitive form)"

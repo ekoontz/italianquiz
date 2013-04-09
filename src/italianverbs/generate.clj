@@ -1,4 +1,3 @@
-;; RESTARTING OF RING REQUIRED FOR CHANGES TO THIS FILE. (purtroppo)
 (ns italianverbs.generate
   (:use [clojure.stacktrace]
         [italianverbs.lexiconfn])
@@ -31,48 +30,6 @@
 (defn filter-by-match [spec lexicon]
   (mapcat (fn [lexeme] (if (not (fs/fail? lexeme)) (list lexeme)))
           (map (fn [lexeme] (fs/match (fs/copy spec) (fs/copy lexeme))) lex/lexicon)))
-
-(defn random-np [head-spec]
-  (let [matching-lexical-heads (filter-by-match head-spec lex/lexicon)
-        random-lexical-head (if (> (.size matching-lexical-heads) 0)
-                              (nth matching-lexical-heads (rand-int (.size matching-lexical-heads))))]
-;    (println (str "random-np: skel:" np))
-;    (println (str "np head-spec   :" head-spec))
-;    (println (str "random-np: rlh :" random-lexical-head))
-    (let [matching-lexical-comps (filter-by-match {:synsem (fs/get-in random-lexical-head '(:synsem :subcat :1))}
-                                                  lex/lexicon)
-          random-lexical-comp (if (> (.size matching-lexical-comps) 0)
-                                (nth matching-lexical-comps (rand-int (.size matching-lexical-comps))))]
-      (let [unified (unify gram/np {:head random-lexical-head
-                               :comp random-lexical-comp})]
-        (if (not (fs/fail? unified))
-          (merge
-           {:italian (morph/get-italian
-                      (fs/get-in unified '(:1 :italian))
-                      (fs/get-in unified '(:2 :italian)))
-            :english (morph/get-english
-                      (fs/get-in unified '(:1 :english))
-                      (fs/get-in unified '(:2 :english)))}
-           unified)
-          unified)))))
-
-(defn random-subject-np [head-spec]
-  (let [rand (rand-int 2)]
-    (if (= rand 0)
-      (random-np {:synsem
-                  (unify
-                   head-spec
-                   {:subcat {:1 {:cat :det}}})})
-      (let [matching (filter-by-match
-                      {:synsem
-                       (unify
-                        head-spec
-                        {:cat :noun
-                         :agr {:case :nom}
-                         :subcat :nil!})}
-                      lex/lexicon)]
-        (if (> (.size matching) 0)
-          (nth matching (rand-int (.size matching))))))))
 
 (defn printfs [fs & filename]
   "print a feature structure to a file. filename will be something easy to derive from the fs."
@@ -419,15 +376,30 @@
                  child)))
 
    :else ; both parent and child are non-lists.
-   ;; First, check to make sure complement matches head's (:synsem :sem) value; otherwise, fail.
+   ;; First, check to make sure complement matches head's (:synsem :sem) value, if it exists, otherwise, fail.
    (let [
          ;; "add-child-where": find where to attach child (:1 or :2), depending on value of current left child (:1)'s :italian.
          ;; if (:1 :italian) is nil, the parent has no child at :1 yet, so attach new child there at :1.
          ;; Otherwise, a :child exists at :1, so attach new child at :2.
-         add-child-where (if (nil?
-                              (fs/get-in parent '(:1 :italian)))
+         add-child-where (if (and
+                              (not
+                               (string?
+                                (fs/get-in parent '(:1 :italian))))
+                              (not
+                               (string?
+                                (fs/get-in parent '(:1 :italian :infinitive))))
+                              ;; TODO: remove: :root is going away.
+                              (not
+                               (string?
+                                (fs/get-in parent '(:1 :italian :root))))
+                              (not
+                               (string?
+                                (fs/get-in parent '(:1 :italian :italian)))))
                            :1
                            :2)
+
+
+         
          head-is-where (if (= (fs/get-in parent '(:head))
                               (fs/get-in parent '(:1)))
                          :1
@@ -456,19 +428,20 @@
                                   {:synsem {:sem (lex/sem-impl sem)}}
                                   {}))
                              child)})]
-         (if (not (fs/fail? unified))
+;         (log/info (str ":2 " (fs/get-in unified '(:2))))
+;         (log/info (str ":2: :italian: " (fs/get-in unified '(:2 :italian))))
+;         (log/info (str "unified: " unified))
+         (if (fs/fail? unified) (log/warn "Failed attempt to add child to parent: " (fs/get-in parent '(:comment))
+                                          " at: " add-child-where))
+         (if (or true (not (fs/fail? unified))) ;; (or true - even if fail, still show it)
            (merge ;; use merge so that we overwrite the value for :italian.
             unified
-            {:italian (morph/get-italian
+            {:italian (morph/get-italian-stub
                        (fs/get-in unified '(:1 :italian))
-                       (fs/get-in unified '(:2 :italian))
-                       (fs/get-in unified '(:1 :synsem :cat))
-                       (fs/get-in unified '(:2 :synsem :cat)))
-             :english (morph/get-english
+                       (fs/get-in unified '(:2 :italian)))
+             :english (morph/get-english-stub
                        (fs/get-in unified '(:1 :english))
-                       (fs/get-in unified '(:2 :english))
-                       (fs/get-in unified '(:1 :synsem :cat))
-                       (fs/get-in unified '(:2 :synsem :cat)))})
+                       (fs/get-in unified '(:2 :english)))})
            :fail))))))
 
 (defn over [& args]
@@ -522,6 +495,34 @@
     expr)
    ""))
 
+(defn get-root [map path language]
+  "display a string representing the canonical 'root' form of a word"
+  (cond
+   (fs/get-in map (concat path (list language language)))
+   (fs/get-in map (concat path (list language language)))
+
+   (fs/get-in map (concat path '(:irregular) (list language)))
+   (fs/get-in map (concat path '(:irregular) (list language)))
+
+   (fs/get-in map (concat path (list language)))
+   (fs/get-in map (concat path (list language)))
+
+   (fs/get-in map (concat path '(:root) (list language)))
+   (fs/get-in map (concat path '(:root) (list language)))
+
+   (fs/get-in map (concat path '(:root)))
+   (fs/get-in map (concat path '(:root)))
+
+   true (fs/get-in map path)))
+
+(defn capitalize [s]
+  "Capitalize first char and leave the rest of the characters alone (compare with string/capitalize which lower-cases all chars after first."
+  (let [s (.toString s)]
+    (if (< (count s) 2)
+      (.toUpperCase s)
+      (str (.toUpperCase (subs s 0 1))
+           (subs s 1)))))
+
 ;;; e.g.:
 ;;; (formattare (over (over s (over (over np lexicon) (lookup {:synsem {:human true}}))) (over (over vp lexicon) (over (over np lexicon) lexicon))))
 ;; TO move this to html.clj: has to do with presentation.
@@ -538,13 +539,30 @@
             "<tt>fail</tt>"
             :else
             (let [english
-                  (string/capitalize
-                   (get-morph (fs/get-in expr '(:english))
-                              morph/get-english))
-                 italian
-                  (string/capitalize
-                   (get-morph (fs/get-in expr '(:italian))
-                              morph/get-italian))]
+                  (capitalize
+                   (cond
+                    (string? (fs/get-in expr '(:english)))
+                    (fs/get-in expr '(:english))
+                    (string? (fs/get-in expr '(:english :english)))
+                    (fs/get-in expr '(:english :english))
+                    (string? (fs/get-in expr '(:english :infinitive)))
+                    (fs/get-in expr '(:english :infinitive))
+                    true
+                    (fs/get-in expr '(:english :b :a))))
+
+                  italian
+                  (capitalize
+                  (cond
+                    (string? (fs/get-in expr '(:italian)))
+                    (fs/get-in expr '(:italian))
+                    (string? (fs/get-in expr '(:italian :italian)))
+                    (fs/get-in expr '(:italian :italian))
+                    (string? (fs/get-in expr '(:italian :infinitive)))
+                    (fs/get-in expr '(:italian :infinitive))
+                    true
+                    expr)
+                  )
+              ]
               (string/trim
                (str italian " (" english ").")))))
          expressions)))
@@ -566,30 +584,34 @@
   (cond
    (= symbol 'adjectives) lex/adjectives
    (= symbol 'nouns) lex/nouns
-   (= symbol 'infinitive-intransitive-verbs) lex/infinitive-intransitive-verbs
-   (= symbol 'infinitive-transitive-verbs) lex/infinitive-transitive-verbs
-   (= symbol 'present-verbs) lex/present-verbs
-   (= symbol 'present-intransitive-verbs) lex/present-intransitive-verbs
-   (= symbol 'present-modal-verbs) lex/present-modal-verbs
-   (= symbol 'present-transitive-verbs) lex/present-transitive-verbs
-   (= symbol 'future-intransitive-verbs) lex/future-intransitive-verbs
-   (= symbol 'future-transitive-verbs) lex/future-transitive-verbs
-   (= symbol 'present-aux-verbs) lex/present-aux-verbs
-   (= symbol 'past-verbs) lex/past-verbs
-   (= symbol 'past-intransitive-verbs) lex/past-intransitive-verbs
-   (= symbol 'past-transitive-verbs) lex/past-transitive-verbs
-   (= symbol 'future-transitive-verbs) lex/future-transitive-verbs
+   (= symbol 'intransitive-verbs) lex/intransitive-verbs
+   (= symbol 'transitive-verbs) lex/transitive-verbs
+   (= symbol 'verbs-taking-pp) lex/verbs-taking-pp
+   (= symbol 'modal-verbs) lex/modal-verbs
+   (= symbol 'prepositions) lex/prepositions
    (= symbol 'determiners) lex/determiners
    (= symbol 'pronouns) lex/pronouns
+   (= symbol 'proper-nouns) lex/proper-nouns
    (= symbol 'verbs) lex/verbs
+
+
    (= symbol 'nbar) gram/nbar
    (= symbol 'np) gram/np
+   (= symbol 'prep-phrase) gram/prep-phrase
                                         ; doesn't exist yet:
                                         ;   (= symbol 'vp-infinitive-intransitive) gram/vp-infinitive-intransitive
    (= symbol 'vp-infinitive-transitive) gram/vp-infinitive-transitive
+
    (= symbol 'vp-present) gram/vp-present
-   (= symbol 'vp-past) gram/vp-past
+   (= symbol 'vp-past-avere) gram/vp-past-avere
+   (= symbol 'vp-past-essere) gram/vp-past-essere
+   
    (= symbol 'vp-future) gram/vp-future
+   (= symbol 'aux-verbs) (list lex/aux-verbs)
+   (= symbol 'essere-aux) (list lex/essere-aux)
+   (= symbol 'avere-aux) (list lex/avere-aux)
+
+
    true (throw (Exception. (str "(italianverbs.generate/eval-symbol could not evaluate symbol: '" symbol "'")))))
 
 (defn random-head-and-comp-from-phrase [phrase expansion]
@@ -597,7 +619,7 @@
         head (eval-symbol (:head expansion))
         comp (:comp expansion)] ;; leave comp as just a symbol for now: we will evaluate it later in random-comp-from-head.
     {:head head
-     :head-sym head-sym
+     :head-sym head-sym ;; saving this for diagnostics
      :comp comp}))
 
 ;; filter by unifying each candidate against parent's :head value -
@@ -610,59 +632,84 @@
   (let [debug (fs/copy phrase)
         head-and-comp (random-head-and-comp-from-phrase phrase expansion)
         parent phrase]
+    (log/debug (str "phrase: " (:comment phrase)))
+    (log/debug (str "phrase synsem: " (fs/get-in phrase '(:synsem))))
+    (log/debug (str "expansion: " expansion))
     (if (fs/fail? parent)
        (do
          (log/error "head-candidates: parent is fail: " parent)
          (log/error "phrase(debug): " debug)
          (log/error "expansion: " expansion)
          (throw (Exception. (str "head-candidates: parent is fail: " parent)))))
-    (let [head (:head head-and-comp)
-;          debug (println "HC: HEAD: " head)
-;          debug (println "head's type is: " (type head))
-          head-filter (fs/unifyc (fs/get-in parent '(:head))
-                                 (if (not (nil? (fs/get-in parent '(:head :synsem :sem))))
-                                   {:head {:synsem {:sem (lex/sem-impl (fs/get-in parent '(:head :synsem :sem)))}}}
-                                   :top))
-;          debug (println (str "HC:HF: " head-filter))
-          check-filter (if (fs/fail? head-filter)
-                         (do
-                           (log/error (str "head-filter is fail: " head-filter))
-                           (log/error (str " parent's head:" (fs/get-in parent '(:head))))
-                           (log/error (str " arg1" (fs/get-in parent '(:head :synsem :sem))))
-                           (throw (Exception. (str "head-filter is fail: " head-filter)))))
-                         
-          candidates
-          (if (and filter-head (seq? head))
-            ;; If head is a seq, then head is a list of possible candidates
-            ;; (e.g. all nouns) for head of this phrase (e.g. for NP) ..
-            (filter (fn [head-candidate]
-                      (let [head-candidate
-                            (if (not (nil? (fs/get-in head-candidate '(:synsem :sem))))
-                              (fs/unifyc head-candidate
-                                         {:synsem {:sem (lex/sem-impl (fs/get-in head-candidate '(:synsem :sem)))}})
-                              head-candidate)]
-                        (not (fs/fail? (fs/unifyc head-filter head-candidate)))))
-                    head)
-            ;; .. else, the head is not a seq, so we assume it must be a map. Unify it with parent's head constraints.
-            (fs/unifyc head (fs/get-in parent '(:head))))]
-      (if (nil? candidates)
-        (throw (Exception. (str "Candidates is nil."))))
-;;     (println (str "HC:HF(2): " head-filter))
-;;      (println (str "HC:CA: (" (.size candidates) ") " (join (map (fn [x] x) candidates) " ; ")))
-;      (if (seq? candidates) (println (str "HC CANDIDATES: " (join (map (fn [x] (fs/get-in x '(:italian))) candidates) " ; "))))
-;      (if (map? candidates) (println (str "HC CANDIDATES IS A MAP (must recursively generate).")))
-      (if (= (.size candidates) 0)
+    (let [filter-candidates-against-phrase (filter (fn [unified-phrase-and-candidate]
+                                                     (not (fs/fail? unified-phrase-and-candidate)))
+                                                   (map (fn [head-candidate]
+                                                          (fs/unifyc {:head head-candidate}
+                                                                     phrase))
+                                                        (:head head-and-comp)))]
+      (if (and
+           (list? (:head head-and-comp))
+           (= (.size filter-candidates-against-phrase) 0))
         (do
-          (log/error (str "expansion: " expansion))
-          (log/error (str "No head candidates found for filter: " (if (nil? head-filter) "(nil)" head-filter) " with phrase: " (fs/get-in phrase '(:comment))))
-          {:error "no head candidates found for filter."
-
-           :head (cond (seq? head) ;; make it formattable if it's a list. (TODO: move this checking somewhere else.)
-                       (zipmap (range 1 (+ 1 (.size head))) head)
-                       :else head)
-                       
-           :head-filter head-filter})
-      candidates))))
+          (log/error "No heads could match this phrase's head requirements: " (fs/get-in phrase '(:head)))
+          (log/error (str "First head candidate unify: " (fs/unifyc {:head (first (:head head-and-comp))}
+                                                                    phrase)))
+          (throw (Exception. (str "No heads could match this phrase's head requirements: " (fs/get-in phrase '(:head)))))))
+      (let [head (:head head-and-comp)
+            head-filter (fs/unifyc (fs/get-in parent '(:head))
+                                   (if (not (nil? (fs/get-in parent '(:head :synsem :sem))))
+                                     {:head {:synsem {:sem (lex/sem-impl (fs/get-in parent '(:head :synsem :sem)))}}}
+                                     :top))
+            check-filter (if (fs/fail? head-filter)
+                           (do
+                             (log/error (str "head-filter is fail: " head-filter))
+                             (log/error (str " parent's head:" (fs/get-in parent '(:head))))
+                             (log/error (str " arg1" (fs/get-in parent '(:head :synsem :sem))))
+                             (throw (Exception. (str "head-filter is fail: " head-filter)))))
+            
+            candidates
+            (if (and filter-head (seq? head))
+              ;; If head is a seq, then head is a list of possible candidates
+              ;; for head of this phrase (e.g. all nouns for NP) ..
+              (filter (fn [head-candidate]
+                        (let [head-candidate
+                              (if (not (nil? (fs/get-in head-candidate '(:synsem :sem))))
+                                (fs/unifyc head-candidate
+                                           {:synsem {:sem (lex/sem-impl (fs/get-in head-candidate '(:synsem :sem)))}})
+                                head-candidate)]
+                          (or false
+                              (not (fs/fail? (fs/unifyc head-filter head-candidate))))))
+                      head)
+              ;; .. else, the head is not a seq, so we assume it must be a map. Unify it with parent's head constraints.
+              (fs/unifyc head (fs/get-in parent '(:head))))]
+        (if (nil? candidates)
+            (throw (Exception. (str "Candidates is nil."))))
+        (if (= (.size candidates) 0)
+          (do
+            (log/error (str "expansion: " expansion))
+            (let [head-candidate (nth head 0)]
+              (if (not (nil? (fs/get-in head-candidate '(:synsem :sem))))
+                (let [unify-result
+                    (fs/unifyc head-candidate
+                               {:synsem {:sem (lex/sem-impl (fs/get-in head-candidate '(:synsem :sem)))}})]
+                  )))
+            
+            (if (seq? head)
+              (do
+                (log/error (str "number of candidates:" (.size head)))
+                (if (> (.size head) 0)
+                  (do
+                    :fail
+                    
+                    ))))
+            
+            (log/error (str "head-filter: " (fs/get-in head-filter '(:synsem :sem))))
+            :fail)
+          (do
+            (log/debug (str "successfully matched expansion: " expansion))
+            (log/debug (str "expansion of " (fs/get-in phrase '(:comment))  " -> "   expansion " ratio:" (/ (.size candidates) (.size head))))
+            (log/debug (str "successfully matched head-filter: " (fs/get-in head-filter '(:synsem :sem))))          
+            candidates))))))
 
 (declare generate)
 
@@ -813,7 +860,7 @@ constraints on the generation of the complement."
                     (do
                       (log/error (str "No candidates found for comp-expansion: " comp-expansion))
                       (throw (Exception. (str "No candidates found for comp-expansion: "
-                                              comp-expansion)))))]
+                                              comp-expansion ". Tried " (.size candidates) " candidates.")))))]
     ;; TODO: don't build this huge diagnostic map unless there's a reason to -
     ;; i.e. development/debugging/exceptions: commenting out the following for now.
     ;;
@@ -848,21 +895,28 @@ constraints on the generation of the complement."
      :expansion comp-expansion}))
 
 (defn generate-with-parent [random-head-and-comp phrase expansion]
-;  (println (str "GWP: RHAC: " random-head-and-comp))
-;  (println (str "GWP: PHRA: " phrase))
   (let [check
         (if (fs/fail? (:head random-head-and-comp))
           (do
             (log/error (str ":head part is :fail of: " random-head-and-comp))
             (throw (Exception. (str "generate-with-parent: head part is fail of: " random-head-and-comp)))))
-        random-head (random-head random-head-and-comp phrase expansion)]
+          random-head (random-head random-head-and-comp phrase expansion)]
     (let [retval
           (unify
            (fs/copy phrase)
            {:head (fs/copy random-head)})]
-      (log/debug (str "GWP: fail?" (fs/fail? retval)))
       (if (fs/fail? retval)
-        (throw (Exception. (str "generate-with-parent failed with random-head: " random-head))))
+        (do
+          (log/error "generate-with-parent failed: " (fs/get-in phrase '(:comment)) "->" expansion)
+          (log/error "*1*")
+          (log/error (str "phrase :2: " (fs/get-in phrase '(:head))))
+          (log/error "*2*")
+          (log/error (str "random-head:2: " random-head))
+          (log/error "*3*")
+          (log/error (str "english of parent: " (fs/get-in phrase '(:head :english))))
+          (log/error (str "english of random-head: " (fs/get-in random-head '(:english))))
+;          (log/error (str "RETVAL :2: " (fs/get-in retval '(:head))))
+          (throw (Exception. (str "generate-with-parent failed with random-head: " random-head)))))
       (log/debug (str "GWP: " retval))
       retval)))
 
@@ -908,12 +962,12 @@ constraints on the generation of the complement."
       (merge
        unified-parent
        {:extend chosen-extension}
-       {:italian (morph/get-italian
+       {:italian (morph/get-italian-stub
                   (fs/get-in unified-parent '(:1 :italian))
                   ""
                   (fs/get-in unified-parent '(:1 :synsem :cat))
                   nil)
-        :english (morph/get-english
+        :english (morph/get-english-stub
                   (fs/get-in unified-parent '(:1 :english))
                   ""
                   (fs/get-in unified-parent '(:1 :synsem :cat))
@@ -950,17 +1004,17 @@ constraints on the generation of the complement."
                       (merge
                        unified-with-comp
                        {:extend chosen-extension}
-                       {:italian (morph/get-italian
+                       {:italian (morph/get-italian-stub
                                   (fs/get-in unified-with-comp '(:1 :italian))
-                                  (fs/get-in unified-with-comp '(:2 :italian))
-                                  (fs/get-in unified-with-comp '(:1 :synsem :cat))
-                                  (fs/get-in unified-with-comp '(:2 :synsem :cat)))
-                        
-                        :english (morph/get-english
+                                  (fs/get-in unified-with-comp '(:2 :italian)))
+;;; :eng and :it are for debugging:
+;;;                        :eng {:a (fs/get-in unified-with-comp '(:1 :english))
+;;;                              :b (fs/get-in unified-with-comp '(:2 :english))}
+;;;                        :ita {:a (fs/get-in unified-with-comp '(:1 :italian))
+;;;                              :b (fs/get-in unified-with-comp '(:2 :italian))}
+                        :english (morph/get-english-stub
                                   (fs/get-in unified-with-comp '(:1 :english))
-                                  (fs/get-in unified-with-comp '(:2 :english))
-                                  (fs/get-in unified-with-comp '(:1 :synsem :cat))
-                                  (fs/get-in unified-with-comp '(:2 :synsem :cat)))})]
+                                  (fs/get-in unified-with-comp '(:2 :english)))})]
                   (if (fs/fail? result)
                     (do
 ;              (log/error (str "random-comp: " random-comp))
