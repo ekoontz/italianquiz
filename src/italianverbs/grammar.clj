@@ -154,14 +154,14 @@
                     :comp comp
                     :1 comp
                     :2 head
-                    :extend {:a {:comp 'np
-                                 :head 'vp}
-                             :b {:comp 'lexicon
-                                 :head 'vp}
-                             :c {:comp 'np
+                    :extend {;:a {:comp 'np-subj  ;; commented out for rathole testing.
+                             ;    :head 'vp}
+                             ;:b {:comp 'lexicon ;; commented out for rathole testing.
+                             ;    :head 'vp}
+                             :c {:comp 'np-subj
                                  :head 'lexicon}
-                             :d {:comp 'lexicon
-                                 :head 'lexicon}
+                             ;:d {:comp 'lexicon ;; commented out for rathole testing
+                             ;    :head 'lexicon}
                              }})]
 
     ;; present
@@ -173,9 +173,9 @@
                   {:comment "sentence[present]"
                    :comment-plaintext "s[present] -> .."
                    :synsem {:infl :present}})
-       {:extend {:e {:comp 'lexicon
-                     :head 'vp-present}
-                 :f {:comp 'np
+       {:extend {;:e {:comp 'lexicon ;; commented out for rathole testing.
+                 ;    :head 'vp-present}
+                 :f {:comp 'np-subj
                      :head 'vp-present}
                  }}))
     (def s-future
@@ -271,7 +271,35 @@
                      }
                     ))))
 
-    (list np)))
+    (def np-subj
+      (fs/unifyc head-principle subcat-1-principle ;; NP -> Comp Head
+                 (let [agr (ref :top)]
+                   (fs/unifyc
+                    (let [def (ref :top)]
+                      {:head {:synsem {:def def}}
+                       :synsem {:def def}
+                       :comp {:synsem {:def def}}})
+                    {:head {:synsem {:cat :noun
+                                     :agr agr}}
+                     :comp {:synsem {:cat :det}}
+                     :synsem {:agr agr}}
+                    {:comment "npSubj &#x2192; det (noun or nbar)"
+                     :comment-plaintext "npSubj -> det (noun or nbar)"
+                     :synsem {:agr agr}
+                     :head head
+                     :comp comp
+                     :1 comp
+                     :2 head
+                     :extend {
+;                              :a {:comp 'lexicon
+;                                  :head 'lexicon}
+                              :b {:comp 'lexicon
+                                  :head 'nbar}
+                              }
+                     }
+                    ))))
+
+    (list np np-subj)))
 
 (def prep-phrase
   (let [head (ref {:synsem {:cat :prep}})

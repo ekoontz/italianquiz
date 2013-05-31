@@ -886,7 +886,8 @@
 
 (def avere-aux
   (let [v-past-pred (ref :top)
-        subject (ref :top)]
+        subject (ref :top)
+        obj (ref :top)]
     (unify
      aux-type
      subjective
@@ -896,9 +897,11 @@
                             :essere false
                             :subcat {:1 subject
                                      :2 '()}
-                            :sem {:pred v-past-pred}
+                            :sem {:pred v-past-pred
+                                  :obj obj}
                             :infl :past}}
-               :sem {:pred v-past-pred}
+               :sem {:pred v-past-pred
+                     :obj obj}
                }})))
 
 (def bevere

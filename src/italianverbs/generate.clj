@@ -494,7 +494,7 @@
     ""))
 
 (defn hc-expands [parent expansion depth]
-  (log/info (str (depth-str depth) "hc-expands: " (unify/get-in parent '(:comment-plaintext)) " with expansion: " expansion))
+  (log/debug (str (depth-str depth) "hc-expands: " (unify/get-in parent '(:comment-plaintext)) " with expansion: " expansion))
   (if expansion
     (let [head (eval-symbol (:head expansion))
           comp (eval-symbol (:comp expansion))]
@@ -524,12 +524,13 @@
 (defn comps-of-expand [expand]
   (:comp expand))
 
-(defn generate [parent & [ hc-exps depth ]]
+(defn generate [parent & [ hc-exps depth shuffled-expansions]]
   (let [depth (if depth depth 0)
         hc-expands-orig hc-exps
-        hc-exps (if hc-exps hc-exps (hc-expand-all parent (shuffle (vals (:extend parent))) depth))
+        shuffled-expansions (if shuffled-expansions shuffled-expansions (shuffle (vals (:extend parent))))
+        hc-exps (if hc-exps hc-exps (hc-expand-all parent shuffled-expansions depth))
         parent-finished (phrase-is-finished? parent)]
-    (log/info (str (depth-str depth) "generate: " (unify/get-in parent '(:comment-plaintext)) " with hc-exps length: " (.size hc-exps) " ; first hc-exps: " (unify/get-in (first hc-expands-orig) '(:comment-plaintext))))
+    (log/info (str (depth-str depth) "generate: " (unify/get-in parent '(:comment-plaintext)) " with hc-exps length: " (.size hc-exps) "; first exp: " (first shuffled-expansions)))
     (log/debug (str "cond1: " (= :not-exists (unify/get-in parent '(:comment-plaintext) :not-exists))))
     (log/debug (str "cond2: " (empty? hc-exps)))
     (log/debug (str "cond3: " (not parent-finished)))
@@ -544,7 +545,7 @@
                              (:head expand)
                              (comps-of-expand expand)
                              depth)
-             (generate parent (rest hc-exps) depth)))
+             (generate parent (rest hc-exps) depth (rest shuffled-expansions))))
           :else
           nil)))
 
@@ -588,10 +589,13 @@
                       (if (not (unify/fail? comp-specification))
                         (do
                           (log/debug (str "generating comp now since head generation is done."))
-                  (log/debug (str "comp sem-impl: " (lex/sem-impl (unify (unify/get-in parent '(:comp :synsem :sem))
-                                                                         (unify/get-in comp '(:synsem :sem))))))
-                  (log/info (str (depth-str depth) "generating comp: " (unify/get-in comp '(:comment-plaintext)) " given head: " (fo head)))
-                  (generate comp-specification nil (+ 1 depth))))))]
+                          (log/debug (str "comp sem-impl: " (lex/sem-impl (unify (unify/get-in parent '(:comp :synsem :sem))
+                                                                                 (unify/get-in comp '(:synsem :sem))))))
+                          (log/debug (str (depth-str depth) "generating comp: " (unify/get-in comp '(:comment-plaintext)) " given head: " (fo head)))
+                          (let [comp-gen
+                                (generate comp-specification nil (+ 1 depth))]
+                            (log/debug (str "DID COMP GEN."))
+                            comp-gen)))))]
               (cond
                (unify/fail? comp-specification)
                (do
@@ -618,7 +622,7 @@
                  (log/debug "5. unify")
                  (if (unify/fail? result)
                    (do
-                     (log/debug (str "failed unification: " (fo head) " and " (fo comp-specification)))
+                     (log/info (str "failed unification: " (fo head) " (" (unify/get-in head '(:comment-plaintext)) ") and " (fo comp-specification)))
                      (head-by-comps parent head (rest comps) depth))
                    (do
 
