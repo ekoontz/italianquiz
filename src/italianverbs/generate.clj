@@ -551,7 +551,7 @@
         shuffled-expansions (if shuffled-expansions shuffled-expansions (shuffle (vals (:extend parent))))
         hc-exps (if hc-exps hc-exps (hc-expand-all parent shuffled-expansions depth))
         parent-finished (phrase-is-finished? parent)]
-    (log/debug (str (depth-str depth) "generate: " (unify/get-in parent '(:comment-plaintext)) " with first exp: " (first shuffled-expansions)))
+    (log/info (str (depth-str depth) "generate: " (unify/get-in parent '(:comment-plaintext)) " with first exp: " (first shuffled-expansions)))
     (log/debug (str "cond1: " (= :not-exists (unify/get-in parent '(:comment-plaintext) :not-exists))))
     (log/debug (str "cond2: " (empty? hc-exps)))
     (log/debug (str "cond3: " (not parent-finished)))
