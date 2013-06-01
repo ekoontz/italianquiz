@@ -157,11 +157,11 @@
                     :comp comp
                     :1 comp
                     :2 head
-                    :extend {:a {:comp 'np-subj  ;; commented out for rathole testing.
+                    :extend {:a {:comp 'np
                                  :head 'vp}
-                             :b {:comp 'lexicon ;; commented out for rathole testing.
+                             :b {:comp 'lexicon
                                  :head 'vp}
-                             :c {:comp 'np-subj
+                             :c {:comp 'np
                                  :head 'lexicon}
                              :d {:comp 'lexicon ;; commented out for rathole testing
                                  :head 'lexicon}
@@ -176,9 +176,9 @@
                   {:comment "sentence[present]"
                    :comment-plaintext "s[present] -> .."
                    :synsem {:infl :present}})
-       {:extend {;:e {:comp 'lexicon ;; commented out for rathole testing.
-                 ;    :head 'vp-present}
-                 :f {:comp 'np-subj
+       {:extend {:e {:comp 'lexicon ;; commented out for rathole testing.
+                     :head 'vp-present}
+                 :f {:comp 'np
                      :head 'vp-present}
                  }}))
     (def s-future
