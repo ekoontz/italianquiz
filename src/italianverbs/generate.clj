@@ -476,6 +476,7 @@
    (= symbol 'vp) gram/vp
    (= symbol 'vp-present) gram/vp-present
    (= symbol 'vp-past) gram/vp-past
+   (= symbol 'vp-pron) gram/vp-pron
 
    true (throw (Exception. (str "(italianverbs.generate/eval-symbol could not evaluate symbol: '" symbol "'")))))
 

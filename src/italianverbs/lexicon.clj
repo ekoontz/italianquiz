@@ -235,6 +235,7 @@
         proper-noun
         (unify
          {:synsem {:cat :noun
+                   :pronoun false
                    :agr {:person :3rd}
                    :subcat '()}})
 
@@ -1245,24 +1246,25 @@
 
 (def intransitive-verbs
   (list
-   andare-intrans
-   dormire
-   pensare
-   ridere
-   sognare
-   vivere))
+;   andare-intrans
+;   dormire
+;   pensare
+;   ridere
+;   sognare
+;   vivere
+   ))
 
 (def transitive-verbs
   (list
-   avere
-   bevere
-   comprare
-   essere-copula
-   fare-make
-   leggere
-   mangiare
-   parlare
-   scrivere
+;   avere
+;   bevere
+;   comprare
+;   essere-copula
+;   fare-make
+;   leggere
+;   mangiare
+;   parlare
+;   scrivere
 ;   telefonare
    vedere
    ))
@@ -1279,12 +1281,13 @@
 
 (def verbs
   (concat
-   (list essere-aux
-         avere-aux)
-   intransitive-verbs
+;   (list essere-aux
+;         avere-aux)
+;   intransitive-verbs
    transitive-verbs
-   verbs-taking-pp
-   modal-verbs))
+;   verbs-taking-pp
+                                        ;   modal-verbs
+   ))
 
 (def nominative-pronouns
   (list {:synsem {:cat :noun

@@ -11,10 +11,18 @@
     (get-head (get sign :head))
     sign))
 
-(defn resolve [arg]
+(defn resolve [arg map path]
   "if arg is not a ref, return arg. if is a ref, return (resolve @arg)"
   (if (= (type arg) clojure.lang.Ref)
-    (resolve @arg)
+    (do
+      (if (and (= (type @arg) clojure.lang.Ref)
+               (= (type @@arg) clojure.lang.Ref)
+               (= arg @@arg))
+;        (throw (Exception. (str "triple circular ref: path=" path "; map=" map "; arg=" arg "; @arg=" @arg "; @@arg=" @@arg))))
+                                        ;(throw (Exception. (str "triple circular ref:" arg "; @arg=" @arg "; @@arg=" @@arg))))
+                                        ;        (throw (Exception. (str "triple circular ref:" arg "; @arg=" @arg "; @@arg=" @@arg "; path=" path))))
+        (throw (Exception. (str "triple circular ref:" arg "; @arg=" @arg "; @@arg=" @@arg "; path=" path ";type of map=" (type map) " keys of map=" (keys map)))))
+      (resolve @arg map path))
     arg))
 
 ;; TODO: need tests: some tests use (get-in), but need more dedicated tests for it alone.
@@ -23,8 +31,9 @@
   (let [result
         (if (first path)
           (let [result (get map (first path) not-found)]
-            (if (= result not-found) not-found
-                (get-in (resolve result) (rest path) not-found)))
+            (if (= result not-found)
+              not-found
+              (get-in (resolve result map path) (rest path) not-found)))
           map)]
     (if (= (type result) clojure.lang.Ref)
       @result

@@ -129,13 +129,19 @@
                              :comp 'lexicon}
                          }}))
 
+  (def vp-present
+    ;; add to vp some additional expansions for vp-present:
+    (fs/merge vp
+              {:head {:synsem {:infl :present}}}
+              {:comment "vp[present] &#x2192; head comp"
+               :comment-plaintext "vp[present] -> head comp"
+               :extend {:e {:head 'lexicon
+                            :comp 'vp-past}
+               }}))
+
   (def vp-pron
-    (let [comp-italian (ref :top)
-          head-italian (ref :top)
-          comp-english (ref :top)
-          head-english (ref :top)
-          infl (ref :top)
-          cat (ref :top)]
+    (let [infl (ref :present)
+          cat (ref :verb)]
       (fs/merge
        (unify
         head-principle
@@ -144,34 +150,16 @@
                        :cat cat}}
          :english {:a {:infl infl
                        :cat cat}}}
-        {:head head
-         :comp comp
-         :1 comp
-         :2 head}
-        {:comp {:english comp-english
-                :italian comp-italian}
-         :head {:english head-english
-                :italian head-italian}
-         :italian {:a comp-italian
-                   :b head-italian}
-         :english {:a head-english
-                   :b comp-english}})
-              {:head {:synsem {:infl :present}}}
-       {:comment-plaintext "vp[pron]"
-        :comment "vp[pron]"
-        :extend {:e {:head :lexicon
-                     :comp :lexicon}
-                 ;; TODO add vp -> lexicon vp also.
-                 }})))
-
-  (def vp-present
-    ;; add to vp some additional expansions for vp-present:
-    (fs/merge vp
-              {:comment "vp[present] &#x2192; head comp"
-               :comment-plaintext "vp[present] -> head comp"
-               :extend {:e {:head 'lexicon
-                            :comp 'vp-past}
-               }}))
+        italian-head-final
+        english-head-first
+        {:comment-plaintext "vp[pron]"
+         :comment "vp[pron]"
+         :comp {:synsem {:pronoun true
+                         :subcat '()}}
+         :head {:synsem {:cat cat
+                         :infl infl}}
+         :extend {:a {:head 'lexicon
+                      :comp 'lexicon}}}))))
 
   (def vp-past
     (fs/merge vp
@@ -227,14 +215,14 @@
                    {:comp {:synsem {:subcat '()
                                     :cat :noun}}
                     :head {:synsem {:cat :verb}}}
-                   {:extend {:a {:comp 'np
-                                 :head 'vp}
-                             :b {:comp 'lexicon
-                                 :head 'vp}
-                             :c {:comp 'np
-                                 :head 'lexicon}
-                             :d {:comp 'lexicon
-                                 :head 'lexicon}
+                   {:extend {;:a {:comp 'np
+                             ;    :head 'vp}
+                             ;:b {:comp 'lexicon
+                             ;    :head 'vp}
+                             ;:c {:comp 'np
+                             ;    :head 'lexicon}
+                             ;:d {:comp 'lexicon
+                             ;    :head 'lexicon}
                              }})]
 
     ;; present
@@ -246,10 +234,14 @@
                   {:comment "sentence[present]"
                    :comment-plaintext "s[present] -> .."
                    :synsem {:infl :present}})
-       {:extend {:e {:comp 'lexicon
-                     :head 'vp-present}
-                 :f {:comp 'np
-                     :head 'vp-present}
+       {:extend {;:e {:comp 'lexicon
+                 ;    :head 'vp-present}
+                 ;:f {:comp 'np
+                 ;    :head 'vp-present}
+                 :g {:comp 'lexicon
+                     :head 'vp-pron}
+                 ;:h {:comp 'np
+                 ;    :head 'vp-pron}
                  }}))
     (def s-future
       (fs/unifyc rule-base
