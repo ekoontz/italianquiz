@@ -18,11 +18,14 @@
       (if (and (= (type @arg) clojure.lang.Ref)
                (= (type @@arg) clojure.lang.Ref)
                (= arg @@arg))
-;        (throw (Exception. (str "triple circular ref: path=" path "; map=" map "; arg=" arg "; @arg=" @arg "; @@arg=" @@arg))))
+        (do
+                                        ;        (throw (Exception. (str "triple circular ref: path=" path "; map=" map "; arg=" arg "; @arg=" @arg "; @@arg=" @@arg))))
                                         ;(throw (Exception. (str "triple circular ref:" arg "; @arg=" @arg "; @@arg=" @@arg))))
                                         ;        (throw (Exception. (str "triple circular ref:" arg "; @arg=" @arg "; @@arg=" @@arg "; path=" path))))
-        (throw (Exception. (str "triple circular ref:" arg "; @arg=" @arg "; @@arg=" @@arg "; path=" path ";type of map=" (type map) " keys of map=" (keys map)))))
-      (resolve @arg map path))
+;        (throw (Exception. (str "triple circular ref:" arg "; @arg=" @arg "; @@arg=" @@arg "; path=" path ";type of map=" (type map) " keys of map=" (keys map)))))
+          (log/warn (str "triple circular ref:" arg "; @arg=" @arg "; @@arg=" @@arg "; path=" path ";type of map=" (type map) " keys of map=" (keys map)))
+        :foobar)
+        (resolve @arg map path)))
     arg))
 
 ;; TODO: need tests: some tests use (get-in), but need more dedicated tests for it alone.
