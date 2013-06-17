@@ -215,8 +215,8 @@
                    {:comp {:synsem {:subcat '()
                                     :cat :noun}}
                     :head {:synsem {:cat :verb}}}
-                   {:extend {;:a {:comp 'np
-                             ;    :head 'vp}
+                   {:extend {:a {:comp 'np
+                                 :head 'vp}
                              ;:b {:comp 'lexicon
                              ;    :head 'vp}
                              ;:c {:comp 'np
