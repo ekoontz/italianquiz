@@ -2,7 +2,8 @@
   (:use [italianverbs.lexiconfn]
         [clojure.test])
   (:require
-   [italianverbs.fs :as fs]
+   [clojure.tools.logging :as log]
+   [italianverbs.unify :as fs]
    [clojure.set :as set]))
 
 ;; WARNING: clear blows away entire lexicon in backing store (mongodb).
@@ -22,6 +23,7 @@
                         true)
                    {:artifact false
                     :mass false
+                    :furniture false
                     :physical-object true
                     :part-of-human-body false
                     :drinkable false
@@ -32,13 +34,23 @@
                     {:animate false
                      :physical-object true}{})
 
+         buyable (if (= (fs/get-in input '(:buyable))
+                        true)
+                   {:human false
+                    :part-of-human-body false})
+
+         city (if (= (fs/get-in input '(:city))
+                     true)
+                {:place true
+                 :legible false})
+
          clothing (if (= (fs/get-in input '(:clothing))
                          true)
                     {:animate false
                      :place false
                      :physical-object true}{})
 
-         
+
          consumable-false (if (= (fs/get-in input '(:consumable)) false)
                             {:drinkable false
                              :edible false} {})
@@ -46,8 +58,9 @@
          drinkable
          ;; drinkables are always mass nouns.
          (if (= (fs/get-in input '(:drinkable)) true)
-           {:mass true}{})
-         
+           {:mass true
+            :legible false}{})
+
          drinkable-xor-edible-1
          ;; things are either drinkable or edible, but not both (except for weird foods
          ;; like pudding or soup). (part 1: edible)
@@ -69,10 +82,24 @@
                    :physical-object true
                    :consumable true
                    :human false
+                   :pet false
                    :place false
                    :speakable false
-                   :legible false}{})
-         
+                   :legible false
+                   :furniture false
+                   :part-of-human-body false}{})
+
+         furniture (if (= (fs/get-in input '(:furniture))
+                          true)
+                     {:artifact true
+                      :animate false
+                      :buyable true
+                      :drinkable false
+                      :legible false
+                      :edible false
+                      :place false
+                      :speakable false})
+
          human (if (= (fs/get-in input '(:human))
                       true)
                  {:buyable false
@@ -81,6 +108,7 @@
                   :animate true
                   :part-of-human-body false
                   :drinkable false
+                  :speakable false
                   :place false}{})
          inanimate (if (= (fs/get-in input '(:animate))
                            false)
@@ -93,6 +121,7 @@
            {:artifact true
             :drinkable false
             :human false
+            :furniture false
             :part-of-human-body false
             :edible false})
 
@@ -102,7 +131,7 @@
                          (= (fs/get-in input '(:pred)) :fiore)
                          (= (fs/get-in input '(:pred)) :scala))
                    {:place false})
-         
+
          ;; artifact(x,false) => legible(x,false)
          not-legible-if-not-artifact
          (if (= (fs/get-in input '(:artifact)) false)
@@ -136,28 +165,33 @@
                   :legible false}{})
 
          ]
-     (let [merged (fs/merge animate artifact clothing consumable-false drinkable
-                            drinkable-xor-edible-1 drinkable-xor-edible-2
-                            edible human inanimate
-                            legible non-places not-legible-if-not-artifact part-of-human-body pets place
-                            input
-                            )]
+     (let [merged
+           (if (= input :fail) :fail
+               (fs/merge input animate artifact buyable city clothing consumable-false drinkable
+                         drinkable-xor-edible-1 drinkable-xor-edible-2
+                         edible furniture human inanimate
+                         legible non-places not-legible-if-not-artifact part-of-human-body pets place
+                         ))]
+       (log/debug (str "sem-impl so far: " merged))
        (if (not (= merged input))
          (sem-impl merged) ;; we've added some new information: more implications possible from that.
          merged))))) ;; no more implications: return
 
 (def modal
   "modal verbs take a VP[inf] as their 2nd arg. the subject of the modal verb is the same as the subject of the VP[inf]"
-  (unify
-   (let [subj-sem (ref :top)]
-     {:synsem {:sem {:subj subj-sem}
-               :subcat {:2 {:sem {:subj subj-sem}}}}})
-   (let [vp-inf-sem (ref :top)]
-     {:synsem {:sem {:obj vp-inf-sem}
-               :subcat {:2 {:sem vp-inf-sem
+  (let [subj-sem (ref :top)
+        vp-inf-sem (ref {:subj subj-sem})
+        subj-subcat (ref {:cat :noun
+                          :sem subj-sem})]
+     {:synsem {:sem {:subj subj-sem
+                     :obj vp-inf-sem}
+               :subcat {:1 subj-subcat
+                        :2 {:sem vp-inf-sem
                             :cat :verb
-                            :infl :infinitive}}}})
-   {:english {:modal true}}))
+                            :infl :infinitive
+                            :subcat {:1 subj-subcat
+                                     :2 '()}}}}
+      :english {:modal true}}))
 
 (def nouns
   (let [gender (ref :top)
@@ -185,7 +219,6 @@
                     :subcat {:1 {:number number
                                  :person person
                                  :gender gender}}
-                    
                     :agr agr}
            :italian {:cat cat
                      :agr agr}
@@ -198,17 +231,8 @@
                    :agr {:person :3rd}
                    :subcat {:1 {:cat :det}}}})
 
-
-        proper-noun
-        (unify
-         {:synsem {:cat :noun
-                   :agr {:person :3rd}
-                   :subcat '()}})
-
-        
         masculine {:synsem {:agr {:gender :masc}}}
         feminine {:synsem {:agr {:gender :fem}}}
-
 
         mass-noun
         (let [mass (ref true)]
@@ -223,7 +247,7 @@
                                  :mass mass}}
                     :sem {:mass mass}}})
 
-        drinkable-new
+        drinkable
         (unify mass-noun
                common-noun
                {:synsem {:sem {:number :sing
@@ -234,7 +258,7 @@
 
 
      (unify agreement
-            drinkable-new
+            drinkable
             feminine
             {:italian {:italian "acqua"}
              :english {:english "water"}
@@ -252,7 +276,7 @@
              :english {:english "friend"}})
 
      (unify agreement
-            drinkable-new
+            drinkable
             feminine
             {:italian {:italian "birra"}
              :english {:english "beer"}
@@ -269,7 +293,7 @@
             ;; current morphology.clj would otherwise return
             ;; "braccii".
             ;; TODO: might not be an exception so much
-            ;; as a otho-pholological rule "io" -plur-> "i"
+            ;; as a ortho-pholological rule "io" -plur-> "i"
             :italian {:italian "braccio"
                       :irregular {:plur "bracci"}}
             :english {:english "arm"}})
@@ -295,6 +319,7 @@
            {:synsem {:sem {:pred :mare
                            :buyable false ;; a seaside's too big to own.
                            :artifact false
+                           :city false
                            :place true}}
             :italian {:italian "mare"}
             :english {:english "seaside"}}
@@ -302,16 +327,21 @@
                                   :number :sing
                                   :def :def}}}})
 
+    (unify agreement
+           common-noun
+           countable-noun
+           feminine
+           {:synsem {:sem {:pred :città
+                           :buyable false  ;; can't buy a city (unless you're a billionaire like Mike Bloomberg)
+                           :artifact true ;;
+                           :city true}}
+            :italian {:italian "città"}
+            :english {:english "city"}}
+           {:synsem {:subcat {:1 {:cat :det
+                                  :def :def}}}})
 
-    (unify proper-noun
-           {:synsem {:sem {:pred :roma
-                           :buyable false ;; can't buy a city (unless you're a billionaire like Mike Bloomberg)
-                           :artifact true ;; but wasn't built in a day.
-                           :place true}}
-            :italian {:italian "Roma"}
-            :english {:english "Rome"}})
 
-    
+
      ;; inherently singular.
     (unify agreement
            common-noun
@@ -338,7 +368,7 @@
                                   :number :sing
                                   :def :def}}}}
            )
-    
+
     (unify agreement
            common-noun
            countable-noun
@@ -347,7 +377,7 @@
                            :artifact true
                            :speakable false
                            ;; (although an exception would be tshirts with writing on them):
-                           :legible false 
+                           :legible false
                            :consumable false
                            :clothing true}}}
            {:italian {:italian "camicia"}
@@ -380,7 +410,6 @@
             :italian {:italian "donna"}
             :english {:irregular {:plur "women"}
                       :english "woman"}})
-
     (unify agreement
            common-noun
            countable-noun
@@ -402,7 +431,7 @@
            {:synsem {:sem (unify animal {:pred :gatto :pet true})}
             :italian {:italian "gatto"}
             :english {:english "cat"}})
-  
+
     (unify agreement
            common-noun
            countable-noun
@@ -421,8 +450,7 @@
     (unify agreement
            common-noun
            feminine
-           {
-            :synsem {:sem {:pred :notizie
+           {:synsem {:sem {:pred :notizie
                            :buyable false
                            :legible true}}
             ;; "notizia" would probably also work, since it
@@ -432,12 +460,13 @@
            {:synsem {:subcat {:1 {:cat :det
                                   :number :plur
                                   :def :def}}}})
-  
+
     (unify agreement
            common-noun
            countable-noun
            feminine
            {:synsem {:sem {:legible true
+                           :buyable false
                            :speakable true
                            :pred :parola}}}
            {:italian {:italian "parola"}
@@ -451,7 +480,7 @@
            {:synsem {:sem {:pred :professoressa}}}
            {:italian {:italian "professoressa"}
             :english {:english "professor"
-                      :note " (&#x2640;) "}}) ;; unicode female symbol
+                      :note " (&#x2640;)"}}) ;; unicode female symbol
 
     (unify agreement
            common-noun
@@ -461,9 +490,8 @@
            {:synsem {:sem {:pred :professore}}}
            {:italian {:italian "professore"}
             :english {:english "professor"
-                      :note " (&#x2642;) "}}) ;; unicode male symbol
-  
-     
+                      :note " (&#x2642;)"}}) ;; unicode male symbol
+
      ;; "pizza" can be either mass or countable.
     (unify agreement
            common-noun
@@ -473,7 +501,7 @@
                            :artifact true}}
             :italian {:italian "pizza"}
             :english {:english "pizza"}})
-  
+
      (unify agreement
             common-noun
             countable-noun
@@ -482,7 +510,6 @@
             {:synsem {:sem {:pred :ragazzo}}
              :italian {:italian "ragazzo"}
              :english {:english "guy"}})
-    
 
      (unify agreement
             common-noun
@@ -513,9 +540,18 @@
                             :consumable true
                             :legible true
                             :speakable true
-                            :pred :scala}}
+                            :pred :stravaganza}}
              :italian {:italian "stravaganza"}
              :english {:english "extravagant thing"}})
+
+     (unify agreement
+            common-noun
+            feminine
+            countable-noun
+            {:synsem {:sem {:furniture true
+                            :pred :sedia}}
+             :italian {:italian "sedia"}
+             :english {:english "chair"}})
 
      (unify agreement
             common-noun
@@ -528,6 +564,15 @@
 
      (unify agreement
             common-noun
+            masculine
+            countable-noun
+           {:synsem {:sem {:furniture true
+                           :pred :tavolo}}
+             :italian {:italian "tavolo"}
+             :english {:english "table"}})
+
+     (unify agreement
+            common-noun
             countable-noun
             masculine
             {:synsem {:sem human}}
@@ -537,7 +582,7 @@
              :english {:irregular {:plur "men"}
                        :english "man"}})
 
-     (unify drinkable-new
+     (unify drinkable
             agreement
             masculine
             {:italian {:italian "vino"}
@@ -547,6 +592,38 @@
      )
     )
   )
+
+(def proper-nouns
+  (let [proper-noun
+        {:synsem {:cat :noun
+                  :pronoun false
+                  :agr {:person :3rd}
+                  :subcat '()}}]
+    (list
+     (unify proper-noun
+            {:synsem {:sem {:pred :milano
+                            :buyable false
+                            :artifact true
+                            :city true}}
+             :italian {:italian "Milano"}
+             :english {:english "Milan"}})
+
+     (unify proper-noun
+            {:synsem {:sem {:pred :napoli
+                            :buyable false
+                            :artifact true
+                            :city true}}
+             :italian {:italian "Napoli"}
+             :english {:english "Naples"}})
+
+     (unify proper-noun
+            {:synsem {:sem {:pred :roma
+                            :buyable false
+                            :artifact true ;; but wasn't built in a day.
+                            :city true}}
+                :italian {:italian "Roma"}
+             :english {:english "Rome"}}))))
+
 (def determiners
   (list
 
@@ -607,7 +684,7 @@
              :number :sing}
     :italian "un"
     :english "a"}
-   
+
    {:synsem {:cat :det
              :def :indef
              :mass false
@@ -623,7 +700,7 @@
              :gender :masc}
     :italian "di il"
     :english "some"}
-   
+
    {:synsem {:cat :det
              :def :partitivo
              :mass false
@@ -696,10 +773,13 @@
 (def subjective
   (let [subj-sem (ref :top)
         subject-agreement (ref {:case {:not :acc}})
-        infl (ref :top)]
-    {:italian {:agr subject-agreement :infl infl}
+        infl (ref :top)
+        essere-type (ref :top)]
+    {:italian {:agr subject-agreement :infl infl :essere essere-type}
      :english {:agr subject-agreement :infl infl}
-     :synsem {:infl infl
+     :synsem {:essere essere-type
+              :infl infl
+              :cat :verb
               :sem {:subj subj-sem}
               :subcat {:1 {:sem subj-sem
                            :cat :noun
@@ -720,8 +800,8 @@
             :synsem {:sem {:obj obj-sem}
                      :infl infl
                      :subcat {:2 {:sem obj-sem
-                                  ;; uncomment this:
-                                  ;;                                  :cat :noun
+                                  :subcat '()
+                                  :cat :noun
                                   :agr {:case {:not :nom}}}}}})))
 
 (def andare
@@ -741,7 +821,8 @@
                                    :3plur "andranno"}}}
     :english {:infinitive "to go"
               :irregular {:past "went"}}
-    :synsem {:sem {:subj {:animate true}
+    :synsem {:essere true
+             :sem {:subj {:animate true}
                    :pred :andare}}})
 
 (def andare-intrans
@@ -756,6 +837,7 @@
    (let [place-sem (ref {:place true})]
      {:synsem {:sem {:location place-sem}
                :subcat {:2 {:sem place-sem
+                            :subcat '()
                             :cat :prep}}}})
    {:note "andare-pp"}))
 
@@ -778,7 +860,6 @@
                                    :1plur "have"
                                    :2plur "have"
                                    :3plur "have"}}}})
-   
 (def avere
   (unify
    transitive
@@ -798,6 +879,7 @@
     {:italian {:aux aux
                :essere essere-binary-categorization}
      :synsem {:aux aux
+              :sem {:tense :past}
               :essere essere-binary-categorization}}))
 
 (def avere-aux
@@ -810,11 +892,11 @@
      {:synsem {:subcat {:1 subject
                         :2 {:cat :verb
                             :essere false
-                            :subcat {:1 subject}
+                            :subcat {:1 subject
+                                     :2 '()}
                             :sem {:pred v-past-pred}
                             :infl :past}}
                :sem {:pred v-past-pred}
-               :essere false
                }})))
 
 (def bevere
@@ -823,17 +905,16 @@
    {:italian {:infinitive "bevere"
               :irregular {:passato "bevuto"}}
     :english {:infinitive "to drink"
-              :irregular {:past "drank"}}
+              :irregular {:past "drunk"}}
     :synsem {:essere false
              :sem {:pred :bevere
-                   :subj (sem-impl {:animate true})
-                   :obj (sem-impl {:drinkable true})}}}))
-
+                   :subj {:animate true}
+                   :obj {:drinkable true}}}}))
 
 (def comprare
   (unify
    transitive
-   {:italian "comprare"
+   {:italian {:infinitive "comprare"}
     :english {:infinitive "to buy"
               :irregular {:past "bought"}}
     :synsem {:essere false
@@ -849,7 +930,7 @@
               :irregular {:past "slept"}}
     :synsem {:essere false
              :sem {:subj {:animate true}
-                   :pred {:pred :dormire}}}}))
+                   :pred :dormire}}}))
 
 (def dovere
   (unify
@@ -885,7 +966,13 @@
                                     :1plur "siamo"
                                     :2plur "siete"
                                     :3plur "sono"}
-                          :passato "stato"}}
+                          :passato "stato"
+                          :futuro {:1sing "sarò"
+                                   :2sing "sarai"
+                                   :3sing "sarà"
+                                   :1plur "saremo"
+                                   :2plur "sarete"
+                                   :3plur "saranno"}}}
     :english {:infinitive "to be"
               :irregular {:present {:1sing "am"
                                     :2sing "are"
@@ -912,7 +999,7 @@
       {:synsem {:subcat {:1 subject
                          :2 {:cat :verb
                              :essere true
-                             :subcat {:1 subject}
+                             :subcat {:1 subject :2 '()}
                              :sem {:pred v-past-pred}
                              :infl :past}}
                 :sem {:pred v-past-pred}
@@ -925,6 +1012,26 @@
    essere-aux
    avere-aux))
 
+(def essere-copula
+  (let [gender (ref :top)
+        number (ref :top)]
+    (unify
+     transitive
+     essere-common
+     {:synsem {:cat :verb
+               :subcat {:1 {:cat :noun
+                            :def :demonstrativo
+                            :agr {:gender gender
+                                  :number number}}
+                        :2 {:cat :noun
+                            :pronoun {:not true} ;; accusative pronouns cause unbounded depth-first searches on the subject side.
+                            :def {:not :demonstrativo}
+                            :agr {:gender gender
+                                  :number number}}}
+               :sem {:pred :essere
+                     :subj {:human true}
+                     :obj {:human true}}}})))
+
 ;; TODO: fare-common (factor out common stuff from fare-do and fare-make)
 (def fare-do
   (unify
@@ -936,7 +1043,13 @@
                                     :3sing "fa"
                                     :1plur "facciamo"
                                     :2plur "fate"
-                                    :3plur "fanno"}}}
+                                    :3plur "fanno"}
+                          :futuro {:1sing "farò"
+                                   :2sing "farai"
+                                   :3sing "farà"
+                                   :1plur "faremo"
+                                   :2plur "farete"
+                                   :3plur "faranno"}}}
     :english {:infinitive "to do"
               :irregular {:present {:1sing "do"
                                     :2sing "do"
@@ -944,7 +1057,6 @@
                                     :1plur "do"
                                     :2plur "do"
                                     :3plur "do"}}}
-    
     :synsem {:cat :verb
              :infl :infinitive
              :sem {:pred :fare
@@ -954,6 +1066,8 @@
 (def fare-make
   (unify
    transitive
+   ;; TODO: as with "essere", make irregular conjugations
+   ;; shared between fare-do and fare-make.
    {:italian {:infinitive "fare"
               :irregular {:passato "fatto"
                           :present {:1sing "facio"
@@ -961,7 +1075,13 @@
                                     :3sing "fa"
                                     :1plur "facciamo"
                                     :2plur "fate"
-                                    :3plur "fanno"}}}
+                                    :3plur "fanno"}
+                          :futuro {:1sing "farò"
+                                   :2sing "farai"
+                                   :3sing "farà"
+                                   :1plur "faremo"
+                                   :2plur "farete"
+                                   :3plur "faranno"}}}
     :english {:infinitive "to make"
               :irregular {:past "made"}}
     :synsem {:cat :verb
@@ -976,8 +1096,7 @@
    {:italian {:infinitive "mangiare"}
     :english {:infinitive "to eat"}
     :synsem {:essere false
-             :sem {:pred {:pred :mangiare
-                          :essere false}
+             :sem {:pred :mangiare
                    :subj {:animate true}
                    :obj {:edible true}}}}))
 
@@ -993,12 +1112,11 @@
                    :subj {:human true}
                    :obj {:legible true}}}}))
 
-
 (def parlare
   (unify
    transitive
    {:italian {:infinitive "parlare"}
-    :english {:infinitive "to speak" 
+    :english {:infinitive "to speak"
               :irregular {:past "spoken"}}
     :synsem {:essere false
              :sem {:pred :parlare
@@ -1026,7 +1144,7 @@
                                     :1plur "possiamo"
                                     :2plur "potete"
                                     :3plur "possono"}}}
-    :english {:infinitive "to be able"
+    :english {:infinitive "to be able to"
               :irregular {:past "could"
                           :present {:1sing "can"
                                     :2sing "can"
@@ -1046,7 +1164,7 @@
               :irregular {:past "laughed"}}
     :synsem {:essere false
              :sem {:subj {:human true}
-                   :pred {:pred :ridere}}}}))
+                   :pred :ridere}}}))
 
 (def scrivere
   (unify
@@ -1066,7 +1184,18 @@
               :irregular {:past "dreamt"}}
     :synsem {:essere false
              :sem {:subj {:animate true}
-                   :pred {:pred :sognare}}}}))
+                   :pred :sognare}}}))
+
+;; something's wrong with conjugation of this verb.
+;(def telefonare
+;  (unify
+;   transitive
+;   {:italian {:italian "telefonare"}
+;    :english {:english "to call"}
+;    :synsem {:essere false
+;             :sem {:pred :telefonare
+;                   :subj {:human true}
+;                   :obj {:human true}}}}))
 
 (def vedere
   (unify
@@ -1109,7 +1238,8 @@
                                     :2plur "want to"
                                     :3plur "want to"}
                           :past "wanted to"}}
-    :synsem {:sem {:pred :volere
+    :synsem {:essere false
+             :sem {:pred :volere
                    :subj {:animate true}}}}))
 
 (def intransitive-verbs
@@ -1124,11 +1254,15 @@
 (def transitive-verbs
   (list
    avere
+   bevere
+   comprare
+   essere-copula
    fare-make
    leggere
    mangiare
    parlare
    scrivere
+;   telefonare
    vedere
    ))
 
@@ -1144,16 +1278,16 @@
 
 (def verbs
   (concat
-   essere-aux
-   avere-aux
+   (list essere-aux
+         avere-aux)
    intransitive-verbs
    transitive-verbs
    verbs-taking-pp
    modal-verbs))
-   
 
-(def pronouns
+(def nominative-pronouns
   (list {:synsem {:cat :noun
+                  :pronoun true
                   :agr {:case :nom
                         :person :1st
                         :number :sing}
@@ -1162,6 +1296,7 @@
          :english "i"
          :italian "io"}
         {:synsem {:cat :noun
+                  :pronoun true
                   :agr {:case :nom
                         :person :2nd
                         :number :sing}
@@ -1170,6 +1305,7 @@
          :english "you"
          :italian "tu"}
         {:synsem {:cat :noun
+                  :pronoun true
                   :agr {:case :nom
                         :person :3rd
                         :gender :masc
@@ -1179,6 +1315,7 @@
          :english "he"
          :italian "lui"}
         {:synsem {:cat :noun
+                  :pronoun true
                   :agr {:case :nom
                         :person :3rd
                         :gender :fem
@@ -1188,6 +1325,7 @@
          :english "she"
          :italian "lei"}
         {:synsem {:cat :noun
+                  :pronoun true
                   :agr {:case :nom
                         :person :1st
                         :number :plur}
@@ -1196,6 +1334,7 @@
          :english "we"
          :italian "noi"}
         {:synsem {:cat :noun
+                  :pronoun true
                   :agr {:case :nom
                         :person :2nd
                         :number :plur}
@@ -1204,6 +1343,7 @@
          :italian "voi"
          :english "you all"}
         {:synsem {:cat :noun
+                  :pronoun true
                   :agr {:case :nom
                         :person :3rd
                         :number :plur}
@@ -1212,17 +1352,139 @@
          :italian "loro"
          :english "they"}))
 
+(def accusative-pronouns
+  (let [acc (ref :acc)
+        noun (ref :noun)]
+    (list {:synsem {:cat noun
+                    :pronoun true
+                    :agr {:case acc
+                          :person :1st
+                          :number :sing}
+                    :sem (unify human {:pred :io})
+                    :subcat '()}
+           :english "me"
+           :italian {:italian "mi"
+                     :pronoun true
+                     :cat noun
+                     :case acc}}
+
+          {:synsem {:cat noun
+                    :pronoun true
+                    :agr {:case acc
+                          :person :2nd
+                          :number :sing}
+                    :sem (unify human {:pred :tu})
+                    :subcat '()}
+           :english "you"
+           :italian {:italian "ti"
+                     :cat noun
+                     :case acc}}
+
+          {:synsem {:cat noun
+                    :pronoun true
+                    :agr {:case acc
+                          :gender :masc
+                          :person :3rd
+                          :number :sing}
+                    :sem (unify human {:pred :lui})
+                    :subcat '()}
+           :english "him"
+           :italian {:italian "lo"
+                     :pronoun true
+                     :cat noun
+                     :case acc}}
+
+          {:synsem {:cat noun
+                    :pronoun true
+                    :agr {:case acc
+                          :gender :fem
+                          :person :3rd
+                          :number :sing}
+                    :sem (unify human {:pred :lei})
+                    :subcat '()}
+           :english "her"
+           :italian {:italian "la"
+                     :cat noun
+                     :case acc}}
+
+          {:synsem {:cat noun
+                    :pronoun true
+                    :agr {:case acc
+                          :person :1st
+                          :number :plur}
+                    :sem (unify human {:pred :noi})
+                    :subcat '()}
+           :english "us"
+           :italian {:italian "ci"
+                     :cat noun
+                     :case acc}}
+
+          {:synsem {:cat noun
+                    :pronoun true
+                    :agr {:case acc
+                          :person :2nd
+                          :number :plur}
+                    :sem (unify human {:pred :voi})
+                    :subcat '()}
+           :english "you all"
+           :italian {:italian "vi"
+                     :cat noun
+                     :case acc}}
+
+          {:synsem {:cat noun
+                    :pronoun true
+                    :agr {:case acc
+                          :gender :masc
+                          :person :3rd
+                          :number :plur}
+                    :sem (unify human {:pred :lui})
+                    :subcat '()}
+           :english {:english "them"
+                     :note " (&#x2642;) "} ;; unicode male
+           :italian {:italian "li"
+                     :cat noun
+                     :case acc}}
+
+          {:synsem {:cat noun
+                    :pronoun true
+                    :agr {:case acc
+                          :gender :fem
+                          :person :3rd
+                          :number :plur}
+                    :sem (unify human {:pred :lei})
+                    :subcat '()}
+           :english {:english "them"
+                     :note " (&#x2640;) "}
+           :italian {:italian "le"
+                     :cat noun
+                     :case acc}}
+
+          )))
+
 (def prepositions
   (list {:synsem {:cat :prep
+                  :sem {:pred :to}
                   :subcat {:1 {:cat :noun
                                :sem {:place true}}}}
          :italian "a"
-         :english "to"}))
+         :english "to"}
+
+;        {:synsem {:cat :prep
+;                  :sem {:pred :in}
+;                  :subcat {:1 {:cat :noun
+;                               :sem {:city true}}}}
+;         ;; this overrides the prep-phrase's extends, which are too general
+;         ;; for this lexical entry "a"/"in".
+;         :extend {:prep-phrase {:a {:head :prepositions
+;                                    :comp :proper-nouns}}}
+;         :italian "a"
+;         :english "in"}
+        ))
 
 ;; TODO: cut down duplication in here (i.e. :italian :cat, :english :cat, etc).
 (def adjectives
   (list
-   
+
    {:synsem {:cat :adjective
              :sem {:pred :alto
                    :mod {:human true}}}
@@ -1239,7 +1501,7 @@
               :cat :adjective}
     :english {:english "beautiful"
               :cat :adjective}}
-   
+
    {:synsem {:cat :adjective
              :sem {:pred :bianco
                    :mod {:physical-object true
@@ -1258,7 +1520,15 @@
               :cat :adjective}
     :english {:english "ugly"
               :cat :adjective}}
-   
+
+   {:synsem {:cat :adjective
+             :sem {:pred :corto
+                   :mod {:human true}}}
+    :italian {:italian "corto"
+              :cat :adjective}
+    :english {:english "short"
+              :cat :adjective}}
+
    {:synsem {:cat :adjective
              :sem {:pred :difficile
                    :mod {:drinkable false
@@ -1270,12 +1540,12 @@
                          :artifact true
                          :physical-object true
                          :edible false}}}
-    
+
     :italian {:italian "difficile"
               :cat :adjective}
     :english {:english "difficult"
               :cat :adjective}}
-   
+
    {:synsem {:cat :adjective
              :sem {:pred :nero
                    :mod {:physical-object true
@@ -1284,7 +1554,7 @@
               :cat :adjective}
     :english {:english "black"
               :cat :adjective}}
-   
+
    {:synsem {:cat :adjective
              :sem {:pred :piccolo
                    :mod {:physical-object true
@@ -1293,7 +1563,7 @@
               :cat :adjective}
     :english {:english "small"
               :cat :adjective}}
-   
+
    {:synsem {:cat :adjective
              :sem {:pred :robusto
                    :mod {:animate true}}}
@@ -1344,20 +1614,30 @@
   (lookup-in query lexicon))
 
 (defn it [italian]
-  (set/union (set (lookup {:italian italian}))
-             (set (lookup {:italian {:infinitive italian}}))
-             (set (lookup {:italian {:infinitive {:infinitive italian}}}))
-             (set (lookup {:italian {:italian italian}}))
-             (set (lookup {:italian {:irregular {:passato italian}}}))))
+  (let [result
+        (set/union (set (lookup {:italian italian}))
+                   (set (lookup {:italian {:infinitive italian}}))
+                   (set (lookup {:italian {:infinitive {:infinitive italian}}}))
+                   (set (lookup {:italian {:italian italian}}))
+                   (set (lookup {:italian {:irregular {:passato italian}}})))]
+    (if (= (.size result) 1)
+      (first result) ;; simply return first member rather than singleton-set:
+      ;; makes it easier to work with by end-users using with generate/* functions.
+      result)))
 
 (defn en [english]
   (lookup {:english english}))
 
-(def proper-nouns (filter (fn [lexeme]
-                        (= '() (fs/get-in lexeme '(:synsem :subcat))))
-                      nouns))
+(def lexicon (concat adjectives determiners nouns proper-nouns prepositions
+                     nominative-pronouns accusative-pronouns
+                     verbs))
 
-(def lexicon (concat adjectives determiners nouns prepositions pronouns verbs))
+                                        ;(def tinylex (list (it "Napoli") (it "lui") (it "pensare")))
+                                        ;(def tinylex (list (it "Napoli"))); (it "lui"))); (it "pensare")))
+                                        ;(def tinylex (list (it "Napoli") (it "pensare") (it "Roma") (it "sognare") (it "dormire") (it "tavolo") (it "gatto") (it "lui") (it "lei")))
+                                        ;(def tinylex (list (it "Napoli") (it "Roma") (it "io")))
+(def tinylex (list (it "gatto") (it "uomo")))
+
 
 ;(def nouns (list (first (it "professoressa"))))
 ;(def adjectives (list (first (it "piccolo"))))
@@ -1368,4 +1648,26 @@
          (add italian english
               lexeme)))
      lexicon)
+
+(def adjs (filter (fn [lex] (= (fs/get-in lex '(:synsem :cat)) :adjective)) lexicon))
+(def nouns (filter (fn [lex] (= (fs/get-in lex '(:synsem :cat)) :noun)) lexicon))
+(def common-nouns (filter (fn [lex] (and (= (fs/get-in lex '(:synsem :cat)) :noun)
+                                         (= (fs/get-in lex '(:synsem :subcat :1 :cat)) :det)))
+                            lexicon))
+(def dets (filter (fn [lex] (= (fs/get-in lex '(:synsem :cat)) :determiner)) lexicon))
+
+(def animate-nouns
+  (filter (fn [lex]
+            (let [sem (fs/get-in lex '(:synsem :sem))
+                  sem-impl (sem-impl sem)]
+              (= (fs/get-in sem-impl '(:animate)) true)))
+          nouns))
+
+(def human-nouns
+  (filter (fn [lex]
+            (let [sem (fs/get-in lex '(:synsem :sem))
+                  sem-impl (sem-impl sem)]
+              (= (fs/get-in sem-impl '(:human)) true)))
+          nouns))
+
 

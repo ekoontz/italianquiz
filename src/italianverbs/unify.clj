@@ -1,4 +1,4 @@
-(ns italianverbs.fs
+(ns italianverbs.unify
   (:use [clojure.set]
         [clojure.tools.logging])
   (:require
@@ -20,7 +20,7 @@
 ;; TODO: need tests: some tests use (get-in), but need more dedicated tests for it alone.
 (defn get-in [map path & [not-found]]
   "same as clojure.core (get-in), but it resolves references if need be."
-  (let [result 
+  (let [result
         (if (first path)
           (let [result (get map (first path) not-found)]
             (if (= result not-found) not-found
@@ -53,20 +53,30 @@
 ;; cost of traversing substructures more than once.
 (defn fail? [fs]
   "(fail? fs) <=> true if at least one of fs's path's value is :fail."
-  (if (= fs :fail) true
-      (do
-        (defn failr? [fs keys]
-          (if (> (.size keys) 0)
-            (if (= (fail? (get-in fs (list (first keys)))) true)
-              true
-              (failr? fs (rest keys)))
-            false))
-        (cond (= fs :fail) true
+  (if (seq? fs) false
+      (if (= fs :fail) true
+          (do
+            (defn failr? [fs keys]
+              (if (and (not (nil? keys)) (> (.size keys) 0))
+                (if (fail? (get-in fs (list (first keys))))
+                  true
+                  (failr? fs (rest keys)))
+                false))
+            (cond (= fs :fail) true
               (map? fs)
               (failr? fs (keys fs))
-        (= (type fs) clojure.lang.Ref)
-        (fail? @fs)
-        :else false))))
+              (= (type fs) clojure.lang.Ref)
+              (fail? @fs)
+              :else false)))))
+
+(defn fail-path [fs & [ fs-keys ] ]
+  "find the first failing path in a fs."
+  (if (map? fs)
+    (let [fs-keys (if fs-keys fs-keys (keys fs))]
+      (if (> (.size fs-keys) 0)
+        (if (fail? (get-in fs (list (first fs-keys))))
+          (cons (first fs-keys) (fail-path (get-in fs (list (first fs-keys)))))
+          (fail-path fs (rest fs-keys)))))))
 
 (defn unify [& args]
   (let [val1 (first args)
@@ -81,7 +91,7 @@
 
      (= :fail (first args))
      :fail
-     
+
      (= :fail (second args))
      :fail
 
@@ -92,8 +102,8 @@
        (if (not (nil? (some #{:fail} (vals tmp-result))))
          :fail
          (do ;(println (str "no fail in: " vals))
-             tmp-result)))
-     (and 
+           tmp-result)))
+     (and
       (= (type val1) clojure.lang.Ref)
       (not (= (type val2) clojure.lang.Ref)))
      (do (dosync
@@ -103,7 +113,7 @@
          ;; TODO: why is this false-disabled? (document and test) or remove
          (if (and false (fail? @val1)) :fail
          val1))
-     (and 
+     (and
       (= (type val2) clojure.lang.Ref)
       (not (= (type val1) clojure.lang.Ref)))
      (do (dosync
@@ -114,7 +124,7 @@
          (if (and false (fail? @val2)) :fail
          val2))
 
-     (and 
+     (and
       (= (type val1) clojure.lang.Ref)
       (= (type val2) clojure.lang.Ref))
      (do
@@ -134,7 +144,7 @@
              (log/debug (str "returning ref: " val1))
              (if (and false (fail? @val1)) :fail
              val1)))))
-     
+
      ;; convoluted way of expressing: "if val1 has the form: {:not X}, then .."
      (not (= :notfound (:not val1 :notfound)))
      (if (= val2 :top)
@@ -343,7 +353,7 @@
           (map? val2))
      (reduce #(merge-with merge %1 %2) args)
 
-     (and 
+     (and
       (= (type val1) clojure.lang.Ref)
       (not (= (type val2) clojure.lang.Ref)))
      (do (dosync
@@ -351,7 +361,7 @@
                  (fn [x] (merge @val1 val2))))
          val1)
 
-     (and 
+     (and
       (= (type val2) clojure.lang.Ref)
       (not (= (type val1) clojure.lang.Ref)))
      (do (dosync
@@ -359,7 +369,7 @@
                  (fn [x] (merge val1 @val2))))
          val2)
 
-     (and 
+     (and
       (= (type val1) clojure.lang.Ref)
       (= (type val2) clojure.lang.Ref))
      (do (dosync
@@ -370,13 +380,13 @@
      (and (= val2 :top)
           (not (= :notfound (:not val1 :notfound))))
      val1
-     
+
      (not (= :notfound (:not val1 :notfound)))
      (let [result (unify (:not val1) val2)]
        (if (= result :fail)
          val2
          :fail))
-     
+
      (and (= val1 :top)
           (not (= :notfound (:not val2 :notfound))))
      val2
@@ -421,7 +431,7 @@
         (eval `(unify ~@maps))
         fn (:fn merged)
         eval-fn (if (and fn (= (type fn) java.lang.String))
-                  (eval (symbol fn)) ;; string->fn (since a fn cannot (yet) be 
+                  (eval (symbol fn)) ;; string->fn (since a fn cannot (yet) be
                   fn)] ;; otherwise, assume it's a function.
     (if (:fn merged)
       (unify merged
@@ -601,7 +611,7 @@ The idea is to map the key :foo to the (recursive) result of pathify on :foo's v
      (map (fn [ref]
             (skeletize @ref))
           refs))))
-          
+
 (defn ref-skel-map [input-map]
   "associate each reference in _input-map_ with:
    1. its skeleton
@@ -672,7 +682,7 @@ The idea is to map the key :foo to the (recursive) result of pathify on :foo's v
      {nil (skeletize input-map)}
      (zipmap
       (vals rsk)
-      sk))))     
+      sk))))
 
 (defn create-shared-values [serialized]
   (map (fn [paths-vals]
@@ -823,7 +833,7 @@ The idea is to map the key :foo to the (recursive) result of pathify on :foo's v
            (nth b index)))
       true)
     false))
-      
+
 (defn sorted-paths-1 [paths]
   (sort (fn [x y]
           (if (< (.size x) (.size y))
@@ -852,5 +862,30 @@ The idea is to map the key :foo to the (recursive) result of pathify on :foo's v
   (let [lookup (nth serialized index)
         firstpath (seq (first (sorted-paths serialized path n index)))]
     firstpath))
+
+(defn ref= [map path1 path2]
+  "return true iff path1 and path2 point to the same object."
+  ;; TODO: add error checking.
+  (let [butlast-val1 (get-in map (butlast path1))
+        butlast-val2 (get-in map (butlast path2))]
+    (= (get butlast-val1 (last path1))
+       (get butlast-val2 (last path2)))))
+
+(defn strip-refs [map-with-refs]
+  "return a map like map-with-refs, but without refs - (e.g. {:foo (ref 42)} => {:foo 42}) - used for printing maps in plain (i.e. non html) format"
+  (cond
+   (= map-with-refs {})
+   {}
+   (map? map-with-refs)
+   (let [map-keys (sort (keys map-with-refs))]
+     (let [first-key (first (keys map-with-refs))
+           val (get map-with-refs first-key)]
+       (conj
+        {first-key (strip-refs val)}
+        (strip-refs (dissoc map-with-refs first-key)))))
+   (= (type map-with-refs) clojure.lang.Ref)
+   (strip-refs (deref map-with-refs))
+   :else
+   map-with-refs))
 
 

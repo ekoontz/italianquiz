@@ -6,6 +6,7 @@
    [clojure.tools.logging :as log]
    [clojure.string :as string]
    [italianverbs.html :as html]
+   [italianverbs.unify :as unify]
    [italianverbs.sandbox :as sandbox]
    [italianverbs.lev :as lev]))
 
@@ -29,19 +30,8 @@
                              "</div>"
                              "<div class='evalresult'>"
                              (cond
-                              (or
-                               (and (seq? loaded)
-                                    (> (.size loaded) 1))
-                               (and false (= (type loaded)
-                                       clojure.lang.LazySeq)
-                                    (= 0
-                                       (.size
-                                        (remove
-                                         (fn [each]
-                                           (= each java.lang.String))
-                                        (map (fn [each]
-                                               (type each))
-                                             loaded))))))
+                              (and (seq? loaded)
+                                   (> (.size loaded) 1))
                               (str "<ol class='workbook'>"
                                    (string/join " "
                                                 (map (fn [elem]
@@ -66,7 +56,7 @@
                               (str (eval loaded))
                               (and (map? loaded)
                                    (= (keys loaded) '(:plain)))
-                              (str "<div style='font-family:monospace'>" (:plain loaded) "</div>")
+                              (str "<div style='font-family:monospace'>" (unify/strip-refs (:plain loaded)) "</div>")
                               (map? loaded)
                               (html/tablize loaded)
                               (= (type loaded) nil)

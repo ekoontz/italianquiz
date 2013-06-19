@@ -1,7 +1,6 @@
 (ns italianverbs.sandbox
   [:use
    [clojure.core :exclude [find]]
-   [italianverbs.lexiconfn]
    [italianverbs.lexicon]
    ;; Prohibit generate/printfs because it writes directly to the filesystem:
    ;; attacker could DOS server by filling up filesystem.
@@ -12,7 +11,8 @@
    [clojail.testers]
    ]
   [:require
-   [italianverbs.fs :as fs]
+   [italianverbs.lexiconfn :as lexfn]
+   [italianverbs.unify :as fs]
    [italianverbs.html :as html]
    [clojure.set :as set]
    [italianverbs.test.generate :as tgen]
@@ -91,44 +91,58 @@
     (take-last 3 (take 3 (show-lexicon)))
     (take-last 3 (take 6 (show-lexicon)))
     (take-last 3 (take 9 (show-lexicon)))
-
-;;
-;;
-
-    (take-last 3 (take 15 (show-lexicon)))
-    
-    ;; get past tense form of "leggere":
-    
-    (lookup {:italian {:infinitive {:infinitive "leggere"}}
-             :synsem {:infl :past}})
-    
-;; generate a complete vp-past:
-    (let [letto (lookup {:italian {:infinitive {:infinitive "leggere"}}
-                         :synsem {:infl :past}})]
-      (over (over rules verbs) (over (over np "il") "libro")))
-    
 ))
-    
-    
-
-(if false
-  (formattare
-   (take-last
-    5
-    (take 100
-          (over (over s-present lexicon)
-                (over (over vp-present lexicon)
-                      (over (over vp-past-avere lexicon)
-                            (over (over np lexicon)
-                                  lexicon))))))))
+;;
+;;
 
 ;; find semantic implicatures of "cane (dog)"
 (if false
   (sem-impl (fs/get-in (it "cane") '(:synsem :sem))))
 
- ;(dotimes [n 200] (time (random-sentence)))
+;(take 10 (repeatedly #(fo (take 1 (generate s-present)))))
 
-;;(take 20 (repeatedly #(fo (random-sentence))))
+;(fo (take 1 (over2 s-present (shuffle nominative-pronouns) (shuffle intransitive-verbs))))
+
+;(def skel (over2 s-present (over2 np :top (over2 nbar :top :top)) (over2 vp :top (over2 np :top :top))))
+
+(if false
+  (do
+(fo
+ (take 1
+       (over2 np
+              (take 4 (shuffle determiners))
+              (over2 nbar
+                     (take 1 (shuffle nouns))
+                     (take 4 (shuffle adjectives))))))
+
+(fo
+ (take 1
+       (over2 np
+              (shuffle determiners)
+              (over2 nbar
+                     (take 1 (shuffle nouns))
+                     (shuffle adjectives)))))
+
+(fo
+ (take 1
+       (over2 np
+              (shuffle determiners)
+              (over2 nbar
+                     (take 5 (shuffle nouns))
+                     (shuffle adjectives)))))
+
+(fo
+ (take 1
+
+       (over2 s-present
+              (over2 np
+                     (shuffle determiners)
+                     (over2 nbar
+                            (take 5 (shuffle nouns))
+                            (shuffle adjectives)))
+              (shuffle intransitive-verbs))))
+))
 
 
-(def foo5 (over vp-present "andare" (over prep-phrase "a" (over np "il" "mare"))))
+42
+
