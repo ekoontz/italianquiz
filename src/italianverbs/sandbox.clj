@@ -1,7 +1,6 @@
 (ns italianverbs.sandbox
   [:use
    [clojure.core :exclude [find]]
-   [italianverbs.lexiconfn]
    [italianverbs.lexicon]
    ;; Prohibit generate/printfs because it writes directly to the filesystem:
    ;; attacker could DOS server by filling up filesystem.
@@ -12,7 +11,8 @@
    [clojail.testers]
    ]
   [:require
-   [italianverbs.fs :as fs]
+   [italianverbs.lexiconfn :as lexfn]
+   [italianverbs.unify :as fs]
    [italianverbs.html :as html]
    [clojure.set :as set]
    [italianverbs.test.generate :as tgen]
@@ -91,122 +91,58 @@
     (take-last 3 (take 3 (show-lexicon)))
     (take-last 3 (take 6 (show-lexicon)))
     (take-last 3 (take 9 (show-lexicon)))
-
+))
 ;;
 ;;
-
-    (take-last 3 (take 15 (show-lexicon)))
-    
-    ;; get past tense form of "leggere":
-    
-    (lookup {:italian {:infinitive {:infinitive "leggere"}}
-             :synsem {:infl :past}})
-    
-;; generate a complete vp-past:
-    (let [letto (lookup {:italian {:infinitive {:infinitive "leggere"}}
-                         :synsem {:infl :past}})]
-      (over (over rules verbs) (over (over np "il") "libro")))
-    
-    (over
-     (over (nth rules 1) avere-present-aux-trans)
-     (over (over rules verbs) (over (over np "il") "libro")))
-    
-    
-    (take 1
-          (over (over s-present lexicon)
-                (over (over (nth rules 1) avere-present-aux-trans)
-                      (over (over rules verbs) (over (over np "il") "libro")))))
-    
-    
-    (over (over s-present (over (over np "il") "dottore"))
-          (over (over (nth rules 1) avere-present-aux-trans)
-                (over (over rules (it "letto"))
-                      (over (over np "il") "libro"))))))
-    
-(if false
-  (formattare
-   (take-last 10 (take 30
-                       (over (over s-present
-                                   (over (over np lexicon) lexicon))
-                             (over (over vp-present avere-present-aux-trans)
-                                   (over (over vp-past verbs)
-                                       (over (over np lexicon) lexicon))))))))
-
-(if false
-  (formattare
-   (take 1
-         (over (over s-present
-                     (over (over np lexicon) lexicon))
-               (over (over vp-present avere-present-aux-trans)
-                     (over (over vp-past verbs)
-                           (over (over np lexicon) lexicon)))))))
-
-(if false
-  (do 
-    (time ;; takes about 4 seconds.
-     (def foo (take 100
-                    (over (over s-present
-                                (over (over np lexicon) lexicon))
-                          (over (over vp-present avere-present-aux-trans)
-                                (over (over vp-past verbs)
-                                      (over (over np lexicon) lexicon)))))))
-    ;;
-    (time (formattare (take-last 5 (take 5 foo))))
-    (time (formattare (take-last 5 (take 10 foo))))
-    (time (formattare (take-last 5 (take 15 foo))))
-    (time (formattare (take-last 5 (take 20 foo))))
-    (time (formattare (take-last 5 (take 25 foo))))
-    (time (formattare (take-last 5 (take 30 foo))))
-    (time (formattare (take-last 5 (take 35 foo))))))
-
-
-(if false
-  (formattare
-   (take-last
-    5
-    (take 100
-          (over (over s-present lexicon)
-                (over (over vp-present lexicon)
-                      (over (over vp-past lexicon)
-                            (over (over np lexicon)
-                                  lexicon))))))))
-
-(if false
-  (formattare
-   (over s-present lexicon
-         (over vp-present lexicon
-               (over vp-past lexicon
-                     (over np lexicon lexicon))))))
-
 
 ;; find semantic implicatures of "cane (dog)"
 (if false
   (sem-impl (fs/get-in (it "cane") '(:synsem :sem))))
 
-;; currently takes 4 seconds per (formattare (over s ..))
+;(take 10 (repeatedly #(fo (take 1 (generate s-present)))))
+
+;(fo (take 1 (over2 s-present (shuffle nominative-pronouns) (shuffle intransitive-verbs))))
+
+;(def skel (over2 s-present (over2 np :top (over2 nbar :top :top)) (over2 vp :top (over2 np :top :top))))
+
 (if false
-  (dotimes [n 20] (time
-                   (formattare
-                    (over s-present
-                          pronouns
-                          (over (over vp-present
-                                      present-aux-verbs)
-                                (over (over vp-past
-                                            past-verbs)
-                                      (over np
-                                            determiners
-                                            nouns))))))))
+  (do
+(fo
+ (take 1
+       (over2 np
+              (take 4 (shuffle determiners))
+              (over2 nbar
+                     (take 1 (shuffle nouns))
+                     (take 4 (shuffle adjectives))))))
 
-;; top part:
-;;(dotimes [n 20] (time (formattare (over s-present pronouns (over vp-present present-aux-verbs)))))
+(fo
+ (take 1
+       (over2 np
+              (shuffle determiners)
+              (over2 nbar
+                     (take 1 (shuffle nouns))
+                     (shuffle adjectives)))))
 
-;; bottom part:
-;;(dotimes [n 20] (time (formattare (over s-present pronouns (over vp-present present-aux-verbs)))))
+(fo
+ (take 1
+       (over2 np
+              (shuffle determiners)
+              (over2 nbar
+                     (take 5 (shuffle nouns))
+                     (shuffle adjectives)))))
 
-;;combine
-;(over (over s-present pronouns (over vp-present present-aux-verbs))
-                                        ;      (over (over vp-past past-verbs) (over np determiners nouns)))
+(fo
+ (take 1
 
- ;(dotimes [n 200] (time (random-sentence)))
+       (over2 s-present
+              (over2 np
+                     (shuffle determiners)
+                     (over2 nbar
+                            (take 5 (shuffle nouns))
+                            (shuffle adjectives)))
+              (shuffle intransitive-verbs))))
+))
 
-;;(take 20 (repeatedly #(fo (random-sentence))))
+
+42
+

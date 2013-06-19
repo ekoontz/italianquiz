@@ -1,9 +1,12 @@
 (ns italianverbs.grammar
   (:require
-   [italianverbs.fs :as fs]
+   [italianverbs.unify :as fs]
    [italianverbs.morphology :as morph]
    [italianverbs.lexiconfn :as lexfn]
    [clojure.string :as string]))
+
+(defn unify [ & args]
+  (apply fs/unifyc args))
 
 ;;    [1]
 ;;   /   \
@@ -11,12 +14,15 @@
 ;; H[1]    C
 (def head-principle
   (let [head-cat (ref :top)
+        head-is-pronoun (ref :top)
         head-sem (ref :top)
         head-infl (ref :top)]
     {:synsem {:cat head-cat
+              :pronoun head-is-pronoun
               :sem head-sem
               :infl head-infl}
      :head {:synsem {:cat head-cat
+                     :pronoun head-is-pronoun
                      :infl head-infl
                      :sem head-sem}}}))
 
@@ -25,9 +31,10 @@
 ;;    /        \
 ;; H subcat<1>  C[1]
 (def subcat-1-principle
-  (let [comp-synsem (ref :top)]
+  (let [comp-synsem (ref {:subcat '()})]
     {:subcat '()
-     :head {:synsem {:subcat {:1 comp-synsem}}}
+     :head {:synsem {:subcat {:1 comp-synsem
+                              :2 '()}}}
      :comp {:synsem comp-synsem}}))
 
 ;;     subcat<1>
@@ -35,8 +42,8 @@
 ;;    /        \
 ;; H subcat<1,2>  C[2]
 (def subcat-2-principle
-  (let [comp-synsem (ref :top)
-        parent-subcat (ref :top)]
+  (let [comp-synsem (ref {:cat :top})
+        parent-subcat (ref {:cat :top})]
     {:synsem {:subcat {:1 parent-subcat}}
      :head {:synsem {:subcat {:1 parent-subcat
                               :2 comp-synsem}}}
@@ -46,84 +53,143 @@
 ;; a language's morphological inflection is
 ;; identical to its head's SYNSEM|INFL value.
 (def verb-inflection-morphology
-  (let [infl (ref :top)]
-    {:italian {:infl infl}
-     :english {:infl infl}
-     :head {:synsem {:infl infl}}}))
+  (let [essere (ref :top)
+        infl (ref :top)
+        cat (ref :verb)]
+    {:italian {:a {:infl infl
+                   :cat cat}}
+     :english {:a {:infl infl
+                   :cat cat}}
+     :synsem {:infl infl
+              :essere essere}
+     :head {:italian {:infl infl
+                      :cat cat}
+            :english {:infl infl
+                      :cat cat}
+            :synsem {:cat cat
+                     :essere essere
+                     :infl infl}}}))
+
+(def italian-head-first
+  (let [head-italian (ref :top)
+        comp-italian (ref :top)]
+    {:head {:italian head-italian}
+     :comp {:italian comp-italian}
+     :italian {:a head-italian
+               :b comp-italian}}))
+
+(def italian-head-last
+  (let [head-italian (ref :top)
+        comp-italian (ref :top)]
+    {:head {:italian head-italian}
+     :comp {:italian comp-italian}
+     :italian {:a comp-italian
+               :b head-italian}}))
+
+(def english-head-first
+  (let [head-english (ref :top)
+        comp-english (ref :top)]
+    {:head {:english head-english}
+     :comp {:english comp-english}
+     :english {:a head-english
+               :b comp-english}}))
+
+(def english-head-last
+  (let [head-english (ref :top)
+        comp-english (ref :top)]
+    {:head {:english head-english}
+     :comp {:english comp-english}
+     :english {:a comp-english
+               :b head-english}}))
 
 (def vp-rules
+
   (let [head (ref :top)
-        comp (ref :top)]
+        comp (ref {:subcat '()})
+        infl (ref :top)
+        agr (ref :top)]
 
-    (def vp-past
-      (fs/unifyc head-principle
-                 subcat-2-principle
-                 verb-inflection-morphology
-                 {:head {:synsem {:cat :verb
-                                  :infl :past}}}
-                 {:comment "vp[past] &#x2192; head comp?"
-                  :head head
-                  :comp comp
-                  :1 head
-                  :2 comp
-                  :extend {:a {:head 'past-transitive-verbs
-                               :comp 'np}
-                           :b {:head 'past-intransitive-verbs}}}))
+  (def vp ;; TODO replace other vps with just vp.
+    (fs/unifyc head-principle
+               subcat-2-principle
+               verb-inflection-morphology
+               {:comment "vp &#x2192; head comp"
+                :comment-plaintext "vp -> head comp"}
+               italian-head-first
+               english-head-first
+               {:comp comp
+                :head head}
+               {:head {:synsem {:cat :verb}}}
+               {:comp {:synsem {:pronoun {:not true}}}}
+               {:extend {:a {:head 'lexicon
+                             :comp 'np}
+                         :b {:head 'lexicon
+                             :comp 'prep-phrase}
+                         :c {:head 'lexicon
+                             :comp 'vp-infinitive-transitive}
+                         :d {:head 'lexicon
+                             :comp 'lexicon}
+                         }}))
 
-    (def vp-infinitive-transitive
-      (fs/unifyc head-principle
-                 subcat-2-principle
-                 verb-inflection-morphology
-                 {:head {:synsem {:cat :verb
-                                  :infl :infinitive
-                                  :subcat {:2 {:cat :noun}}}}}
-                 {:comment "vp[inf] &#x2192; head comp"
-                  :head head
-                  :comp comp
-                  :1 head
-                  :2 comp
-                  :extend {
-                           :a {:head 'infinitive-transitive-verbs
-                               :comp 'np}}}))
+  (def vp-pron
+    (fs/merge
+     (unify
+      head-principle
+      subcat-2-principle
+      italian-head-last
+      english-head-first
+      {:head {:synsem {:cat :verb
+                       :infl :present}} ;; TODO: allow other than :present. (:present-only for now for testing).
+       :comp {:synsem {:cat :noun
+                       :pronoun true}}}
+      {:comment-plaintext "vp[pron]"
+       :comment "vp[pron]"
+       :extend {:e {:head 'lexicon
+                    :comp 'lexicon}
+                ;; TODO add vp -> lexicon vp also.
+                  }})))
 
-    (def vp-present
-      (fs/unifyc head-principle
-                 subcat-2-principle
-                 verb-inflection-morphology
-                 {:head {:synsem {:cat :verb
-                                  :infl :present}}}
-                 {:comment "vp[present] &#x2192; head comp"
-                  :head head
-                  :comp comp
-                  :1 head
-                  :2 comp
-                  :extend {
-                           :a {:head 'present-transitive-verbs
-                               :comp 'np}
-                           :b {:head 'present-modal-verbs
-                               :comp 'vp-infinitive-transitive}
-                           :c {:head 'present-modal-verbs
-                               :comp 'infinitive-intransitive-verbs}
-                           :d {:head 'present-aux-verbs
-                               :comp 'vp-past}
-                           }}))
-    
-    (def vp-future
-      (fs/unifyc head-principle
-                 subcat-2-principle
-                 verb-inflection-morphology
-                 {:head {:synsem {:cat :verb
-                                  :infl :futuro}}}
-                 {:comment "vp[future] &#x2192; head comp"
-                  :head head
-                  :comp comp
-                  :1 head
-                  :2 comp
-                  :extend {
-                           :a {:head 'future-transitive-verbs
-                               :comp 'np}}}))
+  (def vp-present
+    ;; add to vp some additional expansions for vp-present:
+    (fs/merge vp
+              {:comment "vp[present] &#x2192; head comp"
+               :comment-plaintext "vp[present] -> head comp"
+               :extend {:e {:head 'lexicon
+                            :comp 'vp-past}
+               }}))
 
-    (list vp-present vp-past vp-future)))
+  (def vp-past
+    (fs/merge vp
+              {:comment "vp[past] &#x2192; head comp"
+               :comment-plaintext "vp[past] -> head comp"
+               :infl :past}))
+
+  (def vp-infinitive-transitive
+    (fs/unifyc head-principle
+               subcat-2-principle
+               verb-inflection-morphology
+               {:head {:synsem {:cat :verb
+                                :infl :infinitive
+                                :subcat {:2 {:cat :noun
+                                             :subcat '()}}}}}
+               {:comment "vp[inf] &#x2192; head comp"
+                :comment-plaintext "vp[inf] -> head comp"}
+               italian-head-first
+               english-head-first
+               {:extend {
+                         :a {:head 'lexicon
+                             :comp 'np}}}))))
+
+(def subject-verb-agreement
+  (let [infl (ref :top)
+        agr (ref {:case :nom})]
+    {:comp {:synsem {:agr agr}}
+     :head {:synsem {:subcat {:1 {:agr agr}}
+                     :infl infl}
+            :italian {:agr agr
+                      :infl infl}
+            :english {:agr agr
+                      :infl infl}}}))
 
 (def sentence-rules
   (let [subj-sem (ref :top)
@@ -131,131 +197,155 @@
                         :subcat '()
                         :sem subj-sem})
         infl (ref :top)
-        present (ref :present)
-        future (ref :futuro)
         comp (ref {:synsem subcatted})
+        agr (ref :top)
         head (ref {:synsem {:cat :verb
                             :sem {:subj subj-sem}
                             :subcat {:1 subcatted
-                                     :2 '()}}})]
-    (list
-     ;; present
-     (fs/unifyc head-principle subcat-1-principle
-                {:synsem {:infl present}}
-                {:comment "sentence (present) (4 subrules)"
-                 :head head
-                 :comp comp
-                 :1 comp
-                 :2 head
-                 :extend {
-                          :a {:comp 'np
-                              :head 'vp-present}
-                          :b {:comp 'pronouns
-                              :head 'vp-present}
-                          :c {:comp 'np
-                              :head 'present-intransitive-verbs}
-                          :d {:comp 'pronouns
-                              :head 'present-intransitive-verbs}
-                          }})
-     ;; future
-     (fs/unifyc head-principle subcat-1-principle
-                {:synsem {:infl future}}
-                {:comment "sentence (future) (4 subrules)"
-                 :head head
-                 :comp comp
-                 :1 comp
-                 :2 head
-                 :extend {
-                          :a {:comp 'np
-                              :head 'future-intransitive-verbs}
-                          :b {:comp 'pronouns
-                              :head 'future-intransitive-verbs}
-                          :c {:comp 'np
-                              :head 'vp-future}
-                          :d {:comp 'pronouns
-                              :head 'vp-future}
-                          }}))))
+                                     :2 '()}}})
 
+        rule-base
+        (fs/unifyc head-principle subcat-1-principle
+                   subject-verb-agreement
+                   {:comp {:synsem {:subcat '()
+                                    :cat :noun}}
+                    :head {:synsem {:cat :verb}}}
+                   {:extend {:a {:comp 'np
+                                 :head 'vp}
+                             :b {:comp 'lexicon
+                                 :head 'vp}
+                             :c {:comp 'lexicon
+                                 :head 'vp-pron}
+                             :d {:comp 'np
+                                 :head 'vp-pron}
 
-(def adj-rules
-  (let [sem (ref :top)
-        head (ref :top)
-        comp (ref :top)
-        comp-sem-pred (ref :top)
-        subcat (ref :top)
-        gender (ref :top)
-        number (ref :top)
-        agr (ref :top)]
-    (def nbar
-      (fs/unify
-       head-principle
-       {:1 head}
-       {:2 comp}
-       {:synsem {:subcat subcat}}
-       {:head {:synsem {:subcat subcat}}}
-       {:synsem {:sem sem}}
-       {:synsem {:sem {:mod comp-sem-pred}}}
-       {:head head
-        :comp comp}
-       {:head {:synsem {:cat :noun
-                        :agr agr}}
-        :comp {:italian {:agr agr}
-               :english {:agr agr}}
-        :synsem {:agr agr}}
-       {:comp {:synsem {:cat :adjective
-                        :sem {:pred comp-sem-pred}}}}
-       {:comp {:synsem {:cat :adjective
-                        :sem {:mod sem}}}}
-       {:comment "n&#x0305; &#x2192; adj noun"
-        :extend {:a {:head 'nouns
-                     :comp 'adjectives}}}))
-    (list nbar)))
+                             :e {:comp 'np
+                                 :head 'lexicon}
+                             :f {:comp 'lexicon
+                                 :head 'lexicon}
+                             }})]
 
-(def np-rules 
+    (def s-present
+      ;; unlike the case for future and imperfetto,
+      ;; override the existing :extends in the case of s-present.
+      (fs/merge
+       (fs/unifyc rule-base
+                   italian-head-last
+                   english-head-last
+                  {:comment "sentence[present]"
+                   :comment-plaintext "s[present] -> .."
+                   :synsem {:infl :present}})
+       {:extend {:g {:comp 'lexicon
+                      :head 'vp-present}
+                 :h {:comp 'np
+                     :head 'vp-present}
+                 }}))
+
+    (def s-future
+      (fs/unifyc rule-base
+                 italian-head-last
+                 english-head-last
+                 {:comment "sentence[future]"
+                  :comment-plaintext "s[future] -> .."
+                  :synsem {:infl :futuro}}))
+
+    (def s-imperfetto
+      (fs/unifyc rule-base
+                 {:comment "sentence[imperfetto]"
+                  :synsem {:infl :imperfetto}}))))
+
+(def nbar
+  (let [head-semantics (ref :top)
+        adjectival-predicate (ref :top)
+        agr (ref :top)
+        subcat (ref :top)]
+    (unify head-principle
+           ;; for Nbar, italian and english have opposite constituent order:
+           italian-head-first
+           english-head-last
+           (let [def (ref :top)]
+             {:head {:synsem {:def def}}
+              :synsem {:def def}})
+           {:synsem {:sem head-semantics}
+            :comp {:synsem {:sem {:mod head-semantics}}}}
+           ;; the following will rule out pronouns, since they don't subcat for a determiner;
+           ;; (in fact, they don't subcat for anything)
+           {:synsem {:subcat {:1 {:cat :det}}}}
+
+           {:synsem {:agr agr
+                     :subcat subcat}
+            :head {:synsem {:agr agr
+                            :cat :noun
+                            :subcat subcat}}
+            :comp {:synsem {:cat :adjective}
+                   :italian {:agr agr}
+                   :english {:agr agr}}}
+
+           {:synsem {:sem {:mod adjectival-predicate}}
+            :comp {:synsem {:sem {:mod head-semantics
+                                  :pred adjectival-predicate}}}}
+           {:comment "n&#x0305; &#x2192; noun adj"
+            :comment-plaintext "nbar -> noun adj"
+            :extend {:a {:head 'lexicon
+                         :comp 'lexicon}}})))
+
+(def np-rules
   (let [head (ref :top)
         comp (ref :top)]
-    (def np1
-      (fs/unifyc head-principle subcat-1-principle ;; NP -> Comp Head
-                 (let [agr (ref :top)]
-                   (fs/unifyc
-                    {:head {:synsem {:cat :noun
-                                     :agr agr}}
-                     :synsem {:agr agr}}
-                    {:comment "np &#x2192; det (noun or nbar)"
-                     :synsem {:agr agr}
-                     :head head
-                     :comp comp
-                     :1 comp
-                     :2 head
-                     :extend {
-                              :a {:comp 'determiners
-                                  :head 'nouns}
-                              :b {:comp 'determiners
-                                  :head 'nbar}}
-                     }
-                    ))))
-    (list np1)))
+    (def np
+      (let [head-english (ref :top)
+            head-italian (ref :top)
+            comp-english (ref :top)
+            comp-italian (ref :top)]
+        (fs/unifyc head-principle subcat-1-principle ;; NP -> Comp Head
+                   (let [agr (ref :top)]
+                     (fs/unifyc
+                      (let [def (ref :top)]
+                        {:head {:synsem {:def def}}
+                         :synsem {:def def}
+                         :comp {:synsem {:def def}}})
+                      {:head {:italian head-italian
+                              :english head-english
+                              :synsem {:cat :noun
+                                       :agr agr}}
+                       :comp {:synsem {:cat :det}
+                              :italian comp-italian
+                              :english comp-english}
+                       :synsem {:agr agr}
+                       :comment "np &#x2192; det (noun or nbar)"
+                       :comment-plaintext "np -> det (noun or nbar)"
+
+                       ;; for NP, italian and english have same constituent order:
+                       :italian {:a comp-italian
+                                 :b head-italian}
+                       :english {:a comp-english
+                                 :b head-english}
+                       :extend {
+                                :a {:comp 'lexicon
+                                    :head 'lexicon}
+                                :b {:comp 'lexicon
+                                    :head 'nbar}
+                                }
+                   })))))
+    (list np)))
 
 (def prep-phrase
   (let [head (ref {:synsem {:cat :prep}})
-        comp (ref :top)]
+        comp (ref {:synsem {:cat :noun
+                            :subcat '()}})]
     (fs/unifyc head-principle
                subcat-1-principle
+               {
+                :comment "pp &#x2192; prep (np or propernoun)"
+                :comment-plaintext "pp -> prep (np or proper noun)"}
                {:head head
-                :comp comp
-                :1 head
-                :2 comp
-                :extend {:a {:head 'lexicon ;; should be propositions.
-                             :comp 'np}}})))
-
-(def rules (concat np-rules vp-rules sentence-rules))
-
-(def np (nth np-rules 0))
-(def vp-present (nth vp-rules 0))
-(def vp-past (nth vp-rules 1))
-(def vp-future (nth vp-rules 2))
-(def s-present (nth sentence-rules 0))
-(def s-future (nth sentence-rules 1))
+                :comp comp}
+               italian-head-first
+               english-head-first
+               {:extend {:a {:head 'lexicon
+                             :comp 'np}
+                         :b {:head 'lexicon
+                             :comp 'lexicon}}})))
 
 ;; TODO: move to lexicon (maybe).
 (defn italian-number [number]
@@ -279,7 +369,7 @@
    (= number 17) "diciassette"
    (= number 18) "diciotto"
    (= number 19) "diciannove"
-   
+
    ;; ...
    (= number 20) "venti"
    (< number 30) (str (italian-number 20) (italian-number (- number 20)))

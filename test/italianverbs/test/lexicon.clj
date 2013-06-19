@@ -2,11 +2,9 @@
   (:use [clojure.test]
         [italianverbs.lexicon])
   (:require
-   [italianverbs.fs :as fs]
+   [italianverbs.unify :as fs]
    [italianverbs.lexiconfn :as lexfn]
    [italianverbs.search :as search]))
-
-(deftest test1 (is (not (fs/fail? essere-aux-trans))))
 
 (def third-person {:person :3rd :cat :noun})
 (def common-noun (fs/merge third-person
