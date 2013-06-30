@@ -390,9 +390,36 @@
                (first lex/lexicon)))
 
 (defn overflow2 []
-  (lexfn/unify ;(unify/get-in gram/vp-aux '(:head))
-   (unify/get-in (unify/merge gram/head-principle
-                              gram/verb-inflection-morphology)
+  (lexfn/unify
+   (unify/get-in (unify/unify (let [head-cat (ref :top)
+                                    head-is-pronoun (ref :top)
+                                    head-sem (ref :top)
+                                    head-infl (ref :top)]
+                                {:synsem {:cat head-cat
+                                          :pronoun head-is-pronoun
+                                          :sem head-sem
+                                          :infl head-infl}
+                                 :head {:synsem {:cat head-cat
+                                                 :pronoun head-is-pronoun
+                                                 :infl head-infl
+                                                 :sem head-sem}}})
+
+                              (let [essere (ref :top)
+                                    infl (ref :top)
+                                    cat (ref :verb)]
+                                {:italian {:a {:infl infl
+                                               :cat cat}}
+                                 :english {:a {:infl infl
+                                               :cat cat}}
+                                 :synsem {:infl infl
+                                          :essere essere}
+                                 :head {:italian {:infl infl
+                                                  :cat cat}
+                                        :english {:infl infl
+                                                  :cat cat}
+                                        :synsem {:cat cat
+                                                 :essere essere
+                                                 :infl infl}}}))
                  '(:head))
    (lexfn/unify
                 {:italian {:foo 42}}
