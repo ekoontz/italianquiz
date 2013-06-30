@@ -380,18 +380,9 @@
          (depth-str (- depth 1)))
     ""))
 
-
-(defn poh [parent head depth]
-  (lexfn/unify (unify/get-in parent '(:head))
-               head))
-
 (defn overflow []
-  (lexfn/unify (unify/get-in gram/vp-aux '(:head))
-               (first lex/lexicon)))
-
-(defn overflow2 []
   (lexfn/unify
-   (unify/get-in (unify/unify (let [head-cat (ref :top)
+   (unify/get-in (unify/merge (let [head-cat (ref :top)
                                     head-is-pronoun (ref :top)
                                     head-sem (ref :top)
                                     head-infl (ref :top)]
