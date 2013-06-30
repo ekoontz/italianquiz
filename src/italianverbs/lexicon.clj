@@ -975,7 +975,24 @@
               :infl infl
               :cat :verb
               :sem {:subj subj-sem}
-              :subcat {:1 {:sem subj-sem
+              :subcat {:1 {
+                           :sem subj-sem
+                           :cat :noun
+                           :agr subject-agreement}}}}))
+
+(def subjective-debug
+  (let [subj-sem (ref :top)
+        subject-agreement (ref {:case {:not :acc}})
+        infl (ref :top)
+        essere-type (ref :top)]
+    {:italian {:agr subject-agreement :infl infl :essere essere-type}
+     :english {:agr subject-agreement :infl infl}
+     :synsem {:essere essere-type
+              :infl infl
+              :cat :verb
+              :sem {:subj subj-sem}
+              :subcat {:1 {
+                           :sem subj-sem
                            :cat :noun
                            :agr subject-agreement}}}}))
 
@@ -1063,22 +1080,25 @@
 (def avere-common
   {:synsem {:essere false
             :cat :verb}
-   :italian {:infinitive "avere"
-             :irregular {:passato "avuto"
-                         :present {:1sing "ho"
-                                   :2sing "hai"
-                                   :3sing "ha"
-                                   :1plur "abbiamo"
-                                   :2plur "avete"
-                                   :3plur "hanno"}}}
-   :english {:infinitive "to have"
-             :irregular {:past "had"
-                         :present {:1sing "have"
-                                   :2sing "have"
-                                   :3sing "has"
-                                   :1plur "have"
-                                   :2plur "have"
-                                   :3plur "have"}}}})
+;   :italian {:infinitive "avere"
+;             :irregular {:passato "avuto"
+;                         :present {:1sing "ho"
+;                                   :2sing "hai"
+;                                   :3sing "ha"
+;                                   :1plur "abbiamo"
+;                                   :2plur "avete"
+;                                   :3plur "hanno"}}}
+
+;   :english {:infinitive "to have"
+;             :irregular {:past "had"
+;                         :present {:1sing "have"
+;                                   :2sing "have"
+;                                   :3sing "has"
+;                                   :1plur "have"
+;                                   :2plur "have"
+;                                   :3plur "have"}}}
+   }
+  )
 (def avere
   (unify
    transitive
@@ -1095,12 +1115,25 @@
 ;; and the :synsem (for subcategorization by the appropriate aux verb).
 (def aux-type
   (let [essere-binary-categorization (ref :top)
+        aspect (ref :passato)
         aux (ref true)]
     {:italian {:aux aux
                :essere essere-binary-categorization}
      :synsem {:aux aux
-              :sem {:tense :past}
+              :sem {:tense :past
+                    :aspect aspect}
+              :subcat {:2 {:sem {:aspect aspect}}}
               :essere essere-binary-categorization}}))
+
+(def aux-type-plus
+  (unify
+   ;; aux-type
+   {
+    :italian {:foo 42}
+    }
+   subjective
+   ))
+
 
 (def avere-aux
   (let [v-past-pred (ref :top)
@@ -1118,7 +1151,8 @@
                             :sem {:pred v-past-pred}
                             :infl :past}}
                :sem {:pred v-past-pred}
-               }})))
+;               }})))
+     }})))
 
 (def bevere
   (unify
@@ -2177,9 +2211,10 @@
 (defn en [english]
   (lookup {:english english}))
 
-(def lexicon (concat adjectives intensifiers determiners nouns proper-nouns prepositions
-                     nominative-pronouns accusative-pronouns disjunctive-pronouns
-                     verbs))
+(def lexicon (concat ;adjectives intensifiers determiners nouns proper-nouns prepositions
+                     ;nominative-pronouns accusative-pronouns disjunctive-pronouns
+                     ;verbs))
+              (list avere-aux dormire)))
 
                                         ;(def tinylex (list (it "Napoli") (it "lui") (it "pensare")))
                                         ;(def tinylex (list (it "Napoli"))); (it "lui"))); (it "pensare")))

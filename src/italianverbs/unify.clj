@@ -81,8 +81,14 @@
 (defn unify [& args]
   (let [val1 (first args)
         val2 (second args)]
+    (let [retval
+          (do
     (log/debug (str "unify val1: " val1))
     (log/debug (str "      val2: " val2))
+    (if (= (type val1) clojure.lang.Ref)
+      (log/debug (str "val1 deref: " @val1)))
+    (if (= (type val2) clojure.lang.Ref)
+      (log/debug (str "val2 deref: " @val2)))
     (cond
      (nil? args) nil
 
@@ -106,7 +112,9 @@
      (and
       (= (type val1) clojure.lang.Ref)
       (not (= (type val2) clojure.lang.Ref)))
-     (do (dosync
+     (do
+       (log/debug "nonref/ref")
+       (dosync
           (alter val1
                  (fn [x] (unify @val1 val2))))
          ;; alternative to the above (not tested yet):  (fn [x] (unify (fs/copy @val1) val2))))
@@ -116,7 +124,9 @@
      (and
       (= (type val2) clojure.lang.Ref)
       (not (= (type val1) clojure.lang.Ref)))
-     (do (dosync
+     (do
+       (log/debug "ref/nonref")
+       (dosync
           (alter val2
                  (fn [x] (unify val1 @val2))))
          ;; alternative to the above (not tested yet): (fn [x] (unify val1 (fs/copy @val2)))))
@@ -202,18 +212,24 @@
      (and
       (map? val1)
       (string? val2))
-     val2
+     (do
+       (log/warn "unifying a map and a string.")
+       val2)
 
      (and
       (string? val1)
       (map? val2))
-     val1
+     (do
+       (log/warn "unifying a string and a map.")
+       val1)
 
      :else ;; fail.
      (do
        (log/debug (str "(" val1 ", " val2 ") => :fail"))
 ;       (println (str "(" val1 ", " val2 ") => :fail"))
-       :fail))))
+       :fail)))]
+      (log/debug (str "retval: " retval))
+      retval)))
 
 ;; (fs/match {:a 42} {:a 42 :b 43})
 ;; => {:b 43, :a 42} ; ok: val2 specializes val1.

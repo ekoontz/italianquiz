@@ -301,8 +301,13 @@
          do-match
          (if (and (not (nil? sem-filter))
                   (not (nil? comp-sem)))
-           (unify/unify {:synsem (unify/copy sem-filter)}
-                  (unify/copy {:synsem (unify/copy comp-sem)})))]
+           (do
+             (log/debug (str "doing filter with unify.."))
+             (let [retval
+                   (unify/unify {:synsem (unify/copy sem-filter)}
+                                (unify/copy {:synsem (unify/copy comp-sem)}))]
+               (log/debug (str "done with filter using unify."))
+               retval)))]
      ;; wrap the single result in a list so that it can be consumed by (over).
      (list
      (if (= do-match :fail)
@@ -360,6 +365,7 @@
 
    (= symbol 'vp) gram/vp
    (= symbol 'vp-imperfetto) gram/vp-imperfetto
+   (= symbol 'vp-aux) gram/vp-aux
    (= symbol 'vp-present) gram/vp-present
    (= symbol 'vp-past) gram/vp-past
    (= symbol 'vp-pron) gram/vp-pron
@@ -373,6 +379,27 @@
     (str "    "
          (depth-str (- depth 1)))
     ""))
+
+
+(defn poh [parent head depth]
+  (lexfn/unify (unify/get-in parent '(:head))
+               head))
+
+(defn overflow []
+  (lexfn/unify (unify/get-in gram/vp-aux '(:head))
+               (first lex/lexicon)))
+
+(defn overflow2 []
+  (lexfn/unify (unify/get-in gram/vp-aux '(:head))
+               (lexfn/unify
+                {:italian {:foo 42}}
+                lex/subjective-debug
+                )))
+
+(defn parent-over-head [parent head depth]
+  (lexfn/unify parent
+               (lexfn/unify {:head head}
+                            {:head {:synsem {:sem (lex/sem-impl (unify/get-in head '(:synsem :sem)))}}})))
 
 (defn heads-by-comps [parent heads comps depth]
   (log/debug (str (depth-str depth) "heads-by-comps begin: " (unify/get-in parent '(:comment-plaintext))))
@@ -392,56 +419,57 @@
         (log/debug (str "heads-by-comps: "
                        (unify/get-in parent '(:comment-plaintext)) ": first head: " (first heads) "  is fail; continuing."))
         (heads-by-comps parent (rest heads) comps depth))
-      (let [unified
-            (lexfn/unify parent
-                         (lexfn/unify {:head (first heads)}
-                                      {:head {:synsem {:sem (lex/sem-impl (unify/get-in (first heads) '(:synsem :sem)))}}}))
-            unified-parent
-            (if (not (unify/fail? unified))
-              unified
-              :fail)]
-
-      (if (unify/fail? unified-parent)
-        (do
-          (log/debug (str "heads-by-comps: " (unify/get-in parent '(:comment-plaintext)) ": first head: " (first heads) "  is fail; continuing."))
-          (log/debug (str "parent head: " (unify/get-in parent '(:head :english))))
-          (log/debug (str "failed head: " (unify/get-in (first heads) '(:english))))
-          (log/debug (str "fail path:" (unify/fail-path unified-parent)))
-          (log/debug (str "head english: " (unify/get-in (first heads) '(:english))))
-          (log/debug (str "head english b: " (unify/get-in (first heads) '(:english :b))))
-          (log/debug (str "parent head english: " (unify/get-in parent '(:head :english))))
-          (log/debug (str "parent head english b: " (unify/get-in parent '(:head :english :b))))
-          (log/debug (str "unify english: " (lexfn/unify (unify/get-in (first heads) '(:english))
-                                                        (unify/get-in parent '(:head :english)))))
-          (log/debug (str "unify head: " (lexfn/unify (first heads)
-                                                     (unify/get-in parent '(:head)))))
-;          (throw (Exception. (str "failed to unify head.")))
-          (heads-by-comps parent (rest heads) comps depth))
-
-        (do
-          (log/debug (str "heads-by-comps: " (unify/get-in parent '(:comment-plaintext)) " first head: " (fo (first heads))))
-          (lazy-cat
-           (let [comp-cat (unify/get-in unified-parent '(:comp :synsem :cat))
-                 comp-synsem (unify/get-in unified-parent '(:comp :synsem))]
-             (head-by-comps unified-parent
-                            (first heads)
-                            (let [filtered-complements
-                                  (filter (fn [lex]
-                                            (not (unify/fail? (lexfn/unify (unify/get-in lex '(:synsem)) comp-synsem))))
-                                          comps)]
-                              (log/debug (str  (unify/get-in parent '(:comment-plaintext)) ": size of pre-filtered complements: " (.size comps)))
-                              (log/debug (str  (unify/get-in parent '(:comment-plaintext)) ": size of filtered complements: " (.size filtered-complements)))
-                              (if (and (> (/ (.size filtered-complements)
-                                             (.size comps))
-                                          0)
-                                       (> 1/10 (/ (.size filtered-complements)
-                                                  (.size comps))))
-                                (log/warn (str  (unify/get-in parent '(:comment-plaintext)) ": comp filter ratio < 10%: "
-                                                (/ (.size filtered-complements) (.size comps)))))
-                              filtered-complements)
-                            depth
-                            (morph/phrase-is-finished? (first heads))))
-           (heads-by-comps parent (rest heads) comps depth))))))))
+      (do
+        (log/debug (str "parent successfully added head - trying now with sem-impl."))
+        (log/debug (str "component 1: " (lex/sem-impl (unify/get-in (first heads)
+                                                                   '(:synsem :sem)))))
+        (log/debug (str "component 2: " {:head {:synsem {:sem (lex/sem-impl (unify/get-in (first heads)
+                                                                                         '(:synsem :sem)))}}}))
+        (log/debug (str "doing unify now with : " parent " ;;; " (first heads) " ;;; " depth))
+;        (printfs parent "parent.html")
+;        (printfs (first heads) "head.html")
+        (let [unified (parent-over-head parent (first heads) depth)]
+          (log/debug (str "did unify and got: " unified))
+          (if (unify/fail? unified)
+            (do
+              (log/debug (str "heads-by-comps: " (unify/get-in parent '(:comment-plaintext)) ": first head: " (first heads) "  is fail; continuing."))
+              (log/debug (str "parent head: " (unify/get-in parent '(:head :english))))
+              (log/debug (str "failed head: " (unify/get-in (first heads) '(:english))))
+              (log/debug (str "fail path:" (unify/fail-path unified)))
+              (log/debug (str "head english: " (unify/get-in (first heads) '(:english))))
+              (log/debug (str "head english b: " (unify/get-in (first heads) '(:english :b))))
+              (log/debug (str "parent head english: " (unify/get-in parent '(:head :english))))
+              (log/debug (str "parent head english b: " (unify/get-in parent '(:head :english :b))))
+              (log/debug (str "unify english: " (lexfn/unify (unify/get-in (first heads) '(:english))
+                                                            (unify/get-in parent '(:head :english)))))
+              (log/debug (str "unify head: " (lexfn/unify (first heads)
+                                                         (unify/get-in parent '(:head)))))
+                                        ;          (throw (Exception. (str "failed to unify head.")))
+              (heads-by-comps parent (rest heads) comps depth))
+            (do
+              (log/debug (str "heads-by-comps: " (unify/get-in parent '(:comment-plaintext)) " first head: " (fo (first heads))))
+              (lazy-cat
+               (let [comp-cat (unify/get-in unified '(:comp :synsem :cat))
+                     comp-synsem (unify/get-in unified '(:comp :synsem))]
+                 (head-by-comps unified
+                                (first heads)
+                                (let [filtered-complements
+                                      (filter (fn [lex]
+                                                (not (unify/fail? (lexfn/unify (unify/get-in lex '(:synsem)) comp-synsem))))
+                                              comps)]
+                                  (log/debug (str  (unify/get-in parent '(:comment-plaintext)) ": size of pre-filtered complements: " (.size comps)))
+                                  (log/debug (str  (unify/get-in parent '(:comment-plaintext)) ": size of filtered complements: " (.size filtered-complements)))
+                                  (if (and (> (/ (.size filtered-complements)
+                                                 (.size comps))
+                                              0)
+                                           (> 1/10 (/ (.size filtered-complements)
+                                                      (.size comps))))
+                                    (log/warn (str  (unify/get-in parent '(:comment-plaintext)) ": comp filter ratio < 10%: "
+                                                    (/ (.size filtered-complements) (.size comps)))))
+                                  filtered-complements)
+                                depth
+                                (morph/phrase-is-finished? (first heads))))
+               (heads-by-comps parent (rest heads) comps depth)))))))))
 
 (defn lazy-head-filter [parent expansion sem-impl heads]
   (if (not (empty? heads))
@@ -559,6 +587,9 @@
 
 (defn generate-with [parent expands-map]
   (generate parent nil nil nil expands-map))
+
+(defn generate-wtf [parent]
+  (heads-by-comps parent lex/lexicon lex/lexicon 0))
 
 (defn binding-restrictions [sign]
   "Enforce binding restrictions to avoid things like 'I see me'."
@@ -695,6 +726,7 @@
   (finalize (first (take 1 (generate
                             (first (take 1 (shuffle
                                             (list gram/s-present
+                                                  gram/s-past
                                                   gram/s-future
                                                   gram/s-imperfetto
                                                   )))))))))
