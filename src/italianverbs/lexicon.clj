@@ -981,20 +981,10 @@
                            :agr subject-agreement}}}}))
 
 (def subjective-debug
-  (let [subj-sem (ref :top)
-        subject-agreement (ref {:case {:not :acc}})
-        infl (ref :top)
-        essere-type (ref :top)]
-    {:italian {:agr subject-agreement :infl infl :essere essere-type}
-     :english {:agr subject-agreement :infl infl}
-     :synsem {:essere essere-type
-              :infl infl
-              :cat :verb
-              :sem {:subj subj-sem}
-              :subcat {:1 {
-                           :sem subj-sem
-                           :cat :noun
-                           :agr subject-agreement}}}}))
+  (let [infl (ref :top)]
+    {:italian {:infl infl}
+     :english {:infl infl}
+     :synsem {:infl infl}}))
 
 ;; intransitive: has subject but no object.
 (def intransitive

@@ -390,11 +390,16 @@
                (first lex/lexicon)))
 
 (defn overflow2 []
-  (lexfn/unify (unify/get-in gram/vp-aux '(:head))
-               (lexfn/unify
+  (lexfn/unify ;(unify/get-in gram/vp-aux '(:head))
+   (unify/get-in (unify/merge gram/head-principle
+                              gram/verb-inflection-morphology)
+                 '(:head))
+   (lexfn/unify
                 {:italian {:foo 42}}
-                lex/subjective-debug
-                )))
+                (let [infl (ref :top)]
+                  {:italian {:infl infl}
+                   :english {:infl infl}
+                   :synsem {:infl infl}}))))
 
 (defn parent-over-head [parent head depth]
   (lexfn/unify parent
