@@ -11,15 +11,15 @@
             [italianverbs.session :as session]
             [clojure.string :as string]))
 
-(defn message [msg] 
+(defn message [msg]
   (html
    [:div msg]))
 
-(defn welcome [username] 
+(defn welcome [username]
   (html
    [:div
-    (if username 
-      [:div "benvenuti, " username "."
+    (if username
+      [:div "Benvenuti, " username "."
        [:a {:href "/italian/session/clear/"} "Logout"]
        ]
       [:a {:href "/italian/session/set/"} "Login"]
@@ -33,21 +33,20 @@
      (if (= relative-url "/quiz/") {:class "selected"})
      [:a {:href "/italian/quiz/"} "Quiz"]]
 ;    [:div
-;     (if (= relative-url "/preferiti/") {:class "selected"})
-;     [:a {:href "/italian/preferiti/"} "i tuoi preferiti"]]
-;    [:div
 ;     (if (= relative-url "/lexicon/") {:class "selected"})
-;     [:a {:href "/italian/lexicon/"} "Lexicon"  ] ] 
+;     [:a {:href "/italian/lexicon/"} "Lexicon"  ] ]
 ;    [:div
 ;     (if (= relative-url "/search/") {:class "selected"})
 ;     [:a {:href "/italian/search/"} "Search"  ] ]
 ;    [:div
 ;     (if (= relative-url "/workbook/") {:class "selected"})
 ;     [:a {:href "/italian/workbook/"} "Workbook"  ] ]
-
+;    [:div
+;     (if (= relative-url "/preferiti/") {:class "selected"})
+;     [:a {:href "/italian/preferiti/"} "I tuoi preferiti"]]
     [:div
      (if (= relative-url "/about/") {:class "selected"})
-     [:a {:href "/italian/about/"} "About"  ] ]
+     [:a {:href "/italian/about/"} "Che è?"  ] ]
     ]))
 
 (defn powered-by [name link]
@@ -75,7 +74,7 @@
        [:td {:colspan "2"}
         (powered-by "ring" "https://github.com/mmcgrana/ring")]]
      [:tr
-      [:td 
+      [:td
        (powered-by "jetty" "http://jetty.codehaus.org/jetty/")]
       [:td {:colspan "3"}
        (powered-by "clojure" "http://clojure.org/")]
@@ -125,7 +124,7 @@
 
 (defn page [title & [content request onload]]
   (html5
-   [:head 
+   [:head
     [:meta  {:Content-Type "text/html; charset=UTF-8"}]
     [:title (str title
                  (if (and title (not (= title "")))
@@ -160,7 +159,6 @@
     [:div#top
      (menubar (session/request-to-session request)
               (if request (get request :uri)))]
-    
     [:div#content content]
 
     (if request

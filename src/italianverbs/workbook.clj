@@ -73,12 +73,12 @@
   (let [search-query (get (get request :query-params) "search")]
     (html
      [:div#workbook-ui {:class "quiz-elem"}
-      [:h2 "Workbook"]
+      [:h2 "Libro di Lavoro"]
       [:div#searchbar
        [:textarea {:cols 80 :rows 4 :id "workbookq" }
         (if search-query
           search-query
-          "(fo (random-sentence))")]
+          "(fo (take 1 (repeatedly #(random-sentence))))")]
        [:button {:onclick "workbook()"} "evaluate"]]
       [:div#workbooka
        (if search-query

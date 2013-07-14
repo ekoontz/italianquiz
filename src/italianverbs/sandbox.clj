@@ -4,13 +4,16 @@
    [italianverbs.lexicon]
    ;; Prohibit generate/printfs because it writes directly to the filesystem:
    ;; attacker could DOS server by filling up filesystem.
-   [italianverbs.generate :exclude [printfs]]
+   ;; Also exclude 'generate' so that we can define a wrapper for it in the sandbox,
+   ;; rather than using it directly.
+   [italianverbs.generate :exclude [printfs generate]]
    [italianverbs.grammar]
    [italianverbs.morphology]
    [clojail.core :only [sandbox]]
    [clojail.testers]
    ]
   [:require
+   [italianverbs.generate :as gen]
    [italianverbs.lexiconfn :as lexfn]
    [italianverbs.unify :as fs]
    [italianverbs.html :as html]
@@ -144,5 +147,34 @@
 ))
 
 
+(defn get-in [map path & [not-found]]
+  (log/debug "got here: " (seq? map))
+
+  (if (seq? map)
+    (do
+      (log/debug "got here(2): " (first map))
+      (fs/get-in (first map) path not-found))
+    (fs/get-in map path not-found)))
+
+(defn generate [parent]
+  (if (seq? parent)
+    (gen/generate (first parent))
+    (gen/generate parent)))
+
+;;
 42
 
+;; useful sandbox example usage:
+;;
+;; show underlying english structure of a linguistic sign:
+;;
+;; (plain (fs/get-in (first (take 1 (generate vp-past))) '(:english)))
+
+;; show result of morphological computation on a linguistic sign,a
+;; and if computation fails (i.e. falls through to a map), show the map in plain form for debugging.
+;;
+;;(plain (get-english-1 (fs/get-in (first (take 1 (generate vp-past))) '(:english))))
+
+;; generate a noun phrase with a specific expansion
+;;
+;;(fo (take 1 (generate-with np {"np -> det (noun or nbar)" {:a {:head 'lexicon :comp 'lexicon}}})))

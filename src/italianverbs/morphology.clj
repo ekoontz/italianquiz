@@ -4,6 +4,10 @@
    [clojure.tools.logging :as log]
    [clojure.string :as string]))
 
+(defn strip [str]
+  "remove heading and trailing whitespace"
+  (string/replace (string/replace str #"^\s+" "") #"\s+$" ""))
+
 (defn phrase-is-finished? [phrase]
   (cond
    (string? phrase) true
@@ -121,331 +125,426 @@
 
     (cond
 
-   (and (= :infinitive (fs/get-in word '(:infl)))
-        (string? (fs/get-in word '(:infinitive))))
-   (fs/get-in word '(:infinitive))
+     ;; handle lexical exceptions (plural feminine adjectives):
+     (and
+      (= (fs/get-in word '(:agr :number)) :plur)
+      (= (fs/get-in word '(:agr :gender)) :fem)
+      (= (fs/get-in word '(:cat)) :adjective)
+      (string? (fs/get-in word '(:irregular :fem :plur))))
+     (fs/get-in word '(:irregular :fem :plur))
 
-   (and
-    (= (fs/get-in word '(:infl)) :futuro)
-    (map? (fs/get-in word '(:irregular :futuro))))
-   (let [infinitive (fs/get-in word '(:infinitive))
-         person (fs/get-in word '(:agr :person))
-         number (fs/get-in word '(:agr :number))]
-     (cond
-      (and (= person :1st) (= number :sing))
-      (fs/get-in word '(:irregular :futuro :1sing))
-      (and (= person :2nd) (= number :sing))
-      (fs/get-in word '(:irregular :futuro :2sing))
-      (and (= person :3rd) (= number :sing))
-      (fs/get-in word '(:irregular :futuro :3sing))
-      (and (= person :1st) (= number :plur))
-      (fs/get-in word '(:irregular :futuro :1plur))
-      (and (= person :2nd) (= number :plur))
-      (fs/get-in word '(:irregular :futuro :2plur))
-      (and (= person :3rd) (= number :plur))
-      (fs/get-in word '(:irregular :futuro :3plur))
-      true
-      word))
+     ;; handle lexical exceptions (plural masculine adjectives):
+     (and
+      (= (fs/get-in word '(:agr :number)) :plur)
+      (= (fs/get-in word '(:agr :gender)) :masc)
+      (= (fs/get-in word '(:cat)) :adjective)
+      (string? (fs/get-in word '(:irregular :masc :plur))))
+     (fs/get-in word '(:irregular :masc :plur))
 
-   ;; regular futuro tense
-   (and (= (fs/get-in word '(:infl)) :futuro)
-        (fs/get-in word '(:infinitive)))
-   (let [infinitive (fs/get-in word '(:infinitive))
-         person (fs/get-in word '(:agr :person))
-         number (fs/get-in word '(:agr :number))
-         stem (stem-per-futuro infinitive)]
-     (cond
-      (and (= person :1st) (= number :sing))
-      (str stem "ò")
+     (and
+      (or (= (fs/get-in word '(:agr :gender)) :masc)
+          (= (fs/get-in word '(:agr :gender)) :top))
+      (= (fs/get-in word '(:agr :number)) :plur)
+      (= (fs/get-in word '(:cat)) :adjective))
+     (string/replace (fs/get-in word '(:italian))
+                     #"[eo]$" "i") ;; nero => neri
 
-      (and (= person :2nd) (= number :sing))
-      (str stem "ai")
+     (and
+      (= (fs/get-in word '(:agr :gender)) :fem)
+      (= (fs/get-in word '(:agr :number)) :plur)
+      (= (fs/get-in word '(:cat)) :adjective))
+     (string/replace (fs/get-in word '(:italian))
+                     #"[eo]$" "e") ;; nero => nere
 
-      (and (= person :3rd) (= number :sing))
-      (str stem "à")
+     ;; handle lexical exceptions (plural nouns):
+     (and
+      (= (fs/get-in word '(:agr :number)) :plur)
+      (= (fs/get-in word '(:cat)) :noun)
+      (string? (fs/get-in word '(:irregular :plur))))
+     (fs/get-in word '(:irregular :plur))
 
-      (and (= person :1st) (= number :plur))
-      (str stem "emo")
+     ;; regular masculine nouns
+     (and
+      (= (fs/get-in word '(:agr :gender)) :masc)
+      (= (fs/get-in word '(:agr :number)) :plur)
+      (= (fs/get-in word '(:cat) :noun))
+      (fs/get-in word '(:italian)))
+     (string/replace (fs/get-in word '(:italian))
+                     #"[eo]$" "i") ;; dottore => dottori; medico => medici
 
-      (and (= person :2nd) (= number :plur))
-      (str stem "ete")
+     ;; regular feminine nouns
+     (and
+      (= (fs/get-in word '(:agr :gender)) :fem)
+      (= (fs/get-in word '(:agr :number)) :plur)
+      (= (fs/get-in word '(:cat) :noun))
+      (fs/get-in word '(:italian)))
+     (string/replace (fs/get-in word '(:italian))
+                     #"[a]$" "e") ;; donna => donne
 
-      (and (= person :3rd) (= number :plur))
-      (str stem "anno")
+     ;; TODO: move this down to other adjectives.
+     ;; this was moved up here to avoid
+     ;; another rule from matching it.
+     (and
+      (= (fs/get-in word '(:agr :gender)) :fem)
+      (= (fs/get-in word '(:agr :number)) :plur)
+      (= (fs/get-in word '(:cat)) :adjective))
+     (string/replace (fs/get-in word '(:italian))
+                     #"[eo]$" "e") ;; nero => nere
 
-      :else
-      word))
+     (and
+      (= (fs/get-in word '(:agr :gender)) :fem)
+      (= (fs/get-in word '(:agr :number)) :sing)
+      (= (fs/get-in word '(:cat)) :adjective))
+     (string/replace (fs/get-in word '(:italian))
+                     #"[eo]$" "a") ;; nero => nera
 
-   ;; regular imperfetto sense
-   (and (= (fs/get-in word '(:infl)) :imperfetto)
-        (fs/get-in word '(:infinitive)))
-   (let [infinitive (fs/get-in word '(:infinitive))
-         person (fs/get-in word '(:agr :person))
-         number (fs/get-in word '(:agr :number))
-         stem (stem-per-imperfetto infinitive)]
-     (cond
-      (and (= person :1st) (= number :sing))
-      (str stem "vo")
+     (and
+      (string? (fs/get-in word '(:italian)))
+      (= :top (fs/get-in word '(:agr :sing) :top)))
+     (str (fs/get-in word '(:italian)))
 
-      (and (= person :2nd) (= number :sing))
-      (str stem "vi")
+     (= (fs/get-in word '(:a)) :top)
+     (str
+      ".." " " (get-italian-1 (fs/get-in word '(:b))))
 
-      (and (= person :3rd) (= number :sing))
-      (str stem "va")
+     (and
+      (= (fs/get-in word '(:b)) :top)
+      (string? (get-italian-1 (fs/get-in word '(:a)))))
+     (str
+      (get-italian-1 (fs/get-in word '(:a)))
+      " " "..")
 
-      (and (= person :1st) (= number :plur))
-      (str stem "vamo")
+     (and
+      (= (fs/get-in word '(:b)) :top)
+      (string? (fs/get-in word '(:a :italian))))
+     (str
+      (get-italian-1 (fs/get-in word '(:a :italian)))
+      " " "..")
 
-      (and (= person :2nd) (= number :plur))
-      (str stem "vate")
+     (and (= :infinitive (fs/get-in word '(:infl)))
+          (string? (fs/get-in word '(:infinitive))))
+     (fs/get-in word '(:infinitive))
 
-      (and (= person :3rd) (= number :plur))
-      (str stem "vano")
+     (and
+      (= (fs/get-in word '(:infl)) :futuro)
+      (map? (fs/get-in word '(:irregular :futuro))))
+     (let [infinitive (fs/get-in word '(:infinitive))
+           person (fs/get-in word '(:agr :person))
+           number (fs/get-in word '(:agr :number))]
+       (cond
+        (and (= person :1st) (= number :sing))
+        (fs/get-in word '(:irregular :futuro :1sing))
+        (and (= person :2nd) (= number :sing))
+        (fs/get-in word '(:irregular :futuro :2sing))
+        (and (= person :3rd) (= number :sing))
+        (fs/get-in word '(:irregular :futuro :3sing))
+        (and (= person :1st) (= number :plur))
+        (fs/get-in word '(:irregular :futuro :1plur))
+        (and (= person :2nd) (= number :plur))
+        (fs/get-in word '(:irregular :futuro :2plur))
+        (and (= person :3rd) (= number :plur))
+        (fs/get-in word '(:irregular :futuro :3plur))
+        true
+        word))
 
-      :else
-      word))
+     ;; regular futuro tense
+     (and (= (fs/get-in word '(:infl)) :futuro)
+          (fs/get-in word '(:infinitive)))
+     (let [infinitive (fs/get-in word '(:infinitive))
+           person (fs/get-in word '(:agr :person))
+           number (fs/get-in word '(:agr :number))
+           stem (stem-per-futuro infinitive)]
+       (cond
+        (and (= person :1st) (= number :sing))
+        (str stem "ò")
 
+        (and (= person :2nd) (= number :sing))
+        (str stem "ai")
 
-   ;; TODO: remove this: :past is only for english (get-english-1), not italian.
-   ;; italian uses :passato.
-   (and
-    (= :past (fs/get-in word '(:infl)))
-    (string? (fs/get-in word '(:irregular :past))))
-   (fs/get-in word '(:irregular :past))
+        (and (= person :3rd) (= number :sing))
+        (str stem "à")
 
-   ;; irregular passato prossimo and essere-verb => NEI (not enough information): defer conjugatation and keep as a map.
-   (and (= :past (fs/get-in word '(:infl)))
-        (fs/get-in word '(:irregular :passato))
-        (fs/get-in word '(:essere) true)
-        (or (= :notfound (fs/get-in word '(:agr :number) :notfound))
-            (= :top (fs/get-in word '(:agr :number)))))
-   word
+        (and (= person :1st) (= number :plur))
+        (str stem "emo")
 
-   ;; regular passato prossimo and essere-verb => NEI (not enough information): defer conjugation and keep as a map.
-   (and (= :past (fs/get-in word '(:infl)))
-        (fs/get-in word '(:essere) true)
-        (or (= :notfound (fs/get-in word '(:agr :number) :notfound))
-            (= :top (fs/get-in word '(:agr :number)))))
-   word
+        (and (= person :2nd) (= number :plur))
+        (str stem "ete")
 
-   ;; conjugate irregular passato
-   (and (= :past (fs/get-in word '(:infl)))
-        (fs/get-in word '(:irregular :passato)))
-   (let [irregular-passato (fs/get-in word '(:irregular :passato))
-         butlast (nth (re-find #"(.*).$" irregular-passato) 1)]
-     (str butlast (suffix-of word)))
+        (and (= person :3rd) (= number :plur))
+        (str stem "anno")
 
-   ;; conjugate regular passato
-   (= :past (fs/get-in word '(:infl)))
-   (let [infinitive (fs/get-in word '(:infinitive))
-         are-type (try (re-find #"are$" infinitive)
-                       (catch Exception e
-                         (throw (Exception. (str "Can't regex-find on non-string: " infinitive)))))
-         ere-type (re-find #"ere$" infinitive)
-         ire-type (re-find #"ire$" infinitive)
-         stem (string/replace infinitive #"[iae]re$" "")
-         last-stem-char-is-i (re-find #"i$" stem)
+        :else
+        word))
 
-         ;; for passato prossimo, the last char depends on gender and number, if an essere-verb.
-         suffix (suffix-of word)
+     ;; irregular imperfetto sense:
+     ;; 1) use irregular based on number and person.
+     (and
+      (= (fs/get-in word '(:infl)) :imperfetto)
+      (= :sing (fs/get-in word '(:agr :number)))
+      (= :1st (fs/get-in word '(:agr :person)))
+      (string? (fs/get-in word '(:irregular :imperfetto :1sing))))
+     (fs/get-in word '(:irregular :imperfetto :1sing))
 
-         ]
+     (and
+      (= (fs/get-in word '(:infl)) :imperfetto)
+      (= :sing (fs/get-in word '(:agr :number)))
+      (= :2nd (fs/get-in word '(:agr :person)))
+      (string? (fs/get-in word '(:irregular :imperfetto :2sing))))
+     (fs/get-in word '(:irregular :imperfetto :2sing))
 
+     (and
+      (= (fs/get-in word '(:infl)) :imperfetto)
+      (= :sing (fs/get-in word '(:agr :number)))
+      (= :3rd (fs/get-in word '(:agr :person)))
+      (string? (fs/get-in word '(:irregular :imperfetto :3sing))))
+     (fs/get-in word '(:irregular :imperfetto :3sing))
 
-     (cond
+     (and
+      (= (fs/get-in word '(:infl)) :imperfetto)
+      (= :plur (fs/get-in word '(:agr :number)))
+      (= :1st (fs/get-in word '(:agr :person)))
+      (string? (fs/get-in word '(:irregular :imperfetto :1plur))))
+     (fs/get-in word '(:irregular :imperfetto :1plur))
+     (and
+      (= (fs/get-in word '(:infl)) :imperfetto)
+      (= :plur (fs/get-in word '(:agr :number)))
+      (= :2nd (fs/get-in word '(:agr :person)))
+      (string? (fs/get-in word '(:irregular :imperfetto :2plur))))
+     (fs/get-in word '(:irregular :imperfetto :2plur))
+     (and
+      (= (fs/get-in word '(:infl)) :imperfetto)
+      (= :plur (fs/get-in word '(:agr :number)))
+      (= :3rd (fs/get-in word '(:agr :person)))
+      (string? (fs/get-in word '(:irregular :imperfetto :3plur))))
+     (fs/get-in word '(:irregular :imperfetto :3plur))
 
-      (or are-type ere-type)
-      (str stem "at" suffix) ;; "ato" or "ati"
+     ;; regular imperfetto sense
+     (and (= (fs/get-in word '(:infl)) :imperfetto)
+          (fs/get-in word '(:infinitive)))
+     (let [infinitive (fs/get-in word '(:infinitive))
+           person (fs/get-in word '(:agr :person))
+           number (fs/get-in word '(:agr :number))
+           stem (stem-per-imperfetto infinitive)]
+       (cond
+        (and (= person :1st) (= number :sing))
+        (str stem "vo")
 
-      (or are-type ire-type)
-      (str stem "it" suffix) ;; "ito" or "iti"
+        (and (= person :2nd) (= number :sing))
+        (str stem "vi")
 
-      true
-      (str "(regpast:TODO):" stem)))
+        (and (= person :3rd) (= number :sing))
+        (str stem "va")
 
-   (and (= (fs/get-in word '(:infl)) :present)
-        (= person :1st) (= number :sing)
-        (string? (fs/get-in word '(:irregular :present :1sing))))
-   (fs/get-in word '(:irregular :present :1sing))
+        (and (= person :1st) (= number :plur))
+        (str stem "vamo")
 
-   (and (= (fs/get-in word '(:infl)) :present)
-        (= person :2nd) (= number :sing)
-        (string? (fs/get-in word '(:irregular :present :2sing))))
-   (fs/get-in word '(:irregular :present :2sing))
+        (and (= person :2nd) (= number :plur))
+        (str stem "vate")
 
-   (and (= (fs/get-in word '(:infl)) :present)
-        (= person :3rd) (= number :sing)
-        (string? (fs/get-in word '(:irregular :present :3sing))))
-   (fs/get-in word '(:irregular :present :3sing))
+        (and (= person :3rd) (= number :plur))
+        (str stem "vano")
 
-   (and (= (fs/get-in word '(:infl)) :present)
-        (= person :1st) (= number :plur)
-        (string? (fs/get-in word '(:irregular :present :1plur))))
-   (fs/get-in word '(:irregular :present :1plur))
+        (string? infinitive)
+        (str "[" infinitive "]")
 
-   (and (= (fs/get-in word '(:infl)) :present)
-        (= person :2nd) (= number :plur)
-        (string? (fs/get-in word '(:irregular :present :2plur))))
-   (fs/get-in word '(:irregular :present :2plur))
+        :else
+        (merge word
+               {:error 1})))
 
-   (and (= (fs/get-in word '(:infl)) :present)
-        (= person :3rd) (= number :plur)
-        (string? (fs/get-in word '(:irregular :present :3plur))))
-   (fs/get-in word '(:irregular :present :3plur))
+     ;; TODO: remove this: :past is only for english (get-english-1), not italian.
+     ;; italian uses :passato.
+     (and
+      (= :past (fs/get-in word '(:infl)))
+      (string? (fs/get-in word '(:irregular :past))))
+     (fs/get-in word '(:irregular :past))
 
-   (and
-    (= (fs/get-in word '(:infl)) :present)
-    (string? (fs/get-in word '(:infinitive))))
-   (let [infinitive (fs/get-in word '(:infinitive))
-         are-type (try (re-find #"are$" infinitive)
-                       (catch Exception e
-                         (throw (Exception. (str "Can't regex-find on non-string: " infinitive " from word: " word)))))
-         ere-type (re-find #"ere$" infinitive)
-         ire-type (re-find #"ire$" infinitive)
-         stem (string/replace infinitive #"[iae]re$" "")
-         last-stem-char-is-i (re-find #"i$" stem)
-         person (fs/get-in word '(:agr :person))
-         number (fs/get-in word '(:agr :number))]
-     (cond
+     ;; return the irregular form in square brackets, indicating that there's
+     ;; not enough information to conjugate the verb.
+     (and (= :past (fs/get-in word '(:infl)))
+          (fs/get-in word '(:irregular :passato))
+          (fs/get-in word '(:essere) true)
+          (or (= :notfound (fs/get-in word '(:agr :number) :notfound))
+              (= :top (fs/get-in word '(:agr :number)))))
+     (str "[" (fs/get-in word '(:irregular :passato)) "]")
 
-      (and (= person :1st) (= number :sing)
-           (string? (fs/get-in word '(:irregular :present :1sing))))
-      (fs/get-in word '(:irregular :present :1sing))
-      (and (= person :2nd) (= number :sing)
-           (string? (fs/get-in word '(:irregular :present :2sing))))
-      (fs/get-in word '(:irregular :present :2sing))
-      (and (= person :3rd) (= number :sing)
-           (string? (fs/get-in word '(:irregular :present :3sing))))
-      (fs/get-in word '(:irregular :present :3sing))
+     ;; regular passato prossimo and essere-verb => NEI (not enough information): defer conjugation and keep as a map.
+     (and (= :past (fs/get-in word '(:infl)))
+          (= (fs/get-in word '(:essere)) true)
+          (or (= :notfound (fs/get-in word '(:agr :number) :notfound))
+              (= :top (fs/get-in word '(:agr :number)))))
+     (str "[" (fs/get-in word '(:infinitive)) " (past)]")
 
-      (and (= person :1st) (= number :plur)
-           (string? (fs/get-in word '(:irregular :present :1plur))))
-      (fs/get-in word '(:irregular :present :1plur))
-      (and (= person :2nd) (= number :plur)
-           (string? (fs/get-in word '(:irregular :present :2plur))))
-      (fs/get-in word '(:irregular :present :2plur))
-      (and (= person :3rd) (= number :plur)
-           (string? (fs/get-in word '(:irregular :present :3plur))))
-      (fs/get-in word '(:irregular :present :3plur))
+     ;; conjugate irregular passato
+     (and (= :past (fs/get-in word '(:infl)))
+          (fs/get-in word '(:irregular :passato)))
+     (let [irregular-passato (fs/get-in word '(:irregular :passato))
+           butlast (nth (re-find #"(.*).$" irregular-passato) 1)]
+       (str butlast (suffix-of word)))
 
-      (and (= person :1st) (= number :sing))
-      (str stem "o")
+     ;; conjugate regular passato
+     (and (= :past (fs/get-in word '(:infl)))
+          (string? (fs/get-in word '(:infinitive))))
+     (let [infinitive (fs/get-in word '(:infinitive))
+           are-type (try (re-find #"are$" infinitive)
+                         (catch Exception e
+                           (throw (Exception. (str "Can't regex-find on non-string: " infinitive)))))
+           ere-type (re-find #"ere$" infinitive)
+           ire-type (re-find #"ire$" infinitive)
+           stem (string/replace infinitive #"[iae]re$" "")
+           last-stem-char-is-i (re-find #"i$" stem)
 
-      (and (= person :2nd) (= number :sing)
-           last-stem-char-is-i)
-      (str stem)
+           ;; for passato prossimo, the last char depends on gender and number, if an essere-verb.
+           suffix (suffix-of word)
 
-      (and (= person :2nd) (= number :sing))
-      (str stem "i")
+           ]
 
-      (and (= person :3rd) (= number :sing) (or ire-type ere-type))
-      (str stem "e")
+       (cond
 
-      (and (= person :3rd) (= number :sing) are-type)
-      (str stem "a")
+        (or are-type ere-type)
+        (str stem "at" suffix) ;; "ato" or "ati"
 
-      (and (= person :1st) (= number :plur)
-           last-stem-char-is-i)
-      (str stem "amo")
+        (or are-type ire-type)
+        (str stem "it" suffix) ;; "ito" or "iti"
 
-      (and (= person :1st) (= number :plur))
-      (str stem "iamo")
+        true
+        (str "(regpast:TODO):" stem)))
 
-      (and (= person :2nd) (= number :plur) are-type)
-      (str stem "ate")
+     (and (= (fs/get-in word '(:infl)) :present)
+          (= person :1st) (= number :sing)
+          (string? (fs/get-in word '(:irregular :present :1sing))))
+     (fs/get-in word '(:irregular :present :1sing))
 
-      (and (= person :2nd) (= number :plur) ere-type)
-      (str stem "ete")
+     (and (= (fs/get-in word '(:infl)) :present)
+          (= person :2nd) (= number :sing)
+          (string? (fs/get-in word '(:irregular :present :2sing))))
+     (fs/get-in word '(:irregular :present :2sing))
 
-      (and (= person :2nd) (= number :plur) ire-type)
-      (str stem "ite")
+     (and (= (fs/get-in word '(:infl)) :present)
+          (= person :3rd) (= number :sing)
+          (string? (fs/get-in word '(:irregular :present :3sing))))
+     (fs/get-in word '(:irregular :present :3sing))
 
-      (and (= person :3rd) (= number :plur))
-      (str stem "ano")
-      :else
-      word))
+     (and (= (fs/get-in word '(:infl)) :present)
+          (= person :1st) (= number :plur)
+          (string? (fs/get-in word '(:irregular :present :1plur))))
+     (fs/get-in word '(:irregular :present :1plur))
 
-   ;; TODO: move this down to other adjectives.
-   ;; this was moved up here to avoid
-   ;; another rule from matching it.
-   ;; handle lexical exceptions (plural feminine adjectives):
-   (and
-    (= (fs/get-in word '(:agr :number)) :plur)
-    (= (fs/get-in word '(:agr :gender)) :fem)
-    (= (fs/get-in word '(:cat)) :adjective)
-    (string? (fs/get-in word '(:irregular :fem :plur))))
-   (fs/get-in word '(:irregular :fem :plur))
+     (and (= (fs/get-in word '(:infl)) :present)
+          (= person :2nd) (= number :plur)
+          (string? (fs/get-in word '(:irregular :present :2plur))))
+     (fs/get-in word '(:irregular :present :2plur))
 
-   ;; TODO: move this down to other adjectives.
-   ;; this was moved up here to avoid
-   ;; another rule from matching it.
-   (and
-    (= (fs/get-in word '(:agr :gender)) :fem)
-    (= (fs/get-in word '(:agr :number)) :plur)
-    (= (fs/get-in word '(:cat)) :adjective))
-   (string/replace (fs/get-in word '(:italian))
-                   #"[eo]$" "e") ;; nero => nere
-   (and
-    (fs/get-in word '(:a))
-    (fs/get-in word '(:b)))
-   (get-italian
-    (fs/get-in word '(:a))
-    (fs/get-in word '(:b)))
+     (and (= (fs/get-in word '(:infl)) :present)
+          (= person :3rd) (= number :plur)
+          (string? (fs/get-in word '(:irregular :present :3plur))))
+     (fs/get-in word '(:irregular :present :3plur))
 
-   ;; TODO: remove support for deprecated :root.
-   (and
-    (= (fs/get-in word '(:agr :gender)) :masc)
-    (= (fs/get-in word '(:agr :number)) :sing)
-    (= (fs/get-in word '(:cat)) :noun)
-    (fs/get-in word '(:root)))
-   (fs/get-in word '(:root))
+     (and
+      (= (fs/get-in word '(:infl)) :present)
+      (string? (fs/get-in word '(:infinitive))))
+     (let [infinitive (fs/get-in word '(:infinitive))
+           are-type (try (re-find #"are$" infinitive)
+                         (catch Exception e
+                           (throw (Exception. (str "Can't regex-find on non-string: " infinitive " from word: " word)))))
+           ere-type (re-find #"ere$" infinitive)
+           ire-type (re-find #"ire$" infinitive)
+           stem (string/replace infinitive #"[iae]re$" "")
+           last-stem-char-is-i (re-find #"i$" stem)
+           person (fs/get-in word '(:agr :person))
+           number (fs/get-in word '(:agr :number))]
+       (cond
 
-   (and
-    (= (fs/get-in word '(:agr :gender)) :fem)
-    (= (fs/get-in word '(:agr :number)) :sing)
-    (= (fs/get-in word '(:cat)) :noun))
-   (fs/get-in word '(:italian))
+        (and (= person :1st) (= number :sing)
+             (string? (fs/get-in word '(:irregular :present :1sing))))
+        (fs/get-in word '(:irregular :present :1sing))
+        (and (= person :2nd) (= number :sing)
+             (string? (fs/get-in word '(:irregular :present :2sing))))
+        (fs/get-in word '(:irregular :present :2sing))
+        (and (= person :3rd) (= number :sing)
+             (string? (fs/get-in word '(:irregular :present :3sing))))
+        (fs/get-in word '(:irregular :present :3sing))
 
-   ;; handle lexical exceptions (plural nouns):
-   (and
-    (= (fs/get-in word '(:agr :number)) :plur)
-    (= (fs/get-in word '(:cat)) :noun)
-    (string? (fs/get-in word '(:irregular :plur))))
-   (fs/get-in word '(:irregular :plur))
+        (and (= person :1st) (= number :plur)
+             (string? (fs/get-in word '(:irregular :present :1plur))))
+        (fs/get-in word '(:irregular :present :1plur))
+        (and (= person :2nd) (= number :plur)
+             (string? (fs/get-in word '(:irregular :present :2plur))))
+        (fs/get-in word '(:irregular :present :2plur))
+        (and (= person :3rd) (= number :plur)
+             (string? (fs/get-in word '(:irregular :present :3plur))))
+        (fs/get-in word '(:irregular :present :3plur))
 
-   ;; handle lexical exceptions (plural masculine adjectives):
-   (and
-    (= (fs/get-in word '(:agr :number)) :plur)
-    (= (fs/get-in word '(:agr :gender)) :masc)
-    (= (fs/get-in word '(:cat)) :adjective)
-    (string? (fs/get-in word '(:irregular :masc :plur))))
-   (fs/get-in word '(:irregular :masc :plur))
+        (and (= person :1st) (= number :sing))
+        (str stem "o")
 
-   (and
-    (= (fs/get-in word '(:agr :gender)) :masc)
-    (= (fs/get-in word '(:agr :number)) :plur)
-    (= (fs/get-in word '(:cat) :noun))
-    (fs/get-in word '(:italian)))
-   (string/replace (fs/get-in word '(:italian))
-                   #"[eo]$" "i") ;; dottore => dottori; medico => medici
+        (and (= person :2nd) (= number :sing)
+            last-stem-char-is-i)
+        (str stem)
 
-   ;; deprecated: remove support for :root.
-   (and
-    (= (fs/get-in word '(:agr :gender)) :masc)
-    (= (fs/get-in word '(:agr :number)) :plur)
-    (= (fs/get-in word '(:cat) :noun))
-    (fs/get-in word '(:root)))
-   (string/replace (fs/get-in word '(:root))
-                   #"[eo]$" "i") ;; dottore => dottori; medico => medici
+        (and (= person :2nd) (= number :sing))
+        (str stem "i")
 
-   (and
-    (= (fs/get-in word '(:agr :gender)) :fem)
-    (= (fs/get-in word '(:agr :number)) :plur)
-    (= (fs/get-in word '(:cat) :noun))
-    (fs/get-in word '(:italian)))
-   (string/replace (fs/get-in word '(:italian))
-                   #"[a]$" "e") ;; donna => donne
+        (and (= person :3rd) (= number :sing) (or ire-type ere-type))
+        (str stem "e")
 
+        (and (= person :3rd) (= number :sing) are-type)
+        (str stem "a")
+
+        (and (= person :1st) (= number :plur)
+             last-stem-char-is-i)
+        (str stem "amo")
+
+        (and (= person :1st) (= number :plur))
+        (str stem "iamo")
+
+        (and (= person :2nd) (= number :plur) are-type)
+        (str stem "ate")
+
+        (and (= person :2nd) (= number :plur) ere-type)
+        (str stem "ete")
+
+        (and (= person :2nd) (= number :plur) ire-type)
+        (str stem "ite")
+
+        (and (= person :3rd) (= number :plur))
+        (str stem "ano")
+        :else
+        (str "[" infinitive "]")))
+
+     (= (fs/get-in word '(:infl)) :top)
+     (str "[" (fs/get-in word '(:infinitive)) "]")
+
+     (and
+      (fs/get-in word '(:a))
+      (fs/get-in word '(:b)))
+     (get-italian
+      (fs/get-in word '(:a))
+      (fs/get-in word '(:b)))
+
+     ;; TODO: remove support for deprecated :root.
+     (and
+      (= (fs/get-in word '(:agr :gender)) :masc)
+      (= (fs/get-in word '(:agr :number)) :sing)
+      (= (fs/get-in word '(:cat)) :noun)
+      (fs/get-in word '(:root)))
+     (fs/get-in word '(:root))
+
+     (and
+      (= (fs/get-in word '(:agr :gender)) :fem)
+      (= (fs/get-in word '(:agr :number)) :sing)
+      (= (fs/get-in word '(:cat)) :noun))
+     (fs/get-in word '(:italian))
+
+     ;; deprecated: remove support for :root.
+     (and
+      (= (fs/get-in word '(:agr :gender)) :masc)
+      (= (fs/get-in word '(:agr :number)) :plur)
+      (= (fs/get-in word '(:cat) :noun))
+      (fs/get-in word '(:root)))
+     (string/replace (fs/get-in word '(:root))
+                     #"[eo]$" "i") ;; dottore => dottori; medico => medici
+
+   ;; deprecated: TODO: remove this
    (and
     (= (fs/get-in word '(:agr :gender)) :fem)
     (= (fs/get-in word '(:agr :number)) :plur)
@@ -477,20 +576,6 @@
     (string? (fs/get-in word '(:irregular :masc :plur))))
    (fs/get-in word '(:irregular :masc :plur))
 
-   (and
-    (= (fs/get-in word '(:agr :gender)) :masc)
-    (= (fs/get-in word '(:agr :number)) :plur)
-    (= (fs/get-in word '(:cat)) :adjective))
-   (string/replace (fs/get-in word '(:italian))
-                   #"[eo]$" "i") ;; nero => neri
-
-   (and
-    (= (fs/get-in word '(:agr :gender)) :fem)
-    (= (fs/get-in word '(:agr :number)) :sing)
-    (= (fs/get-in word '(:cat)) :adjective))
-   (string/replace (fs/get-in word '(:italian))
-                   #"[eo]$" "a") ;; nero => nera
-
 
    (and
     (= (fs/get-in word '(:agr :gender)) :fem)
@@ -504,12 +589,36 @@
   word))
   )
 
-(defn get-italian [a b]
+(defn get-italian [a & [ b ]]
   (let [a (if (nil? a) "" a)
         b (if (nil? b) "" b)
         a (get-italian-1 a)
         b (get-italian-1 b)]
     (cond
+
+     (and (string? a)
+          (= a "di")
+          (string? b)
+          (re-find #"^il (mio|tio|suo|nostro|vostro|loro)\b" b))
+     (str a " " (string/replace b #"^il " ""))
+
+     (and (string? a)
+          (= a "di")
+          (string? b)
+          (re-find #"^la (mia|tia|sua|nostra|vostra|loro)\b" b))
+     (str a " " (string/replace b #"^la " ""))
+
+     (and (string? a)
+          (= a "di")
+          (string? b)
+          (re-find #"^i (miei|tuoi|suoi|nostri|vostri|loro)\b" b))
+     (str a " " (string/replace b #"^i " ""))
+
+     (and (string? a)
+          (= a "di")
+          (string? b)
+          (re-find #"^le (mie|tue|sue|nostre|vostre|loro)\b" b))
+     (str a " " (string/replace b #"^le " ""))
 
      (and (= a "di i")
           (string? b)
@@ -638,8 +747,81 @@
   (log/debug (str "get-english-1: " word))
   (cond
 
+   ;; :note is used for little annotations that are significant in italian but not in english
+   ;; e.g. gender signs (♂,♀) on nouns like "professore" and "professoressa".
+   (and (string? (fs/get-in word '(:english)))
+        (string? (fs/get-in word '(:note))))
+   (str (get-english-1 (dissoc word :note)) " " (fs/get-in word '(:note)))
+
+   (= (fs/get-in word '(:a)) :top)
+   (str
+    ".." " " (get-english-1 (fs/get-in word '(:b))))
+
+   ;; show elipsis (..) if :b is not specified.
+   (and
+    (= (fs/get-in word '(:b)) :top)
+    (string? (get-english-1 (fs/get-in word '(:a)))))
+   (str
+    (get-english-1 (fs/get-in word '(:a)))
+    " " "..")
+
+   ;; show elipsis (..) if :a is not specified.
+   (and
+    (= (fs/get-in word '(:b)) :top)
+    (string? (fs/get-in word '(:a :english))))
+   (str
+    (get-english-1 (fs/get-in word '(:a :english)))
+    " " "..")
+
    (string? word)
-   word
+   (strip word)
+
+   ;; (could have) + (to go) => "could have gone"
+   (and
+    (fs/get-in word '(:a))
+    (fs/get-in word '(:b))
+    (string? (fs/get-in word '(:a :irregular :past)))
+    (= (fs/get-in word '(:irregular :past)) "could have")
+    (string? (fs/get-in word '(:b :irregular :past-participle)))
+    (= (fs/get-in word '(:a :infl)) :past))
+   (string/join " " (list (fs/get-in word '(:a :irregular :past))
+                          (fs/get-in word '(:b :irregular :past-participle))))
+
+   ;; (could have) + (to sleep) => "could have slept"
+   (and
+    (fs/get-in word '(:a))
+    (fs/get-in word '(:b))
+    (string? (fs/get-in word '(:a :irregular :past)))
+    (string? (fs/get-in word '(:b :irregular :past)))
+    (= (fs/get-in word '(:a :infl)) :past))
+   (string/join " " (list (fs/get-in word '(:a :irregular :past))
+                          (fs/get-in word '(:b :irregular :past))))
+
+   ;; (could have) + (do X) => "could have done X"
+   (and
+    (fs/get-in word '(:a))
+    (fs/get-in word '(:b))
+    (string? (fs/get-in word '(:a :irregular :past)))
+    (= (fs/get-in word '(:a :irregular :past)) "could have")
+    (string? (fs/get-in word '(:b :a :irregular :past-participle)))
+    (= (fs/get-in word '(:a :infl)) :past))
+   ;; recursive call after inflecting '(:b :a) to past.
+   (get-english {:a (fs/get-in word '(:a))
+                 :b {:a (fs/get-in word '(:b :a :irregular :past-participle))
+                     :b (fs/get-in word '(:b :b))}})
+
+   ;; (could have) + (make X) => "could have made X"
+   (and
+    (fs/get-in word '(:a))
+    (fs/get-in word '(:b))
+    (string? (fs/get-in word '(:a :irregular :past)))
+    (= (fs/get-in word '(:a :irregular :past)) "could have")
+    (string? (fs/get-in word '(:b :a :irregular :past)))
+    (= (fs/get-in word '(:a :infl)) :past))
+   ;; recursive call after inflecting '(:b :a) to past.
+   (get-english {:a (fs/get-in word '(:a))
+                 :b {:a (fs/get-in word '(:b :a :irregular :past))
+                     :b (fs/get-in word '(:b :b))}})
 
    (and
     (fs/get-in word '(:a))
@@ -683,11 +865,11 @@
      (str "will " stem))
 
    (and (= (fs/get-in word '(:infl)) :imperfetto)
-        (fs/get-in word '(:infinitive))
-        (not (nil? (fs/get-in word '(:agr :number))))
-        (not (nil? (fs/get-in word '(:agr :person)))))
+        (fs/get-in word '(:infinitive)))
    (let [infinitive (fs/get-in word '(:infinitive))
          stem (string/replace infinitive #"^to " "")
+         to-final (re-find #" to$" stem) ;; occurs in e.g. "have to": in imperfect becomes "was having to"
+         stem (string/replace stem #" to$" "")
          stem-minus-one (nth (re-find #"(.*).$" stem) 1)
          penultimate-stem-char (nth (re-find #"(.).$" stem) 1)
          penultimate-stem-char-is-vowel (or (= penultimate-stem-char "a")
@@ -704,19 +886,38 @@
                   stem-minus-one
                   stem)]
        (cond
+
+        ;; TODO: add support for per-agreement (by number or person) irregular imperfetto;
+        ;; for now, only support for a single imperfetto irregular form for all agreements.
+        ;; (might not be needed for english)
+
+        ;; 2) use irregular that is the same for all number and person if there is one.
+        (string? (fs/get-in word '(:irregular :imperfetto)))
+        (fs/get-in word '(:irregular :imperfetto))
+
         (and (= :sing (fs/get-in word '(:agr :number)))
              (or (= :1st (fs/get-in word '(:agr :person)))
                  (= :3rd (fs/get-in word '(:agr :person)))))
-        (str "was " stem "ing")
-        true
-        (str "were " stem "ing"))))
+        (str "was " stem "ing" (if to-final to-final ""))
 
-   ;; irregular past: one form for all persons/number
+        true
+        (str "were " stem "ing" (if to-final to-final "")))))
+
+   ;; irregular past (1): a single inflection for all persons/numbers.
    (and (= :past (fs/get-in word '(:infl)))
         (string? (fs/get-in word '(:irregular :past))))
    (fs/get-in word '(:irregular :past))
 
-   ;; irregular past: different form for all persons/numbers.
+   (and (= :past (fs/get-in word '(:infl)))
+        (= :top (fs/get-in word '(:agr :number)))
+        (string? (fs/get-in word '(:irregular :past :2sing))))
+   ;; use the 2nd singular form if there's not enough inflection info to go on.
+   (str "[" (fs/get-in word '(:irregular :past :2sing)) "]")
+
+   (= :top (fs/get-in word '(:infl)))
+   (str "[" (fs/get-in word '(:infinitive)) "]")
+
+   ;; irregular past (2): a different inflection for each persons/numbers.
    (and (= :past (fs/get-in word '(:infl)))
         (map? (fs/get-in word '(:irregular :past))))
    (let [number (fs/get-in word '(:agr :number))
@@ -809,7 +1010,9 @@
 
       (and (= person :3rd) (= number :plur))
       (str stem "")
-      :else word))
+
+      :else (str "[" root "]")))
+
    (and
     (fs/get-in word '(:irregular :plur))
     (= (fs/get-in word '(:agr :number)) :plur)
@@ -883,14 +1086,13 @@
         (= (.size (keys word)) 1))
    (fs/get-in word '(:english :english))
 
-   (map? word)
-   (merge {:morphology-is-done false}
-          word)
+   (string? (fs/get-in word '(:english)))
+   (fs/get-in word '(:english))
 
    :else
    word))
 
-(defn get-english [a b]
+(defn get-english [a & [ b ] ]
   (let [a (if (nil? a) "" a)
         b (if (nil? b) "" b)
         re-a (get-english-1 a)
@@ -920,7 +1122,7 @@
 
      (and (string? re-a)
           (string? re-b))
-     (str re-a " " re-b)
+     (strip (str re-a " " re-b))
 
      ;; new-style n' -> adj noun
      (and
@@ -931,6 +1133,7 @@
       :b b}
 
      ;; old-style n' -> adj noun
+     ;; TODO: remove this.
      (and
       (= (fs/get-in a '(:cat)) :noun)
       (= (fs/get-in b '(:cat)) :adjective))
@@ -991,7 +1194,7 @@
       (str english "s"))))
 
 (defn italian-article [det noun]
-  "do italian det/noun morphology e.g. [def :def] + studente => lo studente" 
+  "do italian det/noun morphology e.g. [def :def] + studente => lo studente"
   ;; TODO: return a feature structure holding the current return value in :italian.
   (let [det-italian (get det :italian)
         det-noun (get noun :italian)]
