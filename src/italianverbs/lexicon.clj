@@ -1229,7 +1229,8 @@
 
 (def essere-common
   (unify
-   {:italian {:infinitive "essere"
+   {:synsem {:essere true}
+    :italian {:infinitive "essere"
               :essere true
               :irregular {:present {:1sing "sono"
                                     :2sing "sei"
