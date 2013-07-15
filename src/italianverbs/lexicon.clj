@@ -1596,6 +1596,7 @@
 
 (def transitive-verbs
   (list
+   amare
    avere
    bevere
    comprare
