@@ -3,6 +3,7 @@
    [italianverbs.unify :as fs]
    [italianverbs.morphology :as morph]
    [italianverbs.lexiconfn :as lexfn]
+   [italianverbs.generate :as gen]
    [clojure.string :as string]))
 
 (defn unify [ & args]
@@ -640,3 +641,26 @@
 
 (defn english-time [hour minute ampm]
   (string/trim (str hour ":" (if (< minute 10) (str "0" minute) minute) " " (if (= hour 12) (if (= ampm "am") " after midnight" " after noon") ""))))
+
+
+;; TODO: move this to grammar namespace since what a top-level expression (a sentence) is inherently part of the grammar.
+;; also part of removing gram/ namespace from generate since generate should not depend on gram/.
+(defn random-sentence []
+  (gen/finalize (first (take 1 (gen/generate
+                                (first (take 1 (shuffle
+                                                (list s-present
+                                                      s-present-modifier
+                                                      s-future
+                                                      s-past
+                                                      s-past-modifier
+                                                      s-imperfetto
+                                                      s-quando
+                                                      )))))))))
+
+(defn random-sentences [n]
+  (repeatedly n (fn [] (random-sentence))))
+
+(defn speed-test [ & times]
+  "TODO: show benchmark results and statistics (min,max,95%tile,stddev,etc)"
+  (let [times (if (first times) (first times) 10)]
+    (dotimes [n times] (time (random-sentence)))))

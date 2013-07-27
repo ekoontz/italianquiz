@@ -6,8 +6,6 @@
    [italianverbs.lexiconfn :as lexfn]
    ;; TODO: remove this: generate should not need access to morph/ at all.
    [italianverbs.morphology :as morph]
-   ;; TODO: remove this: generate should not need access to gram/ at all.
-   [italianverbs.grammar :as gram]
    [italianverbs.unify :as unify]
    [italianverbs.config :as config]
    [italianverbs.html :as html]
@@ -698,6 +696,7 @@
       (log/debug (str "no more comps to try for parent: "
                       (unify/get-in parent '(:comment-plaintext)))))))
 
+;; TODO: move to morph/.
 (defn finalize [expr]
   (let [english
         (morph/get-english-1 (unify/get-in expr '(:english)))
@@ -706,28 +705,6 @@
     (merge expr
            {:italian italian
             :english english})))
-
-;; TODO: move this to grammar namespace since what a top-level expression (a sentence) is inherently part of the grammar.
-;; also part of removing gram/ namespace from generate since generate should not depend on gram/.
-(defn random-sentence []
-  (finalize (first (take 1 (generate
-                            (first (take 1 (shuffle
-                                            (list gram/s-present
-                                                  gram/s-present-modifier
-                                                  gram/s-future
-                                                  gram/s-past
-                                                  gram/s-past-modifier
-                                                  gram/s-imperfetto
-                                                  gram/s-quando
-                                                  )))))))))
-
-(defn random-sentences [n]
-  (repeatedly n (fn [] (random-sentence))))
-
-(defn speed-test [ & times]
-  "TODO: show benchmark results and statistics (min,max,95%tile,stddev,etc)"
-  (let [times (if (first times) (first times) 10)]
-    (dotimes [n times] (time (random-sentence)))))
 
 (defn espressioni []
   (lexfn/choose-lexeme {:cat :espressioni}))
