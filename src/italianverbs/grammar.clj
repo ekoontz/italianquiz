@@ -491,6 +491,29 @@
                   :comment-plaintext "quando-sentence"
                   :extend {:a {:comp 's-imperfetto
                                :head 'quando-phrase}}}))))
+(def prep-phrase
+  (let [comparative (ref :top)
+        comp-sem (ref :top)
+        head (ref {:synsem {:cat :prep
+                            :sem {:comparative comparative}}})
+        comp (ref {:synsem {:cat :noun
+                            :sem comp-sem
+                            :subcat '()}})]
+    (fs/unifyc head-principle
+               subcat-1-principle
+               {
+                :comment "pp &#x2192; prep (np or propernoun)"
+                :comment-plaintext "pp -> prep (np or proper noun)"}
+               {:head head
+                :comp comp
+                :synsem {:sem {:comparative comparative
+                               :mod comp-sem}}}
+               italian-head-first
+               english-head-first
+               {:extend {:a {:head 'lexicon
+                             :comp 'np}
+                         :b {:head 'lexicon
+                             :comp 'lexicon}}})))
 
 (def adj-phrase
   (unify head-principle
@@ -515,7 +538,7 @@
 
          {:synsem {:cat :adjective}
           :extend {:a {:head 'lexicon
-                       :comp 'prep-phrase}}}))
+                       :comp prep-phrase}}}))
 
 ;; intensifier (e.g. "più") is the head, which subcategorizes
 ;; for an adjective.
@@ -539,32 +562,8 @@
          ;; ..but for now we use "more=rich" e.g. "più ricca di Paolo (more rich than Paolo)"
          {:comment "intensifier-phrase&nbsp;&#x2192;&nbsp;intensifier&nbsp;+&nbsp;adj-phrase"
           :comment-plaintext "intensifier-phrase -> intensifier adj-phrase"
-          :extend {:a {:comp 'adj-phrase
+          :extend {:a {:comp adj-phrase
                        :head 'lexicon}}}))
-
-(def prep-phrase
-  (let [comparative (ref :top)
-        comp-sem (ref :top)
-        head (ref {:synsem {:cat :prep
-                            :sem {:comparative comparative}}})
-        comp (ref {:synsem {:cat :noun
-                            :sem comp-sem
-                            :subcat '()}})]
-    (fs/unifyc head-principle
-               subcat-1-principle
-               {
-                :comment "pp &#x2192; prep (np or propernoun)"
-                :comment-plaintext "pp -> prep (np or proper noun)"}
-               {:head head
-                :comp comp
-                :synsem {:sem {:comparative comparative
-                               :mod comp-sem}}}
-               italian-head-first
-               english-head-first
-               {:extend {:a {:head 'lexicon
-                             :comp 'np}
-                         :b {:head 'lexicon
-                             :comp 'lexicon}}})))
 
 ;; TODO: move to lexicon (maybe).
 (defn italian-number [number]

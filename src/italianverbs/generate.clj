@@ -353,7 +353,6 @@
    (= symbol 'lexicon) (lazy-seq (cons (first lex/lexicon)
                                        (rest lex/lexicon)))
    (= symbol 'tinylex) lex/tinylex
-   (= symbol 'adj-phrase) gram/adj-phrase
    (= symbol 'np) gram/np
    (= symbol 'prep-phrase) gram/prep-phrase
    (= symbol 'intensifier-phrase) gram/intensifier-phrase
