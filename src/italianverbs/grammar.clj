@@ -102,6 +102,111 @@
      :english {:a comp-english
                :b head-english}}))
 
+
+
+
+;; TODO: make adjective the head (currently the complement)
+;; and make noun the complement (currently the head)
+(def nbar
+  (let [head-semantics (ref :top)
+        adjectival-predicate (ref :top)
+        agr (ref :top)
+        subcat (ref :top)]
+    (unify head-principle
+           ;; for Nbar, italian and english have opposite constituent order:
+           italian-head-first
+           english-head-last
+           (let [def (ref :top)]
+             {:head {:synsem {:def def}}
+              :synsem {:def def}})
+           {:synsem {:sem head-semantics}
+            :comp {:synsem {:sem {:mod head-semantics}}}}
+           ;; the following will rule out pronouns, since they don't subcat for a determiner;
+           ;; (in fact, they don't subcat for anything)
+           {:synsem {:subcat {:1 {:cat :det}}}}
+
+           {:synsem {:agr agr
+                     :subcat subcat}
+            :head {:synsem {:agr agr
+                            :cat :noun
+                            :subcat subcat}}
+            :comp {:synsem {:cat :adjective}
+                   :italian {:agr agr}
+                   :english {:agr agr}}}
+
+           {:synsem {:sem {:mod adjectival-predicate}}
+            :comp {:synsem {:sem {:mod head-semantics
+                                  :comparative false
+                                  :pred adjectival-predicate}}}}
+           {:comment "n&#x0305; &#x2192; noun adj"
+            :comment-plaintext "nbar -> noun adj"
+            :extend {:a {:head 'lexicon
+                         :comp 'lexicon}}})))
+
+(def np-rules
+  (let [head (ref :top)
+        comp (ref :top)]
+    (def np
+      (let [head-english (ref :top)
+            head-italian (ref :top)
+            comp-english (ref :top)
+            comp-italian (ref :top)]
+        (fs/unifyc head-principle subcat-1-principle ;; NP -> Comp Head
+                   (let [agr (ref :top)]
+                     (fs/unifyc
+                      (let [def (ref :top)]
+                        {:head {:synsem {:def def}}
+                         :synsem {:def def}
+                         :comp {:synsem {:def def}}})
+                      {:head {:italian head-italian
+                              :english head-english
+                              :synsem {:cat :noun
+                                       :agr agr}}
+                       :comp {:synsem {:cat :det}
+                              :italian comp-italian
+                              :english comp-english}
+                       :synsem {:agr agr}
+                       :comment "np &#x2192; det (noun or nbar)"
+                       :comment-plaintext "np -> det (noun or nbar)"
+
+                       ;; for NP, italian and english have same constituent order:
+                       :italian {:a comp-italian
+                                 :b head-italian}
+                       :english {:a comp-english
+                                 :b head-english}
+                       :extend {
+                                :a {:comp 'lexicon
+                                    :head 'lexicon}
+                                :b {:comp 'lexicon
+                                    :head nbar}
+                                }
+                   })))))
+    (list np)))
+
+(def prep-phrase
+  (let [comparative (ref :top)
+        comp-sem (ref :top)
+        head (ref {:synsem {:cat :prep
+                            :sem {:comparative comparative}}})
+        comp (ref {:synsem {:cat :noun
+                            :sem comp-sem
+                            :subcat '()}})]
+    (fs/unifyc head-principle
+               subcat-1-principle
+               {
+                :comment "pp &#x2192; prep (np or propernoun)"
+                :comment-plaintext "pp -> prep (np or proper noun)"}
+               {:head head
+                :comp comp
+                :synsem {:sem {:comparative comparative
+                               :mod comp-sem}}}
+               italian-head-first
+               english-head-first
+               {:extend {:a {:head 'lexicon
+                             :comp np}
+                         :b {:head 'lexicon
+                             :comp 'lexicon}}})))
+
 (def vp-rules
 
   (let [head (ref :top)
@@ -138,9 +243,9 @@
                {:comp {:synsem {:pronoun {:not true}}}}
                {:extend {
                          :a {:head 'lexicon
-                             :comp 'np}
+                             :comp np}
                          :b {:head 'lexicon
-                             :comp 'prep-phrase}
+                             :comp prep-phrase}
                          :c {:head 'lexicon
                              :comp 'vp-infinitive-transitive}
                          :d {:head 'lexicon
@@ -223,7 +328,7 @@
                :extend {:f {:head 'lexicon
                             :comp 'lexicon}
                         :g {:head 'lexicon
-                            :comp 'np}}}))
+                            :comp np}}}))
 
   (def vp-past
     (fs/merge (fs/unify
@@ -253,7 +358,7 @@
                english-head-first
                {:extend {
                          :a {:head 'lexicon
-                             :comp 'np}}}))))
+                             :comp np}}}))))
 
 (def subject-verb-agreement
   (let [infl (ref :top)
@@ -265,84 +370,6 @@
                       :infl infl}
             :english {:agr agr
                       :infl infl}}}))
-
-;; TODO: make adjective the head (currently the complement)
-;; and make noun the complement (currently the head)
-(def nbar
-  (let [head-semantics (ref :top)
-        adjectival-predicate (ref :top)
-        agr (ref :top)
-        subcat (ref :top)]
-    (unify head-principle
-           ;; for Nbar, italian and english have opposite constituent order:
-           italian-head-first
-           english-head-last
-           (let [def (ref :top)]
-             {:head {:synsem {:def def}}
-              :synsem {:def def}})
-           {:synsem {:sem head-semantics}
-            :comp {:synsem {:sem {:mod head-semantics}}}}
-           ;; the following will rule out pronouns, since they don't subcat for a determiner;
-           ;; (in fact, they don't subcat for anything)
-           {:synsem {:subcat {:1 {:cat :det}}}}
-
-           {:synsem {:agr agr
-                     :subcat subcat}
-            :head {:synsem {:agr agr
-                            :cat :noun
-                            :subcat subcat}}
-            :comp {:synsem {:cat :adjective}
-                   :italian {:agr agr}
-                   :english {:agr agr}}}
-
-           {:synsem {:sem {:mod adjectival-predicate}}
-            :comp {:synsem {:sem {:mod head-semantics
-                                  :comparative false
-                                  :pred adjectival-predicate}}}}
-           {:comment "n&#x0305; &#x2192; noun adj"
-            :comment-plaintext "nbar -> noun adj"
-            :extend {:a {:head 'lexicon
-                         :comp 'lexicon}}})))
-
-(def np-rules
-  (let [head (ref :top)
-        comp (ref :top)]
-    (def np
-      (let [head-english (ref :top)
-            head-italian (ref :top)
-            comp-english (ref :top)
-            comp-italian (ref :top)]
-        (fs/unifyc head-principle subcat-1-principle ;; NP -> Comp Head
-                   (let [agr (ref :top)]
-                     (fs/unifyc
-                      (let [def (ref :top)]
-                        {:head {:synsem {:def def}}
-                         :synsem {:def def}
-                         :comp {:synsem {:def def}}})
-                      {:head {:italian head-italian
-                              :english head-english
-                              :synsem {:cat :noun
-                                       :agr agr}}
-                       :comp {:synsem {:cat :det}
-                              :italian comp-italian
-                              :english comp-english}
-                       :synsem {:agr agr}
-                       :comment "np &#x2192; det (noun or nbar)"
-                       :comment-plaintext "np -> det (noun or nbar)"
-
-                       ;; for NP, italian and english have same constituent order:
-                       :italian {:a comp-italian
-                                 :b head-italian}
-                       :english {:a comp-english
-                                 :b head-english}
-                       :extend {
-                                :a {:comp 'lexicon
-                                    :head 'lexicon}
-                                :b {:comp 'lexicon
-                                    :head nbar}
-                                }
-                   })))))
-    (list np)))
 
 (def sentence-rules
   (let [subj-sem (ref :top)
@@ -367,16 +394,16 @@
         rule-base
         (fs/unifyc rule-base-no-extend
                    {:extend {
-                             :a {:comp 'np
+                             :a {:comp np
                                  :head 'vp}
                              :b {:comp 'lexicon
                                  :head 'vp}
                              :c {:comp 'lexicon
                                  :head 'vp-pron}
-                             :d {:comp 'np
+                             :d {:comp np
                                  :head 'vp-pron}
 
-                             :e {:comp 'np
+                             :e {:comp np
                                  :head 'lexicon}
                              :f {:comp 'lexicon
                                  :head 'lexicon}
@@ -394,7 +421,7 @@
                    :synsem {:infl :present}})
        {:extend {:g {:comp 'lexicon
                      :head 'vp-present}
-                 :h {:comp 'np
+                 :h {:comp np
                      :head 'vp-present}
                  }}))
 
@@ -443,7 +470,7 @@
                                   :tense :past}}})
        {:extend {:g {:comp 'lexicon
                      :head 'vp-aux}
-                 :h {:comp 'np
+                 :h {:comp np
                      :head 'vp-aux}
                  }}))
 
@@ -469,7 +496,7 @@
                            :sem {:activity true}}
                   :extend {:g {:comp 'lexicon
                                :head 'vp-imperfetto}
-                           :h {:comp 'np
+                           :h {:comp np
                                :head 'vp-imperfetto}
                            :i {:comp 'lexicon
                                :head 'vp-pron}}}))
@@ -491,29 +518,6 @@
                   :comment-plaintext "quando-sentence"
                   :extend {:a {:comp 's-imperfetto
                                :head 'quando-phrase}}}))))
-(def prep-phrase
-  (let [comparative (ref :top)
-        comp-sem (ref :top)
-        head (ref {:synsem {:cat :prep
-                            :sem {:comparative comparative}}})
-        comp (ref {:synsem {:cat :noun
-                            :sem comp-sem
-                            :subcat '()}})]
-    (fs/unifyc head-principle
-               subcat-1-principle
-               {
-                :comment "pp &#x2192; prep (np or propernoun)"
-                :comment-plaintext "pp -> prep (np or proper noun)"}
-               {:head head
-                :comp comp
-                :synsem {:sem {:comparative comparative
-                               :mod comp-sem}}}
-               italian-head-first
-               english-head-first
-               {:extend {:a {:head 'lexicon
-                             :comp 'np}
-                         :b {:head 'lexicon
-                             :comp 'lexicon}}})))
 
 (def adj-phrase
   (unify head-principle
