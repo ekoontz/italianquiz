@@ -287,11 +287,7 @@
                     :head {:synsem {:cat :verb}}})
 
         rule-base
-        (fs/unifyc head-principle subcat-1-principle
-                   subject-verb-agreement
-                   {:comp {:synsem {:subcat '()
-                                    :cat :noun}}
-                    :head {:synsem {:cat :verb}}}
+        (fs/unifyc rule-base-no-extend
                    {:extend {
                              :a {:comp 'np
                                  :head 'vp}
