@@ -266,6 +266,44 @@
             :english {:agr agr
                       :infl infl}}}))
 
+;; TODO: make adjective the head (currently the complement)
+;; and make noun the complement (currently the head)
+(def nbar
+  (let [head-semantics (ref :top)
+        adjectival-predicate (ref :top)
+        agr (ref :top)
+        subcat (ref :top)]
+    (unify head-principle
+           ;; for Nbar, italian and english have opposite constituent order:
+           italian-head-first
+           english-head-last
+           (let [def (ref :top)]
+             {:head {:synsem {:def def}}
+              :synsem {:def def}})
+           {:synsem {:sem head-semantics}
+            :comp {:synsem {:sem {:mod head-semantics}}}}
+           ;; the following will rule out pronouns, since they don't subcat for a determiner;
+           ;; (in fact, they don't subcat for anything)
+           {:synsem {:subcat {:1 {:cat :det}}}}
+
+           {:synsem {:agr agr
+                     :subcat subcat}
+            :head {:synsem {:agr agr
+                            :cat :noun
+                            :subcat subcat}}
+            :comp {:synsem {:cat :adjective}
+                   :italian {:agr agr}
+                   :english {:agr agr}}}
+
+           {:synsem {:sem {:mod adjectival-predicate}}
+            :comp {:synsem {:sem {:mod head-semantics
+                                  :comparative false
+                                  :pred adjectival-predicate}}}}
+           {:comment "n&#x0305; &#x2192; noun adj"
+            :comment-plaintext "nbar -> noun adj"
+            :extend {:a {:head 'lexicon
+                         :comp 'lexicon}}})))
+
 (def np-rules
   (let [head (ref :top)
         comp (ref :top)]
@@ -301,7 +339,7 @@
                                 :a {:comp 'lexicon
                                     :head 'lexicon}
                                 :b {:comp 'lexicon
-                                    :head 'nbar}
+                                    :head nbar}
                                 }
                    })))))
     (list np)))
@@ -503,44 +541,6 @@
           :comment-plaintext "intensifier-phrase -> intensifier adj-phrase"
           :extend {:a {:comp 'adj-phrase
                        :head 'lexicon}}}))
-
-;; TODO: make adjective the head (currently the complement)
-;; and make noun the complement (currently the head)
-(def nbar
-  (let [head-semantics (ref :top)
-        adjectival-predicate (ref :top)
-        agr (ref :top)
-        subcat (ref :top)]
-    (unify head-principle
-           ;; for Nbar, italian and english have opposite constituent order:
-           italian-head-first
-           english-head-last
-           (let [def (ref :top)]
-             {:head {:synsem {:def def}}
-              :synsem {:def def}})
-           {:synsem {:sem head-semantics}
-            :comp {:synsem {:sem {:mod head-semantics}}}}
-           ;; the following will rule out pronouns, since they don't subcat for a determiner;
-           ;; (in fact, they don't subcat for anything)
-           {:synsem {:subcat {:1 {:cat :det}}}}
-
-           {:synsem {:agr agr
-                     :subcat subcat}
-            :head {:synsem {:agr agr
-                            :cat :noun
-                            :subcat subcat}}
-            :comp {:synsem {:cat :adjective}
-                   :italian {:agr agr}
-                   :english {:agr agr}}}
-
-           {:synsem {:sem {:mod adjectival-predicate}}
-            :comp {:synsem {:sem {:mod head-semantics
-                                  :comparative false
-                                  :pred adjectival-predicate}}}}
-           {:comment "n&#x0305; &#x2192; noun adj"
-            :comment-plaintext "nbar -> noun adj"
-            :extend {:a {:head 'lexicon
-                         :comp 'lexicon}}})))
 
 (def prep-phrase
   (let [comparative (ref :top)

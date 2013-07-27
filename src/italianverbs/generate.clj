@@ -4,7 +4,9 @@
    [clojure.tools.logging :as log]
    [italianverbs.lev :as lev]
    [italianverbs.lexiconfn :as lexfn]
+   ;; TODO: remove this: generate should not need access to morph/ at all.
    [italianverbs.morphology :as morph]
+   ;; TODO: remove this: generate should not need access to gram/ at all.
    [italianverbs.grammar :as gram]
    [italianverbs.unify :as unify]
    [italianverbs.config :as config]
@@ -352,7 +354,6 @@
                                        (rest lex/lexicon)))
    (= symbol 'tinylex) lex/tinylex
    (= symbol 'adj-phrase) gram/adj-phrase
-   (= symbol 'nbar) gram/nbar
    (= symbol 'np) gram/np
    (= symbol 'prep-phrase) gram/prep-phrase
    (= symbol 'intensifier-phrase) gram/intensifier-phrase
