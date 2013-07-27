@@ -911,7 +911,13 @@
      :italian "di il"
      :english "some"}
 
-    (unify agreement-noun
+      {:synsem {:cat :sent-modifier
+                :subcat {:1 {:sem {:tense :future
+                                   :activity true}}}}
+       :italian "domani"
+       :english "tomorrow"}
+
+      (unify agreement-noun
            common-noun
            countable-noun
            feminine-noun

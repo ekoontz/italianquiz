@@ -324,12 +324,27 @@
                      :head 'vp-present}
                  }}))
 
-    ;; TODO: a) and b) should both be reducible to one rule.
+    ;; TODO: a) b) and c) should all be reducible to one rule.
     ;; the problem is that the :extend (generation rules) differs.
     ;; so if we encode the generation rules in the lexical entries,
     ;; we can collapse these 2 definitions into 1.
-    ;; also we can do away with these long paths: (:head :synsem :subcat :1 :sem :tense :present).
+    ;; also we can do away with these long paths: e.g. (:head :synsem :subcat :1 :sem :tense :present).
+
     ;; a)
+    ;; e.g. "domani, <s-future>"
+    (def s-future-modifier
+      (fs/unifyc head-principle
+                 subcat-1-principle
+                 italian-head-first
+                 english-head-first
+                 {:comment "mod + s-future"
+                  :comment-plaintext "mod + s-future"
+                  :extend {:a {:head 'lexicon
+                               :comp 's-future}}
+                  :synsem {:cat :sent-modifier}
+                  :head {:synsem {:subcat {:1 {:sem {:tense :future}}}}}}))
+
+    ;; b)
     ;; e.g. "qualche volte, <s-present>"
     (def s-present-modifier
       (fs/unifyc head-principle
@@ -343,7 +358,7 @@
                   :synsem {:cat :sent-modifier}
                   :head {:synsem {:subcat {:1 {:sem {:tense :present}}}}}}))
 
-    ;; b)
+    ;; c)
     ;; e.g. "ieri, <s-past>"
     (def s-past-modifier
       (fs/unifyc head-principle
