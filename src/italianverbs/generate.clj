@@ -1,15 +1,15 @@
 (ns italianverbs.generate
-  (:use [clojure.stacktrace])
+  (:use [clojure.stacktrace]
+        [italianverbs.grammar]
+        [italianverbs.lexicon])
   (:require
    [clojure.tools.logging :as log]
    [italianverbs.lev :as lev]
    [italianverbs.lexiconfn :as lexfn]
    [italianverbs.morphology :as morph]
-   [italianverbs.grammar :as gram]
    [italianverbs.unify :as unify]
    [italianverbs.config :as config]
    [italianverbs.html :as html]
-   [italianverbs.lexicon :as lex]
    [italianverbs.search :as search]
    [clojure.string :as string]))
 
@@ -70,8 +70,8 @@
         (lexfn/unify parent
                      {:1 child1
                       :2 child2}
-                     {:1 {:synsem {:sem (lex/sem-impl (unify/get-in child1 '(:synsem :sem)))}}
-                      :2 {:synsem {:sem (lex/sem-impl (unify/get-in child2 '(:synsem :sem)))}}})
+                     {:1 {:synsem {:sem (sem-impl (unify/get-in child1 '(:synsem :sem)))}}
+                      :2 {:synsem {:sem (sem-impl (unify/get-in child2 '(:synsem :sem)))}}})
         fail (unify/fail? unified)]
     (if (= fail true)
       :fail
@@ -159,10 +159,10 @@
    (over2 parent child1 (lazy-seq child2))
 
    (= (type child1) java.lang.String)
-   (over2 parent (lex/it child1) child2)
+   (over2 parent (it child1) child2)
 
    (= (type child2) java.lang.String)
-   (over2 parent child1 (lex/it child2))
+   (over2 parent child1 (it child2))
 
    (nil? parent)
    nil
@@ -245,7 +245,7 @@
   (cond
 
    (= (type child) java.lang.String)
-   (over-parent-child parent (lex/it child))
+   (over-parent-child parent (it child))
 
    (nil? parent)
    nil
@@ -316,7 +316,7 @@
                                    (lexfn/unify
                                     (let [sem (unify/get-in child '(:synsem :sem) :notfound)]
                                       (if (not (= sem :notfound))
-                                        {:synsem {:sem (lex/sem-impl sem)}}
+                                        {:synsem {:sem (sem-impl sem)}}
                                         {}))
                                     child)})]
          (if (unify/fail? unified)
@@ -343,38 +343,11 @@
       (over-parent-child (over-parent-child parent child1) child2)
       (over-parent-child parent child1))))
 
-;; TODO: figure out how to encode namespaces within rules so we don't need
-;; to have this difficult-to-maintain static mapping.
 (defn eval-symbol [symbol]
   (cond
-   (= symbol 'lexicon) (lazy-seq (cons (first lex/lexicon)
-                                       (rest lex/lexicon)))
-   (= symbol 'tinylex) lex/tinylex
-   (= symbol 'adj-phrase) gram/adj-phrase
-   (= symbol 'nbar) gram/nbar
-   (= symbol 'np) gram/np
-   (= symbol 'prep-phrase) gram/prep-phrase
-   (= symbol 'intensifier-phrase) gram/intensifier-phrase
-                                        ; doesn't exist yet:
-                                        ;   (= symbol 'vp-infinitive-intransitive) gram/vp-infinitive-intransitive
-   (= symbol 'quando) lex/quando
-   (= symbol 'quando-phrase) gram/quando-phrase
-   (= symbol 's-imperfetto) gram/s-imperfetto
-   (= symbol 's-past) gram/s-past
-   (= symbol 's-past-modifier) gram/s-past-modifier
-   (= symbol 's-present) gram/s-present
-   (= symbol 's-present-modifier) gram/s-present-modifier
-   (= symbol 'vp-infinitive-transitive) gram/vp-infinitive-transitive
-
-
-   (= symbol 'vp) gram/vp
-   (= symbol 'vp-aux) gram/vp-aux
-   (= symbol 'vp-imperfetto) gram/vp-imperfetto
-   (= symbol 'vp-present) gram/vp-present
-   (= symbol 'vp-past) gram/vp-past
-   (= symbol 'vp-pron) gram/vp-pron
-
-   true (throw (Exception. (str "(italianverbs.generate/eval-symbol could not evaluate symbol: '" symbol "'")))))
+   (= symbol 'lexicon) (lazy-seq (cons (first lexicon)
+                                       (rest lexicon)))
+   true (eval symbol)))
 
 (declare head-by-comps)
 
@@ -431,7 +404,7 @@
       (let [unified
             (lexfn/unify parent
                          (lexfn/unify {:head (first heads)}
-                                      {:head {:synsem {:sem (lex/sem-impl (unify/get-in (first heads) '(:synsem :sem)))}}}))
+                                      {:head {:synsem {:sem (sem-impl (unify/get-in (first heads) '(:synsem :sem)))}}}))
             unified-parent
             (if (not (unify/fail? unified))
               unified
@@ -499,7 +472,7 @@
 
 (defn lazy-head-expands [parent expansion]
   (let [head (eval-symbol (:head expansion))
-        sem-impl {:synsem {:sem (lex/sem-impl
+        sem-impl {:synsem {:sem (sem-impl
                                  (unify/get-in parent '(:head :synsem :sem)))}}]
     (log/debug (str "doing hc-expands:"
                     (unify/get-in head '(:comment-plaintext))
@@ -647,7 +620,7 @@
                     (lexfn/unify comp
                                  (lexfn/unify
                                   comp-spec
-                                  {:synsem {:sem (lex/sem-impl (lexfn/unify (unify/get-in parent '(:comp :synsem :sem) :top)
+                                  {:synsem {:sem (sem-impl (lexfn/unify (unify/get-in parent '(:comp :synsem :sem) :top)
                                                                             (unify/get-in comp '(:synsem :sem) :top)))}}))
                     ;; TODO: Move this before computation of comp-specification: if (phrase-is-finished? comp) == true, no need to compute comp-specification.
                     ;; TODO: Do not compute comp-specification if (not head-is-finished?) == true, since head is not complete yet - compute comp-specification should
@@ -730,13 +703,13 @@
 (defn random-sentence []
   (finalize (first (take 1 (generate
                             (first (take 1 (shuffle
-                                            (list gram/s-present
-                                                  gram/s-present-modifier
-                                                  gram/s-future
-                                                  gram/s-past
-                                                  gram/s-past-modifier
-                                                  gram/s-imperfetto
-                                                  gram/s-quando
+                                            (list s-present
+                                                  s-present-modifier
+                                                  s-future
+                                                  s-past
+                                                  s-past-modifier
+                                                  s-imperfetto
+                                                  s-quando
                                                   )))))))))
 
 (defn random-sentences [n]
