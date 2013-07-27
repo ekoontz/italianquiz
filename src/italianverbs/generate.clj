@@ -354,7 +354,6 @@
                                        (rest lex/lexicon)))
    (= symbol 'tinylex) lex/tinylex
    (= symbol 'quando) lex/quando
-   (= symbol 'quando-phrase) gram/quando-phrase
    (= symbol 's-imperfetto) gram/s-imperfetto
    (= symbol 's-past) gram/s-past
    (= symbol 's-past-modifier) gram/s-past-modifier
@@ -723,6 +722,8 @@
            {:italian italian
             :english english})))
 
+;; TODO: move this to grammar namespace since what a top-level expression (a sentence) is inherently part of the grammar.
+;; also part of removing gram/ namespace from generate since generate should not depend on gram/.
 (defn random-sentence []
   (finalize (first (take 1 (generate
                             (first (take 1 (shuffle

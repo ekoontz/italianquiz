@@ -567,7 +567,7 @@
                  {:command "quando-sentence"
                   :comment-plaintext "quando-sentence"
                   :extend {:a {:comp 's-imperfetto
-                               :head 'quando-phrase}}}))))
+                               :head quando-phrase}}}))))
 
 
 ;; TODO: move to lexicon (maybe).
