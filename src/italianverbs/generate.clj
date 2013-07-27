@@ -354,15 +354,6 @@
                                        (rest lex/lexicon)))
    (= symbol 'tinylex) lex/tinylex
    (= symbol 'quando) lex/quando
-
-
-   (= symbol 'vp) gram/vp
-   (= symbol 'vp-aux) gram/vp-aux
-   (= symbol 'vp-imperfetto) gram/vp-imperfetto
-   (= symbol 'vp-present) gram/vp-present
-   (= symbol 'vp-past) gram/vp-past
-   (= symbol 'vp-pron) gram/vp-pron
-
    true (throw (Exception. (str "(italianverbs.generate/eval-symbol could not evaluate symbol: '" symbol "'")))))
 
 (declare head-by-comps)

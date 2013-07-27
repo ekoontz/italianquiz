@@ -264,6 +264,24 @@
         infl (ref :top)
         agr (ref :top)]
 
+
+
+  (def vp-infinitive-transitive
+    (fs/unifyc head-principle
+               subcat-2-principle
+               verb-inflection-morphology
+               {:head {:synsem {:cat :verb
+                                :infl :infinitive
+                                :subcat {:2 {:cat :noun
+                                             :subcat '()}}}}}
+               {:comment "vp[inf] &#x2192; head comp"
+                :comment-plaintext "vp[inf] -> head comp"}
+               italian-head-first
+               english-head-first
+               {:extend {
+                         :a {:head 'lexicon
+                             :comp np}}}))
+
   (def vp ;; TODO replace other vps with just vp.
     (fs/unifyc head-principle
                subcat-2-principle
@@ -297,7 +315,7 @@
                          :b {:head 'lexicon
                              :comp prep-phrase}
                          :c {:head 'lexicon
-                             :comp 'vp-infinitive-transitive}
+                             :comp vp-infinitive-transitive}
                          :d {:head 'lexicon
                              :comp 'lexicon}
                          :e {:head 'lexicon
@@ -319,6 +337,22 @@
        :extend {:f {:head 'lexicon
                     :comp 'lexicon}
                 }})))
+
+
+  (def vp-past
+    (fs/merge (fs/unify
+               (fs/copy vp)
+               (let [essere-boolean (ref :top)]
+                 {:head {:synsem {:essere essere-boolean}}
+                  :synsem {:infl :past
+                           :essere essere-boolean
+                           :sem {:aspect :passato}}}))
+              {:comment "vp[past] &#x2192; head comp"
+               :comment-plaintext "vp[past] -> head comp"}))
+               ;; debug only: normally this would be in
+                                        ;               :extend {:x {:head 'lexicon
+                                        ;                            :comp 'lexicon}}}))
+
 
   (def vp-aux
     (let [aspect (ref :top)
@@ -349,9 +383,13 @@
                :comp {:synsem {:agr agr}}})
        ;; add to vp some additional expansions for vp-present:
        {:extend {:f {:head 'lexicon
-                     :comp 'vp-past}
+                     :comp vp-past}
                  :g {:head 'lexicon
                      :comp 'lexicon}}})))
+
+
+
+
 
   (def vp-present
     (let [aspect (ref :top)]
@@ -362,7 +400,7 @@
                  :head {:synsem {:infl :present
                                  :aux false}}
                  :extend {:f {:head 'lexicon
-                              :comp 'vp-past}}})))
+                              :comp vp-past}}})))
 
 
   (def vp-imperfetto
@@ -380,35 +418,7 @@
                         :g {:head 'lexicon
                             :comp np}}}))
 
-  (def vp-past
-    (fs/merge (fs/unify
-               (fs/copy vp)
-               (let [essere-boolean (ref :top)]
-                 {:head {:synsem {:essere essere-boolean}}
-                  :synsem {:infl :past
-                           :essere essere-boolean
-                           :sem {:aspect :passato}}}))
-              {:comment "vp[past] &#x2192; head comp"
-               :comment-plaintext "vp[past] -> head comp"}))
-               ;; debug only: normally this would be in
-                                        ;               :extend {:x {:head 'lexicon
-                                        ;                            :comp 'lexicon}}}))
-
-  (def vp-infinitive-transitive
-    (fs/unifyc head-principle
-               subcat-2-principle
-               verb-inflection-morphology
-               {:head {:synsem {:cat :verb
-                                :infl :infinitive
-                                :subcat {:2 {:cat :noun
-                                             :subcat '()}}}}}
-               {:comment "vp[inf] &#x2192; head comp"
-                :comment-plaintext "vp[inf] -> head comp"}
-               italian-head-first
-               english-head-first
-               {:extend {
-                         :a {:head 'lexicon
-                             :comp np}}}))))
+))
 
 (def subject-verb-agreement
   (let [infl (ref :top)
@@ -445,13 +455,13 @@
         (fs/unifyc rule-base-no-extend
                    {:extend {
                              :a {:comp np
-                                 :head 'vp}
+                                 :head vp}
                              :b {:comp 'lexicon
-                                 :head 'vp}
+                                 :head vp}
                              :c {:comp 'lexicon
-                                 :head 'vp-pron}
+                                 :head vp-pron}
                              :d {:comp np
-                                 :head 'vp-pron}
+                                 :head vp-pron}
 
                              :e {:comp np
                                  :head 'lexicon}
@@ -470,9 +480,9 @@
                    :comment-plaintext "s[present] -> .."
                    :synsem {:infl :present}})
        {:extend {:g {:comp 'lexicon
-                     :head 'vp-present}
+                     :head vp-present}
                  :h {:comp np
-                     :head 'vp-present}
+                     :head vp-present}
                  }}))
 
     ;; TODO: a) and b) should both be reducible to one rule.
@@ -506,9 +516,9 @@
                             :sem {:aspect :passato
                                   :tense :past}}})
        {:extend {:g {:comp 'lexicon
-                     :head 'vp-aux}
+                     :head vp-aux}
                  :h {:comp np
-                     :head 'vp-aux}
+                     :head vp-aux}
                  }}))
 
     ;; b)
@@ -547,11 +557,11 @@
                   :synsem {:infl :imperfetto
                            :sem {:activity true}}
                   :extend {:g {:comp 'lexicon
-                               :head 'vp-imperfetto}
+                               :head vp-imperfetto}
                            :h {:comp np
-                               :head 'vp-imperfetto}
+                               :head vp-imperfetto}
                            :i {:comp 'lexicon
-                               :head 'vp-pron}}}))
+                               :head vp-pron}}}))
     (def quando-phrase
       (fs/unifyc subcat-2-principle
                  italian-head-first
