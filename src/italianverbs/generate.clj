@@ -353,9 +353,6 @@
    (= symbol 'lexicon) (lazy-seq (cons (first lex/lexicon)
                                        (rest lex/lexicon)))
    (= symbol 'tinylex) lex/tinylex
-   (= symbol 'intensifier-phrase) gram/intensifier-phrase
-                                        ; doesn't exist yet:
-                                        ;   (= symbol 'vp-infinitive-intransitive) gram/vp-infinitive-intransitive
    (= symbol 'quando) lex/quando
    (= symbol 'quando-phrase) gram/quando-phrase
    (= symbol 's-imperfetto) gram/s-imperfetto

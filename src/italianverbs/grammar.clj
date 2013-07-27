@@ -206,6 +206,56 @@
                              :comp np}
                          :b {:head 'lexicon
                              :comp 'lexicon}}})))
+(def adj-phrase
+  (unify head-principle
+         subcat-2-principle
+         italian-head-first
+         english-head-first
+         {:comment "adj-phrase&nbsp;&#x2192;&nbsp;adj&nbsp;+&nbsp;prep-phrase" ;; sorry that this is hard to read: trying to avoid the
+          ;; linebreaking within comment: TODO: use CSS to accomplish this instead.
+          :comment-plaintext "adj-phrase -> adj prep-phrase"}
+
+         ;; TODO: prep-phrase should be {:cat {:not {:nom}}} to avoid "richer than he" (should be "richer than him")
+
+         (let [comparative (ref true)]
+           {:synsem {:sem {:comparative comparative}}
+            :comp {:synsem {:sem {:comparative comparative}}}
+            :head {:synsem {:sem {:comparative comparative}}}})
+
+         (let [agr (ref :top)]
+           {:synsem {:agr agr}
+            :italian {:a {:agr agr}} ;; this enforces adjective-np agreement with subject.
+            :head {:synsem {:agr agr}}})
+
+         {:synsem {:cat :adjective}
+          :extend {:a {:head 'lexicon
+                       :comp prep-phrase}}}))
+
+;; intensifier (e.g. "più") is the head, which subcategorizes
+;; for an adjective.
+;; the head is the adjective-phrase, not the intensifier,
+;; while the intensifier is the complement.
+(def intensifier-phrase
+  (unify head-principle
+         subcat-2-principle
+         italian-head-first
+         english-head-first ;; not sure about this e.g. "più ricca di Paolo (richer than Paolo)"
+
+         (let [agr (ref :top)]
+           {:synsem {:subcat {:1 {:agr agr}}}
+            :comp {:synsem {:agr agr}}
+            :italian {:b {:agr agr}}})
+
+         ;; TODO: specify this in lexicon (subcat of head) rather than here in grammar..
+         {:head {:synsem {:cat :intensifier}}}
+
+
+         ;; ..but for now we use "more=rich" e.g. "più ricca di Paolo (more rich than Paolo)"
+         {:comment "intensifier-phrase&nbsp;&#x2192;&nbsp;intensifier&nbsp;+&nbsp;adj-phrase"
+          :comment-plaintext "intensifier-phrase -> intensifier adj-phrase"
+          :extend {:a {:comp adj-phrase
+                       :head 'lexicon}}}))
+
 
 (def vp-rules
 
@@ -251,7 +301,7 @@
                          :d {:head 'lexicon
                              :comp 'lexicon}
                          :e {:head 'lexicon
-                             :comp 'intensifier-phrase}}}))
+                             :comp intensifier-phrase}}}))
 
   (def vp-pron
     (fs/merge
@@ -519,55 +569,6 @@
                   :extend {:a {:comp 's-imperfetto
                                :head 'quando-phrase}}}))))
 
-(def adj-phrase
-  (unify head-principle
-         subcat-2-principle
-         italian-head-first
-         english-head-first
-         {:comment "adj-phrase&nbsp;&#x2192;&nbsp;adj&nbsp;+&nbsp;prep-phrase" ;; sorry that this is hard to read: trying to avoid the
-          ;; linebreaking within comment: TODO: use CSS to accomplish this instead.
-          :comment-plaintext "adj-phrase -> adj prep-phrase"}
-
-         ;; TODO: prep-phrase should be {:cat {:not {:nom}}} to avoid "richer than he" (should be "richer than him")
-
-         (let [comparative (ref true)]
-           {:synsem {:sem {:comparative comparative}}
-            :comp {:synsem {:sem {:comparative comparative}}}
-            :head {:synsem {:sem {:comparative comparative}}}})
-
-         (let [agr (ref :top)]
-           {:synsem {:agr agr}
-            :italian {:a {:agr agr}} ;; this enforces adjective-np agreement with subject.
-            :head {:synsem {:agr agr}}})
-
-         {:synsem {:cat :adjective}
-          :extend {:a {:head 'lexicon
-                       :comp prep-phrase}}}))
-
-;; intensifier (e.g. "più") is the head, which subcategorizes
-;; for an adjective.
-;; the head is the adjective-phrase, not the intensifier,
-;; while the intensifier is the complement.
-(def intensifier-phrase
-  (unify head-principle
-         subcat-2-principle
-         italian-head-first
-         english-head-first ;; not sure about this e.g. "più ricca di Paolo (richer than Paolo)"
-
-         (let [agr (ref :top)]
-           {:synsem {:subcat {:1 {:agr agr}}}
-            :comp {:synsem {:agr agr}}
-            :italian {:b {:agr agr}}})
-
-         ;; TODO: specify this in lexicon (subcat of head) rather than here in grammar..
-         {:head {:synsem {:cat :intensifier}}}
-
-
-         ;; ..but for now we use "more=rich" e.g. "più ricca di Paolo (more rich than Paolo)"
-         {:comment "intensifier-phrase&nbsp;&#x2192;&nbsp;intensifier&nbsp;+&nbsp;adj-phrase"
-          :comment-plaintext "intensifier-phrase -> intensifier adj-phrase"
-          :extend {:a {:comp adj-phrase
-                       :head 'lexicon}}}))
 
 ;; TODO: move to lexicon (maybe).
 (defn italian-number [number]
