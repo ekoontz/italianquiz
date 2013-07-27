@@ -354,12 +354,6 @@
                                        (rest lex/lexicon)))
    (= symbol 'tinylex) lex/tinylex
    (= symbol 'quando) lex/quando
-   (= symbol 's-imperfetto) gram/s-imperfetto
-   (= symbol 's-past) gram/s-past
-   (= symbol 's-past-modifier) gram/s-past-modifier
-   (= symbol 's-present) gram/s-present
-   (= symbol 's-present-modifier) gram/s-present-modifier
-   (= symbol 'vp-infinitive-transitive) gram/vp-infinitive-transitive
 
 
    (= symbol 'vp) gram/vp

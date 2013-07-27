@@ -490,23 +490,10 @@
                  {:comment "mod + s-present"
                   :comment-plaintext "mod + s-present"
                   :extend {:a {:head 'lexicon
-                               :comp 's-present}}
+                               :comp s-present}}
                   :synsem {:cat :sent-modifier}
                   :head {:synsem {:subcat {:1 {:sem {:tense :present}}}}}}))
 
-    ;; b)
-    ;; e.g. "ieri, <s-past>"
-    (def s-past-modifier
-      (fs/unifyc head-principle
-                 subcat-1-principle
-                 italian-head-first
-                 english-head-first
-                 {:comment "mod + s-past"
-                  :comment-plaintext "mod + s-past"
-                  :extend {:a {:head 'lexicon
-                               :comp 's-past}}
-                  :synsem {:cat :sent-modifier}
-                  :head {:synsem {:subcat {:1 {:sem {:tense :past}}}}}}))
 
     (def s-past
       (fs/merge
@@ -523,6 +510,21 @@
                  :h {:comp np
                      :head 'vp-aux}
                  }}))
+
+    ;; b)
+    ;; takes an past sentence as a complement: e.g. "ieri, <s-past>"
+    (def s-past-modifier
+      (fs/unifyc head-principle
+                 subcat-1-principle
+                 italian-head-first
+                 english-head-first
+                 {:comment "mod + s-past"
+                  :comment-plaintext "mod + s-past"
+                  :extend {:a {:head 'lexicon
+                               :comp s-past}}
+                  :synsem {:cat :sent-modifier}
+                  :head {:synsem {:subcat {:1 {:sem {:tense :past}}}}}}))
+
 
     (def s-future
       (fs/unifyc rule-base-no-extend
@@ -556,7 +558,7 @@
                  english-head-first
                  {:comment "quando-phrase"
                   :comment-plaintext "quando-phrase"
-                  :extend {:a {:comp 's-past
+                  :extend {:a {:comp s-past
                                :head 'quando}}}))
 
 
@@ -566,7 +568,7 @@
                  english-head-last
                  {:command "quando-sentence"
                   :comment-plaintext "quando-sentence"
-                  :extend {:a {:comp 's-imperfetto
+                  :extend {:a {:comp s-imperfetto
                                :head quando-phrase}}}))))
 
 
