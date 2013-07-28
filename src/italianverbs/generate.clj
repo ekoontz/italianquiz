@@ -76,8 +76,7 @@
 (defn unify-and-merge [parent child1 child2]
   (let [unified
         (merge {:extend (:extend parent)}
-               (gen-unify ;(dissoc parent :extend)
-                parent
+               (gen-unify parent
                           {:1 child1
                            :2 child2}
                           {:1 {:synsem {:sem (lex/sem-impl (unify/get-in child1 '(:synsem :sem)))}}
@@ -348,6 +347,7 @@
 ;; to have this difficult-to-maintain static mapping.
 (defn eval-symbol [symbol]
   (cond
+   (fn? symbol) (apply symbol nil)
    (map? symbol) symbol
    (= (type symbol) clojure.lang.Ref)
    @symbol
@@ -571,7 +571,6 @@
                                (comps-of-expand expand)
                                depth)
                (generate parent
-                                        ;(dissoc parent :extend)
                          (rest hc-exps) depth (rest shuffled-expansions))))
             :else
             nil))))
