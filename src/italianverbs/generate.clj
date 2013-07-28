@@ -6,20 +6,12 @@
    [italianverbs.lexiconfn :as lexfn]
    ;; TODO: remove this: generate should not need access to morph/ at all.
    [italianverbs.morphology :as morph]
-   [italianverbs.generate :as gen]
    [italianverbs.unify :as unify]
    [italianverbs.config :as config]
    [italianverbs.html :as html]
    [italianverbs.lexicon :as lex]
    [italianverbs.search :as search]
    [clojure.string :as string]))
-
-(defn gen-unify [& args]
-  "like unify/unify, but fs/copy each argument before unifying."
-  (apply unify/unify
-         (map (fn [arg]
-                (unify/copy arg))
-              args)))
 
 (defn printfs [fs & filename]
   "print a feature structure to a file. filename will be something easy to derive from the fs."
@@ -76,7 +68,7 @@
 (defn unify-and-merge [parent child1 child2]
   (let [unified
         (merge {:extend (:extend parent)}
-               (gen-unify parent
+               (lexfn/unify parent
                           {:1 child1
                            :2 child2}
                           {:1 {:synsem {:sem (lex/sem-impl (unify/get-in child1 '(:synsem :sem)))}}
@@ -103,7 +95,7 @@
 
 (defn unify-comp [parent comp]
   (let [unified
-        (gen-unify parent
+        (lexfn/unify parent
                {:comp comp})]
     (if (unify/fail? unified)
       :fail
@@ -126,9 +118,9 @@
 
 
 (defn unify-lr-hc-debug [parent head comp]
-  (let [with-head (gen-unify parent
+  (let [with-head (lexfn/unify parent
                                {:head head})
-        with-comp (gen-unify parent
+        with-comp (lexfn/unify parent
                                {:head comp})]
 
     (do
@@ -311,9 +303,9 @@
        (do
          (log/debug (str "failed match: sem-filter: " sem-filter " and comp-sem: " comp-sem))
          :fail)
-       (let [unified (gen-unify parent
+       (let [unified (lexfn/unify parent
                                   {where-child
-                                   (gen-unify
+                                   (lexfn/unify
                                     (let [sem (unify/get-in child '(:synsem :sem) :notfound)]
                                       (if (not (= sem :notfound))
                                         {:synsem {:sem (lex/sem-impl sem)}}
@@ -407,8 +399,8 @@
                        (unify/get-in parent '(:comment-plaintext)) ": first head: " (first heads) "  is unexpectedly fail; continuing with rest of heads."))
         (heads-by-comps parent (rest heads) comps depth))
       (let [unified
-            (gen-unify parent
-                       (gen-unify {:head (first heads)}
+            (lexfn/unify parent
+                       (lexfn/unify {:head (first heads)}
                                   {:head {:synsem {:sem (lex/sem-impl (unify/get-in (first heads) '(:synsem :sem)))}}}))
             unified-parent
             (if (not (unify/fail? unified))
@@ -425,9 +417,9 @@
           (log/debug (str "head english b: " (unify/get-in (first heads) '(:english :b))))
           (log/debug (str "parent head english: " (unify/get-in parent '(:head :english))))
           (log/debug (str "parent head english b: " (unify/get-in parent '(:head :english :b))))
-          (log/debug (str "unify english: " (gen-unify (unify/get-in (first heads) '(:english))
+          (log/debug (str "unify english: " (lexfn/unify (unify/get-in (first heads) '(:english))
                                                        (unify/get-in parent '(:head :english)))))
-          (log/debug (str "unify head: " (gen-unify (first heads)
+          (log/debug (str "unify head: " (lexfn/unify (first heads)
                                                 (unify/get-in parent '(:head)))))
 ;          (throw (Exception. (str "failed to unify head.")))
           (heads-by-comps parent (rest heads) comps depth))
@@ -441,7 +433,7 @@
                             (first heads)
                             (let [filtered-complements
                                   (filter (fn [lex]
-                                            (not (unify/fail? (gen-unify (unify/get-in lex '(:synsem)) comp-synsem))))
+                                            (not (unify/fail? (lexfn/unify (unify/get-in lex '(:synsem)) comp-synsem))))
                                           comps)]
                               (log/debug (str  (unify/get-in parent '(:comment-plaintext)) ": size of pre-filtered complements: " (.size comps)))
                               (log/debug (str  (unify/get-in parent '(:comment-plaintext)) ": size of filtered complements: " (.size filtered-complements)))
@@ -460,10 +452,10 @@
 (defn lazy-head-filter [parent expansion sem-impl heads]
   (if (not (empty? heads))
     (let [head-candidate (first heads)
-          result (gen-unify head-candidate
-                              (gen-unify
+          result (lexfn/unify head-candidate
+                              (lexfn/unify
                                (do (log/debug (str "trying head candidate of " (unify/get-in parent '(:comment-plaintext)) " : " (fo head-candidate)))
-                                   (gen-unify
+                                   (lexfn/unify
                                     sem-impl
                                     (unify/get-in parent '(:head))))))]
       (if (unify/fail? result)
@@ -487,7 +479,7 @@
       ;; TODO: pre-compile set of candidates heads for each parent.
       (lazy-head-filter parent expansion sem-impl (shuffle head))
       ;; else: treat as rule: should generate at this point.
-      (list (gen-unify (unify/get-in parent '(:head)) head)))))
+      (list (lexfn/unify (unify/get-in parent '(:head)) head)))))
 
 (defn hc-expands [parent expansion depth]
   (log/debug (str (depth-str depth) "hc-expands: " (unify/get-in parent '(:comment-plaintext)) " with expansion: " expansion))
@@ -506,7 +498,7 @@
            (let [compx (:comp-expands head)]
              (log/debug (str "hc-expands: compx: " compx))
              (if (seq? comp) (shuffle comp)
-                 (list (gen-unify (unify/get-in parent '(:comp)) comp)))))}))))
+                 (list (lexfn/unify (unify/get-in parent '(:comp)) comp)))))}))))
 
 (defn hc-expand-all [parent extend-vals depth]
   (if (not (empty? extend-vals))
@@ -599,7 +591,7 @@
   (let [comp-spec
         (if head-is-finished?
           (unify/get-in
-           (gen-unify parent
+           (lexfn/unify parent
                       {:head head})
            '(:comp))
           :top)]
@@ -623,10 +615,10 @@
                 (heads-by-comps parent (generate head nil (+ 1 depth)) comps depth))
               :else
               (let [comp-specification
-                    (gen-unify comp
-                               (gen-unify
+                    (lexfn/unify comp
+                               (lexfn/unify
                                 comp-spec
-                                {:synsem {:sem (lex/sem-impl (gen-unify (unify/get-in parent '(:comp :synsem :sem) :top)
+                                {:synsem {:sem (lex/sem-impl (lexfn/unify (unify/get-in parent '(:comp :synsem :sem) :top)
                                                                         (unify/get-in comp '(:synsem :sem) :top)))}}))
                     ;; TODO: Move this before computation of comp-specification: if (phrase-is-finished? comp) == true, no need to compute comp-specification.
                     ;; TODO: Do not compute comp-specification if (not head-is-finished?) == true, since head is not complete yet - compute comp-specification should
