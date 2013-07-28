@@ -1,5 +1,6 @@
 (ns italianverbs.morphology
   (:require
+   ;; TODO: "fs/" is historical; use "unify/" instead.
    [italianverbs.unify :as fs]
    [clojure.tools.logging :as log]
    [clojure.string :as string]))
@@ -214,6 +215,7 @@
       (get-italian-1 (fs/get-in word '(:a)))
       " " "..")
 
+
      (and
       (= (fs/get-in word '(:b)) :top)
       (string? (fs/get-in word '(:a :italian))))
@@ -345,7 +347,7 @@
         (str stem "vano")
 
         (string? infinitive)
-        (str "[" infinitive "]")
+        (str infinitive )
 
         :else
         (merge word
@@ -358,6 +360,8 @@
       (string? (fs/get-in word '(:irregular :past))))
      (fs/get-in word '(:irregular :past))
 
+     ;; TODO: do not use brackets: if there's an error about there being
+     ;; not enough information, throw an exception explicitly.
      ;; return the irregular form in square brackets, indicating that there's
      ;; not enough information to conjugate the verb.
      (and (= :past (fs/get-in word '(:infl)))
@@ -367,6 +371,7 @@
               (= :top (fs/get-in word '(:agr :number)))))
      (str "[" (fs/get-in word '(:irregular :passato)) "]")
 
+     ;; TODO: do not use brackets: if there's an error about there being
      ;; regular passato prossimo and essere-verb => NEI (not enough information): defer conjugation and keep as a map.
      (and (= :past (fs/get-in word '(:infl)))
           (= (fs/get-in word '(:essere)) true)
@@ -509,10 +514,11 @@
         (and (= person :3rd) (= number :plur))
         (str stem "ano")
         :else
-        (str "[" infinitive "]")))
+        (str infinitive )))
+
 
      (= (fs/get-in word '(:infl)) :top)
-     (str "[" (fs/get-in word '(:infinitive)) "]")
+     (str (fs/get-in word '(:infinitive)) )
 
      (and
       (fs/get-in word '(:a))
@@ -554,7 +560,7 @@
                    #"[a]$" "e") ;; donna => donne
 
 
-   ;; deprecated: remove support for :root.
+   ;; deprecated: TODO: remove support for :root.
    (and
     (= (fs/get-in word '(:agr :gender)) :fem)
     (= (fs/get-in word '(:agr :number)) :sing)
@@ -585,8 +591,13 @@
     (string? (fs/get-in word '(:irregular :fem :plur))))
    (fs/get-in word '(:irregular :fem :plur))
 
+   (string? (fs/get-in word '(:infinitive)))
+   (fs/get-in word '(:infinitive))
+
+   ;; TODO: throw exception rather than returning _word_, which is a map or something else unprintable.
+   ;; in other words, if we've gotten this far, it's a bug.
    :else
-  word))
+   word))
   )
 
 (defn get-italian [a & [ b ]]
@@ -843,13 +854,13 @@
    (fs/get-in word '(:infinitive))
 
    (= true (fs/get-in word '(:hidden)))
+;;   "Ø"
    ""
-
    (and
     (= true (fs/get-in word '(:a :hidden)))
     (= true (fs/get-in word '(:b :hidden))))
+;;   "Ø"
    ""
-
    (= true (fs/get-in word '(:a :hidden)))
    (get-english-1 (fs/get-in word '(:b)))
 
@@ -897,6 +908,15 @@
 
         (and (= :sing (fs/get-in word '(:agr :number)))
              (or (= :1st (fs/get-in word '(:agr :person)))
+                 (= :3rd (fs/get-in word '(:agr :person))))
+             (string? (fs/get-in word '(:irregular :imperfetto-suffix))))
+        (str "was " (fs/get-in word '(:irregular :imperfetto-suffix)))
+
+        (string? (fs/get-in word '(:irregular :imperfetto-suffix)))
+        (str "were " (fs/get-in word '(:irregular :imperfetto-suffix)))
+
+        (and (= :sing (fs/get-in word '(:agr :number)))
+             (or (= :1st (fs/get-in word '(:agr :person)))
                  (= :3rd (fs/get-in word '(:agr :person)))))
         (str "was " stem "ing" (if to-final to-final ""))
 
@@ -915,7 +935,7 @@
    (str "[" (fs/get-in word '(:irregular :past :2sing)) "]")
 
    (= :top (fs/get-in word '(:infl)))
-   (str "[" (fs/get-in word '(:infinitive)) "]")
+   (str (fs/get-in word '(:infinitive)) )
 
    ;; irregular past (2): a different inflection for each persons/numbers.
    (and (= :past (fs/get-in word '(:infl)))
@@ -946,9 +966,9 @@
          last-stem-char (re-find #".$" stem)
          last-stem-char-is-e (re-find #"e$" stem)]
      (cond last-stem-char-is-e
-           (str stem-minus-one penultimate-stem-char "en")
+           (str stem-minus-one penultimate-stem-char "ed")
            true
-           (str stem "en")))
+           (str stem "ed")))
 
    (and
     (= :present (fs/get-in word '(:infl)))
@@ -1011,7 +1031,10 @@
       (and (= person :3rd) (= number :plur))
       (str stem "")
 
-      :else (str "[" root "]")))
+      (string? (fs/get-in word '(:infinitive)))
+      (fs/get-in word '(:infinitive))
+
+      :else (str root )))
 
    (and
     (fs/get-in word '(:irregular :plur))
@@ -1082,12 +1105,17 @@
         (string? (fs/get-in word '(:english))))
    (fs/get-in word '(:english))
 
+   (string? (fs/get-in word '(:english)))
+   (fs/get-in word '(:english))
+
+   ;; TODO: not sure if this code is alive or not: is there ever
+   ;; a case of a sign with '(:english :english :english)?
    (and (string? (fs/get-in word '(:english :english)))
         (= (.size (keys word)) 1))
    (fs/get-in word '(:english :english))
 
-   (string? (fs/get-in word '(:english)))
-   (fs/get-in word '(:english))
+   (string? (fs/get-in word '(:infinitive)))
+   (fs/get-in word '(:infinitive))
 
    :else
    word))
@@ -1373,3 +1401,58 @@
      true
      "??")))
 
+
+
+(defn capitalize [s]
+  "Capitalize first char and leave the rest of the characters alone (compare with string/capitalize which lower-cases all chars after first."
+  (if (nil? s) ""
+      (let [s (.toString s)]
+        (if (< (count s) 2)
+          (.toUpperCase s)
+          (str (.toUpperCase (subs s 0 1))
+               (subs s 1))))))
+
+;; TODO: Move to morphology, same as (formattare) below.
+(defn formattare-1 [expr]
+  (cond
+   (fs/fail? expr)
+   "<tt>fail</tt>"
+   :else
+   (let [english
+         (capitalize
+          (get-english-1 (fs/get-in expr '(:english))))
+         italian
+         (capitalize
+          (get-italian-1 (fs/get-in expr '(:italian))))]
+     (string/trim
+      (str italian " (" english ").")))))
+
+;;; e.g.:
+;;; (formattare (over (over s (over (over np lexicon) (lookup {:synsem {:human true}}))) (over (over vp lexicon) (over (over np lexicon) lexicon))))
+(defn formattare [expressions]
+  "format a bunch of expressions (feature-structures) showing just the italian (and english in parentheses)."
+  (do
+    (if (map? expressions)
+      ;; wrap this single expression in a list and re-call.
+      (list (formattare-1 expressions))
+      (cond (nil? expressions) nil
+            (fs/fail? expressions)
+            ":fail"
+            (empty? expressions) nil
+            true
+            (lazy-seq
+             (cons
+              (formattare-1 (first expressions))
+              (formattare (rest expressions))))))))
+
+(defn fo [expressions]
+  (formattare expressions))
+
+(defn finalize [expr]
+  (let [english
+        (get-english-1 (fs/get-in expr '(:english)))
+        italian
+        (get-italian-1 (fs/get-in expr '(:italian)))]
+    (merge expr
+           {:italian italian
+            :english english})))

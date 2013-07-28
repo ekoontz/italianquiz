@@ -313,7 +313,7 @@
    production
    (random-sentence)
    true
-   (gen/random-sentence)
+   (gram/random-sentence)
    (= question-type :oct2011)
    (oct2011)
    (= question-type :chetempo)
@@ -639,7 +639,7 @@
       :test (html/iframe "/italian/quiz/?guess=foo")}
 
      {:comment "fs printing"
-      :test (html/fs
+      :test (html/tablize
              {:most-recent
               (let [qs (db/fetch :question :where {:session session} :sort {:_id -1} :limit 1)]
                 (if (> (.size qs) 0)
