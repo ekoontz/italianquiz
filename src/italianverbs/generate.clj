@@ -75,11 +75,13 @@
 
 (defn unify-and-merge [parent child1 child2]
   (let [unified
-        (gen-unify parent
-                     {:1 child1
-                      :2 child2}
-                     {:1 {:synsem {:sem (lex/sem-impl (unify/get-in child1 '(:synsem :sem)))}}
-                      :2 {:synsem {:sem (lex/sem-impl (unify/get-in child2 '(:synsem :sem)))}}})
+        (merge {:extend (:extend parent)}
+               (gen-unify ;(dissoc parent :extend)
+                parent
+                          {:1 child1
+                           :2 child2}
+                          {:1 {:synsem {:sem (lex/sem-impl (unify/get-in child1 '(:synsem :sem)))}}
+                           :2 {:synsem {:sem (lex/sem-impl (unify/get-in child2 '(:synsem :sem)))}}}))
         fail (unify/fail? unified)]
     (if (= fail true)
       :fail
@@ -347,6 +349,8 @@
 (defn eval-symbol [symbol]
   (cond
    (map? symbol) symbol
+   (= (type symbol) clojure.lang.Ref)
+   @symbol
    (= symbol 'lexicon) (lazy-seq (cons (first lex/lexicon)
                                        (rest lex/lexicon)))
    (= symbol 'tinylex) lex/tinylex
@@ -547,7 +551,7 @@
                 (log/debug (str "shuffled-expansions: " retval))
                 retval)))
 
-          hc-exps (if hc-exps hc-exps (hc-expand-all (dissoc parent :extend) shuffled-expansions depth))
+          hc-exps (if hc-exps hc-exps (hc-expand-all parent shuffled-expansions depth))
           parent-finished (morph/phrase-is-finished? parent)]
       (log/debug (str (depth-str depth) "generate: " (unify/get-in parent '(:comment-plaintext)) " with exp: " (first shuffled-expansions)))
       (cond (= :not-exists (unify/get-in parent '(:comment-plaintext) :not-exists))
@@ -562,11 +566,13 @@
             (let [expand (first hc-exps)]
               (log/debug "parent not finished.")
               (lazy-cat
-               (heads-by-comps (dissoc parent :extend)
+               (heads-by-comps parent
                                (:head expand)
                                (comps-of-expand expand)
                                depth)
-               (generate (dissoc parent :extend) (rest hc-exps) depth (rest shuffled-expansions))))
+               (generate parent
+                                        ;(dissoc parent :extend)
+                         (rest hc-exps) depth (rest shuffled-expansions))))
             :else
             nil))))
 
