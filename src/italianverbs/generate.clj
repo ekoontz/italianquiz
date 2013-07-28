@@ -348,9 +348,6 @@
 (defn eval-symbol [symbol]
   (cond
    (fn? symbol) (apply symbol nil)
-   (map? symbol) symbol
-   (= (type symbol) clojure.lang.Ref)
-   @symbol
    (= symbol 'lexicon) (lazy-seq (cons (first lex/lexicon)
                                        (rest lex/lexicon)))
    (= symbol 'tinylex) lex/tinylex
