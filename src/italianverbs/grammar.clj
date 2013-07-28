@@ -179,7 +179,7 @@
                                 :a {:comp 'lexicon
                                     :head 'lexicon}
                                 :b {:comp 'lexicon
-                                    :head nbar}
+                                    :head (ref nbar)}
                                 }
                    })))))
     (list np)))
@@ -204,7 +204,7 @@
                italian-head-first
                english-head-first
                {:extend {:a {:head 'lexicon
-                             :comp np}
+                             :comp (ref np)}
                          :b {:head 'lexicon
                              :comp 'lexicon}}})))
 (def adj-phrase
@@ -230,7 +230,7 @@
 
          {:synsem {:cat :adjective}
           :extend {:a {:head 'lexicon
-                       :comp prep-phrase}}}))
+                       :comp (ref prep-phrase)}}}))
 
 ;; intensifier (e.g. "più") is the head, which subcategorizes
 ;; for an adjective.
@@ -254,7 +254,7 @@
          ;; ..but for now we use "more=rich" e.g. "più ricca di Paolo (more rich than Paolo)"
          {:comment "intensifier-phrase&nbsp;&#x2192;&nbsp;intensifier&nbsp;+&nbsp;adj-phrase"
           :comment-plaintext "intensifier-phrase -> intensifier adj-phrase"
-          :extend {:a {:comp adj-phrase
+          :extend {:a {:comp (ref adj-phrase)
                        :head 'lexicon}}}))
 
 
@@ -281,7 +281,7 @@
                english-head-first
                {:extend {
                          :a {:head 'lexicon
-                             :comp np}}}))
+                             :comp (ref np)}}}))
 
   (def vp ;; TODO replace other vps with just vp.
     (fs/unifyc head-principle
@@ -312,15 +312,15 @@
                {:comp {:synsem {:pronoun {:not true}}}}
                {:extend {
                          :a {:head 'lexicon
-                             :comp np}
+                             :comp (ref np)}
                          :b {:head 'lexicon
-                             :comp prep-phrase}
+                             :comp (ref prep-phrase)}
                          :c {:head 'lexicon
-                             :comp vp-infinitive-transitive}
+                             :comp (ref vp-infinitive-transitive)}
                          :d {:head 'lexicon
                              :comp 'lexicon}
                          :e {:head 'lexicon
-                             :comp intensifier-phrase}}}))
+                             :comp (ref intensifier-phrase)}}}))
 
   (def vp-pron
     (fs/merge
@@ -384,7 +384,7 @@
                :comp {:synsem {:agr agr}}})
        ;; add to vp some additional expansions for vp-present:
        {:extend {:f {:head 'lexicon
-                     :comp vp-past}
+                     :comp (ref vp-past)}
                  :g {:head 'lexicon
                      :comp 'lexicon}}})))
 
@@ -401,7 +401,7 @@
                  :head {:synsem {:infl :present
                                  :aux false}}
                  :extend {:f {:head 'lexicon
-                              :comp vp-past}}})))
+                              :comp (ref vp-past)}}})))
 
 
   (def vp-imperfetto
@@ -417,7 +417,7 @@
                :extend {:f {:head 'lexicon
                             :comp 'lexicon}
                         :g {:head 'lexicon
-                            :comp np}}}))
+                            :comp (ref np)}}}))
 
 ))
 
@@ -455,16 +455,15 @@
         rule-base
         (fs/unifyc rule-base-no-extend
                    {:extend {
-                             :a {:comp np
-                                 :head vp}
+                             :a {:comp (ref np)
+                                 :head (ref vp)}
                              :b {:comp 'lexicon
-                                 :head vp}
+                                 :head (ref vp)}
                              :c {:comp 'lexicon
-                                 :head vp-pron}
-                             :d {:comp np
-                                 :head vp-pron}
-
-                             :e {:comp np
+                                 :head (ref vp-pron)}
+                             :d {:comp (ref np)
+                                 :head (ref vp-pron)}
+                             :e {:comp (ref np)
                                  :head 'lexicon}
                              :f {:comp 'lexicon
                                  :head 'lexicon}
@@ -481,9 +480,9 @@
                    :comment-plaintext "s[present] -> .."
                    :synsem {:infl :present}})
        {:extend {:g {:comp 'lexicon
-                     :head vp-present}
-                 :h {:comp np
-                     :head vp-present}
+                     :head (ref vp-present)}
+                 :h {:comp (ref np)
+                     :head (ref vp-present)}
                  }}))
 
     ;; TODO: a) and b) should both be reducible to one rule.
@@ -501,7 +500,7 @@
                  {:comment "mod + s-present"
                   :comment-plaintext "mod + s-present"
                   :extend {:a {:head 'lexicon
-                               :comp s-present}}
+                               :comp (ref s-present)}}
                   :synsem {:cat :sent-modifier}
                   :head {:synsem {:subcat {:1 {:sem {:tense :present}}}}}}))
 
@@ -517,9 +516,9 @@
                             :sem {:aspect :passato
                                   :tense :past}}})
        {:extend {:g {:comp 'lexicon
-                     :head vp-aux}
-                 :h {:comp np
-                     :head vp-aux}
+                     :head (ref vp-aux)}
+                 :h {:comp (ref np)
+                     :head (ref vp-aux)}
                  }}))
 
     ;; b)
@@ -532,7 +531,7 @@
                  {:comment "mod + s-past"
                   :comment-plaintext "mod + s-past"
                   :extend {:a {:head 'lexicon
-                               :comp s-past}}
+                               :comp (ref s-past)}}
                   :synsem {:cat :sent-modifier}
                   :head {:synsem {:subcat {:1 {:sem {:tense :past}}}}}}))
 
@@ -541,10 +540,10 @@
       (fs/unifyc rule-base-no-extend
                  italian-head-last
                  english-head-last
-                 {:extend {:a {:comp np
-                               :head vp}
+                 {:extend {:a {:comp (ref np)
+                               :head (ref vp)}
                            :b {:comp 'lexicon
-                               :head vp}}}
+                               :head (ref vp)}}}
                  {:comment "sentence[future]"
                   :comment-plaintext "s[future] -> .."
                   :synsem {:infl :futuro}}))
@@ -558,9 +557,9 @@
                   :synsem {:infl :imperfetto
                            :sem {:activity true}}
                   :extend {:g {:comp 'lexicon
-                               :head vp-imperfetto}
-                           :h {:comp np
-                               :head vp-imperfetto}
+                               :head (ref vp-imperfetto)}
+                           :h {:comp (ref np)
+                               :head (ref vp-imperfetto)}
                            :i {:comp 'lexicon
                                :head vp-pron}}}))
     (def quando-phrase
@@ -569,7 +568,7 @@
                  english-head-first
                  {:comment "quando-phrase"
                   :comment-plaintext "quando-phrase"
-                  :extend {:a {:comp s-past
+                  :extend {:a {:comp (ref s-past)
                                :head 'quando}}}))
 
 
@@ -579,8 +578,8 @@
                  english-head-last
                  {:command "quando-sentence"
                   :comment-plaintext "quando-sentence"
-                  :extend {:a {:comp s-imperfetto
-                               :head quando-phrase}}}))))
+                  :extend {:a {:comp (ref s-imperfetto)
+                               :head (ref quando-phrase)}}}))))
 
 
 ;; TODO: move to lexicon (maybe).
