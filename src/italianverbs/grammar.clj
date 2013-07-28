@@ -536,7 +536,6 @@
                   :synsem {:cat :sent-modifier}
                   :head {:synsem {:subcat {:1 {:sem {:tense :past}}}}}}))
 
-
     (def s-future
       (fs/unifyc rule-base-no-extend
                  italian-head-last
@@ -548,6 +547,18 @@
                  {:comment "sentence[future]"
                   :comment-plaintext "s[future] -> .."
                   :synsem {:infl :futuro}}))
+
+    (def s-future-modifier
+      (fs/unifyc head-principle
+                 subcat-1-principle
+                 italian-head-first
+                 english-head-first
+                 {:comment "mod + s-past"
+                  :comment-plaintext "mod + s-future"
+                  :extend {:a {:head 'lexicon
+                               :comp (fn [] s-future)}}
+                  :synsem {:cat :sent-modifier}
+                  :head {:synsem {:subcat {:1 {:sem {:tense :future}}}}}}))
 
     (def s-imperfetto
       (fs/unifyc rule-base
@@ -651,6 +662,7 @@
                                                 (list s-present
                                                       s-present-modifier
                                                       s-future
+                                                      s-future-modifier
                                                       s-past
                                                       s-past-modifier
                                                       s-imperfetto
