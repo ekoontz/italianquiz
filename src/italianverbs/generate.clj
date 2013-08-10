@@ -210,8 +210,9 @@
 
    (or (set? parent) (seq? parent))
    (lazy-cat
-    (remove #(unify/fail? %)
-            (over-parent-child (first parent) child))
+;    (remove #(unify/fail? %)
+    (over-parent-child (first parent) child)
+    ;)
     (over-parent-child (rest parent) child))
 
    (nil? child)
@@ -446,7 +447,7 @@
       ;; else: treat as rule: should generate at this point.
       (list (lexfn/unify (unify/get-in parent '(:head)) head)))))
 
-(defn hc-expands [parent expansion depth]
+ (defn hc-expands [parent expansion depth]
   (log/debug (str (depth-str depth) "hc-expands: " (unify/get-in parent '(:comment-plaintext)) " with expansion: " expansion))
   (if expansion
     (let [head (eval-symbol (:head expansion))
@@ -465,17 +466,59 @@
              (if (seq? comp) (shuffle comp)
                  (list (lexfn/unify (unify/get-in parent '(:comp)) comp)))))}))))
 
+(defn hc-expands-debug [parent expansion depth]
+  expansion)
+
+(defn hc-expand-all-debug [parent extend-vals depth]
+  (if (not (empty? extend-vals))
+    (lazy-seq
+     (cons
+      (do
+;        (log/debug (str "hc-expand-all: extend: " (first extend-vals)))
+      (hc-expands-debug parent (first extend-vals) depth)
+      )
+      (hc-expand-all-debug parent (rest extend-vals) depth)))))
+
 (defn hc-expand-all [parent extend-vals depth]
   (if (not (empty? extend-vals))
     (lazy-seq
      (cons
       (do
-        (log/debug (str "hc-expand-all: extend: " (first extend-vals)))
+;        (log/debug (str "hc-expand-all: extend: " (first extend-vals)))
         (hc-expands parent (first extend-vals) depth))
       (hc-expand-all parent (rest extend-vals) depth)))))
 
 (defn comps-of-expand [expand]
   (:comp expand))
+
+(defn genfoo [parent & [ hc-exps depth shuffled-expansions expansions-map]]
+  (if (unify/fail? parent)
+    :fail
+    (if (nil? (:extend parent))
+      (throw (Exception. (str "Parent: " (unify/get-in parent '(:comment-plaintext)) " did not supply any :extend value, which (generate) needs in order to work.")))
+      (let [depth (if depth depth 0)
+            hc-expands-orig hc-exps
+            new-shuffled-expansions
+            (do
+              (let [retval
+                    (if expansions-map
+                      (vec (vals (get expansions-map (unify/get-in parent '(:comment-plaintext))))))]
+                (log/debug (str "(new) expansions map: " expansions-map))
+                (log/debug (str "new-shuffled-expansions: " retval))
+                retval))
+            shuffled-expansions
+            (if (not (nil? new-shuffled-expansions))
+              new-shuffled-expansions
+              (do
+                (let [retval
+                      (if
+                          shuffled-expansions shuffled-expansions
+                        (shuffle (vals (:extend parent))))]
+                  (log/debug (str "shuffled-expansions: " retval))
+                  retval)))
+            hc-exps (if hc-exps hc-exps (hc-expand-all-debug parent shuffled-expansions depth))
+            parent-finished (morph/phrase-is-finished? parent)]
+        52))))
 
 (defn generate [parent & [ hc-exps depth shuffled-expansions expansions-map]]
   (if (unify/fail? parent)
