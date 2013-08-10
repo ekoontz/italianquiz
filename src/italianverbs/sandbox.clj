@@ -1,5 +1,6 @@
 (ns italianverbs.sandbox
-  [:use
+  (:refer-clojure :exclude [get-in merge resolve])
+  (:use
    [clojure.core :exclude [find]]
    [italianverbs.lexicon]
    ;; Prohibit generate/printfs because it writes directly to the filesystem:
@@ -13,8 +14,8 @@
    [italianverbs.morphology]
    [clojail.core :only [sandbox]]
    [clojail.testers]
-   ]
-  [:require
+   )
+  (:require
    [italianverbs.generate :as gen]
    [italianverbs.grammar :as gram]
    [italianverbs.lexiconfn :as lexfn]
@@ -23,7 +24,7 @@
    [clojure.set :as set]
    [italianverbs.test.generate :as tgen]
    [clojure.string :as string]
-   [clojure.tools.logging :as log]])
+   [clojure.tools.logging :as log]))
 
 ;; Sandbox specification derived from:
 ;;    https://github.com/flatland/clojail/blob/4d3f58f69c2d22f0df9f0b843c7dea0c6a0a5cd1/src/clojail/testers.clj#L76
@@ -157,7 +158,7 @@
 ))
 
 
-(defn get-in [map path & [not-found]]
+(defn get-in-within-sandbox [map path & [not-found]]
   (log/debug "got here: " (seq? map))
 
   (if (seq? map)
