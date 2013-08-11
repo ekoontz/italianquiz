@@ -1242,6 +1242,8 @@
                      :sem {:pred :fare
                            :example "fare il pane"
                            :discrete false
+                           :mod nil ;; to avoid matching:
+                           ;; (generate (unify s-past {:synsem {:sem {:pred :fare :mod {:pred :bene}}}})).
                            :subj {:human true}
                            :obj {:artifact true}}}})
 
