@@ -1,4 +1,5 @@
 (ns italianverbs.generate
+  (:refer-clojure :exclude [get-in merge resolve])
   (:use [clojure.stacktrace])
   (:require
    [clojure.tools.logging :as log]
@@ -20,7 +21,7 @@
 
 (defn unify-and-merge [parent child1 child2]
   (let [unified
-        (merge {:extend (:extend parent)}
+        (unify/merge {:extend (:extend parent)}
                (lexfn/unify parent
                           {:1 child1
                            :2 child2}
@@ -29,7 +30,7 @@
         fail (unify/fail? unified)]
     (if (= fail true)
       :fail
-      (merge unified
+      (unify/merge unified
              {:italian (morph/get-italian
                         (unify/get-in unified '(:1 :italian))
                         (unify/get-in unified '(:2 :italian)))
@@ -53,7 +54,7 @@
     (if (unify/fail? unified)
       :fail
       (if true unified
-      (merge unified
+      (unify/merge unified
              (if (italian-head-initial? unified)
                {:italian (morph/get-italian
                           (unify/get-in unified '(:head :italian))
@@ -328,11 +329,11 @@
        (cons
         (che (first parent))
         (che (rest parent)))))
-    {:sem (get-in parent '(:synsem :sem))
-     :italiano-crudo (get-in parent '(:italian))
-     :inglese-crudo (get-in parent '(:english))
-     :english (morph/get-english (get-in parent '(:english)))
-     :italian (morph/get-italian (get-in parent '(:italian)))}))
+    {:sem (unify/get-in parent '(:synsem :sem))
+     :italiano-crudo (unify/get-in parent '(:italian))
+     :inglese-crudo (unify/get-in parent '(:english))
+     :english (morph/get-english (unify/get-in parent '(:english)))
+     :italian (morph/get-italian (unify/get-in parent '(:italian)))}))
 
 (defn che-log [parent]
   "log some basic info about the sign."
@@ -342,9 +343,9 @@
        (cons
         (che-log (first parent))
         (che-log (rest parent)))))
-    {:sem (get-in parent '(:synsem :sem))
-     :english (morph/get-english (get-in parent '(:english)))
-     :italian (morph/get-italian (get-in parent '(:italian)))}))
+    {:sem (unify/get-in parent '(:synsem :sem))
+     :english (morph/get-english (unify/get-in parent '(:english)))
+     :italian (morph/get-italian (unify/get-in parent '(:italian)))}))
 
 (defn heads-by-comps [parent heads comps depth]
   (log/debug (str (depth-str depth) "heads-by-comps begin: " (unify/get-in parent '(:comment-plaintext))))
