@@ -360,6 +360,13 @@
       (string? (fs/get-in word '(:irregular :past))))
      (fs/get-in word '(:irregular :past))
 
+     ;; "fare [past]" + "bene" => "fatto bene"
+     (and (= (fs/get-in word '(:cat)) :verb)
+          (= (fs/get-in word '(:infl)) :past)
+          (string? (fs/get-in word '(:a :irregular :passato))))
+     (str (fs/get-in word '(:a :irregular :passato)) " "
+          (get-italian-1 (fs/get-in word '(:b))))
+
      ;; TODO: do not use brackets: if there's an error about there being
      ;; not enough information, throw an exception explicitly.
      ;; return the irregular form in square brackets, indicating that there's
@@ -677,6 +684,38 @@
           (re-find #"^s[t]" b))
      (str "gli " b)
 
+     ;; 1),2),3) handle e.g. "io lo ho visto" => "io l'ho visto"
+     ;; 1)
+     (and (= a "mi")
+          (string? b)
+          (re-find #"^[aeiouh]" b))
+     (str "m'" b)
+     ;; 2)
+     (and (= a "ti")
+          (string? b)
+          (re-find #"^[aeiouh]" b))
+     (str "t'" b)
+     ;; 3)
+     (and (re-find #"^l[ao]$" a)
+          (string? b)
+          (re-find #"^[aeiouh]" b))
+     (str "l'" b)
+
+     ;; 4) handle e.g. "aiutari + ti" => "aiutarti"
+     (and (string? a)
+          (or (re-find #"are$" a)
+              (re-find #"ere$" a)
+              (re-find #"ire$" a))
+          (or (= b "mi")
+              (= b "ti")
+              (= b "la")
+              (= b "lo")
+              (= b "li")
+              (= b "ci")
+              (= b "vi")))
+     (str (string/replace a #"[e]$" "")
+          b)
+
      (and (= a "un")
           (string? b)
           (re-find #"^s[t]" b))
@@ -694,7 +733,7 @@
 
      (and (= a "il")
           (string? b)
-          (re-find #"^s[t]" b))
+          (re-find #"^s[ct]" b))
      (str "lo " b)
 
      (and (= a "la")
@@ -707,6 +746,11 @@
           (re-find #"^[aeiou]" b))
      (str "quell'" b)
 
+     (and (= a "quelli")
+          (string? b)
+          (re-find #"^(st|sc|[aeiou])" b))
+     (str "quegli " b)
+
      (and (= a "quest[aeio]")
           (string? b)
           (re-find #"^[aeiou]" b))
@@ -717,6 +761,11 @@
           (string? b)
           (re-find #"^il " b))
      (str "al " (string/replace b #"^il " ""))
+
+     (and (= a "a")
+          (string? b)
+          (re-find #"^i " b))
+     (str "ai " (string/replace b #"^il " ""))
 
      (and (= a "a")
           (string? b)
@@ -757,6 +806,13 @@
 (defn get-english-1 [word]
   (log/debug (str "get-english-1: " word))
   (cond
+
+   ;; "to do [past]" + "well" => "did well"
+   (and (= (fs/get-in word '(:cat)) :verb)
+        (= (fs/get-in word '(:infl)) :past)
+        (string? (fs/get-in word '(:a :irregular :past))))
+   (str (fs/get-in word '(:a :irregular :past)) " "
+        (get-english-1 (fs/get-in word '(:b))))
 
    ;; :note is used for little annotations that are significant in italian but not in english
    ;; e.g. gender signs (♂,♀) on nouns like "professore" and "professoressa".

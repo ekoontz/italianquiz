@@ -629,7 +629,7 @@
 
 ;; TODO: more usage of fake session below for more coverage of quiz stateful behavior.
 ;; TODO: move this from src/ into test/ directory, and from italianverbs.quiz to italianverbs.test.quiz
-(defn test []
+(defn move-this-test-to-test-namespace []
   (let [session "e0933a66-2b37-4bc7-b4c6-400ff2e81d9a"]
     (list
      {:comment "all possible question types."
@@ -666,3 +666,8 @@
         true
         (html
          (controls session nil "submit_quiz_filters('#controls_container','#controls_form');"))))
+
+;; need to do this to get the workbook to work, for some reason.
+(def do-the-minimum (take 1 (gram/minimal-grammatical-initialization)))
+
+

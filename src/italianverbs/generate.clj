@@ -146,7 +146,8 @@
                (over2 parent child1 (rest child2))))
 
    :else ; both parent and children are non-lists.
-   ;; First, check to make sure complement matches head's (:synsem :sem) value, if it exists, otherwise, fail.
+   ;; First, check to make sure complement matches head's (:synsem
+   ;; :sem) value, if it exists, otherwise, :fail.
    (let [unified (unify-and-merge parent child1 child2)
          fail (unify/fail? unified)]
      (if (not fail)
@@ -181,6 +182,15 @@
                            " comp italian: " (unify/get-in parent '(:comp :italian))
                            " ref test1: " (unify/ref= parent '(:head :italian) '(:italian :b))
                            " ref test2: " (unify/ref= parent '(:comp :italian) '(:italian :a)))))))
+
+(defn get-path-to-last-subcat [head]
+  (let [path-to-3 (unify/get-in head '(:synsem :subcat :3) :notfound)]
+    (if (not (= path-to-3 :notfound))
+      path-to-3
+      (let [path-to-2 (unify/get-in head '(:synsem :subcat :2) :notfound)]
+        (if (not (= path-to-2 :notfound))
+          path-to-2
+          (unify/get-in head '(:synsem :subcat :1) :notfound))))))
 
 ;; TODO: use multiple dispatch.
 (defn over-parent-child [parent child]
@@ -238,11 +248,17 @@
                 ;; else child is complement, so return parent's version of head.
                 (unify/get-in parent '(:head)))
 
+         path-to-last-subcat
+         (get-path-to-last-subcat head)
+
          do-log
          (do
-           (log/debug (str "child-is-head: " (unify/get-in parent '(:comment-plaintext)) ":" child-is-head)))
+           (log/debug (str "child-is-head: " (unify/get-in parent '(:comment-plaintext)) ":" child-is-head))
+           (log/debug (str "head: " head))
+           (log/debug (str "path-to-last-subcat: " path-to-last-subcat)))
 
-         sem-filter (unify/get-in head '(:synsem :subcat :2 :sem)) ;; :1 VERSUS :2 : make this more explicit about what we are searching for.
+         sem-filter (if (not (= path-to-last-subcat :notfound))
+                      (unify/get-in head (concat path-to-last-subcat '(:sem))))
          comp-sem (unify/get-in comp '(:synsem :sem))
          do-match
          (if (and (not (nil? sem-filter))
@@ -287,15 +303,12 @@
       (over-parent-child (over-parent-child parent child1) child2)
       (over-parent-child parent child1))))
 
-;; TODO: figure out how to encode namespaces within rules so we don't need
-;; to have this difficult-to-maintain static mapping.
 (defn eval-symbol [symbol]
   (cond
    (fn? symbol) (apply symbol nil)
    (= symbol 'lexicon) (lazy-seq (cons (first lex/lexicon)
                                        (rest lex/lexicon)))
    (= symbol 'tinylex) lex/tinylex
-   (= symbol 'quando) lex/quando
    true (throw (Exception. (str "(italianverbs.generate/eval-symbol could not evaluate symbol: '" symbol "'")))))
 
 (declare head-by-comps)
@@ -405,11 +418,8 @@
   (if (not (empty? heads))
     (let [head-candidate (first heads)
           result (lexfn/unify head-candidate
-                              (lexfn/unify
-                               (do (log/debug (str "trying head candidate of " (unify/get-in parent '(:comment-plaintext)) " : " (morph/fo head-candidate)))
-                                   (lexfn/unify
-                                    sem-impl
-                                    (unify/get-in parent '(:head))))))]
+                              sem-impl
+                              (unify/get-in parent '(:head)))]
       (if (unify/fail? result)
         (log/debug (str " head candidate failed: " (morph/fo head-candidate)))
         (log/debug (str " head candidate succeeded: " (morph/fo head-candidate))))
@@ -465,56 +475,56 @@
   (:comp expand))
 
 (defn generate [parent & [ hc-exps depth shuffled-expansions expansions-map]]
-  (if (nil? (:extend parent))
-    (throw (Exception. (str "Parent: " (unify/get-in parent '(:comment-plaintext)) " did not supply any :extend value, which (generate) needs in order to work.")))
-    (let [depth (if depth depth 0)
-          hc-expands-orig hc-exps
+  (if (seq? parent)
+    (generate (first parent))
+    (if (unify/fail? parent)
+      :fail
+      (if (nil? (:extend parent))
+        (throw (Exception. (str "Parent: " (unify/get-in parent '(:comment-plaintext)) " did not supply any :extend value, which (generate) needs in order to work.")))
+        (let [depth (if depth depth 0)
+              hc-expands-orig hc-exps
 
-          new-shuffled-expansions
-          (do
-            (let [retval
-                  (if expansions-map
-                    (vec (vals (get expansions-map (unify/get-in parent '(:comment-plaintext))))))]
-;                    expansions-map)]
-;                      (shuffle (vals (:np expansions-map))))]
-              (log/debug (str "(new) expansions map: " expansions-map))
-              (log/debug (str "new-shuffled-expansions: " retval))
-              retval))
+              new-shuffled-expansions
+              (do
+                (let [retval
+                      (if expansions-map
+                        (vec (vals (get expansions-map (unify/get-in parent '(:comment-plaintext))))))]
+                                        ;                    expansions-map)]
+                                        ;                      (shuffle (vals (:np expansions-map))))]
+                  (log/debug (str "(new) expansions map: " expansions-map))
+                  (log/debug (str "new-shuffled-expansions: " retval))
+                  retval))
 
-          shuffled-expansions
-          (if (not (nil? new-shuffled-expansions))
-            new-shuffled-expansions
-            (do
-              (let [retval
-                    (if
-                        shuffled-expansions shuffled-expansions
-                        (shuffle (vals (:extend parent))))]
-                (log/debug (str "shuffled-expansions: " retval))
-                retval)))
+              shuffled-expansions
+              (if (not (nil? new-shuffled-expansions))
+                new-shuffled-expansions
+                (do
+                  (let [retval
+                        (if
+                            shuffled-expansions shuffled-expansions
+                            (shuffle (vals (:extend parent))))]
+                    (log/debug (str "shuffled-expansions: " retval))
+                    retval)))
 
-          hc-exps (if hc-exps hc-exps (hc-expand-all parent shuffled-expansions depth))
-          parent-finished (morph/phrase-is-finished? parent)]
-      (log/debug (str (depth-str depth) "generate: " (unify/get-in parent '(:comment-plaintext)) " with exp: " (first shuffled-expansions)))
-      (cond (= :not-exists (unify/get-in parent '(:comment-plaintext) :not-exists))
-            (do
-              (log/warn "No :comment-plaintext for this parent.")
-              nil)
-            (empty? hc-exps)
-            (do
-              (log/debug (str "no expansions left to do for "(unify/get-in parent '(:comment-plaintext) :not-exists)))
-              nil)
-            (not parent-finished)
-            (let [expand (first hc-exps)]
-              (log/debug "parent not finished.")
-              (lazy-cat
-               (heads-by-comps parent
-                               (:head expand)
-                               (comps-of-expand expand)
-                               depth)
-               (generate parent
-                         (rest hc-exps) depth (rest shuffled-expansions))))
-            :else
-            nil))))
+              hc-exps (if hc-exps hc-exps (hc-expand-all parent shuffled-expansions depth))
+            parent-finished (morph/phrase-is-finished? parent)]
+          (log/debug (str (depth-str depth) "generate: " (unify/get-in parent '(:comment-plaintext)) " with exp: " (first shuffled-expansions)))
+          (cond (empty? hc-exps)
+                (do
+                  (log/debug (str "no expansions left to do for "(unify/get-in parent '(:comment-plaintext) :not-exists)))
+                  nil)
+                (not parent-finished)
+                (let [expand (first hc-exps)]
+                  (log/debug "parent not finished.")
+                  (lazy-cat
+                   (heads-by-comps parent
+                                   (:head expand)
+                                   (comps-of-expand expand)
+                                   depth)
+                   (generate parent
+                             (rest hc-exps) depth (rest shuffled-expansions))))
+                :else
+                nil))))))
 
 (defn generate-with [parent expands-map]
   (generate parent nil nil nil expands-map))
@@ -651,9 +661,8 @@
           config/random-infinitivo)))
 
 (defn random-futuro-semplice [& constraints]
-  (let [
-        ;; 1. choose a random verb in the passato-prossimo form.
-        verb-future (lexfn/choose-lexeme
+  ;; 1. choose a random verb in the passato-prossimo form.
+  (let [verb-future (lexfn/choose-lexeme
                      (unify/unify
                       (if constraints (first constraints) {})
                       {:infl :futuro-semplice}

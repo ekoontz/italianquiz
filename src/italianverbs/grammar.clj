@@ -14,19 +14,29 @@
 ;;   /   \
 ;;  /     \
 ;; H[1]    C
-(def head-principle
+(def head-principle-no-infl
   (let [head-cat (ref :top)
+        head-essere (ref :top)
         head-is-pronoun (ref :top)
-        head-sem (ref :top)
-        head-infl (ref :top)]
+        head-sem (ref :top)]
     {:synsem {:cat head-cat
+              :essere head-essere
               :pronoun head-is-pronoun
-              :sem head-sem
-              :infl head-infl}
+              :sem head-sem}
      :head {:synsem {:cat head-cat
+                     :essere head-essere
                      :pronoun head-is-pronoun
-                     :infl head-infl
                      :sem head-sem}}}))
+
+;;    [1]
+;;   /   \
+;;  /     \
+;; H[1]    C
+(def head-principle
+  (unify head-principle-no-infl
+  (let [head-infl (ref :top)]
+    {:synsem {:infl head-infl}
+     :head {:synsem {:infl head-infl}}})))
 
 ;;     subcat<>
 ;;     /      \
@@ -39,6 +49,20 @@
                               :2 '()}}}
      :comp {:synsem comp-synsem}}))
 
+;;     subcat<>
+;;     /      \
+;;    /        \
+;; H subcat<1>  C[1]
+(def subcat-1-principle-no-complement-subcat-restrictions
+  (let [comp-synsem (ref {:subcat :top})]
+    {:synsem {:subcat '()}
+     :head {:synsem {:subcat {:1 comp-synsem
+                              :2 '()}}}
+     :comp {:synsem comp-synsem}}))
+
+
+
+
 ;;     subcat<1>
 ;;     /      \
 ;;    /        \
@@ -48,9 +72,58 @@
         parent-subcat (ref {:cat :top})]
     {:synsem {:subcat {:1 parent-subcat}}
      :head {:synsem {:subcat {:1 parent-subcat
-                              :2 comp-synsem}}}
+                              :2 comp-synsem
+                              :3 '()}}}
      :comp {:synsem comp-synsem}}))
 
+;;     subcat<1,3>
+;;     /      \
+;;    /        \
+;; H subcat<1,2>  C[2]<1,3>
+(def subcat-3-principle
+  (let [subcat-1 (ref :top)
+        subcat-3 (ref :top)
+        subcat-2 (ref {:subcat {:1 subcat-1
+                                :2 subcat-3}})]
+    {:synsem {:subcat {:1 subcat-1
+                       :2 subcat-3}}
+     :head {:synsem {:subcat {:1 subcat-1
+                              :2 subcat-2}}}
+     :comp {:synsem subcat-2}}))
+
+;;     subcat<1>
+;;     /      \
+;;    /        \
+;; H subcat<2>  C[2]<1>
+(def subcat-4-principle
+  (let [subcat-1 (ref :top)
+        subcat-2 (ref {:subcat {:1 subcat-1}})]
+    {:synsem {:subcat {:1 subcat-1
+                       :2 '()}}
+     :head {:synsem {:subcat {:1 subcat-2}}}
+     :comp {:synsem subcat-2}}))
+
+;;       subcat<1,2>
+;;      /          \
+;;     /            \
+;; H subcat<1,2,3>  C[3]
+(def subcat-5-principle
+  ;; we specify {:cat :top} rather than simply :top
+  ;; because we want to prevent matching with '()
+  ;; that is, a verb which only subcats for :1 and 2: (transitive)
+  ;; would match :3 because (unify '() :top) => :top,
+  ;; and would fit in here erroneously.
+  ;; This is prevented by {:cat :top},
+  ;; because (unify '() {:cat :top}) => :fail.
+  (let [subcat-1 (ref {:cat :top})
+        subcat-2 (ref {:cat :top})
+        subcat-3 (ref {:cat :top})]
+    {:head {:synsem {:subcat {:1 subcat-1
+                              :2 subcat-2
+                              :3 subcat-3}}}
+     :comp {:synsem subcat-3}
+     :synsem {:subcat {:1 subcat-1
+                       :2 subcat-2}}}))
 
 ;; a language's morphological inflection is
 ;; identical to its head's SYNSEM|INFL value.
@@ -104,8 +177,13 @@
      :english {:a comp-english
                :b head-english}}))
 
-
-
+(def vp-plus-adverb
+  (unify subcat-5-principle
+         head-principle-no-infl
+         italian-head-first
+         english-head-first
+         {:extend {:a {:head (fn [] lex/verbs)
+                       :comp (fn [] lex/adverbs)}}}))
 
 ;; TODO: make adjective the head (currently the complement)
 ;; and make noun the complement (currently the head)
@@ -185,29 +263,32 @@
                    })))))
     (list np)))
 
+(def vp-infinitive-transitive)
+(def vp-pron-verb-first)
+
 (def prep-phrase
-  (let [comparative (ref :top)
-        comp-sem (ref :top)
-        head (ref {:synsem {:cat :prep
-                            :sem {:comparative comparative}}})
-        comp (ref {:synsem {:cat :noun
-                            :sem comp-sem
-                            :subcat '()}})]
-    (fs/unifyc head-principle
-               subcat-1-principle
-               {
-                :comment "pp &#x2192; prep (np or propernoun)"
-                :comment-plaintext "pp -> prep (np or proper noun)"}
-               {:head head
-                :comp comp
-                :synsem {:sem {:comparative comparative
-                               :mod comp-sem}}}
-               italian-head-first
-               english-head-first
-               {:extend {:a {:head (fn [] lex/preps)
-                             :comp (fn [] np)}
-                         :b {:head (fn [] lex/preps)
-                             :comp (fn [] lex/propernouns-and-pronouns)}}})))
+  (merge
+    (unify head-principle
+           subcat-1-principle-no-complement-subcat-restrictions
+           italian-head-first
+           english-head-first)
+    {:extend {:a {:head (fn [] lex/preps)
+                  :comp (fn [] lex/propernouns-and-pronouns)}
+
+              :b {:head (fn [] lex/preps)
+                  :comp (fn [] np)}
+
+              :c {:head (fn [] lex/preps)
+                  :comp (fn [] lex/verbs)}
+
+              :d {:head (fn [] lex/preps)
+                  :comp (fn [] vp-infinitive-transitive)}
+
+              :e {:head (fn [] lex/preps)
+                  :comp (fn [] vp-pron-verb-first)}}}))
+
+(def vp)
+
 (def adj-phrase
   (unify head-principle
          subcat-2-principle
@@ -258,14 +339,14 @@
           :extend {:a {:comp (fn [] adj-phrase)
                        :head (fn [] lex/intensifiers)}}}))
 
-(def vp-rules
-
-  (let [head (ref :top)
-        comp (ref {:subcat '()})
-        infl (ref :top)
-        agr (ref :top)]
-
-
+(let [head (ref :top)
+      ;; commenting out a) in favor of b): heads should declare this constraint if they want.
+      ;; a)
+      ;; comp (ref {:subcat '()})
+      ;; b) comp has no restrictions on its :subcat.
+      comp (ref :top)
+      infl (ref :top)
+      agr (ref :top)]
 
   (def vp-infinitive-transitive
     (fs/unifyc head-principle
@@ -282,6 +363,7 @@
                {:extend {
                          :a {:head (fn [] lex/verbs)
                              :comp (fn [] np)}}}))
+
 
   (def vp ;; TODO replace other vps with just vp.
     (fs/unifyc head-principle
@@ -320,35 +402,105 @@
                          :d {:head (fn [] lex/verbs)
                              :comp (fn [] lex/propernouns-and-pronouns)}
                          :e {:head (fn [] lex/verbs)
-                             :comp (fn [] intensifier-phrase)}}}))
+                             :comp (fn [] intensifier-phrase)}
+                         }}))
+
+  ;; vp-pron is verb-last in Italian, so this is the opposite order in Italian.
+  ;; e.g. "aiutare" "ti" (morphology turns it into "aiutarti").
+  (def vp-pron-verb-first
+    (unify
+     head-principle
+     subcat-2-principle
+     italian-head-first
+     english-head-first
+     {:head {:synsem {:cat :verb}}
+      :comp {:synsem {:cat :noun
+                      :pronoun true}}}
+     {:comment-plaintext "vp[pron-vf]"
+      :comment "vp[pron-vf]"
+      :extend {:a {:head (fn [] lex/verbs)
+                   :comp (fn [] lex/propernouns-and-pronouns)}}}))
+
+  ;; "tu fai bene [a vendere la casa]"
+  (def prep-plus-verb-inf
+    (unify
+     subcat-4-principle
+     head-principle
+     {:comment "pp &#x2192; prep vp[inf]"
+      :comment-plaintext "pp -> prep vp[inf]"}
+
+     italian-head-first
+     english-head-first
+
+     {:extend {:a {:head (fn [] lex/preps)
+                   :comp (fn [] vp)}
+               :b {:head (fn [] lex/preps)
+                   :comp (fn [] vp-pron-verb-first)}
+               :c {:head (fn [] lex/preps)
+                   :comp (fn [] lex/verbs)}}}))
+
+  (def vp-aux-3
+    (let [aspect (ref :top)
+          agr (ref :top)]
+      (fs/merge
+       (unify
+        head-principle
+        subcat-3-principle
+        verb-inflection-morphology
+        italian-head-first
+        english-head-first
+          {:comment "vp[aux3] &#x2192; head comp"
+           :comment-plaintext "vp[aux3] -> head comp"
+           ;; force the head (auxiliary verb (essere/avere)) to be present-tense:
+           ;; non-present is possible too, but deferring that till later.
+           :head {:synsem {:infl :present
+                           :cat :verb
+                           :aux true
+                           :subcat {:2 {:cat :verb
+                                        :infl :past}}}}}
+          {:english {:a {:agr agr}
+                     :b {:agr agr}
+                     :agr agr}
+           :italian {:a {:agr agr}
+                     :b {:agr agr}
+                     :agr agr}
+           :head {:synsem {:agr agr}}
+           :comp {:synsem {:agr agr}}}
+          {:extend {:a {:head (fn [] lex/verbs)
+                        :comp (fn [] lex/verbs)}}}))))
 
   (def vp-pron
-    (fs/merge
-     (unify
-      head-principle
-      subcat-2-principle
-      italian-head-last
-      english-head-first
-      {:head {:synsem {:cat :verb}}
-;                       :infl :present}} ;; TODO: allow other than :present. (:present-only for now for testing).
-       :comp {:synsem {:cat :noun
-                       :pronoun true}}}
-      {:comment-plaintext "vp[pron]"
-       :comment "vp[pron]"
-       :extend {:f {:head (fn [] lex/verbs)
-                    :comp (fn [] lex/propernouns-and-pronouns)}}})))
-
+    (unify
+     head-principle
+     subcat-2-principle
+     italian-head-last
+     english-head-first
+     {:head {:synsem {:cat :verb}}
+                                        ;                       :infl :present}} ;; TODO: allow other than :present. (:present-only for now for testing).
+      :comp {:synsem {:cat :noun
+                      :pronoun true}}}
+     {:comment-plaintext "vp[pron]"
+      :comment "vp[pron]"
+      :extend {:a {:head (fn [] lex/verbs)
+                   :comp (fn [] lex/propernouns-and-pronouns)}
+               :b {:head (fn [] lex/verbs)
+                   :comp (fn [] vp-aux-3)}}}))
 
   (def vp-past
-    (fs/merge (fs/unify
-               (fs/copy vp)
-               (let [essere-boolean (ref :top)]
-                 {:head {:synsem {:essere essere-boolean}}
-                  :synsem {:infl :past
-                           :essere essere-boolean
-                           :sem {:aspect :passato}}}))
-              {:comment "vp[past] &#x2192; head comp"
-               :comment-plaintext "vp[past] -> head comp"}))
+    (fs/merge
+     (unify
+      vp
+;      (dissoc vp :extend) ;; for debugging: allows elimination of vp's extend.
+      (let [essere-boolean (ref :top)]
+        {:head {:synsem {:essere essere-boolean}}
+         :synsem {:infl :past
+                  :essere essere-boolean
+                  :sem {:aspect :passato}}}))
+     {:comment "vp[past] &#x2192; head comp"
+      :comment-plaintext "vp[past] -> head comp"}
+     ;; TODO: promote to vp.
+     {:extend {:f {:head (fn [] vp-plus-adverb)
+                   :comp (fn [] prep-plus-verb-inf)}}}))
 
   (def vp-aux
     (let [aspect (ref :top)
@@ -368,7 +520,8 @@
                                :cat :verb
                                :aux true
                                :subcat {:2 {:cat :verb
-                                            :infl :past}}}}}
+                                            :infl :past}}}}
+               :comp {:synsem {:subcat {:2 '()}}}}
               {:english {:a {:agr agr}
                          :b {:agr agr}
                          :agr agr}
@@ -377,10 +530,9 @@
                          :agr agr}
                :head {:synsem {:agr agr}}
                :comp {:synsem {:agr agr}}})
-       ;; add to vp some additional expansions for vp-present:
-       {:extend {:f {:head (fn [] lex/verbs)
+       {:extend {:a {:head (fn [] lex/verbs)
                      :comp (fn [] vp-past)}
-                 :g {:head (fn [] lex/verbs)
+                 :b {:head (fn [] lex/verbs)
                      :comp (fn [] lex/verbs)}}})))
 
   (def vp-present
@@ -408,8 +560,7 @@
                :extend {:f {:head (fn [] lex/verbs)
                             :comp (fn [] lex/propernouns-and-pronouns)}
                         :g {:head (fn [] lex/verbs)
-                            :comp (fn [] np)}}}))
-))
+                            :comp (fn [] np)}}})))
 
 (def subject-verb-agreement
   (let [infl (ref :top)
@@ -567,24 +718,24 @@
                                :head (fn [] vp-imperfetto)}
                            :i {:comp 'lexicon
                                :head (fn [] vp-pron)}}}))
-    (def quando-phrase
+    (def temporal-glue-phrase
       (fs/unifyc subcat-2-principle
                  italian-head-first
                  english-head-first
-                 {:comment "quando-phrase"
-                  :comment-plaintext "quando-phrase"
+                 {:comment "temporal-glue-phrase"
+                  :comment-plaintext "temporal-glue-phrase"
                   :extend {:a {:comp (fn [] s-past)
-                               :head 'quando}}}))
+                               :head (fn [] lex/temporal-glue)}}}))
 
 
-    (def s-quando
+    (def s-temporal-glue
       (fs/unifyc subcat-1-principle
                  italian-head-last
                  english-head-last
-                 {:command "quando-sentence"
-                  :comment-plaintext "quando-sentence"
+                 {:command "temporal-sentence"
+                  :comment-plaintext "temporal-sentence"
                   :extend {:a {:comp (fn [] s-imperfetto)
-                               :head (fn [] quando-phrase)}}}))))
+                               :head (fn [] temporal-glue-phrase)}}}))))
 
 
 ;; TODO: move to lexicon (maybe).
@@ -648,16 +799,20 @@
 
 (defn random-sentence []
   (morph/finalize (first (take 1 (gen/generate
-                                (first (take 1 (shuffle
-                                                (list s-present
-                                                      s-present-modifier
-                                                      s-future
-                                                      s-future-modifier
-                                                      s-past
-                                                      s-past-modifier
-                                                      s-imperfetto
-                                                      s-quando
-                                                      )))))))))
+                                  (first (take 1 (shuffle
+                                                  (list s-present
+                                                        s-present-modifier
+                                                        s-future
+                                                        s-future-modifier
+                                                        s-past
+                                                        s-past-modifier
+                                                        s-imperfetto
+                                                        s-temporal-glue
+                                                        )))))))))
+(defn minimal-grammatical-initialization []
+  ;; TODO: replace with something less expensive. we want the minimum amount of work that
+  ;; will prevent ExceptionInInitializerErrors.
+  (first (take 1 (gen/generate nbar))))
 
 (defn random-sentences [n]
   (repeatedly n (fn [] (random-sentence))))

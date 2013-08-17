@@ -1,19 +1,19 @@
 (ns italianverbs.sandbox
-  [:use
-   [clojure.core :exclude [find]]
+  (:refer-clojure :exclude [get-in merge resolve find])
+  (:use
    [italianverbs.lexicon]
    ;; Prohibit generate/printfs because it writes directly to the filesystem:
    ;; attacker could DOS server by filling up filesystem.
    ;; Also exclude 'generate' so that we can define a wrapper for it in the sandbox,
    ;; rather than using it directly.
-   [italianverbs.generate :exclude [printfs generate]]
+   [italianverbs.generate :exclude [printfs]]
    [italianverbs.grammar]
+   [italianverbs.test.grammar]
    [italianverbs.html]
    [italianverbs.morphology]
    [clojail.core :only [sandbox]]
-   [clojail.testers]
-   ]
-  [:require
+   [clojail.testers])
+  (:require
    [italianverbs.generate :as gen]
    [italianverbs.grammar :as gram]
    [italianverbs.lexiconfn :as lexfn]
@@ -22,7 +22,7 @@
    [clojure.set :as set]
    [italianverbs.test.generate :as tgen]
    [clojure.string :as string]
-   [clojure.tools.logging :as log]])
+   [clojure.tools.logging :as log]))
 
 ;; Sandbox specification derived from:
 ;;    https://github.com/flatland/clojail/blob/4d3f58f69c2d22f0df9f0b843c7dea0c6a0a5cd1/src/clojail/testers.clj#L76
@@ -50,141 +50,3 @@
    ;;   for development usage.
    :timeout 5000
    :namespace 'italianverbs.sandbox))
-
-(defn sandbox-load-string [expression]
-  (workbook-sandbox (read-string expression)))
-
-(defn show-lexicon []
-  (map (fn [entry]
-         (let [inflection
-               (fs/get-in entry '(:synsem :infl))
-               italian
-               (fs/get-in entry '(:italian))
-               italian-infinitive
-               (fs/get-in entry '(:italian :infinitive))
-               italian-infinitive-infinitive
-               (fs/get-in entry
-                          '(:italian :infinitive :infinitive))]
-           (merge entry
-                  {:header
-                   (cond
-                    (= inflection :present)
-                    (str
-                     (if (string? italian-infinitive)
-                       italian-infinitive
-                       italian-infinitive-infinitive)
-                     " (present)")
-                    italian-infinitive
-                    (str italian-infinitive " (infinitive)")
-                    italian-infinitive-infinitive
-                    (str italian-infinitive-infinitive " (present)")
-                    :else italian)})))
-       lexicon))
-
-;;;workbook examples:
-
-;;;(dotimes [n 10] (def foo (time (args1-cached "mangiare"))))
-
-(if false
-  (map (fn [x] {:it (fs/get-in x '(:italian))
-                :it-inf (fs/get-in x '(:italian :infinitive))})
-       lexicon)
-
-  )
-(if false
-  (do
-    (take-last 3 (take 3 (show-lexicon)))
-    (take-last 3 (take 6 (show-lexicon)))
-    (take-last 3 (take 9 (show-lexicon)))
-))
-;;
-;;
-
-;; find semantic implicatures of "cane (dog)"
-(if false
-  (sem-impl (fs/get-in (it "cane") '(:synsem :sem))))
-
-;(take 10 (repeatedly #(fo (take 1 (generate s-present)))))
-
-;(fo (take 1 (over2 s-present (shuffle nominative-pronouns) (shuffle intransitive-verbs))))
-
-;(def skel (over2 s-present (over2 np :top (over2 nbar :top :top)) (over2 vp :top (over2 np :top :top))))
-
-(if false
-  (do
-(fo
- (take 1
-       (over2 np
-              (take 4 (shuffle lexicon))
-              (over2 nbar
-                     (take 1 (shuffle lexicon))
-                     (take 4 (shuffle lexicon))))))
-
-(fo
- (take 1
-       (over2 np
-              (shuffle lexicon)
-              (over2 nbar
-                     (take 1 (shuffle lexicon))
-                     (shuffle lexicon)))))
-
-(fo
- (take 1
-       (over2 np
-              (shuffle lexicon)
-              (over2 nbar
-                     (take 5 (shuffle lexicon))
-                     (shuffle lexicon)))))
-
-(fo
- (take 1
-
-       (over2 s-present
-              (over2 np
-                     (shuffle lexicon)
-                     (over2 nbar
-                            (take 5 (shuffle lexicon))
-                            (shuffle lexicon)))
-              (shuffle lexicon))))
-))
-
-
-(defn get-in [map path & [not-found]]
-  (log/debug "got here: " (seq? map))
-
-  (if (seq? map)
-    (do
-      (log/debug "got here(2): " (first map))
-      (fs/get-in (first map) path not-found))
-    (fs/get-in map path not-found)))
-
-(defn generate [parent]
-  (if (seq? parent)
-    (gen/generate (first parent))
-    (gen/generate parent)))
-
-
-(defn fail? [input]
-  (if (seq? input)
-    (map (fn [each-of-input]
-           (fail? each-of-input))
-         input)
-    (fs/fail? input)))
-
-;;
-42
-
-;; useful sandbox example usage:
-;;
-;; show underlying english structure of a linguistic sign:
-;;
-;; (plain (fs/get-in (first (take 1 (generate vp-past))) '(:english)))
-
-;; show result of morphological computation on a linguistic sign,a
-;; and if computation fails (i.e. falls through to a map), show the map in plain form for debugging.
-;;
-;;(plain (get-english-1 (fs/get-in (first (take 1 (generate vp-past))) '(:english))))
-
-;; generate a noun phrase with a specific expansion
-;;
-;;(fo (take 1 (generate-with np {"np -> det (noun or nbar)" {:a {:head 'lexicon :comp 'lexicon}}})))
