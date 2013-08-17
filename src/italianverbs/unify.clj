@@ -1,4 +1,5 @@
 (ns italianverbs.unify
+  (:refer-clojure :exclude [get-in merge resolve])
   (:use [clojure.set]
         [clojure.tools.logging])
   (:require
@@ -17,7 +18,7 @@
     (resolve @arg)
     arg))
 
-;; TODO: need tests: some tests use (get-in), but need more dedicated tests for it alone.
+;; TODO: need tests: many tests use (get-in), but need more dedicated tests for it alone.
 (defn get-in [map path & [not-found]]
   "same as clojure.core (get-in), but it resolves references if need be."
   (let [result
@@ -62,12 +63,13 @@
                   true
                   (failr? fs (rest keys)))
                 false))
-            (cond (= fs :fail) true
-              (map? fs)
-              (failr? fs (keys fs))
-              (= (type fs) clojure.lang.Ref)
-              (fail? @fs)
-              :else false)))))
+            (cond
+             (= fs :fail) true
+             (map? fs)
+             (failr? fs (keys fs))
+             (= (type fs) clojure.lang.Ref)
+             (fail? @fs)
+             :else false)))))
 
 (defn fail-path [fs & [ fs-keys ] ]
   "find the first failing path in a fs."
@@ -202,12 +204,16 @@
      (and
       (map? val1)
       (string? val2))
-     val2
+     (do
+       (log/debug "unifying a map and a string: ignoring the former and returning the latter: 'val2'")
+       val2)
 
      (and
       (string? val1)
       (map? val2))
-     val1
+     (do
+       (log/debug (str "unifying a string and a map: ignoring the latter and returning the former: '" val1 "'"))
+       val1)
 
      :else ;; fail.
      (do

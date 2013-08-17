@@ -61,13 +61,13 @@
   (if (> (.size path-value-pairs) 0)
     (let [path (first (keys (first path-value-pairs)))
           value (get (first path-value-pairs) path)
-          debug (println (str "path=" (seq path) "; value=" value))
+          debug (log/debug (str "path=" (seq path) "; value=" value))
           result (set ;; <- removes duplicates
                   (mapcat
                    (fn [entry]
                      (pv-matches entry path value))
                    lexicon))
-          debug2 (println (str "matches: " (.size result)))]
+          debug2 (log/debug (str "matches: " (.size result)))]
       (if (= (.size result) 0)
         ;; no results for _path_:_value_: short-circuit: return emptyset without trying remaining path-value-pairs,
         ;; since ultimate result will be emptyset regardless of remaining path-value-pairs.
@@ -89,7 +89,7 @@
 
 (defn query-with-lexicon [lexicon & constraints]
   "search the supplied lexicon for entries matching constraints."
-  (println (str "input lexicon size: " (.size lexicon)))
+  (log/info (str "input lexicon size: " (.size lexicon)))
   (let [lexicon (set lexicon) ;; hopefully converting to a set is O(1) if _lexicon_ is already a set.
         ;; TODO: Find out: does calling (set) on (already) a set have
         ;; a penalty?
@@ -103,21 +103,21 @@
           (query-r pathified lexicon)]
       (if (nil? result)
         (do
-;          (println  (str "searching with constraints : " constraints))
+;          (log/info  (str "searching with constraints : " constraints))
           (log/info "(returned null)")
           result)
         result))))
 
 ;; How to map over (fetch :lexicon) results:
-;; 
+;;
 ;; (get all lexical items with path=>value: :obj/:cat => "noun")
 ;; 1. (defn myfn [fs] (= (get (get fs :obj) :cat) "noun"))
-;; 
+;;
 ;; 2. (def results (mapcat (fn [fs] (if (myfn fs) (list fs))) (fetch :lexicon)))
 ;;
 (defn search [& constraints]
   ;; TODO: figure out how to get log/info to print to console in REPL.
-  (log/info (str "searching with constraints : " constraints))
+  (log/debug (str "searching with constraints : " constraints))
   (if (= (first constraints) :fail)
     (list :fail)
 ;; TODO: s/query/create-query/
@@ -148,7 +148,7 @@
                                  results (lexfn/choose-lexeme constraints)]
                              (if (and results
                                       (not (= (get results :cat) :error))) ;; currently 'no results found' is a {:cat :error}.
-                               (html/fs (lexfn/choose-lexeme constraints)))))
+                               (html/tablize (lexfn/choose-lexeme constraints)))))
                          (string/split (if attrs attrs "italian english") #"[ ]+"))
                     (mapcat (fn [search-term]
                               (let [grammatical-terminology-term (get

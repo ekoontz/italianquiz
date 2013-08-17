@@ -8,11 +8,9 @@ table.fs {
 }
 
 th {
-    width:6em;
 }
 
 td {
-    width:6em;
 }
 
 div.map h2 {
@@ -168,7 +166,7 @@ div.ref {
 
 td.parent2child {
     text-align:center;
-    border-bottom:3px solid lightgreen;
+    border-bottom:3px solid #3ee;
 }
 
 td.parent {
@@ -222,7 +220,7 @@ table {
 
 div.evalresult {
     margin-bottom:0.5em;
-    background:#eff;
+    background:rgb(210,255,255);
     padding-top:0.5em;
     padding-bottom:0.5em;
     padding-left:0.5em;

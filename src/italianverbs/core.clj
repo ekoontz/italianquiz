@@ -26,7 +26,7 @@
     (str "Welcome to Italian Verbs" (if username (str ", " username)) ".")))
 
 (defn printlex [lexeme]
-  (ihtml/fs lexeme))
+  (ihtml/tablize lexeme))
 
 (defn wrap-div [string]
   (str "<div class='test'>" string "</div>"))
@@ -35,7 +35,7 @@
 ;   "A handler processes the request map and returns a response map."
 ; http://groups.google.com/group/compojure/browse_thread/thread/3c507da23540da6e
 ; http://brehaut.net/blog/2011/ring_introduction
-  (GET "/" 
+  (GET "/"
        request
        ;; response map
        {:status 302
@@ -44,6 +44,12 @@
   (GET "/preferiti/"
        request
        {:body (quiz/preferiti request)
+        :status 200
+        :headers {"Content-Type" "text/html;charset=utf-8"}})
+
+  (GET "/about"
+       request
+       {:body (html/page "About" (html/about) request)
         :status 200
         :headers {"Content-Type" "text/html;charset=utf-8"}})
 
@@ -65,7 +71,7 @@
         :headers (if (session/request-to-session request)
                    {"Content-Type" "text/html;charset=utf-8"}
                    {"Location" "/italian/session/set/"})})
-  
+
   (GET "/quiz"
        request
        {:status 302
@@ -89,28 +95,7 @@
                               (get (get request :query-params) "attrs"))
         :headers {"Content-Type" "text/html;charset=utf-8"}})
 
-  ;; <workbook>
-;  (GET "/workbook"
-;       request
-;       {:status 302
-;        :headers {"Location" "/italian/workbook/"}})
-
-;  (GET "/workbook/"
-;       request
-;       {:status 200
-;        :body (html/page "Workbook" (workbook/workbook-ui request) request)
-;        :headers {"Content-Type" "text/html;charset=utf-8"}})
-
-;  (GET "/workbook/q/"
-;       request
-;       {:status 200
-;        :body (workbook/workbookq (get (get request :query-params) "search")
-;                                  (get (get request :query-params) "attrs"))
-;        :headers {"Content-Type" "text/html;charset=utf-8"}})
-;  ;; </workbook>
-
-  
-  (GET "/lexicon/" 
+  (GET "/lexicon/"
        request
        ;; response map
        {
@@ -126,7 +111,7 @@
 
 
   ;; show all the results of the sentence generation unit tests.
-  (GET "/generate/" 
+  (GET "/generate/"
        request
        ;; response map
        {
@@ -137,7 +122,6 @@
         })
 
 
-  
   ;; show user's quiz filter preferences. format param (in request) controls output's formatting:
   ;; might be a comma-separated list of filters, a bunch of checkboxes, xml, json, etc.
   (GET "/quiz/filter/"
@@ -158,8 +142,8 @@
         :headers {"Location" "/italian/quiz/filter/"}
         }
        )
-  
-  (POST "/quiz/clear" 
+
+  (POST "/quiz/clear"
        request
        {
         :side-effect (quiz/clear-questions (session/request-to-session request))
@@ -167,9 +151,9 @@
         :headers {"Location" "/quiz/"}
        }
        )
-  
-;; TODO: make this a POST with 'username' and 'password' params.
-  (GET "/session/set/"  
+
+  ;; TODO: make this a POST with 'username' and 'password' params so that users can login.
+  (GET "/session/set/"
        request
        {
         :side-effect (session/register request)
@@ -178,8 +162,8 @@
         :headers {"Location" "/italian/?msg=set"}
         })
 
-  (GET "/session/clear/" 
-       request 
+  (GET "/session/clear/"
+       request
        {
         :side-effect (session/unregister request)
         :status 302
@@ -222,6 +206,13 @@
         :headers {"Content-Type" "text/html;charset=utf-8"}
         })
 
+  (GET "/quiz/fillqueue/"
+       request
+       {:body (quiz/fillqueue request)
+        :status 200
+        :headers {"Content-Type" "text/html;charset=utf-8"}
+        })
+
   (GET "/guess/tr/"
        request
        {
@@ -237,6 +228,11 @@
        request
        {
         :body
+        ;; note this only evaluates the user's guess to the previous question -
+        ;; it does not generate a new question. The latter is caused by a javascript
+        ;; function get_next_question() that is called when the user's
+        ;; clicks the 'Rispondi' button, which also more or less simulatenously submits the form that
+        ;; causes the (quiz/evaluate) here - see /resources/public/js/quiz.js.
         (quiz/evaluate request "tr")
         :status 200
         :headers {"Content-Type" "text/html;charset=utf-8"}
@@ -278,6 +274,6 @@
 ; A map of options may also be provided. These keys are provided:
 ;  :session - a map of session middleware options
 
+;; TODO: clear out cache of sentences-per-user session when starting up.
 (def app
   (handler/site main-routes))
-
