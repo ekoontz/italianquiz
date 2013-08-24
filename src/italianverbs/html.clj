@@ -122,7 +122,7 @@
                                 arg)))
 
 
-     ;; displaying a phrase structure tree (2 children) (new implementation)
+     ;; displaying a phrase structure tree (2 children)
      ;; Head-initial (H C)
      (and
       (map? arg)
@@ -197,7 +197,7 @@
       "</div>")
 
 
-     ;; displaying a phrase structure tree (2 children) (new implementation)
+     ;; displaying a phrase structure tree (2 children)
      ;; Head-final (C H)
      (and
       (map? arg)
@@ -425,7 +425,9 @@
            "</tr>"))
         ;; sorts the argument list in _arg__ by key name. remove :comment-plaintext and :extend.
         (remove #(= (first %) :comment-plaintext)
-                (remove #(= (first %) :extend)
+                (remove #(or (= (first %) :comment-plaintext)
+                             (= (first %) :extend)
+                             (= (first %) :serialized))
                         (into (sorted-map) arg)))
         ))
       "  </table>"

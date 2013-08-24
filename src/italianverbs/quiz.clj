@@ -520,6 +520,7 @@
              "<input type='text' id='question_id' value='" qid "'/>")))))
 
 (defn fillqueue [request]
+      (if (not production)
   (let [session (session/request-to-session request)]
     (while
         (let [queue (db/fetch :queue :where {:session session})]
@@ -534,7 +535,7 @@
                             :italian (normalize-whitespace answer)
                             :english (normalize-whitespace question)
                             :session session})))
-    (log/info (str "queue is now big enough: size=" (.size (db/fetch :queue :where {:session session}))))))
+    (log/info (str "queue is now big enough: size=" (.size (db/fetch :queue :where {:session session})))))))
 
 (defn evaluate [request format]
   ;; takes form data back from the user about what their guess was.

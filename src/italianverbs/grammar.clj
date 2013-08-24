@@ -407,6 +407,7 @@
 
   ;; vp-pron is verb-last in Italian, so this is the opposite order in Italian.
   ;; e.g. "aiutare" "ti" (morphology turns it into "aiutarti").
+  ;; TODO: as mentioned above, fold this into vp.
   (def vp-pron-verb-first
     (unify
      head-principle
@@ -821,3 +822,63 @@
   "TODO: show benchmark results and statistics (min,max,95%tile,stddev,etc)"
   (let [times (if (first times) (first times) 10)]
     (dotimes [n times] (time (random-sentence)))))
+
+(def np (conj {:serialized (fs/serialize np)}
+              np))
+(def nbar (conj {:serialized (fs/serialize nbar)}
+              nbar))
+(def s-present (conj {:serialized (fs/serialize s-present)}
+                     s-present))
+
+(def s-present-modifier (conj {:serialized (fs/serialize s-present-modifier)}
+                              s-present-modifier))
+
+(def s-future (conj {:serialized (fs/serialize s-future)}
+                    s-future))
+
+(def s-future-modifier (conj {:serialized (fs/serialize s-future-modifier)}
+                             s-future-modifier))
+
+(def s-past (conj {:serialized (fs/serialize s-past)}
+                  s-past))
+
+(def s-past-modifier (conj {:serialized (fs/serialize s-past-modifier)}
+                           s-past-modifier))
+
+(def s-imperfetto (conj {:serialized (fs/serialize s-imperfetto)}
+                        s-imperfetto))
+
+(def s-temporal-glue (conj {:serialized (fs/serialize s-temporal-glue)}
+                           s-temporal-glue))
+
+(def temporal-glue-phrase (conj {:serialized (fs/serialize temporal-glue-phrase)}
+                                  temporal-glue-phrase))
+
+(def vp-plus-adverb (conj {:serialized (fs/serialize vp-plus-adverb)}
+                          vp-plus-adverb))
+
+(def vp-aux (conj {:serialized (fs/serialize vp-aux)}
+                  vp-aux))
+
+(def vp-pron (conj {:serialized (fs/serialize vp-pron)}
+                   vp-pron))
+
+(def vp-past (conj {:serialized (fs/serialize vp-past)}
+                   vp-past))
+
+(def vp-present (conj {:serialized (fs/serialize vp-present)}
+                      vp-present))
+
+(def vp-pron-verb-first (conj {:serialized (fs/serialize vp-pron-verb-first)}
+                              vp-pron-verb-first))
+
+(def prep-phrase (conj {:serialized (fs/serialize prep-phrase)}
+                       prep-phrase))
+
+(def nbar (conj {:serialized (fs/serialize nbar)}
+                nbar))
+
+(def adj-phrase (conj {:serialized (fs/serialize adj-phrase)}
+                      adj-phrase))
+
+

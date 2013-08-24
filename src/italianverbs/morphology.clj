@@ -126,6 +126,23 @@
 
     (cond
 
+     (and
+      (string? (fs/get-in word '(:a :infinitive)))
+      (fs/get-in word '(:a :infinitive))
+      (or (= :none (fs/get-in word '(:b :agr :number) :none))
+          (= :top (fs/get-in word '(:b :agr :number) :none)))
+      (= (fs/get-in word '(:a :infl)) :top))
+     (strip (str (fs/get-in word '(:a :infinitive))
+                 " " (get-italian-1 (fs/get-in word '(:b)))))
+
+     ;; handle lexical exceptions (plural feminine adjectives):
+     (and
+      (= (fs/get-in word '(:agr :number)) :plur)
+      (= (fs/get-in word '(:agr :gender)) :fem)
+      (= (fs/get-in word '(:cat)) :adjective)
+      (string? (fs/get-in word '(:irregular :fem :plur))))
+     (fs/get-in word '(:irregular :fem :plur))
+
      ;; handle lexical exceptions (plural feminine adjectives):
      (and
       (= (fs/get-in word '(:agr :number)) :plur)
@@ -601,11 +618,22 @@
    (string? (fs/get-in word '(:infinitive)))
    (fs/get-in word '(:infinitive))
 
+   (or
+    (not (= :none (fs/get-in word '(:a) :none)))
+    (not (= :none (fs/get-in word '(:b) :none))))
+   (get-italian (fs/get-in word '(:a))
+                (fs/get-in word '(:b)))
+
+   (or
+    (= (fs/get-in word '(:agr :case)) {:not :acc})
+    (= (fs/get-in word '(:agr)) :top))
+   ".."
+
    ;; TODO: throw exception rather than returning _word_, which is a map or something else unprintable.
    ;; in other words, if we've gotten this far, it's a bug.
    :else
-   word))
-  )
+   word)
+  ))
 
 (defn get-italian [a & [ b ]]
   (let [a (if (nil? a) "" a)
@@ -706,12 +734,13 @@
           (or (re-find #"are$" a)
               (re-find #"ere$" a)
               (re-find #"ire$" a))
-          (or (= b "mi")
-              (= b "ti")
+          (or (= b "ci")
+              (= b "mi")
               (= b "la")
-              (= b "lo")
+              (= b "le")
               (= b "li")
-              (= b "ci")
+              (= b "lo")
+              (= b "ti")
               (= b "vi")))
      (str (string/replace a #"[e]$" "")
           b)
