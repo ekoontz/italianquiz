@@ -360,33 +360,6 @@
           ;; (eval schema) is a 3-node tree (parent and two children) as described
           ;; above: schema is a symbol (e.g. 'cc10 whose value is the tree, thus
           ;; allowing us to access that value with (eval schema).
-          (log/debug (str "going to copy the thing.."))
-          (log/debug (str "here is a copy.." (unify/copy (eval schema))))
-
-          (log/debug (str "here is a function(1i): "
-                          (fn [inner-filter-against]
-;                            (log/debug (str "inner-filter-against: " inner-filter-against))
-                            42)))
-
-          (log/debug (str "survived the function creation!"))
-
-          (log/debug (str "here is a function: "
-                          (fn [inner-filter-against]
-                            (let [intermediate (unifyc filter-against
-                                                       {:head inner-filter-against})
-                                  shuffled-heads (lazy-shuffle (eval head))]
-                     (generate shuffled-heads
-                               (if false ;; show or don't show schema (e.g. cc10)
-                                 (str label ":" schema " -> {H:" head "}")
-                                 (str label " -> {H:" head "}"))
-                               (unify/get-in intermediate
-                                             '(:head) :top)
-                               lexfn-sem-impl)))))
-
-
-          (log/debug (str "survived the function creation(2)!"))
-
-
           (gen14 (unify/copy (eval schema))
                  ;; head (1) (see below for complements)
                  (fn [inner-filter-against]
@@ -441,8 +414,7 @@
            (first alternatives));; TODO: (first alternatives) is redundant?
     (let [candidate (first alternatives)
           constraints (if (:constraints candidate)
-                        :top
-;                        (:constraints candidate)
+                        (:constraints candidate)
                         :top)
           filter-against (do
                            (log/debug (str "using constraints: " constraints))
