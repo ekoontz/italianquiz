@@ -26,9 +26,10 @@
     (log/debug (str "moreover-head (candidate) parent sem: " (unify/get-in parent '(:synsem :sem) :no-semantics)))
     (log/debug (str "moreover-head (candidate) head child sem:" (unify/get-in child '(:synsem :sem) :top)))
     (log/debug (str "moreover-head (candidate) head:" (fo child)))
-    (let [result (unifyc parent
-                              (unifyc {:head child}
-                                           {:head {:synsem {:sem (lexfn-sem-impl (unify/get-in child '(:synsem :sem) :top))}}}))]
+    (let [result
+          (unifyc parent
+                  (unifyc {:head child}
+                          {:head {:synsem {:sem (lexfn-sem-impl (unify/get-in child '(:synsem :sem) :top))}}}))]
       (if (not (unify/fail? result))
         (let [debug (log/debug (str "moreover-head " (unify/get-in parent '(:comment)) " (SUCCESS) result sem: " (unify/get-in result '(:synsem :sem))))
               debug (log/debug (str "moreover-head (SUCCESS) parent (2x) sem: " (unify/get-in parent '(:synsem :sem))))]
@@ -197,7 +198,6 @@
 
 (defn gen14 [phrase heads complements filter-against post-unify-fn recursion-level lexfn-sem-impl]
   (log/debug (str "gen14: phrase: " (:comment phrase) "; heads type: " (type heads)))
-  (log/debug (str "next.."))
 ;  (log/debug (str "gen14: filter-against: " filter-against))
   (log/debug (str "gen14: fn? heads:" (fn? heads)))
   (log/debug (str "gen14: not empty? heads: " (and (not (fn? heads)) (not (empty? heads)))))
@@ -211,18 +211,29 @@
       (log/debug (str "gen14: type of comps: " (type complements)))
       (log/debug (str "gen14: emptyness of comps: " (and (not (fn? complements)) (empty? complements))))
       (let [recursion-level (+ 1 recursion-level)
+            debug (log/debug (str "gen14: phrase-unify first arg: " phrase))
+            debug (log/debug (str "gen14: phrase-unify second arg: " filter-against))
+            debug (log/debug (str "gen14: phrase-unify third arg: " 
+                                  {:synsem {:sem (lexfn-sem-impl
+                                                  (unifyc
+                                                   (unify/get-in phrase '(:synsem :sem) :top)
+                                                   (unify/get-in filter-against '(:synsem :sem) :top)))}}))
+
             phrase (unifyc phrase
-                           filter-against
-                           {:synsem {:sem (lexfn-sem-impl
-                                           (unifyc
-                                            (unify/get-in phrase '(:synsem :sem) :top)
-                                            (unify/get-in filter-against '(:synsem :sem) :top)))}})
+                           (unifyc
+                            filter-against
+                            {:synsem {:sem (lexfn-sem-impl
+                                            (unifyc
+                                             (unify/get-in phrase '(:synsem :sem) :top)
+                                             (unify/get-in filter-against '(:synsem :sem) :top)))}}))
+            debug (log/debug (str "gen14: unified phrase: " phrase))
+            debug (log/debug (str "gen14: unified phrase fail?: " (fail? phrase)))
             debug (log/debug "gen14: TYPE OF HEADS (before eval): " (type heads))
             heads (cond (fn? heads)
                         (let [filter-against
                               (unify/get-in phrase
                                             '(:head) :top)]
-                          (log/debug (str "gen14: PHRASE IS:" phrase))
+                          (log/debug (str "gen14: phrase:" phrase))
                           (log/debug (str "gen14: treating heads as a function and applying against filter:"  filter-against))
                           (apply heads (list filter-against)))
                         :else
@@ -345,7 +356,6 @@
               comp (:comp candidate)]
           (log/debug (str "generate: candidate is a schema: " schema))
           (log/debug (str "generate: filter-against: " filter-against))
-          (log/debug (str "generate: eval schema: " (eval schema)))
           ;; schema is a tree with 3 nodes: a parent and two children: a head child, and a comp child.
           ;; all possible schemas are defined above, after the "BEGIN SCHEMA DEFINITIONS" comment.
           ;; in a particular order (i.e. either head is first or complement is first).
@@ -356,6 +366,10 @@
           ;; comp is either 1) or 2):
           ;; 1) a rule consisting of a schema, a head rule, and a comp rule.
           ;; 2) a sequence of lexemes.
+
+          (log/debug (str "going to call gen14 from g-f-c: filter-against: " filter-against))
+          (log/debug (str "going to call gen14 from g-f-c: schema: " schema))
+          (log/debug (str "going to call gen14 from g-f-c: head: " head))
 
           ;; (eval schema) is a 3-node tree (parent and two children) as described
           ;; above: schema is a symbol (e.g. 'cc10 whose value is the tree, thus
@@ -421,6 +435,7 @@
                            (log/debug (str "using filter-against: " filter-against))
                            (unifyc filter-against constraints))
           label (if label label (if (map? label) (:label candidate)))
+          debug (log/debug (str "filter-against U constraints: " filter-against))
           debug (if (fail? filter-against)
                   (log/debug (str "WILL IGNORE THIS FAILURE: " filter-against)))]
       (lazy-cat

@@ -653,5 +653,17 @@ when run from a REPL."
 
 (deftest set-and-set-is-intersection
   (is (= (unify #{1 2} #{2 3})
-     #{2})))
+         2)))
+
+(deftest set-and-set-is-intersection
+  (is (= (unify #{1 2 3} #{2 3 4})
+         #{2 3})))
+
+(deftest singular-intersection-is-just-single-member
+  (is (= (unify #{1 2} #{2 3})
+         2)))
+
+(deftest set-and-map-is-set
+  (is (= (unify #{{:a 1}} {:b 2})
+         #{{:a 1 :b 2}})))
 

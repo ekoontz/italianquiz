@@ -18,12 +18,14 @@
 ;; TODO: translate the keyword ':present' into Italian.
 (rewrite-as declarative-sentence
             {:schema 'cc10
-             :constraints #{{:synsem {:infl :present
-                                      :sem {:tense :present}}}
-                            {:synsem {:infl :futuro
-                                      :sem {:tense :futuro}}}
-                            {:synsem {:infl :imperfetto
-                                      :sem {:tense :past}}}}
+             :constraints #{{:synsem {:infl :futuro
+                                    :sem {:tense :futuro}}}}
+;             :constraints #{{:synsem {:infl :present
+;                                      :sem {:tense :present}}}
+;                            {:synsem {:infl :futuro
+;                                      :sem {:tense :futuro}}}
+;                            {:synsem {:infl :imperfetto
+;                                      :sem {:tense :past}}}}
              :label 'decl-sent
              :comp 'np
              :head 'vp})

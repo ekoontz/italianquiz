@@ -123,7 +123,23 @@
 
      (and (set? val1)
           (set? val2))
-     (intersection val1 val2)
+     (let [intersect (intersection val1 val2)]
+       (cond (empty? intersect)
+             :fail
+             (= (.size intersect)
+                1)
+             (first intersect)
+             true intersect))
+
+     (set? val1)
+     (set (map (fn [each-member]
+                 (unify each-member val2))
+               val1))
+
+     (set? val2)
+     (set (map (fn [each-member]
+                 (unify each-member val1))
+               val2))
 
      (nil? args) nil
 
