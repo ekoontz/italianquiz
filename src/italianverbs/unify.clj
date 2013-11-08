@@ -146,9 +146,18 @@
              mapped))
 
      (set? val2)
-     (set (map (fn [each-member]
-                 (unify each-member val1))
-               val2))
+     (let [mapped
+           (set (remove (fn [each]
+                          (fail? each))
+                        (map (fn [each-member]
+                               (unify each-member val1))
+                             val2)))]
+       (cond (empty? mapped)
+             :fail
+             (= (.size mapped) 1)
+             (first mapped)
+             true
+             mapped))
 
      (nil? args) nil
 

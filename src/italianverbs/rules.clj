@@ -19,7 +19,9 @@
 (rewrite-as declarative-sentence
             {:schema 'cc10
              :constraints #{{:synsem {:infl :futuro
-                                    :sem {:tense :futuro}}}}
+                                    :sem {:tense :futuro}}}
+                            {:synsem {:infl :present
+                                    :sem {:tense :present}}}}
 ;             :constraints #{{:synsem {:infl :present
 ;                                      :sem {:tense :present}}}
 ;                            {:synsem {:infl :futuro

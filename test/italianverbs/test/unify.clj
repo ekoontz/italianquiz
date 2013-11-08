@@ -663,18 +663,34 @@ when run from a REPL."
   (is (= (unify #{1 2} #{2 3})
          2)))
 
-(deftest singleton-set-and-map-is-map
+(deftest singleton-set-and-map-is-map-left
   (is (= (unify #{{:a 1}} {:b 2})
          {:a 1 :b 2})))
 
-(deftest set-with-two-members-one-fails-returns-other-member
+(deftest set-with-two-members-one-fails-returns-other-member-left
   (is (= {:a 1 :b 2 :c 3}
          (unify #{{:a 1 :b 2} {:a 1 :c 4}} {:c 3}))))
 
-(deftest set-with-two-members-none-fails-returns-both-members
+(deftest set-with-two-members-none-fails-returns-both-members-left
   (is (= #{{:a 1 :b 2 :c 3}
            {:a 1 :b 2 :c 4}}
-         (unify #{{:a 1 :c 3}
-                  {:a 1 :c 4}} {:b 2}))))
+         (unify {:b 2} 
+                #{{:a 1 :c 3}
+                  {:a 1 :c 4}}))))
+
+(deftest singleton-set-and-map-is-map-right
+  (is (= (unify {:b 2} #{{:a 1}})
+         {:a 1 :b 2})))
+
+(deftest set-with-two-members-one-fails-returns-other-member-right
+  (is (= {:a 1 :b 2 :c 3}
+         (unify {:c 3} #{{:a 1 :b 2} {:a 1 :c 4}}))))
+
+(deftest set-with-two-members-none-fails-returns-both-members-right
+  (is (= #{{:a 1 :b 2 :c 3}
+           {:a 1 :b 2 :c 4}}
+         (unify {:b 2} 
+                #{{:a 1 :c 3}
+                  {:a 1 :c 4}}))))
 
 
