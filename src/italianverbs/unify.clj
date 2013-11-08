@@ -132,9 +132,18 @@
              true intersect))
 
      (set? val1)
-     (set (map (fn [each-member]
-                 (unify each-member val2))
-               val1))
+     (let [mapped
+           (set (remove (fn [each]
+                          (fail? each))
+                        (map (fn [each-member]
+                               (unify each-member val2))
+                             val1)))]
+       (cond (empty? mapped)
+             :fail
+             (= (.size mapped) 1)
+             (first mapped)
+             true
+             mapped))
 
      (set? val2)
      (set (map (fn [each-member]

@@ -663,7 +663,18 @@ when run from a REPL."
   (is (= (unify #{1 2} #{2 3})
          2)))
 
-(deftest set-and-map-is-set
+(deftest singleton-set-and-map-is-map
   (is (= (unify #{{:a 1}} {:b 2})
-         #{{:a 1 :b 2}})))
+         {:a 1 :b 2})))
+
+(deftest set-with-two-members-one-fails-returns-other-member
+  (is (= {:a 1 :b 2 :c 3}
+         (unify #{{:a 1 :b 2} {:a 1 :c 4}} {:c 3}))))
+
+(deftest set-with-two-members-none-fails-returns-both-members
+  (is (= #{{:a 1 :b 2 :c 3}
+           {:a 1 :b 2 :c 4}}
+         (unify #{{:a 1 :c 3}
+                  {:a 1 :c 4}} {:b 2}))))
+
 
