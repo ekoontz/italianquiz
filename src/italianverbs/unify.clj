@@ -177,12 +177,11 @@
 
      (and (map? val1)
           (map? val2))
-     (let [tmp-result
+     (let [result
            (reduce #(merge-with unify %1 %2) args)]
-       (if (not (nil? (some #{:fail} (vals tmp-result))))
+       (if (not (nil? (some #{:fail} (vals result))))
          :fail
-         (do ;(println (str "no fail in: " vals))
-           tmp-result)))
+         result))
      (and
       (= (type val1) clojure.lang.Ref)
       (not (= (type val2) clojure.lang.Ref)))
