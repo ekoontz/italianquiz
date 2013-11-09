@@ -652,9 +652,7 @@ The idea is to map the key :foo to the (recursive) result of pathify on :foo's v
 ;; TODO s/map/input-map/
 (defn skels [input-map refs]
   "create map from reference to their skeletons."
-  (let [
-        refs (get-refs input-map)
-        ]
+  (let [refs (get-refs input-map)]
     (zipmap
      refs
      (map (fn [ref]
@@ -794,6 +792,10 @@ The idea is to map the key :foo to the (recursive) result of pathify on :foo's v
         ;; the dummy placeholder value :top substituted for each occurance
         ;; of a reference in _input-map_.
         ;;
+        ;; However, _ser_ is not sorted by path length.
+        ;; It needs to be sorted so that, when deserialization is done,
+        ;; assignment will occur in the correct order: shortest path first.
+
         ;; We now sort _ser_ in a shortest-path-first order, so that,
         ;; during de-serialization, all assignments will happen in this
         ;; same correct order.
@@ -943,6 +945,12 @@ The idea is to map the key :foo to the (recursive) result of pathify on :foo's v
         (strip-refs (dissoc map-with-refs first-key)))))
    (= (type map-with-refs) clojure.lang.Ref)
    (strip-refs (deref map-with-refs))
+
+   ;; TODO: print a quote mark (') before lists.
+   ;; e.g. (list :foo) becomes "'(:foo)" when printed out.
+;   (seq? map-with-refs)
+;   (cons #\' map-with-refs)
+
    :else
    map-with-refs))
 
