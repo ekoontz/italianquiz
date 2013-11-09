@@ -581,8 +581,7 @@ The idea is to map the key :foo to the (recursive) result of pathify on :foo's v
   (if (= map value) (list path)
       (if (= (type map) clojure.lang.Ref)
         (paths-to-value @map value path)
-        (if (or (= (type map) clojure.lang.PersistentArrayMap)
-                (= (type map) clojure.lang.PersistentHashMap))
+        (if (map? map)
           (mapcat (fn [key]
                     (paths-to-value (get map key) value (concat path (list key))))
                   (keys map))))))
@@ -606,8 +605,7 @@ The idea is to map the key :foo to the (recursive) result of pathify on :foo's v
            ;; a simple reference: reference to a non-reference (e.g. a map, boolean, etc):
            input)
          (all-refs @input))
-        (if (or (= (type input) clojure.lang.PersistentArrayMap)
-                (= (type input) clojure.lang.PersistentHashMap))
+        (if (map? input)
           ;; TODO: fix bug here: vals resolves @'s
           (concat
            (mapcat (fn [key]
@@ -635,17 +633,16 @@ The idea is to map the key :foo to the (recursive) result of pathify on :foo's v
              (all-refs (rest input)))))))))
 
 (defn skeletize [input-val]
-  (if (or (= (type input-val) clojure.lang.PersistentArrayMap)
-          (= (type input-val) clojure.lang.PersistentHashMap))
-    (zipmap (keys (dissoc input-val :serialized))
-            (map (fn [val]
-                   (if (= (type val) clojure.lang.Ref)
-                     :top
-                     (if (or (= (type val) clojure.lang.PersistentArrayMap)
-                             (= (type val) clojure.lang.PersistentHashMap))
+  (if (map? input-val)
+    (let [exclude-serialized (dissoc input-val :serialized)]
+      (zipmap (keys exclude-serialized)
+              (map (fn [val]
+                     (if (= (type val) clojure.lang.Ref)
+                       :top
+                       (if (map? input-val)
                        (skeletize val)
                        val)))
-                 (vals (dissoc input-val :serialized))))
+                   (vals exclude-serialized))))
     input-val))
 
 ;; TODO s/map/input-map/
