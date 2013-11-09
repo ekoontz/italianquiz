@@ -587,49 +587,38 @@ The idea is to map the key :foo to the (recursive) result of pathify on :foo's v
 
 (defn all-refs [input]
   (if input
-    (do
-      (if false ;; debug instrumentation
-        (do (println "")
-            (println (str "input: " input))
-            (if (= (type input) clojure.lang.Ref)
-              (println (str "@input: " @input)))
-            (println "")))
-      (if (= (type input) clojure.lang.Ref)
-        (cons
-         (if (= (type @input) clojure.lang.Ref)
-           ;; dereference double-references (references to another reference) :
-           (do
-;             (println (str "double ref(i): " input " -> " @input " -> " @@input))
-           @input)
+    (if (= (type input) clojure.lang.Ref)
+      (cons
+       (if (= (type @input) clojure.lang.Ref)
+         ;; dereference double-references (references to another reference) :
+         @input
            ;; a simple reference: reference to a non-reference (e.g. a map, boolean, etc):
-           input)
-         (all-refs @input))
-        (if (map? input)
-          ;; TODO: fix bug here: vals resolves @'s
+         input)
+       (all-refs @input))
+      (if (map? input)
+        ;; TODO: fix bug here: vals resolves @'s
+        (concat
+         (mapcat (fn [key]
+                   (let [val (get input key)]
+                     (if (= (type input) clojure.lang.Ref)
+                       (if (= (type @val) clojure.lang.Ref)
+                         (list @val)
+                         (list val)))))
+                 input)
+         (all-refs
+          (map (fn [val]
+                 ;; dereference double-references (references to another reference) :
+                 (if (and (= (type val) clojure.lang.Ref)
+                          (= (type @val) clojure.lang.Ref))
+                   @val
+                   ;; a simple reference: reference to a non-reference (e.g. a map, boolean, etc):
+                   val))
+               (vals input))))
+        (if (and (seq? input)
+                 (> (.size input) 0))
           (concat
-           (mapcat (fn [key]
-                     (let [val (get input key)]
-                       (if (= (type input) clojure.lang.Ref)
-                         (if (= (type @val) clojure.lang.Ref)
-                           (list @val)
-                           (list val)))))
-                   input)
-           (all-refs
-            (map (fn [val]
-                   ;; dereference double-references (references to another reference) :
-                   (if (and (= (type val) clojure.lang.Ref)
-                            (= (type @val) clojure.lang.Ref))
-                     (do
-;                       (println (str "double ref: " val " -> " @val " -> " @@val))
-                       @val)
-                     ;; a simple reference: reference to a non-reference (e.g. a map, boolean, etc):
-                     val))
-                 (vals input))))
-          (if (and (seq? input)
-                   (> (.size input) 0))
-            (concat
-             (all-refs (first input))
-             (all-refs (rest input)))))))))
+           (all-refs (first input))
+           (all-refs (rest input))))))))
 
 (defn skeletize [input-val]
   (if (map? input-val)
@@ -678,8 +667,8 @@ The idea is to map the key :foo to the (recursive) result of pathify on :foo's v
             (paths-to-value input-map eachref nil))
           refs))))
 
-;; only used for testing: move to test.fs.
-(defn ser-db [input-map]
+;; only used for testing/debugging: TODO: consider moving to test.unify.
+(defn ser [input-map]
   (let [refs (get-refs input-map)
         skels (skels input-map refs)]
     (ref-skel-map input-map)))
