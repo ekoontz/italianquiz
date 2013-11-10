@@ -564,15 +564,15 @@
   "find all members of the collection that matches with query successfully."
   (fn [query collection]
     (loop [coll collection matches nil]
-      (let [first-val (first coll)]
-        (if (nil? first-val)
-          matches
-          (let [result (unify/match (unify/copy query) (unify/copy first-val))]
-            (if (not (unify/fail? result))
-              (recur (rest coll)
-                     (cons first-val matches))
-              (recur (rest coll)
-                     matches))))))))
+      (if (not (empty? coll))
+        (let [first-val (first coll)
+              result (unify/match (unify/copy query) (unify/copy first-val))]
+          (if (not (unify/fail? result))
+            (recur (rest coll)
+                   (cons first-val matches))
+            (recur (rest coll)
+                   matches)))
+        matches))))
 
 ;(declare lexicon)
 
