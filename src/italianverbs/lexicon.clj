@@ -13,17 +13,11 @@
 (def lexicon
 
   ;; this filter is for debugging purposes to restrict lexicon to particular entries, if desired.
-  ;; default shown is (or true ..) i.e. no restrictions.
+  ;; default shown is (not (nil? entry)) i.e. no restrictions except that an entry must be non-nil.
+  ;;  (currently there is one nil below: "chiunque (anyone)").
   (filter (fn [entry]
             (or false
-                true
-                (= (get-in entry '(:synsem :cat)) :adjective)
-                (= (get-in entry '(:synsem :cat)) :adverb)
-                (= (get-in entry '(:synsem :cat)) :verb)
-                (= (get-in entry '(:synsem :cat)) :noun)
-                (= (get-in entry '(:synsem :cat)) :prep)
-                (= (get-in entry '(:italian :infinitive)) "andare")
-                (= (get-in entry '(:italian :infinitive)) "mangiare")))
+                (not (nil? entry))))
 
           ;; TODO: move this fn to lexiconfn: keep any code out of the lexicon proper.
           ;; this (map) adds, to each lexical entry, a copy of the serialized form of the entry.
@@ -1043,7 +1037,7 @@
        :english {:english "mobile phone"}
        :italian {:italian "cellulare"}})
 
-      {:synsem {:cat :fail ; :noun ;; disabling until more constraints are put on usage of it.
+      {:synsem {:cat :fail ; :noun ;; disabling until more constraints are put on usage of it (TODO).
                 :pronoun true
                 :agr {:case :nom
                       :person :3rd
