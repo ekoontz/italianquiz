@@ -182,13 +182,9 @@
      ;; the first. If a key occurs in more than one map, the mapping(s)
      ;; from the latter (left-to-right) will be combined with the mapping in
      ;; the result by calling (f val-in-result val-in-latter)."
-     ;;
-     ;;
-     ;;
      (and (map? val1)
           (map? val2))
-     (let [result
-           (reduce #(merge-with unify %1 %2) (list val1 val2))]
+     (let [result (merge-with unify val1 val2)]
        (if (not (nil? (some #{:fail} (vals result))))
          :fail
          result))
@@ -367,14 +363,10 @@
           (map? val2))
      (let [debug (log/debug (str "about to recursively match with args: " args))
            debug (log/debug (str "match function: " match))
-           tmp-result
-           (reduce #(merge-with match %1 %2) args)]
-       (if (not (nil? (some #{:fail} (vals tmp-result))))
-         (do
-;           (println (str "found fail amongst: " (vals tmp-result)))
-            :fail)
-         (do ;(println (str "no fail in: " vals))
-             tmp-result)))
+           result (merge-with match val1 val2)]
+       (if (not (nil? (some #{:fail} (vals result))))
+         :fail
+         result))
      (and
       (= (type val1) clojure.lang.Ref)
       (not (= (type val2) clojure.lang.Ref)))
