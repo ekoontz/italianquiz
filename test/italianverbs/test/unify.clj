@@ -384,21 +384,21 @@ a given value in a given map."
         mymap {:a ref1 :b ref2}]
     (is (= (skeletize mymap) {:a :top :b :top}))))
 
-(deftest ser-db-1
+(deftest ser-1
   (let [ref1 (ref 42)
         mymap {:a ref1, :b ref1}
-        ser (ser-db mymap)]
+        ser (ser mymap)]
     (is (= ser
            {
             {:ref ref1
              :skel 42} '((:a)(:b))}))))
 
 ;; TODO: this test is unnecessarily strict: see below for specifics
-(deftest ser-db-2
+(deftest ser-2
   (let [ref2 (ref 42)
         ref1 (ref {:c ref2})
         mymap {:a ref1 :b ref1 :d ref2}
-        ser (ser-db mymap)]
+        ser (ser mymap)]
     (is (=
          ser
          {
@@ -668,29 +668,75 @@ when run from a REPL."
          {:a 1 :b 2})))
 
 (deftest set-with-two-members-one-fails-returns-other-member-left
+  "1st arg is a set"
   (is (= {:a 1 :b 2 :c 3}
          (unify #{{:a 1 :b 2} {:a 1 :c 4}} {:c 3}))))
 
 (deftest set-with-two-members-none-fails-returns-both-members-left
+  "If one arg a is a map and the other b is a set, result
+   should be a set of all the nonfail unifications of a with each member of b."
   (is (= #{{:a 1 :b 2 :c 3}
            {:a 1 :b 2 :c 4}}
-         (unify {:b 2} 
+         (unify {:b 2}
                 #{{:a 1 :c 3}
                   {:a 1 :c 4}}))))
 
 (deftest singleton-set-and-map-is-map-right
+  "2nd arg is a set"
   (is (= (unify {:b 2} #{{:a 1}})
          {:a 1 :b 2})))
 
-(deftest set-with-two-members-one-fails-returns-other-member-right
+(deftest set-with-two-members-one-fails-returns-other-member-2
+  "If one arg a is a map and the other b is a set, result
+   should be a set of all the nonfail unifications of a and each member of b;
+   and if there is only one member in the result set, just return that one
+   member, not a set with only that member in it."
   (is (= {:a 1 :b 2 :c 3}
          (unify {:c 3} #{{:a 1 :b 2} {:a 1 :c 4}}))))
 
-(deftest set-with-two-members-none-fails-returns-both-members-right
+(deftest set-with-two-members-one-fails-returns-other-member-2
+  "If one arg a is a map and the other b is a set, result
+   should be a set of all the nonfail unifications of a and each member of b;
+   and if there is only one member in the result set, just return that one
+   member, not a set with only that member in it."
+  (is (= {:a 1 :b 2 :c 3}
+         (unify {:c 3} #{{:a 1 :b 2}
+                         {:a 1 :c 4}}))))
+
+(deftest set-with-two-members-none-fails-returns-both-members-2
+  "2nd arg is a set"
   (is (= #{{:a 1 :b 2 :c 3}
            {:a 1 :b 2 :c 4}}
-         (unify {:b 2} 
+         (unify {:b 2}
                 #{{:a 1 :c 3}
                   {:a 1 :c 4}}))))
+
+;(deftest set-and-ref
+;  (let [result (unify #{{:cat :noun}{:cat :verb}} (ref :top))]
+;    (is (set? result))
+;    (is (= (.size result) 2))
+;    (is (= (type (first result))
+;           clojure.lang.Ref))
+;    (is (= (type (second result))
+;           clojure.lang.Ref))))
+
+;(deftest linguistic-test
+;  "a more complicated test with sets."
+;  (let [parent (let [catref (ref :top)]
+;                 {:head {:cat catref}
+;                  :cat catref})
+ ;       head #{{:cat :noun}
+;               {:cat :verb}}
+ ;       result
+ ;       (unify parent
+ ;              {:head head})]
+ ;   (is (not (fail? result)))
+ ;;   (is (set? result))
+ ;   (is (= (.size result) 2))
+ ;   (is (= #{:noun :verb}
+ ;          (set
+  ;          (map (fn [each-result]
+  ;;                 (get-in each-result '(:cat)))
+  ;               result))))))
 
 

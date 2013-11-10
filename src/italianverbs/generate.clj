@@ -18,6 +18,8 @@
     (spit filename (html/static-page (html/tablize fs) filename))))
 
 (defn plain [expr]
+  "simply map expr in a map with one key :plain, whose value is expr.
+   workbook/workbookq will format this accordingly."
   {:plain expr})
 
 (defn moreover-head [parent child lexfn-sem-impl]

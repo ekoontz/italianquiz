@@ -95,13 +95,12 @@
 ;; either consider all args, or change signature of (unify) to take only val1 val2.
 ;; see also lexiconfn/unify (probably will change signature, but make lexiconfn/unify handle
 ;; have signature [& args] and pass to unify/unify with appropriate translation.
-(defn unify [& args]
-  (let [val1 (first args)
-        val2 (second args)]
+(defn unify [val1 val2]
+  (let [val1 val1
+        val2 val2]
     (log/debug (str "unify val1: " val1))
     (log/debug (str "      val2: " val2))
     (cond
-
      (and (= val1 '())
           (= val2 :top))
      val1
@@ -110,7 +109,6 @@
           (= val2 '()))
      val1
 
-
      (and (= val1 '()))
      :fail
 
@@ -118,9 +116,12 @@
           (= val2 :top))
      val1
 
+     ;; TODO: what about (unify nil nil)?
+
      (= val1 nil)
      :fail
 
+     ;; <sets>
      (and (set? val1)
           (set? val2))
      (let [intersect (intersection val1 val2)]
@@ -159,29 +160,39 @@
              true
              mapped))
 
-     (nil? args) nil
+     ;; </sets>
 
-     (= (.count args) 1)
-     (first args)
-
-     (= :fail (first args))
+     ;; :fail
+     (or (= :fail val1)
+         (= :fail val2))
      :fail
 
-     (= :fail (second args))
-     :fail
-
+     ;; seqs
      (seq? val1)
      (map (fn [each]
             (unify each val2))
           val1)
 
+     ;; This is the canonical unification case: unifying two DAGs
+     ;; (maps with possible references within them).
+     ;;
+     ;; merge-with: http://clojuredocs.org/clojure_core/clojure.core/merge-with
+     ;;
+     ;; "Returns a map that consists of the rest of the maps conj-ed onto
+     ;; the first. If a key occurs in more than one map, the mapping(s)
+     ;; from the latter (left-to-right) will be combined with the mapping in
+     ;; the result by calling (f val-in-result val-in-latter)."
+     ;;
+     ;;
+     ;;
      (and (map? val1)
           (map? val2))
      (let [result
-           (reduce #(merge-with unify %1 %2) args)]
+           (reduce #(merge-with unify %1 %2) (list val1 val2))]
        (if (not (nil? (some #{:fail} (vals result))))
          :fail
          result))
+
      (and
       (= (type val1) clojure.lang.Ref)
       (not (= (type val2) clojure.lang.Ref)))
@@ -260,6 +271,7 @@
      (= val1 "top") val2
      (= val2 "top") val1
 
+     ;; TODO: verify that these keyword/string exceptions are necessary - otherwise remove them.
      ;; :foo,"foo" => :foo
      (and (= (type val1) clojure.lang.Keyword)
           (= (type val2) java.lang.String)
@@ -278,6 +290,7 @@
      ;; are strings to over-ride values that are maps (in which
      ;; case they are specs of how to compute a string: agreement
      ;; information such as gender and number.
+     ;; TODO: verify that these map/string exceptions are necessary - otherwise remove them.
      (and
       (map? val1)
       (string? val2))
@@ -295,12 +308,21 @@
      :else ;; fail.
      (do
        (log/debug (str "(" val1 ", " val2 ") => :fail"))
-;       (println (str "(" val1 ", " val2 ") => :fail"))
        :fail))))
 
+;; unify vs. merge:
+;;
+;; case 1:
+;; (fs/unify {:a 42} {:a 42 :b 43})
+;; => {:a 42 :b 43}
+;;  and:
 ;; (fs/match {:a 42} {:a 42 :b 43})
 ;; => {:b 43, :a 42} ; ok: val2 specializes val1.
-
+;;
+;; case 2:
+;; (fs/unify {:a 42 :b 43} {:a 42})
+;; => {:a 42 :b 43}
+;;  but:
 ;; (fs/match {:a 42 :b 43} {:a 42})
 ;; => :fail          ; fail: val2 does not specialize val1.
 
@@ -310,31 +332,42 @@
 
 (defn match [val1 val2]
   "match: like unify, but requires that every path in val1 must be in val2: in other words, val2 matches, or is a specialization, of val1."
-  (let [args (list val1 val2)]
-;    (println (str "match(" val1 "," val2 ")"))
+  (let [args (list val1 val2)
+        keys1 (if (map? val1) (set (keys val1)))
+        keys2 (if (map? val2) (set (keys val2)))]
+    (log/debug (str "vals1: " val1))
+    (log/debug (str "keys1: " keys1))
+    (log/debug (str "vals2: " val2))
+    (log/debug (str "keys2: " keys2))
+    (log/debug (str "count args: " (count args)))
+    (log/debug (str "map? val1 " (map? val1)))
+    (log/debug (str "map? val2 " (map? val2)))
+    (log/debug (str "subset? keys1 keys2 " (subset? keys1 keys2)))
     (cond
 
      (= (.count args) 1)
      (first args)
 
-     (= :fail (first args))
+     (= :fail val1)
      :fail
 
-     (= :fail (second args))
+     (= :fail val2)
      :fail
 
      ;; if keys(val1) is not a subset of keys(val2), then fail.
      ;; same set is ok, since a set is a subset of itself.
      (and (map? val1)
           (map? val2)
-          (not (subset? (set (keys val1)) (set (keys val2)))))
+          (not (subset? keys1 keys2)))
      (do
-;       (println (str "SUBSET FAIL: " (keys val1) " is not a subset of:" (keys val2)))
-     :fail)
+       (log/debug (str "SUBSET FAIL: " keys1 " is not a subset of:" keys2))
+       :fail)
 
      (and (map? val1)
           (map? val2))
-     (let [tmp-result
+     (let [debug (log/debug (str "about to recursively match with args: " args))
+           debug (log/debug (str "match function: " match))
+           tmp-result
            (reduce #(merge-with match %1 %2) args)]
        (if (not (nil? (some #{:fail} (vals tmp-result))))
          (do
@@ -673,6 +706,39 @@ The idea is to map the key :foo to the (recursive) result of pathify on :foo's v
         skels (skels input-map refs)]
     (ref-skel-map input-map)))
 
+(defn ref-skel-map-with-sets [input]
+  "like ref-skel-map but can deal with sets as inputs."
+  (let [refs (get-refs input)
+        ;; skels returns a map from a reference to its skeleton.
+        vals (skels input refs)]
+    (zipmap
+     ;; associate each ref with its skeleton.
+     (map (fn [each-ref]
+            {:ref (ref @each-ref)
+             :skel (get vals each-ref)})
+          refs)
+
+     ;; list of all paths that point to each ref in _input-map_.
+     (map (fn [each-ref]
+            (paths-to-value input each-ref nil))
+          refs))))
+
+(defn ser2 [input-map]
+  (let [refs (get-refs input-map)
+        skels (skels input-map refs)]
+    {:refs refs
+     :skels skels
+     :refskels2paths (ref-skel-map input-map)}))
+
+;; start with (ser) (above): TODO: actually expand set values.
+(defn externalize-set-values [input]
+  (let [refs (get-refs input)
+        skels (skels input refs)]
+    (set (ref-skel-map input))))
+
+(defn esv [input]
+  (externalize-set-values input))
+
 ;; (((:a :c) (:b :c) (:d))
 ;;  ((:a) (:b))
 ;;  nil)
@@ -767,9 +833,9 @@ The idea is to map the key :foo to the (recursive) result of pathify on :foo's v
 (defn serialize [input-map]
   (let [memoized (get input-map :serialized :none)]
     (if (not (= memoized :none))
-      (let [debug (log/debug "using cached serialization!")]
+      (let [debug (log/debug "using cached serialization.")]
         memoized)
-      (let [;debug (println (str "SERIALIZING: " input-map))
+      (let [debug (log/debug "no cached value: serializing at runtime.")
             ser (ser-intermed input-map)]
         ;; ser is a intermediate (but fully-serialized) representation
         ;; as a map:
@@ -849,12 +915,15 @@ The idea is to map the key :foo to the (recursive) result of pathify on :foo's v
   (deserialize (trunc (serialize map))))
 
 (defn unifyc [& args]
-  (log/debug (str "unifyc: " args))
   "like fs/unify, but fs/copy each argument before unifying."
-  (apply unify
-         (map (fn [arg]
-                (copy arg))
-              args)))
+  (do
+    (log/debug (str "unifyc: args: " (str args)))
+    (if (not (empty? args))
+      (if (empty? (rest args))
+        (first args)
+        (unify (copy (first args))
+               (apply unifyc (rest args))))
+      :top)))
 
 (defn has-path [path paths]
   (if (first paths)
