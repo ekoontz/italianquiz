@@ -328,21 +328,16 @@
 
 (defn match [val1 val2]
   "match: like unify, but requires that every path in val1 must be in val2: in other words, val2 matches, or is a specialization, of val1."
-  (let [args (list val1 val2)
-        keys1 (if (map? val1) (set (keys val1)))
+  (let [keys1 (if (map? val1) (set (keys val1)))
         keys2 (if (map? val2) (set (keys val2)))]
     (log/debug (str "vals1: " val1))
     (log/debug (str "keys1: " keys1))
     (log/debug (str "vals2: " val2))
     (log/debug (str "keys2: " keys2))
-    (log/debug (str "count args: " (count args)))
     (log/debug (str "map? val1 " (map? val1)))
     (log/debug (str "map? val2 " (map? val2)))
     (log/debug (str "subset? keys1 keys2 " (subset? keys1 keys2)))
     (cond
-
-     (= (.count args) 1)
-     (first args)
 
      (= :fail val1)
      :fail
@@ -361,9 +356,7 @@
 
      (and (map? val1)
           (map? val2))
-     (let [debug (log/debug (str "about to recursively match with args: " args))
-           debug (log/debug (str "match function: " match))
-           result (merge-with match val1 val2)]
+     (let [result (merge-with match val1 val2)]
        (if (not (nil? (some #{:fail} (vals result))))
          :fail
          result))
@@ -448,6 +441,7 @@
 
      :else :fail)))
 
+;; TODO: as with (unify), use [val1 val2] as signature, not [& args].
 (defn merge [& args]
   "warning: {} is the identity value, not nil; that is: (merge X {}) => X, but (merge X nil) => nil, (not X)."
   (let [val1 (first args)
