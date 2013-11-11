@@ -91,10 +91,8 @@
           (cons (first fs-keys) (fail-path (get-in fs (list (first fs-keys)))))
           (fail-path fs (rest fs-keys)))))))
 
-;; TODO: many code paths below only look at val1 and val2, and ignore rest of args beyond that.
-;; either consider all args, or change signature of (unify) to take only val1 val2.
-;; see also lexiconfn/unify (probably will change signature, but make lexiconfn/unify handle
-;; have signature [& args] and pass to unify/unify with appropriate translation.
+(declare set-cross-product)
+
 (defn unify [val1 val2]
   (let [val1 val1
         val2 val2]
@@ -139,8 +137,10 @@
                      (not (fail? each)))
                    (mapcat (fn [each-val1]
                              (map (fn [each-val2]
-                                    (unify each-val1
-                                           each-val2))
+;                                    (set-cross-product
+                                     (unify each-val1
+                                            each-val2))
+;)
                                   val2))
                            val1))]
        (if (empty? (rest filtered))
@@ -455,8 +455,6 @@
      (= val1 val2) val1
 
      :else :fail)))
-
-(declare set-cross-product)
 
 (defn set-cross-product-kv [key val]
   (cond
