@@ -79,8 +79,6 @@
         (log/debug "moreover-comp:  parent value: " (unify/get-in parent (unify/fail-path result)))
         :fail))))
 
-(declare gen14-inner)
-
 (defn gen14-inner [phrase-with-head complements complement-filter-fn post-unify-fn recursion-level
                    lexfn-sem-impl [ & filtered-complements]]
   (let [debug (log/debug (str "gen14-inner begin: recursion level: " recursion-level))
