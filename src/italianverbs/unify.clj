@@ -441,6 +441,26 @@
 
      :else :fail)))
 
+(declare set-cross-product)
+
+(defn set-cross-product-kv [key val]
+  (cond
+   (set? val)
+   (set (map (fn [each-val]
+               {key (set-cross-product each-val)})
+             val))
+   true
+   (set {key (set-cross-product val)})))
+
+(defn set-cross-product [input-map]
+  (if (not (empty? input-map))
+    (union
+     (let [kv (first input-map)
+           k (first kv)
+           v (second kv)]
+       (set-cross-product k v))
+     (set-cross-product (rest input-map)))))
+
 ;; TODO: as with (unify), use [val1 val2] as signature, not [& args].
 (defn merge [& args]
   "warning: {} is the identity value, not nil; that is: (merge X {}) => X, but (merge X nil) => nil, (not X)."

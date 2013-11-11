@@ -711,6 +711,11 @@ when run from a REPL."
                 #{{:a 1 :c 3}
                   {:a 1 :c 4}}))))
 
+(deftest scp-kv
+  "set cross product for a single key-value pair."
+  (is (= #{{:a 1}{:a 2}{:a 3}}
+         (set-cross-product-kv :a #{1 2 3}))))
+
 ;(deftest set-and-ref
 ;  (let [result (unify #{{:cat :noun}{:cat :verb}} (ref :top))]
 ;    (is (set? result))
