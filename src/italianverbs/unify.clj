@@ -123,14 +123,29 @@
 
      ;; <sets>
      (and (set? val1)
+          (set? val2)
+          (empty? val2))
+     (unify val1 :top)
+
+     (and (set? val1)
+          (set? val2)
+          (empty? val1))
+     (unify val2 :top)
+
+     (and (set? val1)
           (set? val2))
-     (let [intersect (intersection val1 val2)]
-       (cond (empty? intersect)
-             :fail
-             (= (.size intersect)
-                1)
-             (first intersect)
-             true intersect))
+     (let [filtered
+           (filter (fn [each]
+                     (not (fail? each)))
+                   (mapcat (fn [each-val1]
+                             (map (fn [each-val2]
+                                    (unify each-val1
+                                           each-val2))
+                                  val2))
+                           val1))]
+       (if (empty? (rest filtered))
+         (first filtered)
+         (set filtered)))
 
      (set? val1)
      (let [mapped
@@ -447,23 +462,27 @@
   (cond
    (set? val)
    (set (map (fn [each-val]
-               {key (set-cross-product each-val)})
+               {key each-val})
              val))
    true
-   (set {key (set-cross-product val)})))
+   (set (list {key (set-cross-product val)}))))
 
 (defn set-cross-product [input]
+  (log/info (str "scp: " input))
   (cond (not (map? input))
         input
+        (empty? input) #{}
         true
-        (let [input-map input]
-          (if (not (empty? input-map))
-            (union
-             (let [kv (first input-map)
-                   k (first kv)
-                   v (second kv)]
-               (set-cross-product k v))
-             (set-cross-product (rest input-map)))))))
+        (let [kv (first input)
+              k (first kv)
+              v (second kv)]
+          (log/debug (str "kv: " kv))
+          (log/debug (str "k: " k))
+          (log/debug (str "v: " v))
+          (set-cross-product
+           (unify
+            (set-cross-product-kv k v)
+            (set-cross-product (dissoc input k)))))))
 
 ;; TODO: as with (unify), use [val1 val2] as signature, not [& args].
 (defn merge [& args]

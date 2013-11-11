@@ -716,6 +716,28 @@ when run from a REPL."
   (is (= #{{:a 1}{:a 2}{:a 3}}
          (set-cross-product-kv :a #{1 2 3}))))
 
+(deftest set-cross-product-1
+  (is (= #{{:b 1}
+           {:b 2}}
+         (set-cross-product {:b #{1 2}}))))
+
+(deftest set-cross-product-2
+  (is (= #{{:a 42 :b 1}
+           {:a 42 :b 2}}
+         (set-cross-product {:a 42 :b #{1 2}}))))
+
+(deftest set-cross-product-3
+  (is (= #{{:b 1, :a 43} {:b 2, :a 43} 
+           {:b 1, :a 42} {:b 2, :a 42}}
+         (set-cross-product {:a #{42 43} 
+                             :b #{1 2}}))))
+
+(deftest set-cross-product-4
+  (is (= #{{:a {:b 1}}
+           {:a {:b 2}}}
+         (set-cross-product {:a {:b #{1 2}}}))))
+
+
 ;(deftest set-and-ref
 ;  (let [result (unify #{{:cat :noun}{:cat :verb}} (ref :top))]
 ;    (is (set? result))
