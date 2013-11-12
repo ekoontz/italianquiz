@@ -137,15 +137,13 @@
                      (not (fail? each)))
                    (mapcat (fn [each-val1]
                              (map (fn [each-val2]
-;                                    (set-cross-product
-                                     (unify each-val1
-                                            each-val2))
-;)
+                                    (unify each-val1
+                                           each-val2))
                                   val2))
                            val1))]
        (if (empty? (rest filtered))
          (first filtered)
-         (set filtered)))
+         (set-cross-product (set filtered))))
 
      (set? val1)
      (let [mapped
@@ -199,10 +197,16 @@
      ;; the result by calling (f val-in-result val-in-latter)."
      (and (map? val1)
           (map? val2))
-     (let [result (merge-with unify val1 val2)]
+     (let [xp-val1 (set-cross-product val1)
+           xp-val2 (set-cross-product val2)
+           debug (log/debug (str "xp val1:" val1))
+           debug (log/debug (str "xp val2:" val2))
+           result (set-cross-product (merge-with unify xp-val1 xp-val2))]
        (if (not (nil? (some #{:fail} (vals result))))
          :fail
-         result))
+         (do
+           (log/debug (str val1 " ; " val2 " map/map unification result:" result))
+           result)))
 
      (and
       (= (type val1) clojure.lang.Ref)
@@ -275,8 +279,8 @@
          (= val2 :fail))
      :fail
 
-     (= val1 :top) val2
-     (= val2 :top) val1
+     (= val1 :top) (set-cross-product val2)
+     (= val2 :top) (set-cross-product val1)
 
      ;; these two rules are unfortunately necessary because of mongo/clojure storage of keywords as strings.
      (= val1 "top") val2
@@ -459,29 +463,37 @@
 (defn set-cross-product-kv [key val]
   (let [val (set-cross-product val)]
     (cond
+     (and (set? val)
+          (empty? (rest val)))
+     {key (first val)}
+
      (set? val)
      (set (map (fn [each-val]
                  {key each-val})
                val))
      true
-     (set (list {key val})))))
+     {key val})))
 
 (defn set-cross-product [input]
   (log/info (str "scp: " input))
   (cond (not (map? input))
         input
 
-        (empty? input) #{}
-        true
+        (empty? input) :top
 
+        true
         (let [kv (first input)
               k (first kv)
-              v (second kv)]
+              v (second kv)
+              xpv (set-cross-product-kv k v)]
           (log/debug (str "kv: " kv))
           (log/debug (str "k: " k))
           (log/debug (str "v: " v))
+          (log/debug (str "xpv: " xpv))
           (unify
-           (set-cross-product-kv k v)
+           (cond (empty? xpv) :top
+                 (empty? (rest xpv)) (first xpv)
+                 true xpv)
            (set-cross-product (dissoc input k))))))
 
 ;; TODO: as with (unify), use [val1 val2] as signature, not [& args].
