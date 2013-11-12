@@ -457,30 +457,32 @@
      :else :fail)))
 
 (defn set-cross-product-kv [key val]
-  (cond
-   (set? val)
-   (set (map (fn [each-val]
-               {key each-val})
-             val))
-   true
-   (set (list {key (set-cross-product val)}))))
+  (let [val (set-cross-product val)]
+    (cond
+     (set? val)
+     (set (map (fn [each-val]
+                 {key each-val})
+               val))
+     true
+     (set (list {key val})))))
 
 (defn set-cross-product [input]
   (log/info (str "scp: " input))
   (cond (not (map? input))
         input
+
         (empty? input) #{}
         true
+
         (let [kv (first input)
               k (first kv)
               v (second kv)]
           (log/debug (str "kv: " kv))
           (log/debug (str "k: " k))
           (log/debug (str "v: " v))
-          (set-cross-product
-           (unify
-            (set-cross-product-kv k v)
-            (set-cross-product (dissoc input k)))))))
+          (unify
+           (set-cross-product-kv k v)
+           (set-cross-product (dissoc input k))))))
 
 ;; TODO: as with (unify), use [val1 val2] as signature, not [& args].
 (defn merge [& args]
