@@ -114,7 +114,8 @@
           (= val2 :top))
      val1
 
-     ;; TODO: what about (unify nil nil)?
+     ;; TODO: what about (unify nil nil) > nil?
+     ;; TODO: what about (unify X :top) => X? (probably pretty common).
 
      (= val1 nil)
      :fail
@@ -201,7 +202,9 @@
            xp-val2 (set-cross-product val2)
            debug (log/debug (str "xp val1:" val1))
            debug (log/debug (str "xp val2:" val2))
-           result (set-cross-product (merge-with unify xp-val1 xp-val2))]
+           merge-result (merge-with unify xp-val1 xp-val2)
+           debug (log/debug (str "merge-result:" merge-result))
+           result (set-cross-product merge-result)]
        (if (not (nil? (some #{:fail} (vals result))))
          :fail
          (do
@@ -476,10 +479,25 @@
 
 (defn set-cross-product [input]
   (log/info (str "scp: " input))
+;  (if (map? input)
+;    (log/info (str "first input: " (first input))))
+;  (if (map? (first input)) 
+;    (log/info (str "second first input: " (second (first input)))))
   (cond (not (map? input))
         input
 
         (empty? input) :top
+
+        (and (map? input)
+             (not (set? (second (first input))))
+             (not (map? (second (first input)))))
+        input
+
+        (and (map? input)
+             (empty? (rest input))
+             (not (set? (second (first input)))))
+        {(first (first input))
+         (set-cross-product ((first (first input)) input))}
 
         true
         (let [kv (first input)
@@ -490,11 +508,15 @@
           (log/debug (str "k: " k))
           (log/debug (str "v: " v))
           (log/debug (str "xpv: " xpv))
-          (unify
-           (cond (empty? xpv) :top
-                 (empty? (rest xpv)) (first xpv)
-                 true xpv)
-           (set-cross-product (dissoc input k))))))
+          (let [arg1 
+                (cond (empty? xpv) :top
+                      (and (set? xpv)
+                           (empty? (rest xpv)))
+                      (first xpv)
+                      true xpv)
+                debug (log/debug (str "arg1 to unify:" arg1))]
+            (unify arg1
+                   (set-cross-product (dissoc input k)))))))
 
 ;; TODO: as with (unify), use [val1 val2] as signature, not [& args].
 (defn merge [& args]

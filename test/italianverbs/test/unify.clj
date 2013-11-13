@@ -3,6 +3,8 @@
   (:use [italianverbs.unify])
   (:use [clojure.test]))
 
+(defmacro deftest-ignore [test-name comment code])
+
 (deftest simple-merge-test
   (let [result (merge {:foo 99} {:bar 42})]
     (is (= (:foo result) 99))
@@ -591,7 +593,7 @@ a given value in a given map."
          (unify "foo"
                 {:english "foo"}))))
 
-(deftest overflow
+(deftest-ignore overflow
   "merge has a problem: we hit StackOverflowError java.util.regex.Pattern$BmpCharProperty.match (Pattern.java:3366) when this test is run.
    Code works as expected if merge is replaced with unify. However, this test passes - the SOE seems to only happen
 when run from a REPL."
@@ -608,18 +610,17 @@ when run from a REPL."
                                                  :pronoun head-is-pronoun
                                                  :infl head-infl
                                                  :sem head-sem}}})
-
-                              (let [essere (ref :top)
-                                    infl (ref :top)]
-                                {:italian {:a {:infl infl}}
-                                 :english {:a {:infl infl}}
-                                 :synsem {:infl infl
-                                          :essere essere}
-                                 :head {:italian {:infl infl}
-                                        :english {:infl infl}
-                                        :synsem {:essere essere
-                                                 :infl infl}}}))
-                 '(:head))
+                  (let [essere (ref :top)
+                        infl (ref :top)]
+                    {:italian {:a {:infl infl}}
+                     :english {:a {:infl infl}}
+                     :synsem {:infl infl
+                              :essere essere}
+                     :head {:italian {:infl infl}
+                            :english {:infl infl}
+                            :synsem {:essere essere
+                                     :infl infl}}}))
+           '(:head))
    (unify
     {:italian {:foo 42}}
     (let [infl (ref :top)]
@@ -716,33 +717,33 @@ when run from a REPL."
   (is (= #{{:a 1}{:a 2}{:a 3}}
          (set-cross-product-kv :a #{1 2 3}))))
 
-(deftest set-cross-product-1
-  (is (= #{{:b 1}
-           {:b 2}}
-         (set-cross-product {:b #{1 2}}))))
+;(deftest set-cross-product-1
+;  (is (= #{{:b 1}
+;           {:b 2}}
+;         (set-cross-product {:b #{1 2}}))))
 
-(deftest set-cross-product-2
-  (is (= #{{:a 42 :b 1}
-           {:a 42 :b 2}}
-         (set-cross-product {:a 42 :b #{1 2}}))))
+;(deftest set-cross-product-2
+;  (is (= #{{:a 42 :b 1}
+;           {:a 42 :b 2}}
+;         (set-cross-product {:a 42 :b #{1 2}}))))
 
-(deftest set-cross-product-3
-  (is (= #{{:b 1, :a 43} {:b 2, :a 43}
-           {:b 1, :a 42} {:b 2, :a 42}}
-         (set-cross-product {:a #{42 43}
-                             :b #{1 2}}))))
+;(deftest set-cross-product-3
+;  (is (= #{{:b 1, :a 43} {:b 2, :a 43}
+;           {:b 1, :a 42} {:b 2, :a 42}}
+;         (set-cross-product {:a #{42 43}
+;                             :b #{1 2}}))))
 
-(deftest set-cross-product-4
-  (is (= #{{:a {:b 1}}
-           {:a {:b 2}}}
-         (set-cross-product {:a {:b #{1 2}}}))))
+;(deftest set-cross-product-4
+;  (is (= #{{:a {:b 1}}
+;           {:a {:b 2}}}
+;         (set-cross-product {:a {:b #{1 2}}}))))
 
 
-(deftest unify-with-set
-  (is (= #{{:a 42 :b 43}
-           {:a 42 :b 44}}
-         (unify {:a 42}
-                {:b #{43 44}}))))
+;(deftest unify-with-set
+;  (is (= #{{:a 42 :b 43}
+;           {:a 42 :b 44}}
+;         (unify {:a 42}
+;                {:b #{43 44}}))))
 
 ;(deftest set-and-ref
 ;  (let [result (unify #{{:cat :noun}{:cat :verb}} (ref :top))]
