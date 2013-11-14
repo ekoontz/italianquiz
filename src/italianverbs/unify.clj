@@ -94,8 +94,8 @@
 (declare set-cross-product)
 
 (defn unify [val1 val2]
-  (let [val1 val1
-        val2 val2]
+  (let [val1 (set-cross-product val1)
+        val2 (set-cross-product val2)]
     (log/debug (str "unify val1: " val1))
     (log/debug (str "      val2: " val2))
     (cond
@@ -199,10 +199,10 @@
      ;; the result by calling (f val-in-result val-in-latter)."
      (and (map? val1)
           (map? val2))
-     (let [xp-val1 (set-cross-product val1)
-           xp-val2 (set-cross-product val2)
-           debug (log/debug (str "xp val1:" val1))
-           debug (log/debug (str "xp val2:" val2))
+     (let [xp-val1 val1
+           xp-val2 val2
+           debug (log/debug (str "xp val1:" xp-val1))
+           debug (log/debug (str "xp val2:" xp-val2))
            merge-result (merge-with unify xp-val1 xp-val2)
            debug (log/debug (str "merge-result:" merge-result))
 ;           result merge-result
@@ -493,13 +493,13 @@
   (log/debug (str "empty? input:" (and (or
                                        (set? input)
                                        (map? input))
-                                      (empty? input))))
+                                       (empty? input))))
 
   (log/debug (str "cond2: " (and (or (set? input)(map? input))
                                  (empty? input))))
   (log/debug (str "cond3: " (and (map? input)
-                                (not (set? (second (first input))))
-                                (not (map? (second (first input)))))))
+                                 (not (set? (second (first input))))
+                                 (not (map? (second (first input)))))))
 
 
   (cond (not (map? input))
@@ -522,30 +522,56 @@
         (and (map? input)
              (not (set? (second (first input))))
              (not (map? (second (first input)))))
-        (let [debug (log/debug (str "doing cond3.."))
+        (let [debug (log/debug (str "doing cond3 with input: " input))
               key (first (first input))
               val (second (first input))
               debug (log/debug (str "cond3 key: " key))
               debug (log/debug (str "cond3 val: " val))]
           (let [rest-of (set-cross-product (dissoc input key))
-                debug (log/debug (str "type of rest-of: " (type rest-of)))]
-            (cond (map? rest-of)
-                  (conj
-                   {key val}
-                   rest-of)
-                  (set? rest-of)
-                  (set (map (fn [member]
-                              (unify {key val}
-                                     member))
-                            rest-of))
-                  true
-                  (throw (Exception. (str "don't know what to do with a: " (type rest-of)))))))
-          
+                xp-val (set-cross-product val)
+                debug (log/debug (str "cond3 type of xp-val: " (type xp-val)))
+                debug (log/debug (str "cond3 type of rest-of: " (type rest-of)))]
+            (cond
+
+             (and (not (set? xp-val))
+                  (map? rest-of))
+             (conj     ;; TODO: use unify instead?
+              {key val}
+              rest-of)
+
+             (and (set? xp-val)
+                  (map? rest-of))
+             (set (map (fn [member]
+                         (unify member
+                                rest-of))
+                       xp-val))
+
+             (and (set? xp-val)
+                  (set? rest-of))
+             (reduce (fn [x y] (union x y))
+                     (map (fn [val-member]
+                            (map (fn [rest-of-member]
+                                   (unify val-member rest-of-member))
+                                 rest-of))
+                          xp-val))
+
+             (and (not (set? xp-val))
+                  (set? rest-of))
+             (set (map (fn [member]
+                         (unify {key xp-val}
+                                member))
+                       rest-of))
+
+             true
+             (throw (Exception. (str "don't know what to do with first/rest: "
+                                     (type xp-val)
+                                     (type rest-of)))))))
+
         (and (map? input)
              (empty? (rest input))
              (not (set? (second (first input)))))
-        {(first (first input))
-         (set-cross-product ((first (first input)) input))}
+        (set-cross-product-kv (first (first input))
+                              (second (first input)))
 
         true
         (let [kv (first input)
@@ -556,7 +582,7 @@
           (log/debug (str "k: " k))
           (log/debug (str "v: " v))
           (log/debug (str "xpv: " xpv))
-          (let [arg1 
+          (let [arg1
                 (cond (empty? xpv) :top
                       (and (set? xpv)
                            (empty? (rest xpv)))
