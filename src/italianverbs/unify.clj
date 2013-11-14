@@ -147,7 +147,8 @@
          (set-cross-product (set filtered))))
 
      (set? val1)
-     (let [mapped
+     (let [debug (log/debug (str "val1 is a set (but not val2): " val1))
+           mapped
            (set (remove (fn [each]
                           (fail? each))
                         (map (fn [each-member]
@@ -204,7 +205,9 @@
            debug (log/debug (str "xp val2:" val2))
            merge-result (merge-with unify xp-val1 xp-val2)
            debug (log/debug (str "merge-result:" merge-result))
-           result (set-cross-product merge-result)]
+;           result merge-result
+           result (set-cross-product merge-result)
+]
        (if (not (nil? (some #{:fail} (vals result))))
          :fail
          (do
@@ -221,6 +224,7 @@
          ;; TODO: why is this false-disabled? (document and test) or remove
          (if (and false (fail? @val1)) :fail
          val1))
+
      (and
       (= (type val2) clojure.lang.Ref)
       (not (= (type val1) clojure.lang.Ref)))
@@ -478,21 +482,65 @@
      {key val})))
 
 (defn set-cross-product [input]
-  (log/info (str "scp: " input))
-;  (if (map? input)
-;    (log/info (str "first input: " (first input))))
-;  (if (map? (first input)) 
-;    (log/info (str "second first input: " (second (first input)))))
+  (log/debug (str "set-cross-product: " input))
+  (if (or (set? input) (map? input))
+    (log/debug (str "first input: " (first input))))
+  (if (and (map? input) (first input))
+    (log/debug (str "map's first key: " (first (first input)))))
+  (if (and (map? input) (first input))
+    (log/debug (str "map's first val: " (second (first input)))))
+
+  (log/debug (str "empty? input:" (and (or
+                                       (set? input)
+                                       (map? input))
+                                      (empty? input))))
+
+  (log/debug (str "cond2: " (and (or (set? input)(map? input))
+                                 (empty? input))))
+  (log/debug (str "cond3: " (and (map? input)
+                                (not (set? (second (first input))))
+                                (not (map? (second (first input)))))))
+
+
   (cond (not (map? input))
         input
 
-        (empty? input) :top
+        (empty? input) {}
 
         (and (map? input)
              (not (set? (second (first input))))
-             (not (map? (second (first input)))))
-        input
+             (not (map? (second (first input))))
+             (empty? (rest input)))
+        (let [debug (log/debug (str "doing cond3.."))
+              key (first (first input))
+              val (second (first input))
+              debug (log/debug (str "cond3 key: " key))
+              debug (log/debug (str "cond3 val: " val))]
+          input)
 
+        ;; cond 3
+        (and (map? input)
+             (not (set? (second (first input))))
+             (not (map? (second (first input)))))
+        (let [debug (log/debug (str "doing cond3.."))
+              key (first (first input))
+              val (second (first input))
+              debug (log/debug (str "cond3 key: " key))
+              debug (log/debug (str "cond3 val: " val))]
+          (let [rest-of (set-cross-product (dissoc input key))
+                debug (log/debug (str "type of rest-of: " (type rest-of)))]
+            (cond (map? rest-of)
+                  (conj
+                   {key val}
+                   rest-of)
+                  (set? rest-of)
+                  (set (map (fn [member]
+                              (unify {key val}
+                                     member))
+                            rest-of))
+                  true
+                  (throw (Exception. (str "don't know what to do with a: " (type rest-of)))))))
+          
         (and (map? input)
              (empty? (rest input))
              (not (set? (second (first input)))))
@@ -514,7 +562,9 @@
                            (empty? (rest xpv)))
                       (first xpv)
                       true xpv)
-                debug (log/debug (str "arg1 to unify:" arg1))]
+                debug (log/debug (str "arg1 to unify:" arg1))
+                debug (log/debug (str "rest: " (dissoc input k)))
+                debug (log/debug (str "scp(rest): " (set-cross-product (dissoc input k))))]
             (unify arg1
                    (set-cross-product (dissoc input k)))))))
 
