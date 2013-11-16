@@ -595,13 +595,14 @@
                        (set? scp-rest))
                   (do
                     (log/debug (str "both arg1 and scp-rest in default of scp is a set: " arg1 " , " scp-rest))
-                    (set
-                     (map (fn [member-arg1]
-                            (set (map (fn [member-scp-rest]
-                                        (unify member-arg1
-                                               member-scp-rest))
-                                      scp-rest)))
-                          arg1)))
+                    (reduce (fn [x y] (union x y))
+                            (map (fn [member-arg1]
+                                   (set (map (fn [member-scp-rest]
+                                               (unify member-arg1
+                                                      member-scp-rest))
+                                             scp-rest)))
+                                 arg1)))
+
                   (set? arg1)
                   (do
                     (log/debug (str "arg1 in default of scp is a set: " arg1))
@@ -609,6 +610,7 @@
                                 (conj member
                                       (set-cross-product (dissoc input k))))
                               arg1)))
+
                   true
                   (unify arg1
                          (set-cross-product (dissoc input k))))))))
