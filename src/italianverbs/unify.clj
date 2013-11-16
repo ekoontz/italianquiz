@@ -540,13 +540,6 @@
                             rest-of))
                   true
                   (throw (Exception. (str "don't know what to do with a: " (type rest-of)))))))
-          
-        (and (map? input)
-             (empty? (rest input))
-             (not (set? (second (first input)))))
-        {(first (first input))
-         (set-cross-product ((first (first input)) input))}
-
         true
         (let [kv (first input)
               k (first kv)
@@ -562,11 +555,31 @@
                            (empty? (rest xpv)))
                       (first xpv)
                       true xpv)
+                scp-rest (set-cross-product (dissoc input k))
                 debug (log/debug (str "arg1 to unify:" arg1))
                 debug (log/debug (str "rest: " (dissoc input k)))
-                debug (log/debug (str "scp(rest): " (set-cross-product (dissoc input k))))]
-            (unify arg1
-                   (set-cross-product (dissoc input k)))))))
+                debug (log/debug (str "scp(rest): " scp-rest))]
+            (cond (and (set? arg1)
+                       (set? scp-rest))
+                  (do
+                    (log/debug (str "both arg1 and scp-rest in default of scp is a set: " arg1 " , " scp-rest))
+                    (set
+                     (map (fn [member-arg1]
+                            (set (map (fn [member-scp-rest]
+                                        (unify member-arg1
+                                               member-scp-rest))
+                                      scp-rest)))
+                          arg1)))
+                  (set? arg1)
+                  (do
+                    (log/debug (str "arg1 in default of scp is a set: " arg1))
+                    (set (map (fn [member]
+                                (conj member
+                                      (set-cross-product (dissoc input k))))
+                              arg1)))
+                  true
+                  (unify arg1
+                         (set-cross-product (dissoc input k))))))))
 
 ;; TODO: as with (unify), use [val1 val2] as signature, not [& args].
 (defn merge [& args]

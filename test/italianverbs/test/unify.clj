@@ -727,16 +727,16 @@ when run from a REPL."
            {:a 42 :b 2}}
          (set-cross-product {:a 42 :b #{1 2}}))))
 
-;(deftest set-cross-product-3
-;  (is (= #{{:b 1, :a 43} {:b 2, :a 43}
-;           {:b 1, :a 42} {:b 2, :a 42}}
-;         (set-cross-product {:a #{42 43}
-;                             :b #{1 2}}))))
+(deftest set-cross-product-3
+  (is (= #{{:b 1, :a 43} {:b 2, :a 43}
+           {:b 1, :a 42} {:b 2, :a 42}}
+         (set-cross-product {:a #{42 43}
+                             :b #{1 2}}))))
 
-;(deftest set-cross-product-4
-;  (is (= #{{:a {:b 1}}
-;           {:a {:b 2}}}
-;         (set-cross-product {:a {:b #{1 2}}}))))
+(deftest set-cross-product-4
+  (is (= #{{:a {:b 1}}
+           {:a {:b 2}}}
+         (set-cross-product {:a {:b #{1 2}}}))))
 
 
 ;(deftest unify-with-set
