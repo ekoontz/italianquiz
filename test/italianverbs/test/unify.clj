@@ -739,11 +739,19 @@ when run from a REPL."
          (set-cross-product {:a {:b #{1 2}}}))))
 
 
+<<<<<<< HEAD
 ;(deftest unify-with-set
 ;  (is (= #{{:a 42 :b 43}
 ;           {:a 42 :b 44}}
 ;         (unify {:a 42}
 ;                {:b #{43 44}}))))
+=======
+(deftest unify-with-set
+  (is (= #{{:a 42 :b 43}
+           {:a 42 :b 44}}
+         (unify {:a 42}
+                {:b #{43 44}}))))
+>>>>>>> ekoontz/clarify-unification
 
 ;(deftest set-and-ref
 ;  (let [result (unify #{{:cat :noun}{:cat :verb}} (ref :top))]
