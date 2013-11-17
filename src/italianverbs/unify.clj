@@ -286,8 +286,8 @@
          (= val2 :fail))
      :fail
 
-     (= val1 :top) (set-cross-product val2)
-     (= val2 :top) (set-cross-product val1)
+     (= val1 :top) val2
+     (= val2 :top) val1
 
      ;; these two rules are unfortunately necessary because of mongo/clojure storage of keywords as strings.
      (= val1 "top") val2
@@ -470,55 +470,17 @@
 (defn ref? [val]
   (= (type val) clojure.lang.Ref))
 
-(defn set-cross-product [input & [ use-unify-or-conj ]]
-  (if (not (map? input)) input
-
-      (let [use-unify-or-conj (if (nil? use-unify-or-conj)
-                                unify
-                                conj)
-
-            key (first (first input))
-
+(defn set-cross-product [input]
+  (if (or (not (map? input)) (empty? input)) input
+      (let [key (first (first input))
             val (set-cross-product (second (first input)))
-
-            arg1 (let [xpv
-                       (cond
-                        (and (ref? val)
-                             (set? @val))
-                        (set (map (fn [each-val]
-                                    {key (ref (set-cross-product each-val))})
-                                  @val))
-
-                        (and (set? val)
-                             (empty? (rest val)))
-                        {key (first val)}
-
-                        (set? val)
-                        (set (map (fn [each-val]
-                                    {key each-val})
-                                  val))
-                        true
-                        {key val})]
-                   (cond (empty? xpv) :top
-                         (and (set? xpv)
-                              (empty? (rest xpv)))
-                         (first xpv)
-                         true xpv))
-
-            rest-of (if (not (empty? input))
-                      (set-cross-product (dissoc input key) use-unify-or-conj))]
-
-        (cond (empty? input) {}
-
+            rest-of (set-cross-product (dissoc input key))]
+        (cond (set? val)
+              (unify (set (map (fn [each-val]
+                                 {key each-val})
+                               val))
+                     rest-of)
               (and (not (set? val))
-                   (not (map? val))
-                   (map? rest-of))
-              (conj
-               {key val}
-               rest-of)
-
-              (and (not (set? val))
-                   (not (map? val))
                    (set? rest-of))
               (set (map (fn [member]
                           (unify {key val}
@@ -526,23 +488,11 @@
                         rest-of))
 
               (and (not (set? val))
-                   (set? arg1)
-                   (set? rest-of))
-              (reduce (fn [x y] (union x y))
-                      (map (fn [member-arg1]
-                             (set (map (fn [member-rest-of]
-                                         (let [result (use-unify-or-conj member-arg1
-                                                                         member-rest-of)]
-                                           result))
-                                       rest-of)))
-                           arg1))
+                   (not (set? rest-of)))
+              (conj {key val}
+                     rest-of)
 
-              (not (set? val))
-              arg1
-
-              true
-              (unify arg1
-                     rest-of)))))
+              true (throw (Exception. "Not sure what to do with this input: " input))))))
 
 ;; TODO: as with (unify), use [val1 val2] as signature, not [& args].
 (defn merge [& args]
