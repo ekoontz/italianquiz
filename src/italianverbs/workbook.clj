@@ -126,7 +126,7 @@
   (fo (take 1 (over-gen np {:synsem {:gender :masc :number :sing}} {:synsem {:sem {:human true}}})))
   (fo (take 1 (over-gen sents {:synsem {:agr {:gender :masc}}} "dormire"))))
 
-(fo (take 1 (over-gen sents {:synsem {:agr {:gender :masc}}} "dormire")))
+;(fo (take 1 (over-gen sents {:synsem {:agr {:gender :masc}}} "dormire")))
 
 (defn overh [parent child]
   (log/debug (str "overh child: " child))
