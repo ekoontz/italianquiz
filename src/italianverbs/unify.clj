@@ -133,7 +133,8 @@
 
      (and (set? val1)
           (set? val2))
-     (let [filtered
+     (let [debug (log/debug (str "unify: val1 and val2 are both sets."))
+           filtered
            (filter (fn [each]
                      (not (fail? each)))
                    (mapcat (fn [each-val1]
@@ -147,7 +148,7 @@
          (set-cross-product (set filtered))))
 
      (set? val1)
-     (let [debug (log/debug (str "val1 is a set (but not val2): " val1))
+     (let [debug (log/debug (str "unify: val1 is a set (but not val2): " val1))
            mapped
            (set (remove (fn [each]
                           (fail? each))
@@ -162,7 +163,8 @@
              mapped))
 
      (set? val2)
-     (let [mapped
+     (let [debug (log/debug (str "val2 is a set; val1 is: " val1))
+           mapped
            (set (remove (fn [each]
                           (fail? each))
                         (map (fn [each-member]
@@ -205,9 +207,7 @@
            debug (log/debug (str "xp val2:" xp-val2))
            merge-result (merge-with unify xp-val1 xp-val2)
            debug (log/debug (str "merge-result:" merge-result))
-;           result merge-result
-           result (set-cross-product merge-result)
-]
+           result merge-result]
        (if (not (nil? (some #{:fail} (vals result))))
          :fail
          (do
@@ -481,139 +481,185 @@
      true
      {key val})))
 
-(defn set-cross-product [input]
-  (log/debug (str "set-cross-product: " input))
-  (if (or (set? input) (map? input))
-    (log/debug (str "first input: " (first input))))
-  (if (and (map? input) (first input))
-    (log/debug (str "map's first key: " (first (first input)))))
-  (if (and (map? input) (first input))
-    (log/debug (str "map's first val: " (second (first input)))))
+(defn set-cross-product [input & [ use-unify-or-conj ]]
+  (let [use-unify-or-conj (if (nil? use-unify-or-conj)
+                            unify
+                            conj)]
+    (log/debug (str "set-cross-product: " input))
+    (log/debug (str "use-unify-or-conj: " use-unify-or-conj))
+    (if (or (set? input) (map? input))
+      (log/debug (str "first input: " (first input))))
+    (if (and (map? input) (first input))
+      (log/debug (str "map's first key: " (first (first input)))))
+    (if (and (map? input) (first input))
+      (log/debug (str "map's first val: " (second (first input)))))
 
-  (log/debug (str "empty? input:" (and (or
-                                       (set? input)
-                                       (map? input))
-                                       (empty? input))))
+    (log/debug (str "empty? input:" (and (or
+                                          (set? input)
+                                          (map? input))
+                                         (empty? input))))
 
-  (log/debug (str "cond2: " (and (or (set? input)(map? input))
-                                 (empty? input))))
-  (log/debug (str "cond3: " (and (map? input)
-                                 (not (set? (second (first input))))
-                                 (not (map? (second (first input)))))))
+    (log/debug (str "cond2: " (and (or (set? input)(map? input))
+                                   (empty? input))))
+    (log/debug (str "cond2.5: " (and (map? input)
+                                     (not (set? (second (first input))))
+                                     (not (map? (second (first input))))
+                                     (empty? (rest input)))))
+
+    (cond (not (map? input))
+          input
+
+          (empty? input) {}
+
+          (and (map? input)
+               (not (set? (second (first input))))
+               (not (map? (second (first input))))
+               (empty? (rest input)))
+          (let [debug (log/debug (str "doing cond2.5: simply returning input: " input))
+                key (first (first input))
+                val (second (first input))
+                debug (log/debug (str "cond2.5 key: " key))
+              debug (log/debug (str "cond2.5 val: " val))]
+            input)
+
+          ;; cond 3
+          (and (map? input)
+               (not (set? (second (first input))))
+               (not (map? (second (first input)))))
+          (let [debug (log/debug (str "doing cond3: input is a map; input's first kv's value is neither a set nor a map:" (second (first input))))
+                key (first (first input))
+                val (second (first input))
+                debug (log/debug (str "cond3 key: " key))
+                debug (log/debug (str "cond3 val: " val))
+                debug (log/debug (str "cond3: calling set-cross-product on rest=" (dissoc input key)))]
+            (let [rest-of (set-cross-product (dissoc input key))
+                  debug (str "recursively calling set-cross-product on val: " val)
+                  xp-val (set-cross-product val)
+                  debug (str "result of recursively calling set-cross-product on val:" val " => " xp-val)
+                  debug (log/debug (str "cond3 type of xp-val: " (type xp-val)))
+                  debug (log/debug (str "cond3 type of rest-of: " (type rest-of)))]
+              (cond
+
+               (and (map? xp-val)
+                    (map? rest-of))
+               (do
+                 (log/debug (str "cond3.1: xp-val is a map and rest-of is a map: combining with: " use-unify-or-conj))
+                 (use-unify-or-conj
+                  {key val}
+                  rest-of))
+
+               (and
+                (not (map? xp-val))
+                (not (map? xp-val))
+                (map? rest-of))
+               (do
+                 (log/debug (str "cond3.15: xp-val: " xp-val " is neither a map nor a set and rest-of is a map: using conj."))
+                 (conj
+                  {key val}
+                  rest-of))
 
 
-  (cond (not (map? input))
-        input
+               (and (not (set? xp-val))
+                    (map? rest-of))
+               (do
+                 (log/debug (str "cond3.2: xp-val: " xp-val " is not a set and rest-of is a map: have to use unify."))
+                 (unify
+                  {key val}
+                  rest-of))
 
-        (empty? input) {}
+               (and (set? xp-val)
+                    (map? rest-of))
+               (do
+                 (log/debug (str "cond3.3: xp-val is a set and rest-of is a map."))
+                 (set (map (fn [member]
+                             (use-unify-or-conj member
+                                                rest-of))
+                           xp-val)))
 
-        (and (map? input)
-             (not (set? (second (first input))))
-             (not (map? (second (first input))))
-             (empty? (rest input)))
-        (let [debug (log/debug (str "doing cond3.."))
-              key (first (first input))
-              val (second (first input))
-              debug (log/debug (str "cond3 key: " key))
-              debug (log/debug (str "cond3 val: " val))]
-          input)
+               (and (set? xp-val)
+                    (set? rest-of))
+               (do
+                 (log/debug (str "cond3.4: both xp-val and rest-of are sets."))
+                 (reduce (fn [x y] (union x y))
+                         (map (fn [val-member]
+                                (map (fn [rest-of-member]
+                                       (unify val-member rest-of-member))
+                                     rest-of))
+                              xp-val)))
 
-        ;; cond 3
-        (and (map? input)
-             (not (set? (second (first input))))
-             (not (map? (second (first input)))))
-        (let [debug (log/debug (str "doing cond3 with input: " input))
-              key (first (first input))
-              val (second (first input))
-              debug (log/debug (str "cond3 key: " key))
-              debug (log/debug (str "cond3 val: " val))]
-          (let [rest-of (set-cross-product (dissoc input key))
-                xp-val (set-cross-product val)
-                debug (log/debug (str "cond3 type of xp-val: " (type xp-val)))
-                debug (log/debug (str "cond3 type of rest-of: " (type rest-of)))]
-            (cond
+               (and (not (set? xp-val))
+                    (set? rest-of))
+               (do
+                 (log/debug (str "cond3.5: xp-val is not a set, but rest-of is a set."))
+                 (set (map (fn [member]
+                             (unify {key xp-val}
+                                    member))
+                           rest-of)))
 
-             (and (not (set? xp-val))
-                  (map? rest-of))
-             (conj     ;; TODO: use unify instead?
-              {key val}
-              rest-of)
+               true
+               (throw (Exception. (str "don't know what to do with first/rest: "
+                                       (type xp-val)
+                                       (type rest-of)))))))
 
-             (and (set? xp-val)
-                  (map? rest-of))
-             (set (map (fn [member]
-                         (unify member
-                                rest-of))
-                       xp-val))
+          (and (map? input)
+               (empty? (rest input))
+               (not (set? (second (first input)))))
+          (do
+            (log/debug (str "cond4 is true: (input is map with one kv pair)"))
+            (log/debug (str "calling set-cross-product-kv with " (first (first input))
+                            " and  " (second (first input))))
+            (let [result (set-cross-product-kv (first (first input))
+                                               (second (first input)))]
+              (log/debug (str "cond4: returning:" result))
+              result))
 
-             (and (set? xp-val)
-                  (set? rest-of))
-             (reduce (fn [x y] (union x y))
-                     (map (fn [val-member]
-                            (map (fn [rest-of-member]
-                                   (unify val-member rest-of-member))
-                                 rest-of))
-                          xp-val))
+          true
+          (let [kv (first input)
+                k (first kv)
+                v (second kv)
+                debug (str "cond5 (default) is true.")
+                xpv (set-cross-product-kv k v)]
+            (log/debug (str "cond5 kv: " kv))
+            (log/debug (str "cond5 k: " k))
+            (log/debug (str "cond5 v: " v))
+            (log/debug (str "cond5 xpv: " xpv))
+            (let [arg1
+                  (cond (empty? xpv) :top
+                        (and (set? xpv)
+                             (empty? (rest xpv)))
+                        (first xpv)
+                        true xpv)
+                  scp-rest (set-cross-product (dissoc input k))
+                  debug (log/debug (str "arg1 to unify:" arg1))
+                  debug (log/debug (str "rest: " (dissoc input k)))
+                  debug (log/debug (str "scp(rest): " scp-rest))]
+              (cond (and (set? arg1)
+                         (set? scp-rest))
+                    (do
+                      (log/debug (str "both arg1 and scp-rest in default of scp is a set: " arg1 " , " scp-rest))
+                      (reduce (fn [x y] (union x y))
+                              (map (fn [member-arg1]
+                                     (set (map (fn [member-scp-rest]
+                                                 (log/debug (str "UNIFYING(1): " member-arg1))
+                                                 (log/debug (str "UNIFYING(2): " member-scp-rest))
+                                                 (let [result (use-unify-or-conj member-arg1
+                                                                                 member-scp-rest)]
+                                                   (log/debug (str "UNIFYING RESULT: " result))
+                                                   result))
+                                               scp-rest)))
+                                   arg1)))
 
-             (and (not (set? xp-val))
-                  (set? rest-of))
-             (set (map (fn [member]
-                         (unify {key xp-val}
-                                member))
-                       rest-of))
+                    (set? arg1)
+                    (do
+                      (log/debug (str "arg1 in default of scp is a set: " arg1))
+                      (set (map (fn [member]
+                                  (conj member
+                                        (set-cross-product (dissoc input k))))
+                                arg1)))
 
-             true
-             (throw (Exception. (str "don't know what to do with first/rest: "
-                                     (type xp-val)
-                                     (type rest-of)))))))
-
-        (and (map? input)
-             (empty? (rest input))
-             (not (set? (second (first input)))))
-        (set-cross-product-kv (first (first input))
-                              (second (first input)))
-        true
-        (let [kv (first input)
-              k (first kv)
-              v (second kv)
-              xpv (set-cross-product-kv k v)]
-          (log/debug (str "kv: " kv))
-          (log/debug (str "k: " k))
-          (log/debug (str "v: " v))
-          (log/debug (str "xpv: " xpv))
-          (let [arg1
-                (cond (empty? xpv) :top
-                      (and (set? xpv)
-                           (empty? (rest xpv)))
-                      (first xpv)
-                      true xpv)
-                scp-rest (set-cross-product (dissoc input k))
-                debug (log/debug (str "arg1 to unify:" arg1))
-                debug (log/debug (str "rest: " (dissoc input k)))
-                debug (log/debug (str "scp(rest): " scp-rest))]
-            (cond (and (set? arg1)
-                       (set? scp-rest))
-                  (do
-                    (log/debug (str "both arg1 and scp-rest in default of scp is a set: " arg1 " , " scp-rest))
-                    (reduce (fn [x y] (union x y))
-                            (map (fn [member-arg1]
-                                   (set (map (fn [member-scp-rest]
-                                               (unify member-arg1
-                                                      member-scp-rest))
-                                             scp-rest)))
-                                 arg1)))
-
-                  (set? arg1)
-                  (do
-                    (log/debug (str "arg1 in default of scp is a set: " arg1))
-                    (set (map (fn [member]
-                                (conj member
-                                      (set-cross-product (dissoc input k))))
-                              arg1)))
-
-                  true
-                  (unify arg1
-                         (set-cross-product (dissoc input k))))))))
+                    true
+                    (unify arg1
+                           (set-cross-product (dissoc input k)))))))))
 
 ;; TODO: as with (unify), use [val1 val2] as signature, not [& args].
 (defn merge [& args]

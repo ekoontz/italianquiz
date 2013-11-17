@@ -745,6 +745,17 @@ when run from a REPL."
          (unify {:a 42}
                 {:b #{43 44}}))))
 
+(deftest two-embedded-sets
+  (is (= (set-cross-product {:z {:a {:b #{1 2}}} :q #{{:r 49}{:s 53}}})
+         #{{:z {:a {:b 1}}
+            :q {:r 49}}
+           {:z {:a {:b 1}}
+            :q {:s 53}}
+           {:z {:a {:b 2}}
+            :q {:r 49}}
+           {:z {:a {:b 2}}
+            :q {:s 53}}})))
+
 ;(deftest set-and-ref
 ;  (let [result (unify #{{:cat :noun}{:cat :verb}} (ref :top))]
 ;    (is (set? result))
