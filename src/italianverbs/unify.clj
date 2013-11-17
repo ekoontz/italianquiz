@@ -655,7 +655,6 @@ The idea is to map the key :foo to the (recursive) result of pathify on :foo's v
                   (uniq-recursive (rest sorted-vals))))
           (list first-val))))))
 
-;; TODO: input path should be a vector, not a list, for efficiency (also TODO: metrics to (dis)prove this)
 (defn paths-to-value [map value path]
   (log/debug (str "paths-to-value path: " path))
   (if (= map value) (list path)
