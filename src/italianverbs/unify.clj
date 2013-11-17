@@ -655,13 +655,15 @@ The idea is to map the key :foo to the (recursive) result of pathify on :foo's v
                   (uniq-recursive (rest sorted-vals))))
           (list first-val))))))
 
+;; TODO: input path should be a vector, not a list, for efficiency (also TODO: metrics to (dis)prove this)
 (defn paths-to-value [map value path]
+  (log/debug (str "paths-to-value path: " path))
   (if (= map value) (list path)
       (if (= (type map) clojure.lang.Ref)
         (paths-to-value @map value path)
         (if (map? map)
           (mapcat (fn [key]
-                    (paths-to-value (get map key) value (concat path (list key))))
+                    (paths-to-value (get map key) value (conj path key)))
                   (keys map))))))
 
 (defn all-refs [input]
@@ -743,7 +745,7 @@ The idea is to map the key :foo to the (recursive) result of pathify on :foo's v
 
      ;; list of all paths that point to each ref in _input-map_.
      (map (fn [eachref]
-            (paths-to-value input-map eachref nil))
+            (paths-to-value input-map eachref []))
           refs))))
 
 ;; only used for testing/debugging: TODO: consider moving to test.unify.
@@ -766,15 +768,8 @@ The idea is to map the key :foo to the (recursive) result of pathify on :foo's v
 
      ;; list of all paths that point to each ref in _input-map_.
      (map (fn [each-ref]
-            (paths-to-value input each-ref nil))
+            (paths-to-value input each-ref []))
           refs))))
-
-(defn ser2 [input-map]
-  (let [refs (get-refs input-map)
-        skels (skels input-map refs)]
-    {:refs refs
-     :skels skels
-     :refskels2paths (ref-skel-map input-map)}))
 
 ;; start with (ser) (above): TODO: actually expand set values.
 (defn externalize-set-values [input]

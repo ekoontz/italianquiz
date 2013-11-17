@@ -331,8 +331,8 @@ a given value in a given map."
         mymap {:a ref1
                :b ref1
                :d ref2}
-        paths-to-ref2 (paths-to-value mymap ref2 nil)]
-    (is (= paths-to-ref2 '((:a :c)(:b :c)(:d))))))
+        paths-to-ref2 (set (paths-to-value mymap ref2 []))]
+    (is (= paths-to-ref2 #{[:a :c][:b :c][:d]}))))
 
 (deftest all-refs1
   (let [ref1 (ref 42)
