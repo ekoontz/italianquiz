@@ -736,7 +736,7 @@ when run from a REPL."
   (is (= #{{:a 42 :b 43}
            {:a 42 :b 44}}
          (unify {:a 42}
-                {:b #{43 44}}))))
+                (copy {:b #{43 44}})))))
 
 (deftest two-embedded-sets
   (is (= (set-cross-product {:z {:a {:b #{1 2}}} :q #{{:r 49}{:s 53}}})
@@ -756,6 +756,11 @@ when run from a REPL."
             (map (fn [each-ref]
                    (ref (set-cross-product @each-ref)))
                  myset))))))
+
+(deftest unify-ref-with-set
+  (let [result
+        (unify (let [myref (ref :top)] {:a myref}) (copy {:a #{1 2}}))]
+    (is (not (fail? result)))))
 
 
 (deftest copy-does-set-expansion

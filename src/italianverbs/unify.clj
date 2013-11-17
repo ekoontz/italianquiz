@@ -94,8 +94,8 @@
 (declare set-cross-product)
 
 (defn unify [val1 val2]
-  (let [val1 (set-cross-product val1)
-        val2 (set-cross-product val2)]
+  (let [val1 val1
+        val2 val2]
     (log/debug (str "unify val1: " val1))
     (log/debug (str "      val2: " val2))
     (cond
@@ -145,7 +145,7 @@
                            val1))]
        (if (empty? (rest filtered))
          (first filtered)
-         (set-cross-product (set filtered))))
+         (set filtered)))
 
      (set? val1)
      (let [debug (log/debug (str "unify: val1 is a set (but not val2): " val1))
