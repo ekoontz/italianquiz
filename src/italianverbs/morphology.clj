@@ -1,6 +1,7 @@
 (ns italianverbs.morphology
   (:use
-   [clojure.core :exclude (get-in)])
+   [clojure.core :exclude (get-in)]
+   [italianverbs.unify :only (ref?)])
   (:require
    ;; TODO: "fs/" is historical; use "unify/" instead.
    [italianverbs.unify :as fs]
@@ -121,9 +122,6 @@
 
 
 }))
-
-(defn ref? [word]
-  (= (type word) clojure.lang.Ref))
 
 (defn get-italian-1 [word]
   (let [analysis (analyze-italian-1 word)
