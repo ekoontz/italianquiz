@@ -732,7 +732,6 @@ when run from a REPL."
            {:a {:b 2}}}
          (set-cross-product {:a {:b #{1 2}}}))))
 
-
 (deftest unify-with-set
   (is (= #{{:a 42 :b 43}
            {:a 42 :b 44}}
@@ -757,6 +756,18 @@ when run from a REPL."
             (map (fn [each-ref]
                    (ref (set-cross-product @each-ref)))
                  myset))))))
+
+(deftest sets-with-refs
+  "(ref #{1 2} => #{(ref 1)(ref 2)}"
+  (let [result (set-cross-product (ref #{1 2}))]
+    (is (set? result))
+    (is (= 2 (.size result)))
+    (is (= (ref? (first result))))
+    (is (= (ref? (second result))))
+    (is (or (= 1 @(first result))
+            (= 2 @(first result))))
+    (is (or (= 1 @(second result))
+            (= 2 @(second result))))))
 
 ;(deftest set-and-ref
 ;  (let [result (unify #{{:cat :noun}{:cat :verb}} (ref :top))]

@@ -471,28 +471,45 @@
   (= (type val) clojure.lang.Ref))
 
 (defn set-cross-product [input]
-  (if (or (not (map? input)) (empty? input)) input
-      (let [key (first (first input))
-            val (set-cross-product (second (first input)))
-            rest-of (set-cross-product (dissoc input key))]
-        (cond (set? val)
-              (unify (set (map (fn [each-val]
-                                 {key each-val})
-                               val))
-                     rest-of)
-              (and (not (set? val))
-                   (set? rest-of))
-              (set (map (fn [member]
-                          (unify {key val}
-                                 member))
+  (cond (and (ref? input)
+
+             (set? @input))
+        (set (map (fn [each]
+                    (ref each))
+                  @input))
+
+        (and false (ref? input))
+        (set-cross-product @input)
+
+        (or (not (map? input))
+            (empty? input))
+        input
+
+        (map? input)
+        (let [key (first (first input))
+              val (set-cross-product (second (first input)))
+              rest-of (set-cross-product (dissoc input key))]
+          (cond (set? val)
+                (unify (set (map (fn [each-val]
+                                   {key each-val})
+                                 val))
+                       rest-of)
+
+                (and (not (set? val))
+                     (set? rest-of))
+                (set (map (fn [member]
+                            (unify {key val}
+                                   member))
                         rest-of))
 
-              (and (not (set? val))
-                   (not (set? rest-of)))
-              (conj {key val}
-                     rest-of)
+                (and (not (set? val))
+                     (not (set? rest-of)))
+                (conj {key val}
+                      rest-of)
 
-              true (throw (Exception. "Not sure what to do with this input: " input))))))
+                true (throw (Exception. "set-cross-product: don't know what to do with this input (which is a map): " input))))
+
+        true (throw (Exception. "set-cross-product: don't know what to do with this input: " input))))
 
 ;; TODO: as with (unify), use [val1 val2] as signature, not [& args].
 (defn merge [& args]
