@@ -855,20 +855,26 @@ The idea is to map the key :foo to the (recursive) result of pathify on :foo's v
 ;;
 ;; Note that (deserialize) should be able to cope with
 ;; both lists and arrays (i.e. just assume a sequence).
+;; (see more docs about serialization above the (serialize) function definitiion.
 (defn deserialize [serialized]
-  (let [base (second (first serialized))]
-    (apply merge-debug
-           (let [all
-                 (cons base
-                       (flatten
-                        (map (fn [paths-val]
-                               (let [paths (first paths-val)
-                                     val (ref (second paths-val))]
-                                 (map (fn [path]
-                                        (create-path-in path val))
-                                      paths)))
-                             (rest serialized))))]
-             all))))
+  (cond (set? serialized)
+        (set (map (fn [each]
+                    (deserialize each))
+                  serialized))
+        true
+        (let [base (second (first serialized))]
+          (apply merge-debug
+                 (let [all
+                       (cons base
+                             (flatten
+                              (map (fn [paths-val]
+                                     (let [paths (first paths-val)
+                                           val (ref (second paths-val))]
+                                       (map (fn [path]
+                                              (create-path-in path val))
+                                            paths)))
+                                   (rest serialized))))]
+                   all)))))
 
 (defn serialize [input-map]
   (let [memoized (get input-map :serialized :none)]
@@ -876,7 +882,7 @@ The idea is to map the key :foo to the (recursive) result of pathify on :foo's v
       (let [debug (log/debug "using cached serialization.")]
         memoized)
       (let [debug (log/debug "no cached value: serializing at runtime.")
-            ser (ser-intermed input-map)]
+            ser (set-cross-product (ser-intermed input-map))]
         ;;
         ;; ser is a intermediate (but fully-serialized) representation
         ;; of the input map, as a map from pathsets to reference-free maps
@@ -908,7 +914,11 @@ The idea is to map the key :foo to the (recursive) result of pathify on :foo's v
         ;; Thefore, we now sort _ser_ in a shortest-path-first order, so that
         ;; during de-serialization, all assignments will happen in this
         ;; same correct order.
-        (sort-shortest-path-ascending-r ser (sort-by-max-lengths ser))))))
+        (if (not (set? ser))
+          (sort-shortest-path-ascending-r ser (sort-by-max-lengths ser))
+          (set (map (fn [each-ser]
+                      (sort-shortest-path-ascending-r each-ser (sort-by-max-lengths each-ser)))
+                    ser)))))))
 
 (defn optimized-ser [input-map]
   "generate a better serialized form that removes intermediate refs (refs to other refs)"
@@ -917,7 +927,11 @@ The idea is to map the key :foo to the (recursive) result of pathify on :foo's v
 
 (defn copy [input]
   (log/debug (str "copy: " input))
-  (cond (seq? input)
+  (cond (set? input)
+        (set (map (fn [each]
+                    (copy each))
+                  input))
+        (seq? input)
         (map (fn [each]
                (copy each))
              input)

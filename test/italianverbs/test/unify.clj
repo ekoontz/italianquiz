@@ -758,10 +758,31 @@ when run from a REPL."
                  myset))))))
 
 
+(deftest copy-does-set-expansion
+  "{:a (ref #{42 43})} = copy = > #{ {:a (ref 42)} {:a (ref 43)} }"
+  (let [myfs-with-ref-to-set
+        (let [ref (ref #{42 43})]
+          {:a ref :b ref})
+        copy-of (copy myfs-with-ref-to-set)]
+    (is (set? copy-of))
+    (is (= 2 (.size copy-of)))
+    (is (map? (first copy-of)))
+    (is (map? (second copy-of)))
+    (is (map? (first copy-of)))
+    (is (map? (second copy-of)))
+    (is (ref? (:a (first copy-of))))
+    (is (ref? (:a (second copy-of))))
+    (is (or
+         (= 42 @(:a (first copy-of)))
+         (= 43 @(:a (first copy-of)))))
+    (is (or
+         (= 42 @(:a (second copy-of)))
+         (= 43 @(:a (second copy-of)))))))
+
 ;; serialization tests: precursor to getting sets-with-refs working.
-(deftest serialize-with-set
-  (is (= (serialize (let [ref (ref #{1 2})] {:a ref :b {:c ref}}))
-         '((nil {:b {:c :top}, :a :top}) (((:a) (:b :c)) #{1 2})))))
+;(deftest serialize-with-set
+;  (is (= (serialize (let [ref (ref #{1 2})] {:a ref :b {:c ref}}))
+;         '((nil {:b {:c :top}, :a :top}) (([:a][:b :c]) #{1 2})))))
 
 ;(deftest sets-with-refs
 ;  "(ref #{1 2} => #{(ref 1)(ref 2)}"
