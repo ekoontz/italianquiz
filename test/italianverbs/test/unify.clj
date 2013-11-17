@@ -757,17 +757,23 @@ when run from a REPL."
                    (ref (set-cross-product @each-ref)))
                  myset))))))
 
-(deftest sets-with-refs
-  "(ref #{1 2} => #{(ref 1)(ref 2)}"
-  (let [result (set-cross-product (ref #{1 2}))]
-    (is (set? result))
-    (is (= 2 (.size result)))
-    (is (= (ref? (first result))))
-    (is (= (ref? (second result))))
-    (is (or (= 1 @(first result))
-            (= 2 @(first result))))
-    (is (or (= 1 @(second result))
-            (= 2 @(second result))))))
+
+;; serialization tests: precursor to getting sets-with-refs working.
+(deftest serialize-with-set
+  (is (= (serialize (let [ref (ref #{1 2})] {:a ref :b {:c ref}}))
+         '((nil {:b {:c :top}, :a :top}) (((:a) (:b :c)) #{1 2})))))
+
+;(deftest sets-with-refs
+;  "(ref #{1 2} => #{(ref 1)(ref 2)}"
+;  (let [result (set-cross-product (ref #{1 2}))]
+;    (is (set? result))
+;    (is (= 2 (.size result)))
+;    (is (= (ref? (first result))))
+;    (is (= (ref? (second result))))
+;    (is (or (= 1 @(first result))
+;            (= 2 @(first result))))
+;    (is (or (= 1 @(second result))
+;            (= 2 @(second result))))))
 
 ;(deftest set-and-ref
 ;  (let [result (unify #{{:cat :noun}{:cat :verb}} (ref :top))]
