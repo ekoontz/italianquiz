@@ -217,14 +217,13 @@
   (let [result (unify '{:a 42} '{:a 43})]
     (is (fail? result))))
 
-      
 ;;      (deftest
 ;;       "merge should union :not-values"
 ;;       (merge {:not 41} {:not 42})
 ;;       (fn [result]
 ;;         (= (set (:not result)) (set 41 42)))
 
-;;      
+;;
 ;;      (deftest
 ;;       "unify should union :not-values"
 ;;       (unify {:not 41} {:not 42})
@@ -750,6 +749,14 @@ when run from a REPL."
             :q {:r 49}}
            {:z {:a {:b 2}}
             :q {:s 53}}})))
+
+(deftest first-ref-test
+  (is (= 2
+         (.size
+          (let [myset (list (ref 1) (ref 2))]
+            (map (fn [each-ref]
+                   (ref (set-cross-product @each-ref)))
+                 myset))))))
 
 ;(deftest set-and-ref
 ;  (let [result (unify #{{:cat :noun}{:cat :verb}} (ref :top))]
