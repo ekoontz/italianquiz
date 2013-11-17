@@ -471,17 +471,7 @@
   (= (type val) clojure.lang.Ref))
 
 (defn set-cross-product [input]
-  (cond (and (ref? input)
-
-             (set? @input))
-        (set (map (fn [each]
-                    (ref each))
-                  @input))
-
-        (and false (ref? input))
-        (set-cross-product @input)
-
-        (or (not (map? input))
+  (cond (or (not (map? input))
             (empty? input))
         input
 
