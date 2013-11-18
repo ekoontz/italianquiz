@@ -91,7 +91,7 @@
           (cons (first fs-keys) (fail-path (get-in fs (list (first fs-keys)))))
           (fail-path fs (rest fs-keys)))))))
 
-(declare set-cross-product)
+(declare copy)
 
 (defn unify [val1 val2]
   (let [val1 val1
@@ -139,8 +139,8 @@
                      (not (fail? each)))
                    (mapcat (fn [each-val1]
                              (map (fn [each-val2]
-                                    (unify each-val1
-                                           each-val2))
+                                    (unify (copy each-val1)
+                                           (copy each-val2)))
                                   val2))
                            val1))]
        (if (empty? (rest filtered))
@@ -148,12 +148,13 @@
          (set filtered)))
 
      (set? val1)
-     (let [debug (log/debug (str "unify: val1 is a set (but not val2): " val1))
+     (let [debug (log/debug (str "unify: val1 is a set (but not val2)"))
            mapped
            (set (remove (fn [each]
                           (fail? each))
                         (map (fn [each-member]
-                               (unify each-member val2))
+                               (unify (copy each-member)
+                                      (copy val2)))
                              val1)))]
        (cond (empty? mapped)
              :fail
@@ -163,12 +164,13 @@
              mapped))
 
      (set? val2)
-     (let [debug (log/debug (str "val2 is a set; val1 is: " val1))
+     (let [debug (log/debug (str "unify: val2 is a set (but not val1)"))
            mapped
            (set (remove (fn [each]
                           (fail? each))
                         (map (fn [each-member]
-                               (unify each-member val1))
+                               (unify (copy each-member)
+                                      (copy val1)))
                              val2)))]
        (cond (empty? mapped)
              :fail
