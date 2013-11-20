@@ -762,7 +762,6 @@ when run from a REPL."
         (unify (let [myref (ref :top)] {:a myref}) (copy {:a #{1 2}}))]
     (is (not (fail? result)))))
 
-
 (deftest copy-does-set-expansion
   "{:a (ref #{42 43})} = copy = > #{ {:a (ref 42)} {:a (ref 43)} }"
   (let [myfs-with-ref-to-set
@@ -783,6 +782,10 @@ when run from a REPL."
     (is (or
          (= 42 @(:a (second copy-of)))
          (= 43 @(:a (second copy-of)))))))
+
+(deftest copy-set-exp2
+  (let [result (copy {:a #{{:b #{:c :d}} {:e #{:f :g}}}})]
+    result))
 
 ;; serialization tests: precursor to getting sets-with-refs working.
 ;(deftest serialize-with-set
