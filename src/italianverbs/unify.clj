@@ -1096,9 +1096,16 @@ is simply a singleton set #{fs}."
    (and (map? fs) true)
    (let [key (first (first fs))
          val (key fs)]
-     #{{key val}})
+     (set
+      (list
+       (conj
+        {key val}
+        (if (second fs)
+          {(first (second fs))
+           ((first (second fs)) fs)})))))))
 
-   :else false))
+
+
 
 
 

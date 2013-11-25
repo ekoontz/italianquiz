@@ -835,7 +835,12 @@ when run from a REPL."
   (is (= true true)))
 
 (deftest get-trees-test1
-  (is (= #{{:a 42}}
-         (get-trees {:a 42}))))
+  (is (= #{{:a 1}}
+         (get-trees {:a 1}))))
+
+
+(deftest get-trees-test2
+  (is (= #{{:a 1 :b 2}}
+         (get-trees {:a 1 :b 2}))))
 
 
