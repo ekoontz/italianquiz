@@ -1082,5 +1082,14 @@ The idea is to map the key :foo to the (recursive) result of pathify on :foo's v
    :else
    map-with-refs))
 
+(defn take-powerset [set1 set2]
+  "unify set1 by set2."
+  set1)
+
 (defn jump-in [fs]
-  fs)
+  (let [graph-sets {} ;; the power-set of graphs from fs.
+        tree-sets {} ;; the power set of values from fs, without reentraces
+        ]
+    (let [result (take-powerset graph-sets tree-sets)]
+      result)))
+
