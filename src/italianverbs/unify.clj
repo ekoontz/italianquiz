@@ -1082,10 +1082,10 @@ The idea is to map the key :foo to the (recursive) result of pathify on :foo's v
    :else
    map-with-refs))
 
+(declare cartesian)
+
 (defn get-graphs [fs]
   fs)
-
-(declare take-powerset)
 
 (defn get-trees [fs]
   "get-trees returns a set of fs_i, where each fs_i has no sets within it. if input has no sets, set
@@ -1101,34 +1101,34 @@ signature: map => set
    (let [key (first (first fs))
          val (key fs)]
      (cond (set? val)
-           (take-powerset
+           (cartesian
             (apply union
                    (map (fn [each-val]
                           (get-trees {key each-val}))
                         val))
             (get-trees (dissoc fs key)))
 
-           (ref? val)
-           (take-powerset
-            (set (list {key @val}))
-            (get-trees (dissoc fs key)))
-
            (map? val)
            (let [nested-vals (get-trees val)]
-             (take-powerset
+             (cartesian
               (set (map (fn [each-nested-val]
                           {key each-nested-val})
                         nested-vals))
               (get-trees (dissoc fs key))))
 
+           (ref? val)
+           (cartesian
+            (set (list {key @val}))
+            (get-trees (dissoc fs key)))
+
            true
-           (take-powerset
+           (cartesian
             (set (list {key val}))
             (get-trees (dissoc fs key)))))
    :else fs))
 
-(defn take-powerset [set1 set2]
-  "unify set1 by set2."
+(defn cartesian [set1 set2]
+  "for x in set1, y in set2, conj each x and each y"
   (cond (empty? set1) set2
         (empty? set2) set1
         true
@@ -1140,9 +1140,9 @@ signature: map => set
                     set1))))
 
 (defn jump-in [fs]
-  (let [graph-sets (get-graphs fs) ;; the power-set of graphs from fs.
-        tree-sets (get-trees fs) ;; the power set of values from fs, without reentraces
+  (let [graph-sets (get-graphs fs) ;; the set of graphs from fs, each of which has no sets within it.
+        tree-sets (get-trees fs) ;; the set of trees from fs, each of which has no sets within it.
         ]
-    (let [result (take-powerset graph-sets tree-sets)]
+    (let [result (cartesian graph-sets tree-sets)]
       result)))
 
