@@ -855,4 +855,37 @@ when run from a REPL."
          (get-trees {:a #{1 2} :b #{3 4}}))))
 
 
+(deftest get-trees-test6
+  (is (= #{{:a {:c 1}
+            :b 2}}
+         (get-trees
+          {:a #{{:c 1}}
+           :b 2}))))
+
+(deftest get-trees-test7
+  (is (= (get-trees
+          {:a #{{:c 1}}
+           :b 2})
+         #{{:a {:c 1}
+            :b 2}})))
+
+(deftest get-trees-test8
+  (is (= (get-trees
+          {:a #{{:c 1}{:d 1}}
+           :b 2})
+         #{{:a {:c 1}
+            :b 2}
+           {:a {:d 1}
+            :b 2}})))
+
+;; nested set test:
+(deftest get-trees-test9
+  (is (or true (= (get-trees
+          {:a #{{:b #{1 2}}}})
+         #{{:a {:b 1}}
+           {:a {:b 2}}}))))
+
+
+
+
 

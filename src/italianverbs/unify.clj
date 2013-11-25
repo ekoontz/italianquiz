@@ -1108,9 +1108,10 @@ signature: map => set
             (get-trees (dissoc fs key)))
 
            (ref? val)
-           (get-trees
-            (conj {key @val}
-                  (dissoc fs key)))
+           (take-powerset
+            (set (list {key @val}))
+            (get-trees (dissoc fs key)))
+
            true
            (take-powerset
             (set (list {key val}))
