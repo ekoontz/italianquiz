@@ -1088,7 +1088,20 @@ The idea is to map the key :foo to the (recursive) result of pathify on :foo's v
 (defn get-trees [fs]
   "get-trees returns a set of fs_i, where each fs_i has no sets within it. if input has no sets, set
 is simply a singleton set #{fs}."
-  (set (list fs)))
+  (cond
+
+   (empty? fs)
+   fs
+
+   (and (map? fs) true)
+   (let [first-feature (first (first fs))
+         first-feature-val (first-feature fs)]
+     (set
+      (list
+       (conj {first-feature first-feature-val}
+             (get-trees (dissoc fs first-feature))))))
+
+   true :fail))
 
 (defn take-powerset [set1 set2]
   "unify set1 by set2."
