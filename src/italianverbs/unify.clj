@@ -1085,9 +1085,13 @@ The idea is to map the key :foo to the (recursive) result of pathify on :foo's v
 (defn get-graphs [fs]
   fs)
 
+(declare take-powerset)
+
 (defn get-trees [fs]
   "get-trees returns a set of fs_i, where each fs_i has no sets within it. if input has no sets, set
-is simply a singleton set #{fs}."
+is simply a singleton set #{fs}.
+signature: map => set
+"
   (cond
 
    (empty? fs)
@@ -1096,25 +1100,33 @@ is simply a singleton set #{fs}."
    (and (map? fs) true)
    (let [key (first (first fs))
          val (key fs)]
-     (set
-      (list
-       (conj
-        {key val}
-        (if (second fs)
-          {(first (second fs))
-           ((first (second fs)) fs)})))))))
+     (cond (set? val)
+           (take-powerset
+            (set (map (fn [each-val]
+                        {key each-val})
+                      val))
+            (get-trees (dissoc fs key)))
 
-
-
-
-
-
-
-
+           (ref? val)
+           (get-trees
+            (conj {key @val}
+                  (dissoc fs key)))
+           true
+           (take-powerset
+            (set (list {key val}))
+            (get-trees (dissoc fs key)))))))
 
 (defn take-powerset [set1 set2]
   "unify set1 by set2."
-  set1)
+  (cond (empty? set1) set2
+        (empty? set2) set1
+        true
+        (apply union
+               (map (fn [each-map-in-set-1]
+                      (set (map (fn [each-map-in-set-2]
+                                  (conj each-map-in-set-1 each-map-in-set-2))
+                                set2)))
+                    set1))))
 
 (defn jump-in [fs]
   (let [graph-sets (get-graphs fs) ;; the power-set of graphs from fs.

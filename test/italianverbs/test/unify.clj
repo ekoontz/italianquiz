@@ -838,9 +838,21 @@ when run from a REPL."
   (is (= #{{:a 1}}
          (get-trees {:a 1}))))
 
-
 (deftest get-trees-test2
   (is (= #{{:a 1 :b 2}}
          (get-trees {:a 1 :b 2}))))
+
+(deftest get-trees-test3
+  (is (= #{{:a 1} {:a 2}}
+         (get-trees {:a #{1 2}}))))
+
+(deftest get-trees-test4
+  (is (= #{{:a 1 :b 3} {:a 2 :b 3}}
+         (get-trees {:a #{1 2} :b 3}))))
+
+(deftest get-trees-test5
+  (is (= #{{:a 1 :b 3} {:a 2 :b 3} {:a 1 :b 4} {:a 2 :b 4}}
+         (get-trees {:a #{1 2} :b #{3 4}}))))
+
 
 
