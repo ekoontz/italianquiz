@@ -1097,14 +1097,15 @@ signature: map => set
    (empty? fs)
    fs
 
-   (and (map? fs) true)
+   (map? fs)
    (let [key (first (first fs))
          val (key fs)]
      (cond (set? val)
            (take-powerset
-            (set (map (fn [each-val]
-                        {key each-val})
-                      val))
+            (apply union
+                   (map (fn [each-val]
+                          (get-trees {key each-val}))
+                        val))
             (get-trees (dissoc fs key)))
 
            (ref? val)
@@ -1112,10 +1113,19 @@ signature: map => set
             (set (list {key @val}))
             (get-trees (dissoc fs key)))
 
+           (map? val)
+           (let [nested-vals (get-trees val)]
+             (take-powerset
+              (set (map (fn [each-nested-val]
+                          {key each-nested-val})
+                        nested-vals))
+              (get-trees (dissoc fs key))))
+
            true
            (take-powerset
             (set (list {key val}))
-            (get-trees (dissoc fs key)))))))
+            (get-trees (dissoc fs key)))))
+   :else fs))
 
 (defn take-powerset [set1 set2]
   "unify set1 by set2."

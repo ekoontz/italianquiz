@@ -878,12 +878,49 @@ when run from a REPL."
            {:a {:d 1}
             :b 2}})))
 
-;; nested set test:
+;; nested set tests:
 (deftest get-trees-test9
-  (is (or true (= (get-trees
+  (is (= (get-trees
           {:a #{{:b #{1 2}}}})
          #{{:a {:b 1}}
-           {:a {:b 2}}}))))
+           {:a {:b 2}}})))
+
+
+(deftest get-trees-test10
+  (is (= (get-trees
+          {:a #{{:b #{1 2}}}
+           :c #{3 4}})
+         #{{:a {:b 1}
+            :c 3}
+           {:a {:b 1}
+            :c 4}
+           {:a {:b 2}
+            :c 3}
+           {:a {:b 2}
+            :c 4}})))
+
+(deftest get-trees-test11
+  (is (= (get-trees
+          {:a #{{:b #{1 2}}
+                {:c #{3 4}}}
+           :c #{5 6}})
+
+         #{
+           {:c 5, :a {:b 1}}
+           {:c 5, :a {:b 2}}
+           {:c 5, :a {:c 3}}
+           {:c 5, :a {:c 4}}
+           {:c 6, :a {:b 1}}
+           {:c 6, :a {:b 2}}
+           {:c 6, :a {:c 3}}
+           {:c 6, :a {:c 4}}
+           }
+         )))
+
+
+
+
+
 
 
 
