@@ -1094,14 +1094,16 @@ is simply a singleton set #{fs}."
    fs
 
    (and (map? fs) true)
-   (let [first-feature (first (first fs))
-         first-feature-val (first-feature fs)]
-     (set
-      (list
-       (conj {first-feature first-feature-val}
-             (get-trees (dissoc fs first-feature))))))
+   (let [key (first (first fs))
+         val (key fs)]
+     #{{key val}})
 
-   true :fail))
+   :else false))
+
+
+
+
+
 
 (defn take-powerset [set1 set2]
   "unify set1 by set2."
