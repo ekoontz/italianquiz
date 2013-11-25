@@ -1082,3 +1082,5 @@ The idea is to map the key :foo to the (recursive) result of pathify on :foo's v
    :else
    map-with-refs))
 
+(defn jump-in [fs]
+  fs)
