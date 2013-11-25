@@ -1082,13 +1082,21 @@ The idea is to map the key :foo to the (recursive) result of pathify on :foo's v
    :else
    map-with-refs))
 
+(defn get-graphs [fs]
+  fs)
+
+(defn get-trees [fs]
+  "get-trees returns a set of fs_i, where each fs_i has no sets within it. if input has no sets, set
+is simply a singleton set #{fs}."
+  (set (list fs)))
+
 (defn take-powerset [set1 set2]
   "unify set1 by set2."
   set1)
 
 (defn jump-in [fs]
-  (let [graph-sets {} ;; the power-set of graphs from fs.
-        tree-sets {} ;; the power set of values from fs, without reentraces
+  (let [graph-sets (get-graphs fs) ;; the power-set of graphs from fs.
+        tree-sets (get-trees fs) ;; the power set of values from fs, without reentraces
         ]
     (let [result (take-powerset graph-sets tree-sets)]
       result)))

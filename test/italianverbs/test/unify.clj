@@ -833,3 +833,9 @@ when run from a REPL."
 
 (deftest jump-in-test-1
   (is (= true true)))
+
+(deftest get-trees-test1
+  (is (= #{{:a 42}}
+         (get-trees {:a 42}))))
+
+
