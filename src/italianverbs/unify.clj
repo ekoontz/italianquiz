@@ -1087,7 +1087,7 @@ The idea is to map the key :foo to the (recursive) result of pathify on :foo's v
 (defn get-graphs [fs]
   fs)
 
-(defn get-trees [fs]
+(defn get-trees [fs & [ref-map]]
   "get-trees returns a set of fs_i, where each fs_i has no sets within it. if input has no sets, set
 is simply a singleton set #{fs}.
 signature: map => set
@@ -1104,27 +1104,36 @@ signature: map => set
            (cartesian
             (apply union
                    (map (fn [each-val]
-                          (get-trees {key each-val}))
+                          (get-trees {key each-val} ref-map))
                         val))
             (get-trees (dissoc fs key)))
 
            (map? val)
-           (let [nested-vals (get-trees val)]
+           (let [nested-vals (get-trees val ref-map)]
              (cartesian
               (set (map (fn [each-nested-val]
                           {key each-nested-val})
                         nested-vals))
-              (get-trees (dissoc fs key))))
+              (get-trees (dissoc fs key) ref-map)))
+
+           (and (ref? val)
+                (set? @val))
+           (cartesian
+            (apply union
+                   (map (fn [each-val]
+                          (get-trees {key each-val} ref-map))
+                        @val))
+            (get-trees (dissoc fs key) ref-map))
 
            (ref? val)
            (cartesian
             (set (list {key @val}))
-            (get-trees (dissoc fs key)))
+            (get-trees (dissoc fs key) ref-map))
 
            true
            (cartesian
             (set (list {key val}))
-            (get-trees (dissoc fs key)))))
+            (get-trees (dissoc fs key) ref-map))))
    :else fs))
 
 (defn cartesian [set1 set2]
