@@ -1106,7 +1106,7 @@ signature: map => set
                    (map (fn [each-val]
                           (get-trees {key each-val} ref-map))
                         val))
-            (get-trees (dissoc fs key)))
+            (get-trees (dissoc fs key) ref-map))
 
            (map? val)
            (let [nested-vals (get-trees val ref-map)]
@@ -1118,17 +1118,22 @@ signature: map => set
 
            (and (ref? val)
                 (set? @val))
-           (cartesian
-            (apply union
-                   (map (fn [each-val]
-                          (get-trees {key each-val} ref-map))
-                        @val))
-            (get-trees (dissoc fs key) ref-map))
+           (let [new-ref-map ref-map]
+             (cartesian
+              (apply union
+                     (map (fn [each-val]
+                            (get-trees {key each-val} new-ref-map))
+                          @val))
+              (get-trees (dissoc fs key) new-ref-map)))
 
            (ref? val)
-           (cartesian
-            (set (list {key @val}))
-            (get-trees (dissoc fs key) ref-map))
+           (let [new-ref-map
+                 (if (= :not-found (val ref-map :not-found))
+                   (conj val (ref val))
+                   ref-map)]
+             (cartesian
+              (set (list {key @val}))
+              (get-trees (dissoc fs key) new-ref-map)))
 
            true
            (cartesian
