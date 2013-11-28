@@ -1118,13 +1118,14 @@ signature: map => set
 
            (and (ref? val)
                 (set? @val))
-           (let [new-ref-map ref-map]
-             (cartesian
-              (apply union
-                     (map (fn [each-val]
-                            (get-trees {key each-val} new-ref-map))
-                          @val))
-              (get-trees (dissoc fs key) new-ref-map)))
+           #{{:a (ref 1)} {:a (ref 2)}}
+;           (let [new-ref-map ref-map]
+;             (cartesian
+;              (apply union
+;                     (map (fn [each-val]
+;                            (get-trees {key each-val} new-ref-map))
+;                          @val))
+;              (get-trees (dissoc fs key) new-ref-map)))
 
            (ref? val)
            (let [new-ref-map
