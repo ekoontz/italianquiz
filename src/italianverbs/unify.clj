@@ -1116,16 +1116,22 @@ signature: map => set
                         nested-vals))
               (get-trees (dissoc fs key) ref-map)))
 
+
+           (and (ref? val)
+                (set? @val)
+                (empty? @val))
+           {}
+
            (and (ref? val)
                 (set? @val))
-           #{{:a (ref 1)} {:a (ref 2)}}
-;           (let [new-ref-map ref-map]
-;             (cartesian
-;              (apply union
-;                     (map (fn [each-val]
-;                            (get-trees {key each-val} new-ref-map))
-;                          @val))
-;              (get-trees (dissoc fs key) new-ref-map)))
+           (union
+            (set
+             (list
+              {key (ref (first @val))}))
+            (do (dosync (alter val (fn [x] (set (rest @val)))))
+                (get-trees (conj {key val}
+                                 (dissoc fs key))
+                           ref-map)))
 
            (ref? val)
            (let [new-ref-map
