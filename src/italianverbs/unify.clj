@@ -1167,3 +1167,26 @@ signature: map => set
     (let [result (cartesian graph-sets tree-sets)]
       result)))
 
+(defn step1 [fs]
+  "get the set of all refs that occur in this input fs."
+  (cond
+   (ref? fs)
+   (set (list fs))
+   (and (map? fs)
+        (not (empty? fs)))
+   (let [key (first (keys fs))]
+     (union
+      (step1 (key fs))
+      (step1 (dissoc fs key))))
+   true
+   #{}))
+
+(defn step2 [set-of-refs]
+  "alter each ref: normalize it."
+  true
+  )
+
+
+
+
+

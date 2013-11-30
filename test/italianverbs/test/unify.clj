@@ -938,4 +938,15 @@ when run from a REPL."
             (= 2 (get-in (second trees) '(:a)))))))
 
 
+(deftest step1-test1
+  (let [input {:a (ref 42)}
+        result (step1 input)]
+    (is (set? result))
+    (is (= 1 (.size result)))
+    (is (= 42 @(first result)))))
+
+(deftest step2-test1
+  (let [input (step1 {:a (ref 42)})
+        result (step2 input)]
+    (is (= true result))))
 
