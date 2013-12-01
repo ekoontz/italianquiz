@@ -1168,16 +1168,54 @@ signature: map => set
       result)))
 
 (defn step1 [fs]
-  "get the set of all refs that occur in this input fs."
-  (let [myref (:a fs)]
-    #{{:a {:val 1
-           :ref myref}}
-      {:a {:val 2
-           :ref myref}}}))
+  "val-ref: turn every ref to a set into a map with two keys: :ref and :val."
+  (cond
 
+   (set? fs)
+   (set (map (fn [each]
+               (step1 each))
+             fs))
 
+   (and (ref? fs)
+        (set? @fs))
+   (set (map (fn [each]
+               {:val (step1 each)
+                :ref fs})
+             @fs))
 
+   (ref? fs)
+   {:val (step1 @fs)
+    :ref fs}
 
+   (and (map? fs)
+        (not (empty? fs)))
+   (let [key (first (first fs))
+         val (key fs)]
+     (conj
+      {key (step1 val)}
+      (step1 (dissoc fs key))))
+
+   true
+   fs))
+
+(defn step2 [fs]
+  "step2.."
+  (cond
+
+   (and (map? fs)
+        (not (empty? fs)))
+   (let [key (first (first fs))
+         val (key fs)]
+     (cond (set? val)
+           (set (map (fn [each-member-of-val]
+                       {key (step2 each-member-of-val)})
+                     val))
+
+           true
+           {key (step2 val)}))
+
+   true
+   fs))
 
 
 

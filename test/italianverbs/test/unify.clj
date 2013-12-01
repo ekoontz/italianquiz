@@ -937,21 +937,30 @@ when run from a REPL."
     (is (or (= 1 (get-in (second trees) '(:a)))
             (= 2 (get-in (second trees) '(:a)))))))
 
-(deftest step1-test1
-  (let [input {:a (ref #{1 2})}
+(deftest step1-test
+  (let [myref (ref #{1 2})
+        input {:a myref
+               :b #{{:c myref} {:d 3}}}
         result (step1 input)]
-    (is (set? result))
-    (is (= 2 (.size result)))
-    (is (map? (nth (seq result) 0)))
-    (is (map? (nth (seq result) 1)))
-    (is (map? (:a (nth (seq result) 0))))
-    (is (map? (:a (nth (seq result) 1))))
-    (is (or (= (get-in (nth (seq result) 0) '(:a :val)) 1)
-            (= (get-in (nth (seq result) 0) '(:a :val)) 2)))
-    (is (or (= (get-in (nth (seq result) 1) '(:a :val)) 1)
-            (= (get-in (nth (seq result) 1) '(:a :val)) 2)))
-
+    (is (map? result))
+    (is (set? (get-in result '(:a))))
+    (is (set? (get-in result '(:b))))
+    (is (= myref (:ref (first (get-in result '(:a))))))
+    (is (= myref (:ref (second (get-in result '(:a))))))
+    (is (or (= 1 (:val (first (get-in result '(:a)))))
+            (= 2 (:val (first (get-in result '(:a)))))))
+    (is (= 2 (.size (get-in result '(:b)))))
 ))
+
+(deftest step2-test
+  (let [myref (ref #{1 2})
+        input {:a myref
+               :b #{{:c myref} {:d 3}}}
+        result (step1 input)
+        a-map {:a (:a result)}
+        step2-result (step2 a-map)]
+    (is (set? step2-result))))
+
 
 
 
