@@ -1207,15 +1207,20 @@ signature: map => set
    (let [key (first (first fs))
          val (key fs)]
      (cond (set? val)
-           (set (map (fn [each-member-of-val]
-                       {key (step2 each-member-of-val)})
-                     val))
+           (cartesian
+            (set (map (fn [each-member-of-val]
+                        {key (step2 each-member-of-val)})
+                      val))
+            (step2 (dissoc fs key)))
 
            true
-           {key (step2 val)}))
+           (cartesian
+            (set (list {key (step2 val)}))
+            (step2 (dissoc fs key)))))
 
    true
    fs))
+
 
 
 

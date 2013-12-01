@@ -957,9 +957,9 @@ when run from a REPL."
         input {:a myref
                :b #{{:c myref} {:d 3}}}
         result (step1 input)
-        a-map {:a (:a result)}
-        step2-result (step2 a-map)]
+        step2-result (step2 result)]
     (is (set? step2-result))))
+
 
 
 
