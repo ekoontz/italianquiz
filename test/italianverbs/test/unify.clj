@@ -937,16 +937,26 @@ when run from a REPL."
     (is (or (= 1 (get-in (second trees) '(:a)))
             (= 2 (get-in (second trees) '(:a)))))))
 
-
 (deftest step1-test1
-  (let [input {:a (ref 42)}
+  (let [input {:a (ref #{1 2})}
         result (step1 input)]
     (is (set? result))
-    (is (= 1 (.size result)))
-    (is (= 42 @(first result)))))
+    (is (= 2 (.size result)))
+    (is (map? (nth (seq result) 0)))
+    (is (map? (nth (seq result) 1)))
+    (is (map? (:a (nth (seq result) 0))))
+    (is (map? (:a (nth (seq result) 1))))
+    (is (or (= (get-in (nth (seq result) 0) '(:a :val)) 1)
+            (= (get-in (nth (seq result) 0) '(:a :val)) 2)))
+    (is (or (= (get-in (nth (seq result) 1) '(:a :val)) 1)
+            (= (get-in (nth (seq result) 1) '(:a :val)) 2)))
 
-(deftest step2-test1
-  (let [input (step1 {:a (ref 42)})
-        result (step2 input)]
-    (is (= true result))))
+))
+
+
+
+
+
+
+
 
