@@ -1198,28 +1198,56 @@ signature: map => set
    true
    fs))
 
+
+(defn get-all-refs [fs]
+  "returns set:pair:ref,val."
+  )
+
+
+(defn get-all-paths-for-refs [fs ref]
+  "returns set:set:path."
+  )
+
+
+(defn set-all-paths-to [fs set:set:path]
+  "returns map (fs with appropriate alterations)."
+  )
+
 (defn step2 [fs]
   "step2.."
   (cond
 
+   (and (set? fs)
+        (not (empty? fs)))
+   (union
+    (step2 (first fs))
+    (step2 (rest fs)))
+
    (and (map? fs)
         (not (empty? fs)))
    (let [key (first (first fs))
-         val (key fs)]
-     (cond (set? val)
-           (cartesian
-            (set (map (fn [each-member-of-val]
-                        {key (step2 each-member-of-val)})
-                      val))
-            (step2 (dissoc fs key)))
+         val (step2 (key fs))]
+     (cond
 
-           true
-           (cartesian
-            (set (list {key (step2 val)}))
-            (step2 (dissoc fs key)))))
+      (and (set? val)
+           (empty? val))
+      val
+
+      (set? val)
+      (cartesian
+       (union
+        #{{key (first val)}}
+        (step2 {key (set (rest val))}))
+       (step2 (dissoc fs key)))
+
+      true
+      (cartesian
+       (set (list {key val}))
+       (step2 (dissoc fs key)))))
 
    true
    fs))
+
 
 
 
