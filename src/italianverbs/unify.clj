@@ -1198,7 +1198,7 @@ signature: map => set
    true
    fs))
 
-(defn get-all-refs [fs & [path]]
+(defn get-all-ref-tuples [fs & [path]]
   "returns list of ref:val:path tuples."
   (let [path (if path path nil)]
     (cond
@@ -1208,21 +1208,16 @@ signature: map => set
            val (key fs)]
        (cond (= key :ref)
              (concat (set (list (list val (:val fs) path)))
-                     (get-all-refs (dissoc fs key) path))
+                     (get-all-ref-tuples (dissoc fs key) path))
              (map? val)
              (concat
-              (get-all-refs val (concat path (list key)))
-              (get-all-refs (dissoc fs key)))
+              (get-all-ref-tuples val (concat path (list key)))
+              (get-all-ref-tuples (dissoc fs key)))
              true nil))
      true
      nil)))
 
-(defn get-all-paths-for-refs [fs ref]
-  "returns set:set:path."
-  )
-
-
-(defn set-all-paths-to [fs set:set:path]
+(defn set-all-paths-to [fs tuples]
   "returns map (fs with appropriate alterations)."
   )
 
