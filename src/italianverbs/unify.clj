@@ -1198,23 +1198,24 @@ signature: map => set
    true
    fs))
 
-(defn get-all-refs [fs]
-  "returns set:pair:ref,val."
-  (cond
-   (and (map? fs)
-        (not (empty? fs)))
-   (let [key (first (first fs))
-         val (key fs)]
-     (cond (= key :ref)
-           (union (set (list (list val (:val fs))))
-                  (get-all-refs (dissoc fs key)))
-           (map? val)
-           (union
-            (get-all-refs val)
-            (get-all-refs (dissoc fs key)))
-           true #{}))
-   true
-   #{}))
+(defn get-all-refs [fs & [path]]
+  "returns list of ref:val:path tuples."
+  (let [path (if path path nil)]
+    (cond
+     (and (map? fs)
+          (not (empty? fs)))
+     (let [key (first (first fs))
+           val (key fs)]
+       (cond (= key :ref)
+             (concat (set (list (list val (:val fs) path)))
+                     (get-all-refs (dissoc fs key) path))
+             (map? val)
+             (concat
+              (get-all-refs val (concat path (list key)))
+              (get-all-refs (dissoc fs key)))
+             true nil))
+     true
+     nil)))
 
 (defn get-all-paths-for-refs [fs ref]
   "returns set:set:path."
