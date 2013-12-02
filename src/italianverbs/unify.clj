@@ -1217,9 +1217,58 @@ signature: map => set
      true
      nil)))
 
-(defn set-all-paths-to [fs tuples]
-  "returns map (fs with appropriate alterations)."
-  )
+(defn get-all-refs-for [fs]
+  "get the set of refs in a normalized fs"
+  (apply union
+         (map (fn [tuple]
+                (set (list (first tuple))))
+              (get-all-ref-tuples fs))))
+
+(defn get-all-values-for [fs ref]
+  "get all values to be unified for the given ref in the given normalized fs."
+  (apply concat
+         (map (fn [tuple]
+                (let [tuple-ref (first tuple)]
+                  (if (= tuple-ref ref)
+                    (list (second tuple)))))
+              (get-all-ref-tuples fs))))
+
+(defn get-unified-value-for [fs ref]
+  "get all values to be unified for the given ref in the given normalized fs."
+  (reduce unify
+          (apply concat
+                 (map (fn [tuple]
+                        (let [tuple-ref (first tuple)]
+                          (if (= tuple-ref ref)
+                            (list (second tuple)))))
+                      (get-all-ref-tuples fs)))))
+
+(defn get-all-paths-for [fs ref]
+  "get all paths that point to the givenref in the given normalized fs."
+  (apply list
+         (map (fn [tuple]
+                (let [tuple-ref (first tuple)]
+                  (if (= tuple-ref ref)
+                    (nth tuple 2))))
+              (get-all-ref-tuples fs))))
+
+(defn copy-with-ref-substitute [fs old-ref new-ref]
+  "create new fs, but with new-ref substituted for every occurance of {:ref ref,:val X}"
+  (cond 
+   (and (map? fs)
+        (not (empty? fs))
+        (not (nil? (:ref fs)))
+        (= (:ref fs) old-ref))
+   new-ref
+        
+   (and (map? fs)
+        (not (empty? fs)))
+   (let [key (first (first fs))
+         val (key fs)]
+     (conj {key (copy-with-ref-substitute val old-ref new-ref)}
+           (copy-with-ref-substitute (dissoc fs key) old-ref new-ref)))
+   true
+   fs))
 
 (defn step2 [fs]
   "step2.."
@@ -1255,8 +1304,3 @@ signature: map => set
 
    true
    fs))
-
-
-
-
-
