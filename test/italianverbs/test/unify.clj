@@ -966,27 +966,7 @@ when run from a REPL."
         (let [myref (ref #{1 2})]
           {:a myref
            :b #{{:c myref} {:d 3}}})
-        step2-set (step2 (step1 input))
-        refs-per-fs
-        (zipmap (seq step2-set)
-                (map (fn [each-member]
-                       (get-all-refs-for each-member))
-                     step2-set))
-
-        unified-values (map (fn [each-fs]
-                              {:fs each-fs
-                               :assignments 
-                               (map (fn [each-ref-in-fs]
-                                      {:ref each-ref-in-fs
-                                    :val (get-unified-value-for each-fs each-ref-in-fs)})
-                                    (get refs-per-fs each-fs))})
-                            step2-set)
-
-        final (map (fn [each-tuple]
-                  (let [fs (:fs each-tuple)
-                        assignments (:assignments each-tuple)]
-                    (copy-with-assignments fs assignments)))
-                unified-values)]
+        final (expand-disj input)]
     (= (.size final) 6)
     (= (.size (filter (fn [each]
                         (fail? each))
@@ -997,6 +977,26 @@ when run from a REPL."
                       final))
        4)))
 
+(def parent
+  (let [catref (ref :top)]
+    {:head {:cat catref}
+     :cat catref}))
+
+(def disj-cat #{{:cat :noun}
+                {:cat :verb}})
+
+(def parent-with-disj
+  (let [catref (ref #{{:cat :noun}
+                      {:cat :verb}})]
+    {:head {:cat catref}
+     :cat catref}))
+
+(deftest category-disjunction
+  (let [result (expand-disj parent-with-disj)]
+    (is (= (.size result) 4))
+    (is (= (.size (filter (fn [each]
+                            (fail? each))
+                          result)) 2))))
 
 
 

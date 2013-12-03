@@ -1235,9 +1235,9 @@ signature: map => set
   "get all paths that point to the givenref in the given normalized fs."
   (apply list
          (map (fn [tuple]
-                (let [tuple-ref (first tuple)]
+                (let [tuple-ref (:ref tuple)]
                   (if (= tuple-ref ref)
-                    (nth tuple 2))))
+                    (:path tuple))))
               (get-all-ref-tuples fs))))
 
 (defn copy-with-ref-substitute [fs old-ref new-ref]
@@ -1302,3 +1302,28 @@ signature: map => set
 
    true
    fs))
+
+(defn expand-disj [input]
+  (let [step2-set (step2 (step1 input))
+        refs-per-fs
+        (zipmap (seq step2-set)
+                (map (fn [each-member]
+                       (get-all-refs-for each-member))
+                     step2-set))
+
+        unified-values (map (fn [each-fs]
+                              {:fs each-fs
+                               :assignments 
+                               (map (fn [each-ref-in-fs]
+                                      {:ref each-ref-in-fs
+                                    :val (get-unified-value-for each-fs each-ref-in-fs)})
+                                    (get refs-per-fs each-fs))})
+                            step2-set)]
+    (map (fn [each-tuple]
+           (let [fs (:fs each-tuple)
+                 assignments (:assignments each-tuple)]
+             (copy-with-assignments fs assignments)))
+         unified-values)))
+
+
+  
