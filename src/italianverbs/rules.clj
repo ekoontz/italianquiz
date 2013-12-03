@@ -26,7 +26,7 @@
 ;                                      :sem {:tense :present}}}
 ;                            {:synsem {:infl :futuro
 ;                                      :sem {:tense :futuro}}}
-;                            {:synsem {:infl :imperfetto
+;                            {:synsem {:igrnfl :imperfetto
 ;                                      :sem {:tense :past}}}}
              :label 'decl-sent
              :comp 'np

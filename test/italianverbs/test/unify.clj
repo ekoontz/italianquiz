@@ -973,20 +973,22 @@ when run from a REPL."
 ;; 2. for each member of step2-set:
 ;;
 
-;; 2.1. (def refs-for-member (get-all-ref-for member)
+;; 2.1. (def refs-for-member (get-all-refs-for member)
 
-(def refs (map (fn [each]
-                 (get-all-refs-for each))
-               step2-set))
+(def refs-per-fs
+  (zipmap (seq step2-set)
+          (map (fn [each-member]
+                 (get-all-refs-for each-member))
+               step2-set)))
 ;;
 ;; 2.2. for each ref:
 ;; 2.2.1. (def unified-value (get-unified-value-for member ref)
 
 (def unified-values (map (fn [each-fs]
-                           (map (fn [each-ref]
-                                  (get-unified-value-for each-fs each-ref))
-                                (get-all-refs-for each-fs)))
+                           (map (fn [each-ref-in-fs]
+                                  (get-unified-value-for each-fs each-ref-in-fs))
+                                (get refs-per-fs each-fs)))
                          step2-set))
-;; 
+;;
 ;;
 ;; 2.2.2. (def new-member (copy-with-ref-substitute member ref (ref unified-value)))
