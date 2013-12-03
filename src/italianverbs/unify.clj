@@ -1191,34 +1191,34 @@ signature: map => set
   (let [path (if path path nil)]
     (cond
      (and (map? fs)
+          (not (empty? fs))
+          (:ref fs))
+     (list {:ref (:ref fs)
+            :val (:val fs)
+            :path path})
+     (and (map? fs)
           (not (empty? fs)))
-     (let [key :ref
+     (let [key (first (first fs))
            val (key fs)]
-       (cond val
-             (concat (set (list (list val (:val fs) path)))
-                     (get-all-ref-tuples (dissoc fs key) path))
-             (map? val)
-             (concat
-              (get-all-ref-tuples val (concat path (list key)))
-              (get-all-ref-tuples (dissoc fs key) path))
-             true nil))
-     true
-     nil)))
+       (concat
+        (get-all-ref-tuples val (concat path (list key)))
+        (get-all-ref-tuples (dissoc fs key) path)))
+     true nil)))
 
 (defn get-all-refs-for [fs]
   "get the set of refs in a normalized fs"
   (apply union
          (map (fn [tuple]
-                (set (list (first tuple))))
+                (set (list (:ref tuple))))
               (get-all-ref-tuples fs))))
 
 (defn get-all-values-for [fs ref]
   "get all values to be unified for the given ref in the given normalized fs."
   (apply concat
          (map (fn [tuple]
-                (let [tuple-ref (first tuple)]
+                (let [tuple-ref (:ref tuple)]
                   (if (= tuple-ref ref)
-                    (list (second tuple)))))
+                    (list (:val tuple)))))
               (get-all-ref-tuples fs))))
 
 (defn get-unified-value-for [fs ref]
@@ -1226,9 +1226,9 @@ signature: map => set
   (reduce unify
           (apply concat
                  (map (fn [tuple]
-                        (let [tuple-ref (first tuple)]
+                        (let [tuple-ref (:ref tuple)]
                           (if (= tuple-ref ref)
-                            (list (second tuple)))))
+                            (list (:val tuple)))))
                       (get-all-ref-tuples fs)))))
 
 (defn get-all-paths-for [fs ref]
@@ -1257,6 +1257,16 @@ signature: map => set
            (copy-with-ref-substitute (dissoc fs key) old-ref new-ref)))
    true
    fs))
+
+(defn copy-with-assignments [fs assignments]
+  (if (not (empty? assignments))
+    (let [assignment (first assignments)
+          old-ref (:ref assignment)
+          new-ref (ref (:val assignment))]
+      (copy-with-assignments
+       (copy-with-ref-substitute fs old-ref new-ref)
+       (rest assignments)))
+    fs))
 
 (defn step2 [fs]
   "step2.."

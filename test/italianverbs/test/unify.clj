@@ -961,34 +961,46 @@ when run from a REPL."
     (is (set? step2-result))
     (is (= (.size step2-result) 6))))
 
-;; starting with input (e.g:
-(def input
-   (let [myref (ref #{1 2})]
-     {:a myref
-      :b #{{:c myref} {:d 3}}}))
+(deftest test-final
+  (let [input
+        (let [myref (ref #{1 2})]
+          {:a myref
+           :b #{{:c myref} {:d 3}}})
+        step2-set (step2 (step1 input))
+        refs-per-fs
+        (zipmap (seq step2-set)
+                (map (fn [each-member]
+                       (get-all-refs-for each-member))
+                     step2-set))
 
-;; 1. create step2-set:
-(def step2-set (step2 (step1 input)))
-;;
-;; 2. for each member of step2-set:
-;;
+        unified-values (map (fn [each-fs]
+                              {:fs each-fs
+                               :assignments 
+                               (map (fn [each-ref-in-fs]
+                                      {:ref each-ref-in-fs
+                                    :val (get-unified-value-for each-fs each-ref-in-fs)})
+                                    (get refs-per-fs each-fs))})
+                            step2-set)
 
-;; 2.1. (def refs-for-member (get-all-refs-for member)
+        final (map (fn [each-tuple]
+                  (let [fs (:fs each-tuple)
+                        assignments (:assignments each-tuple)]
+                    (copy-with-assignments fs assignments)))
+                unified-values)]
+    (= (.size final) 6)
+    (= (.size (filter (fn [each]
+                        (fail? each))
+                      final))
+       2)
+    (= (.size (filter (fn [each]
+                        (not (fail? each)))
+                      final))
+       4)))
 
-(def refs-per-fs
-  (zipmap (seq step2-set)
-          (map (fn [each-member]
-                 (get-all-refs-for each-member))
-               step2-set)))
-;;
-;; 2.2. for each ref:
-;; 2.2.1. (def unified-value (get-unified-value-for member ref)
 
-(def unified-values (map (fn [each-fs]
-                           (map (fn [each-ref-in-fs]
-                                  (get-unified-value-for each-fs each-ref-in-fs))
-                                (get refs-per-fs each-fs)))
-                         step2-set))
-;;
-;;
-;; 2.2.2. (def new-member (copy-with-ref-substitute member ref (ref unified-value)))
+
+
+
+
+
+
