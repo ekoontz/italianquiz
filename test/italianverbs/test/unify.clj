@@ -962,30 +962,31 @@ when run from a REPL."
     (is (= (.size step2-result) 6))))
 
 ;; starting with input (e.g:
-;; (def input
-;;   (let [myref (ref #{1 2})]
-;;     {:a myref
-;;      :b #{{:c myref} {:d 3}}}))
+(def input
+   (let [myref (ref #{1 2})]
+     {:a myref
+      :b #{{:c myref} {:d 3}}}))
 
 ;; 1. create step2-set:
-;; (def step2-set (step2 (step1 input)))
+(def step2-set (step2 (step1 input)))
 ;;
 ;; 2. for each member of step2-set:
 ;;
+
 ;; 2.1. (def refs-for-member (get-all-ref-for member)
+
+(def refs (map (fn [each]
+                 (get-all-refs-for each))
+               step2-set))
 ;;
 ;; 2.2. for each ref:
-;; 
 ;; 2.2.1. (def unified-value (get-unified-value-for member ref)
+
+(def unified-values (map (fn [each-fs]
+                           (map (fn [each-ref]
+                                  (get-unified-value-for each-fs each-ref))
+                                (get-all-refs-for each-fs)))
+                         step2-set))
+;; 
 ;;
 ;; 2.2.2. (def new-member (copy-with-ref-substitute member ref (ref unified-value)))
-
-
-
-
-
-
-
-
-
-
