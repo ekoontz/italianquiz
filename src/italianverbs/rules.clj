@@ -2,6 +2,7 @@
   (:refer-clojure :exclude [get-in merge resolve])
   (:require [clojure.tools.logging :as log]
             [clojure.core :as core]
+;            [italianverbs.generate :refer :only (rewrite-as)]
             [italianverbs.generate :refer :all]
             [italianverbs.grammar :refer :all]
             [italianverbs.lexicon :refer :all]

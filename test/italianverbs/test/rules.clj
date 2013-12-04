@@ -8,14 +8,17 @@
    [italianverbs.generate :as generate]
    [clojure.tools.logging :as log]
    [italianverbs.lexiconfn :as lexfn]
+   [italianverbs.rules :refer :all]
    [italianverbs.unify :refer :all]))
 
 (deftest test-constraints
   (let [constraints {:constraints #{{:synsem {:infl :futuro
                                               :sem {:tense :futuro}}}
                                     {:synsem {:infl :present
-                                              :sem {:tense :present}}}}}]
-    (is (not (nil? constraints)))))
+                                              :sem {:tense :present}}}}}
+        constraints-expanded (expand-disj constraints)]
+    (is (= (.size constraints-expanded) 2))))
+
 
 
 
