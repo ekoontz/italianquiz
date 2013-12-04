@@ -250,7 +250,8 @@
               is-fail? (unify/fail? phrase-with-head)
               debug (log/debug (str "gen14: head is-nil? " (nil? head)))
               debug (log/debug (str "gen14: phrase-with-head is-fail? " is-fail?))
-              ]
+              debug (log/debug (str "comp-filter-fn: " (unify/get-in phrase '(:comp-filter-fn))))
+             ]
           (if (nil? head)
             nil
             (if (not is-fail?)

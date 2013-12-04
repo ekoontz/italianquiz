@@ -9,6 +9,7 @@
    [clojure.tools.logging :as log]
    [italianverbs.lexiconfn :refer (sem-impl)]
    [italianverbs.rules :refer :all]
+   [italianverbs.ug :refer :all]
    [italianverbs.unify :refer :all]))
 
 (deftest test-constraints
