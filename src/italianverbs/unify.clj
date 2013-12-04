@@ -1276,7 +1276,7 @@ signature: map => set
         (not (empty? fs)))
    (union
     (step2 (first fs))
-    (step2 (rest fs)))
+    (step2 (set (rest fs))))
 
    (and (map? fs)
         (not (empty? fs)))
@@ -1300,8 +1300,16 @@ signature: map => set
        (set (list {key val}))
        (step2 (dissoc fs key)))))
 
+   (and (seq? fs)
+        (empty? fs))
+   fs
+
+   (and (set? fs)
+        (empty? fs))
+   fs
+
    true
-   fs))
+   (set (list fs))))
 
 (defn expand-disj [input]
   (let [step2-set (step2 (step1 input))

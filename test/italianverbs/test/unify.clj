@@ -997,10 +997,3 @@ when run from a REPL."
     (is (= (.size (filter (fn [each]
                             (fail? each))
                           result)) 2))))
-
-
-
-
-
-
-
