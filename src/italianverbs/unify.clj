@@ -1327,11 +1327,13 @@ signature: map => set
                                     :val (get-unified-value-for each-fs each-ref-in-fs)})
                                     (get refs-per-fs each-fs))})
                             step2-set)]
-    (map (fn [each-tuple]
-           (let [fs (:fs each-tuple)
-                 assignments (:assignments each-tuple)]
-             (copy-with-assignments fs assignments)))
-         unified-values)))
+    (filter (fn [each]
+              (not (fail? each)))
+            (map (fn [each-tuple]
+                   (let [fs (:fs each-tuple)
+                         assignments (:assignments each-tuple)]
+                     (copy-with-assignments fs assignments)))
+                 unified-values))))
 
 
   

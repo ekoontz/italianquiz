@@ -967,15 +967,7 @@ when run from a REPL."
           {:a myref
            :b #{{:c myref} {:d 3}}})
         final (expand-disj input)]
-    (= (.size final) 6)
-    (= (.size (filter (fn [each]
-                        (fail? each))
-                      final))
-       2)
-    (= (.size (filter (fn [each]
-                        (not (fail? each)))
-                      final))
-       4)))
+    (= (.size final) 2)))
 
 (def parent
   (let [catref (ref :top)]
@@ -993,7 +985,4 @@ when run from a REPL."
 
 (deftest category-disjunction
   (let [result (expand-disj parent-with-disj)]
-    (is (= (.size result) 4))
-    (is (= (.size (filter (fn [each]
-                            (fail? each))
-                          result)) 2))))
+    (is (= (.size result) 2))))
