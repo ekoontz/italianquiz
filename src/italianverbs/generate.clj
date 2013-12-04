@@ -251,6 +251,13 @@
               debug (log/debug (str "gen14: head is-nil? " (nil? head)))
               debug (log/debug (str "gen14: phrase-with-head is-fail? " is-fail?))
               debug (log/debug (str "comp-filter-fn: " (unify/get-in phrase '(:comp-filter-fn))))
+              debug (let [complement-filter-function (unify/get-in phrase '(:comp-filter-fn))
+                          applied-complement-filter-fn (apply
+                                                        complement-filter-function
+                                                        (list phrase-with-head))]
+                      (log/debug (str "applied-complement-filter-fn: " applied-complement-filter-fn)))
+              debug (log/debug (str "SURVIVED do apply..."))
+
              ]
           (if (nil? head)
             nil
