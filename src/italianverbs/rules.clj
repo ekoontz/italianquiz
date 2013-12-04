@@ -1,5 +1,7 @@
 (ns italianverbs.rules
   (:refer-clojure :exclude [get-in merge resolve])
+  ;; TODO: more restrictions on what's required: see italianverbs.test.rules
+  ;; for getting specific symbols, e.g. sem-impl.
   (:require [clojure.tools.logging :as log]
             [clojure.core :as core]
 ;            [italianverbs.generate :refer :only (rewrite-as)]
