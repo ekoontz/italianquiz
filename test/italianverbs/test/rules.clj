@@ -7,7 +7,7 @@
   (:require
    [italianverbs.generate :as generate]
    [clojure.tools.logging :as log]
-   [italianverbs.lexiconfn :as lexfn]
+   [italianverbs.lexiconfn :refer (sem-impl)]
    [italianverbs.rules :refer :all]
    [italianverbs.unify :refer :all]))
 
