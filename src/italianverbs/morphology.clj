@@ -941,7 +941,7 @@
 (declare get-english)
 (declare plural-en)
 
-(defn get-english-1 [word]
+(defn get-english-1 [word & [opts]]
   (log/debug (str "get-english-1: " word))
   (cond
 
@@ -953,24 +953,24 @@
         (= (get-in word '(:infl)) :past)
         (string? (get-in word '(:a :irregular :past))))
    (str (get-in word '(:a :irregular :past)) " "
-        (get-english-1 (get-in word '(:b))))
+        (get-english-1 (get-in word '(:b)) opts))
 
    ;; :note is used for little annotations that are significant in italian but not in english
    ;; e.g. gender signs (♂,♀) on nouns like "professore" and "professoressa".
    (and (string? (get-in word '(:english)))
         (string? (get-in word '(:note))))
-   (str (strip (get-english-1 (dissoc word :note))) " " (strip (get-in word '(:note))))
+   (str (strip (get-english-1 (dissoc word :note) opts)) " " (strip (get-in word '(:note))))
 
    (= (get-in word '(:a)) :top)
    (str
-    ".." " " (get-english-1 (get-in word '(:b))))
+    ".." " " (get-english-1 (get-in word '(:b)) opts))
 
    ;; show elipsis (..) if :b is not specified.
    (and
     (= (get-in word '(:b)) :top)
-    (string? (get-english-1 (get-in word '(:a)))))
+    (string? (get-english-1 (get-in word '(:a)) opts)))
    (str
-    (get-english-1 (get-in word '(:a)))
+    (get-english-1 (get-in word '(:a)) opts)
     " " "..")
 
    ;; show elipsis (..) if :a is not specified.
@@ -978,7 +978,7 @@
     (= (get-in word '(:b)) :top)
     (string? (get-in word '(:a :english))))
    (str
-    (get-english-1 (get-in word '(:a :english)))
+    (get-english-1 (get-in word '(:a :english)) opts)
     " " "..")
 
    (string? word)
@@ -1625,7 +1625,7 @@
          comment (if (:comment expr) (str "[" (:comment expr) "] ") "")
          english
          (capitalize
-          (get-english-1 (get-in expr '(:english))))
+          (get-english-1 (get-in expr '(:english)) {:show-phrasal-boundaries true}))
          italian
          (capitalize
           (get-italian-1 (get-in expr '(:italian))))]
