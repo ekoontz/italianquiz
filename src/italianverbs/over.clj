@@ -127,19 +127,31 @@
 
 ;; Might be useful to set the following variable to true,
 ;; if doing grammar development and it would be unexpected
-;; to have a failing result from calling (moreove-comp)
+;; to have a failing result from calling (moreover-comp)
 ;; with certain arguments.
 (def ^:dynamic *throw-exception-if-failed-to-add-complement* false)
 
 (defn moreover-comp [parent child lexfn-sem-impl]
-  (log/trace (str "moreover-comp parent: " (fo parent)))
-  (log/trace (str "moreover-comp comp:" (fo child)))
-  (log/trace (str "moreover-comp type parent: " (type parent)))
-  (log/trace (str "moreover-comp type comp:" (type child)))
+  (log/debug (str "moreover-comp parent: " (fo parent)))
+  (log/debug (str "moreover-comp comp:" (fo child)))
+  (log/debug (str "moreover-comp type parent: " (type parent)))
+  (log/debug (str "moreover-comp type comp:" (type child)))
+
+;  (if (not (= :notfound (get-in parent '(:synsem :sem :subj :subj) :notfound)))
+;      (throw (Exception. (str "Too many subjs in parent."))))
+
+;  (let [result
+;        (unifyc parent
+;                {:comp child})]
+
+;    (if (and true (not (= :notfound (get-in result '(:synsem :sem :subj :subj) :notfound))))
+;      (throw (Exception. (str "Too many subjs in result.")))))
+
   (let [result
         (unifyc parent
                 (unifyc {:comp child}
                         {:comp {:synsem {:sem (lexfn-sem-impl (get-in child '(:synsem :sem) :top))}}}))]
+
     (if (not (fail? result))
       (let [debug (log/trace (str "moreover-comp (SUCCESS) parent (2x) sem: " (get-in parent '(:synsem :sem))))]
         (let [result
@@ -147,7 +159,7 @@
                      result)]
           (log/trace (str "moreover-comp (SUCCESS) merged result:(fo) " (fo result)))
           )
-          result)
+        result)
       (do
         (log/trace "moreover-comp: fail at: " (fail-path result))
         (if (and
@@ -246,12 +258,18 @@
 
   (if (map? parent)
     (if (get-in parent '(:comment))
-      (log/trace (str "parent:" (get-in parent '(:comment)))))
-    (log/trace (str "parent:" (fo parent))))
+      (log/debug (str "parent:" (get-in parent '(:comment)))))
+    (log/debug (str "parent:" (fo parent))))
   (if (map? comp)
-    (log/trace (str "comp: " (fo comp))))
+    (log/debug (str "comp: " (fo comp))))
+
+  (log/debug (str "type of parent: " (type parent)))
+  (log/debug (str "type of comp  : " (type comp)))
+  (log/debug (str "nil? comp  : " (nil? comp)))
+
 
   (cond
+   (nil? comp) nil
 
    (or
     (seq? parent)
@@ -279,10 +297,12 @@
 
    true
    (let [result (moreover-comp parent comp sem-impl)
+         debug (log/debug (str "about to check for fail?.."))
+         debug (log/debug (str "comp's nil? is: " (nil? comp)))
          is-fail? (fail? result)]
      (log/debug (str "overc: parent=" (:comment parent)
                      ";head=[" (fo (get-in parent '(:head)))
-                     "]; comp=[" (fo comp) "]=> " (if (fail? result)
+                     "]; comp=[" comp "/" (get-in comp '(:italian))  "]=> " (if (fail? result)
                                                     ":fail"
                                                     (fo result))))
 
@@ -290,7 +310,7 @@
      (if (not is-fail?)
        (log/info (str "overc: parent=" (:comment parent)
                       ";head=[" (fo (get-in parent '(:head)))
-                      "]; comp=[" (fo comp) "]=> " (if is-fail?
+                      "]; comp=[" comp "]=> " (if is-fail?
                                                      ":fail"
                                                      (fo result)))))
 
