@@ -127,7 +127,7 @@
               :headed-phrases (overh parent (get-lex parent :head cache lexicon))}
              (lexical-headed-phrases (rest parents) lexicon phrases depth cache))))))
 
-(defn phrasal-headed-phrases [parents lexicon phrases depth path-to-here lexicon-of-heads cache]
+(defn phrasal-headed-phrases [parents lexicon phrases depth path-to-here cache]
   "return a lazy seq of phrases (maps) whose heads are themselves phrases."
   (if (not (empty? parents))
     (let [parent (first parents)
@@ -139,12 +139,12 @@
                                     bolts (lightning-bolt (get-in parent '(:head))
                                                           lexicon phrases (+ 1 depth)
                                                           path-to-here
-                                                          lexicon-of-heads cache)]
+                                                          cache)]
                                 (if (empty? bolts)
                                   (log/trace "phrasal-headed-parents@" path-to-here ": " (fo-ps parent) " => bolts are empty.")
                                   (log/debug "phrasal-headed-parents@" path-to-here ": bolts for parent: " (fo-ps parent) " => non-empty."))
                                 (overh parents bolts))}
-             (phrasal-headed-phrases (rest parents) lexicon phrases depth path-to-here lexicon-of-heads cache))))))
+             (phrasal-headed-phrases (rest parents) lexicon phrases depth path-to-here cache))))))
 
 ;; TODO: move this to inside lightning-bolt.
 (defn decode-gen-ordering2 [rand2]
@@ -214,7 +214,7 @@
     result))
 
 (defn parents-with-phrasal-complements [parents-with-lexical-heads parents-with-phrasal-heads
-                                        rand-parent-type-order head-lexemes]
+                                        rand-parent-type-order]
   (let [parents-with-lexical-heads (filter (fn [parent]
                                              (not (= false (get-in parent '(:comp :phrasal)))))
                                            parents-with-lexical-heads)
@@ -227,16 +227,12 @@
           (lazy-cat parents-with-phrasal-heads parents-with-lexical-heads))))
 
 ;; TODO: s/head/head-spec/
-(defn lightning-bolt [ & [head lexicon phrases depth path-to-here lexicon-of-heads cache]]
+(defn lightning-bolt [ & [head lexicon phrases depth path-to-here cache]]
   (let [maxdepth 2
         depth (if depth depth 0)
         parents-at-this-depth (parents-at-this-depth head phrases depth)
         head (if head head :top)
         path-to-here (if path-to-here path-to-here (remove-top-values-log head))
-        ;; the subset of the lexicon that matches the head-spec, with a few paths removed from the head-spec
-        ;; that would cause unification failure because they are specific to the desired final top-level phrase,
-        ;; not the lexical entry.
-        lexicon-of-heads (if lexicon-of-heads lexicon-of-heads (get-lexicon-of-head-spec head lexicon))
         cache (if cache cache (build-lex-sch-cache phrases lexicon))]
     (cond
 
@@ -253,12 +249,11 @@
                                             phrases
                                             depth
                                             path-to-here
-                                            lexicon-of-heads
                                             cache))
 
            lexical-headed-phrases (lexical-headed-phrases
                                    parents-at-this-depth
-                                   lexicon-of-heads
+                                   lexicon
                                    phrases
                                    depth
                                    cache)
@@ -299,7 +294,7 @@
            comp-phrases (comp-phrases (parents-with-phrasal-complements
                                        parents-with-phrasal-head-for-comp-phrases
                                        parents-with-lexical-heads-for-comp-phrases
-                                       rand-parent-type-order lexicon-of-heads)
+                                       rand-parent-type-order)
                                       phrases (lazy-shuffle lexicon) 0 path-to-here cache)
 
           ]
