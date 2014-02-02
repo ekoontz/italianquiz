@@ -31,10 +31,14 @@
     (log/debug (str "forest-unify 1 " (fo-ps (first args)))))
   (if (first args) 
     (log/debug (str "forest-unify 1 " (fo (first args)))))
+  (if (first args) 
+    (log/debug (str "forest-unify 1 " (first args))))
   (if (second args) 
     (log/debug (str "forest-unify 2 " (fo-ps (second args)))))
   (if (second args) 
     (log/debug (str "forest-unify 2 " (fo (second args)))))
+  (if (second args) 
+    (log/debug (str "forest-unify 2 " (second args))))
   (apply unify/unifyc args))
 
 (declare lightning-bolt)
@@ -194,7 +198,7 @@
         (= rand 2)
         (str (decode-gen-ordering2 rand2) " + hPcL + hLcL")
         true
-        (str "hPcL + "  (decode-gen-ordering2 rand2) " + hLcL")))
+        (str "hPcL + " (decode-gen-ordering2 rand2) " + hLcL")))
 
 (defn parents-at-this-depth [head phrases depth]
   "subset of phrases possible at this depth where the phrase's head is the given head."
@@ -244,6 +248,8 @@
         (log/info (str "LB@[" depth "]: " (first path)))
         (log-path (rest path) (+ depth 1)))
       (if print-blank-line (log/info (str ""))))))
+
+(declare do-with-plan)
 
 ;; TODO: s/head/head-spec/
 (defn lightning-bolt [ & [head lexicon phrases depth cache path]]
@@ -371,25 +377,36 @@
 
 
           ]
+       (do-with-plan
+        rand-order
+        rand-parent-type-order
+        one-level-trees
+        with-phrasal-comps
+        parents-with-phrasal-head cache lexicon)))))
 
-       (cond (= rand-order 0)
-             (lazy-cat
-              with-phrasal-comps
-              (overc-with-cache parents-with-phrasal-head cache lexicon)
-              one-level-trees)
-
-             (= rand-order 1)
-             (lazy-cat
-              (overc-with-cache parents-with-phrasal-head cache lexicon)
-              with-phrasal-comps
-              one-level-trees)
-
-             (= rand-order 2)
-             (lazy-cat
-              one-level-trees
-              (overc-with-cache parents-with-phrasal-head cache lexicon)
-              with-phrasal-comps))))))
-
+(defn do-with-plan [rand-order rand-parent-type-order 
+                    one-level-trees with-phrasal-comps parents-with-phrasal-head cache lexicon]
+  (log/debug (str "order: " rand-order "/" rand-parent-type-order))
+  (cond (= rand-order 0) ;; hLcL + rand2 + hPcL
+        (do
+          (lazy-cat
+           one-level-trees
+           with-phrasal-comps
+           (overc-with-cache parents-with-phrasal-head cache lexicon)))
+        
+        (= rand-order 1) ;; rand2 + hLcL + hPcL
+        (do (lazy-cat
+             with-phrasal-comps
+             one-level-trees
+             (overc-with-cache parents-with-phrasal-head cache lexicon)))
+        
+        (= rand-order 2) ;; hPcL + rand2 + hLcL
+        (do
+          (lazy-cat
+           (overc-with-cache parents-with-phrasal-head cache lexicon)
+           with-phrasal-comps
+           one-level-trees))))
+  
 ;; aliases that might be easier to use in a repl:
 (defn lb [ & [head lexicon phrases depth]]
   (let [depth (if depth depth 0)
