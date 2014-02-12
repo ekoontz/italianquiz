@@ -1,5 +1,6 @@
 (ns italianverbs.ug
   (:refer-clojure :exclude [get-in resolve])
+  ;; TODO: convert :use to :require
   (:use [clojure.set :only (union intersection)]
         [clojure.core :exclude (get-in resolve merge)]
         [italianverbs.lexicon :only (it)]
@@ -84,6 +85,39 @@
      :comp {:synsem {:subcat '()}}
      :head {:synsem {:subcat {:1 subcat
                               :2 '()}}}}))
+
+
+;;     subcat<1,2>
+;;     /         \
+;;    /           \
+;; H subcat<1,3>  3:C<1,2>
+(def subcat-2-2-principle
+  (let [subcat1 (ref :top)
+        subcat2 (ref :top)
+        subcat3 (ref {:subcat {:1 subcat1
+                               :2 subcat2
+                               :3 '()}})]
+    {:synsem {:subcat {:1 subcat1
+                       :2 subcat2
+                       :3 '()}}
+     :comp {:synsem subcat3}
+     :head {:synsem {:subcat {:1 subcat1
+                              :2 subcat3
+                              :3 '()}}}}))
+
+;;     subcat<1>
+;;     /      \
+;;    /        \
+;; H subcat<1>  C<>
+(def subcat-1-1-principle-comp-subcat-1
+  (let [subcat (ref :top)]
+    {:synsem {:subcat {:1 subcat
+                       :2 '()}}
+     :comp {:synsem {:subcat {:1 :top
+                              :2 '()}}}
+     :head {:synsem {:subcat {:1 subcat
+                              :2 '()}}}}))
+
 
 ;;     subcat<1>
 ;;     /      \
@@ -268,8 +302,7 @@
 
     :schema-symbol 'cc10 ;; used by over-each-parent to know where to put children.
     :first :comp
-    :comp {:synsem {:subcat '()}}
-    :comp-filter-fn standard-filter-fn}))
+    :comp {:synsem {:subcat '()}}}))
 
 (def ch21
   (unify
@@ -281,8 +314,7 @@
                     :pronoun true}}
     :schema-symbol 'ch21 ;; used by over-each-parent to know where to put children.
     :first :comp
-    :comment "ch21"
-    :comp-filter-fn standard-filter-fn}))
+    :comment "ch21"}))
 
 (def hc11
   (unify
@@ -295,8 +327,23 @@
    {
     :schema-symbol 'hc11 ;; used by over-each-parent to know where to put children.
     :first :head
-    :comment "hc11"
-    :comp-filter-fn standard-filter-fn}))
+    :comment "hc11"}))
+
+
+(def hc11-comp-subcat-1
+  (unify
+   subcat-1-1-principle-comp-subcat-1
+   hc-agreement
+   head-principle
+   comp-modifies-head
+   italian-head-first
+   english-head-last
+   {
+    :schema-symbol 'hc11-comp-subcat-1
+    :first :head
+    :comment "hc11-comp-subcat-1"}))
+
+
 
 (def hh10
   (unify
@@ -306,8 +353,7 @@
    english-head-first
    {:comment "hh10"
     :schema-symbol 'hh10 ;; used by over-each-parent to know where to put children.
-    :first :head
-    :comp-filter-fn standard-filter-fn}))
+    :first :head}))
 
 (def hh21
   (unify
@@ -317,8 +363,17 @@
    english-head-first
    {:comment "hh21"
     :schema-symbol 'hh21 ;; used by over-each-parent to know where to put children.
-    :first :head
-    :comp-filter-fn standard-filter-fn}))
+    :first :head}))
+
+(def hh22
+  (unify
+   subcat-2-2-principle
+   head-principle
+   italian-head-first
+   english-head-first
+   {:comment "hh22"
+    :schema-symbol 'hh22 ;; used by over-each-parent to know where to put children.
+    :first :head}))
 
 (def hh32
   (unify
@@ -328,8 +383,7 @@
    english-head-first
    {:comment "hh32"
     :schema-symbol 'hh32 ;; used by over-each-parent to know where to put children.
-    :first :head
-    :comp-filter-fn standard-filter-fn}))
+    :first :head}))
 
 ;; -- END SCHEMA DEFINITIONS
 

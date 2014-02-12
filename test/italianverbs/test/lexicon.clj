@@ -5,11 +5,12 @@
   (:require
    [italianverbs.unify :as fs]
    [italianverbs.lexiconfn :as lexfn]
+   [italianverbs.pos :refer :all]
    [italianverbs.search :as search]))
 
 (def third-person {:person :3rd :cat :noun})
 
-(def artifact (fs/merge lexfn/common-noun {:artifact true}))
+(def artifact (fs/merge common-noun {:artifact true}))
 (def masc {:gender :masc})
 (def letto-fs (apply fs/merge
                      ;; copy here to prevent any structure sharing between new lexical entry on the one hand, and input featuremaps on the other.
@@ -54,17 +55,3 @@
     ;;.. and number.
     (is (= (get-in to-have '(:number))
            (get-in to-have '(:subj :number))))))
-
-;; doing this in src/lexicon.clj for now,
-;; since it can't get reloaded automatically for
-;; some reason.
-;(def tinylex
-;  (union (it1 "andare")
-;         (it1 "dormire")
-;         (it1 "il")
-;         (it1 "io")
-;         (it1 "libro")
-;         (it1 "lui")
-;         (it1 "tu")))
-
-;  (take 7 lexicon))

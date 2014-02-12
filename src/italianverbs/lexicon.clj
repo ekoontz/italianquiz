@@ -5,6 +5,7 @@
    [clojure.set :refer :all]
    [clojure.tools.logging :as log]
    [italianverbs.lexiconfn :refer :all]
+   [italianverbs.pos :refer :all]
    [italianverbs.unify :refer :all :exclude (unify)]))
 
 ;; WARNING: clear blows away entire lexicon in backing store (mongodb or some other db).
