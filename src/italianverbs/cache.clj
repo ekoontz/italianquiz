@@ -132,15 +132,17 @@
                          lexicon))]
     (lazy-shuffle result)))
 
-(defn get-head-phrases-of [parent cache]
-  (let [result (:head-phrases (get cache (:comment parent)))
+(defn get-head-phrases-of [parent]
+  (let [cache lex-cache 
+        result (:head-phrases (get cache (:comment parent)))
         result (if (nil? result) (list) result)]
     (if (empty? result)
       (log/warn (str "headed-phrases of parent: " (:comment parent) " is empty.")))
     (lazy-shuffle result)))
 
-(defn get-comp-phrases-of [parent cache]
-  (let [result (:comp-phrases (get cache (:comment parent)))
+(defn get-comp-phrases-of [parent]
+  (let [cache lex-cache
+        result (:comp-phrases (get cache (:comment parent)))
         result (if (nil? result) (list) result)]
     (if (empty? result)
       (log/warn (str "comp-phrases of parent: " (:comment parent) " is empty.")))

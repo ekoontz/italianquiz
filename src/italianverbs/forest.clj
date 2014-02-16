@@ -51,7 +51,7 @@
            '((:english :initial)
              (:italian :initial)))
 
-          comp-phrases-for-parent (get-comp-phrases-of parent cache)
+          comp-phrases-for-parent (get-comp-phrases-of parent)
           comp-phrases-for-parent (if (nil? comp-phrases-for-parent) (list)
                                       comp-phrases-for-parent)
 
@@ -91,7 +91,7 @@
   (if (not (empty? parents))
     (let [cache (get-cache phrases lexicon)
           parent (first parents)
-          headed-phrases-of-parent (get-head-phrases-of parent cache)
+          headed-phrases-of-parent (get-head-phrases-of parent)
           headed-phrases-of-parent (if (nil? headed-phrases-of-parent)
                                      (list)
                                      headed-phrases-of-parent)]
