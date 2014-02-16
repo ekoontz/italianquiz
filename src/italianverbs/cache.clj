@@ -121,18 +121,10 @@
             (log/debug (str "survivors are empty."))))
         result))))
 
+(declare overc-with-cache)
+
 (defn overc [parent comp]
-  (if (or true (not (seq? comp)))
-    (do (log/trace (str "comp is not a seq; returning over/overc directly."))
-        (over/overc parent comp))
-    (do
-      (log/debug (str "overc comp: " (show-spec (get-in parent '(:comp :synsem)))))
-      (if (not (nil? comp))
-        (log/debug (str "overc size of comp: " (.size comp))))
-      (let [result (over/overc parent comp)]
-        (if (not (nil? result))
-          (log/trace (str "overc size of result: " (.size result))))
-        result))))
+  (over/overc parent comp))
 
 (defn overc-with-cache-1 [parent lex]
   (log/trace (str "overc-with-cache-1 with parent: " (fo-ps parent)))
