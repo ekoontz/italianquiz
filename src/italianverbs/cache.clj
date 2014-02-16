@@ -89,7 +89,7 @@
 
                         (and (= :comp head-or-comp)
                              (not (nil? (:comp cache-entry))))
-                        (:comp cache-entry)
+                        (deref (:comp cache-entry))
 
                         true
                         (throw (Exception. (str "get-lex called incorrectly: head-or-comp was:" head-or-comp)))))))
@@ -103,12 +103,25 @@
 (defn overc [parent comp]
   (over/overc parent comp))
 
+(defn get-overc [parent]
+  nil)
+
+(defn set-overc [parent overc]
+  nil)
+
 (defn overc-complement-is-lexeme [parents lexicon]
   (log/trace (str "overc-complement-is-lexeme with parents type: " (type parents)))
   (mapcat (fn [parent]
             (mapcat (fn [lexeme]
-                      (overc parent lexeme))
-                    (get-lex parent :comp lexicon)))
+                      (let [result (overc parent lexeme)]
+                        (if (not (fail? result))
+                          (do
+                            (log/debug (str "overc-complement-is-lexeme succeeded: " (fo-ps parent) " over " (fo lexeme)))
+                            result)
+                          :fail)))
+                    (if (future? (get-lex parent :comp lexicon))
+                      (lazy-seq (deref (get-lex parent :comp lexicon)))
+                      (lazy-seq (get-lex parent :comp lexicon)))))
           parents))
 
 (defn get-head-phrases-of [parent]
