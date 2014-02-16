@@ -68,6 +68,39 @@
         lex-cache)
     lex-cache))
 
+(defn get-lex [schema head-or-comp lexicon]
+  "" ;; TODO: document
+  (if (not (map? schema))
+    (throw (Exception. (str "'schema' not a map: " schema))))
+  (log/debug (str "get-lex for schema: " (:comment schema)))
+  (if (nil? (:comment schema))
+    (log/error (str "no schema for: " schema)))
+  (let [cache lex-cache
+        result (cond (= :head head-or-comp)
+                     (if (and (= :head head-or-comp)
+                              (not (nil? (:head (get cache (:comment schema))))))
+                       (do
+                         (log/trace (str "get-lex hit: head for schema: " (:comment schema)))
+                         (:head (get cache (:comment schema))))
+                       (do
+                         (log/warn (str "CACHE MISS 1"))
+                         lexicon))
+
+                     (= :comp head-or-comp)
+                     (if (and (= :comp head-or-comp)
+                              (not (nil? (:comp (get cache (:comment schema))))))
+                       (do
+                         (log/trace (str "get-lex hit: comp for schema: " (:comment schema)))
+                         (:comp (get cache (:comment schema))))
+                       (do
+                         (log/warn (str "CACHE MISS 2"))
+                         lexicon))
+
+                     true
+                     (do (log/warn (str "CACHE MISS 3"))
+                         lexicon))]
+    (lazy-shuffle result)))
+
 (defn over [parents child1 & [child2]]
   (over/over parents child1 child2))
 
@@ -113,38 +146,6 @@
     (let [parent (first parents)]
       (lazy-cat (overc-with-cache-1 parent (get-lex parent :comp lexicon))
                 (overc-with-cache (rest parents) lexicon)))))
-
-(defn get-lex [schema head-or-comp lexicon]
-  (if (not (map? schema))
-    (throw (Exception. (str "'schema' not a map: " schema))))
-  (log/debug (str "get-lex for schema: " (:comment schema)))
-  (if (nil? (:comment schema))
-    (log/error (str "no schema for: " schema)))
-  (let [cache lex-cache
-        result (cond (= :head head-or-comp)
-                     (if (and (= :head head-or-comp)
-                              (not (nil? (:head (get cache (:comment schema))))))
-                       (do
-                         (log/trace (str "get-lex hit: head for schema: " (:comment schema)))
-                         (:head (get cache (:comment schema))))
-                       (do
-                         (log/warn (str "CACHE MISS 1"))
-                         lexicon))
-
-                     (= :comp head-or-comp)
-                     (if (and (= :comp head-or-comp)
-                              (not (nil? (:comp (get cache (:comment schema))))))
-                       (do
-                         (log/trace (str "get-lex hit: comp for schema: " (:comment schema)))
-                         (:comp (get cache (:comment schema))))
-                       (do
-                         (log/warn (str "CACHE MISS 2"))
-                         lexicon))
-
-                     true
-                     (do (log/warn (str "CACHE MISS 3"))
-                         lexicon))]
-    (lazy-shuffle result)))
 
 (defn get-head-phrases-of [parent]
   (let [cache lex-cache 
