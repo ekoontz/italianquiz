@@ -26,13 +26,9 @@
    workbook/workbookq will format this accordingly."
   {:plain expr})
 
-;; this rule-cache is defined outside any function so that all functions can share
-;; a single cache.
-(def rule-cache (build-lex-sch-cache grammar lexicon grammar))
-
 (defn generate [ & [head]]
   (let [head (if head head :top)]
-    (first (take 1 (forest/lightning-bolt head lexicon (lazy-shuffle grammar) 0 rule-cache)))))
+    (first (take 1 (forest/lightning-bolt head lexicon (lazy-shuffle grammar) 0)))))
 
 (defn sentence [ & [ with ]]
   (generate {:synsem {:cat :verb :subcat '()}}))

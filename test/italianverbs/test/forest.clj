@@ -28,10 +28,8 @@
                       (= (get-in x '(:italian :infinitive)) "volere")))
                    lexicon))
 
-(def test-cache (get-cache grammar lexicon))
-
 (defn lightning-bolt [spec]
-  (forest/lightning-bolt spec lexicon grammar 0 test-cache))
+  (forest/lightning-bolt spec lexicon grammar 0))
 
 (deftest sleeper-1 []
   (let [sleeper (get-in (first (lightning-bolt {:synsem {:cat :verb

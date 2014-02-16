@@ -60,7 +60,7 @@
                     comp-spec (get-lex parent :comp lexicon)
                     comp-phrases-for-parent
                     0
-                    cache (conj path (str "C " " " (show-spec comp-spec))))))]
+                    (conj path (str "C " " " (show-spec comp-spec))))))]
 
       (if (not (empty? comps))
         (do
@@ -75,8 +75,7 @@
 (defn lexical-headed-phrases [parents lexicon phrases depth]
   "return a lazy seq of phrases (maps) whose heads are lexemes."
   (if (not (empty? parents))
-    (let [parent (first parents)
-          cache (get-cache phrases lexicon)]
+    (let [parent (first parents)]
       (lazy-seq
        (let [result (overh parent (get-lex parent :head lexicon))]
          (cons {:parent parent
@@ -98,7 +97,6 @@
                                     (deref (future
                                              (lightning-bolt (get-in parent '(:head))
                                                              lexicon headed-phrases-of-parent (+ 1 depth)
-                                                             cache
                                                              path)))]
                                 (overh parents bolts))}
              (phrasal-headed-phrases (rest parents) lexicon phrases depth path))))))
@@ -200,7 +198,7 @@
       (if print-blank-line (log/info (str ""))))))
 
 ;; TODO: s/head/head-spec/
-(defn lightning-bolt [ & [head lexicon phrases depth cache path]]
+(defn lightning-bolt [ & [head lexicon phrases depth path]]
   (let [maxdepth 5
         head (if head head :top)
         remove-top-values (remove-top-values-log head)
