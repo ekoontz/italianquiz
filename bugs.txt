@@ -5,7 +5,8 @@ Semantics:
    is:  "Antonia was less tall than Naples"
    should be: "Antonia was less tall than (some human)"
 
-
-
+Syntax: wrong transitivity
+   is: "Loro hanno deluso (They disappointed)."
+   should be: "Loro hanno deluso qualcuno (They disappointed someone)."
 
 
