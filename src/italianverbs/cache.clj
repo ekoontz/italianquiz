@@ -69,36 +69,24 @@
     lex-cache))
 
 (defn get-lex [schema head-or-comp lexicon]
-  "" ;; TODO: document
+  "get the non-fail subset of every way of adding each lexeme as either the head
+   or the comp (depending on head-or-comp) to the phrase indicated by the given schema" ;; TODO: document
   (if (not (map? schema))
     (throw (Exception. (str "get-lex was passed with the wrong type of arguments. This (schema) should be a map: " schema))))
   (log/debug (str "get-lex for schema: " (:comment schema)))
   (if (nil? (:comment schema))
     (log/error (str "no schema for: " schema)))
   (let [cache lex-cache
-        result (cond (= :head head-or-comp)
-                     (if (and (= :head head-or-comp)
-                              (not (nil? (:head (get cache (:comment schema))))))
-                       (do
-                         (log/trace (str "get-lex hit: head for schema: " (:comment schema)))
-                         (:head (get cache (:comment schema))))
-                       (do
-                         (log/warn (str "CACHE MISS 1"))
-                         lexicon))
+        result (cond (and (= :head head-or-comp)
+                          (not (nil? (:head (get cache (:comment schema))))))
+                     (:head (get cache (:comment schema)))
 
-                     (= :comp head-or-comp)
-                     (if (and (= :comp head-or-comp)
-                              (not (nil? (:comp (get cache (:comment schema))))))
-                       (do
-                         (log/trace (str "get-lex hit: comp for schema: " (:comment schema)))
-                         (:comp (get cache (:comment schema))))
-                       (do
-                         (log/warn (str "CACHE MISS 2"))
-                         lexicon))
+                     (and (= :comp head-or-comp)
+                          (not (nil? (:comp (get cache (:comment schema))))))
+                     (:comp (get cache (:comment schema)))
 
                      true
-                     (do (log/warn (str "CACHE MISS 3"))
-                         lexicon))]
+                     (throw (Exception. (str "get-lex called incorrectly or cache is empty."))))]
     (lazy-shuffle result)))
 
 (defn over [parents child1 & [child2]]
