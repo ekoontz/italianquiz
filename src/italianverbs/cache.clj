@@ -100,18 +100,13 @@
 (defn overc [parent comp]
   (over/overc parent comp))
 
-(defn overc-complement-is-lexeme-1 [parent lex]
-  (log/trace (str "overc-complement-is-lexeme-1 with parent: " (fo-ps parent)))
-  (if (not (empty? lex))
-    (lazy-cat (overc parent (first lex))
-              (overc-complement-is-lexeme-1 parent (rest lex)))))
-
 (defn overc-complement-is-lexeme [parents lexicon]
   (log/trace (str "overc-complement-is-lexeme with parents type: " (type parents)))
-  (if (not (empty? parents))
-    (let [parent (first parents)]
-      (lazy-cat (overc-complement-is-lexeme-1 parent (get-lex parent :comp lexicon))
-                (overc-complement-is-lexeme (rest parents) lexicon)))))
+  (mapcat (fn [parent]
+            (mapcat (fn [lexeme]
+                      (overc parent lexeme))
+                    (get-lex parent :comp lexicon)))
+          parents))
 
 (defn get-head-phrases-of [parent]
   (let [cache lex-cache 
