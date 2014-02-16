@@ -35,18 +35,18 @@
                                      :head subset-of-lexicon}."
   (if (not (empty? phrases))
     (conj
-     {(:comment (first phrases))
+     ;; create a key-value pair, K -> V:
+     {
+      ;; this is the key K: a string such as "noun-phrase".
+      (:comment (first phrases)) 
+      
+      ;; this is the value V: information about the phrase represented by the key K.
+      ;; value V is itself a map with four keys: :comp, :add-all-lexemes-as-comp, :head-phrases, and :head.
       {:comp
-       (filter (fn [lex]
-                 (not (fail? (unifyc (first phrases)
-                                     {:comp lex}))))
-               lexicon)
-
-       :comp-phrases
-       (filter (fn [comp-phrase]
-                 (not (fail? (unifyc (first phrases)
-                                     {:comp comp-phrase}))))
-               all-phrases)
+       (future (filter (fn [lex]
+                         (not (fail? (unifyc (first phrases)
+                                             {:comp lex}))))
+                       lexicon))
 
        :head-phrases
        (filter (fn [head-phrase]
