@@ -64,7 +64,7 @@
 
 (defn get-cache [phrases lexicon]
   (if (nil? lex-cache)
-    (do (set-cache phrases lexicon phrases)
+    (do (def lex-cache (build-lex-sch-cache phrases lexicon phrases))
         lex-cache)
     lex-cache))
 
