@@ -40,10 +40,7 @@
   (if (not (empty? parents))
     (let [iter (if (nil? iter) 0 iter)
           parent (first parents)
-          cache (if cache cache
-                    (do
-                      (log/info (str "building cache (" (.size phrases) ")"))
-                      (get-cache phrases lexicon)))
+          cache (get-cache phrases lexicon)
           comp-spec
           (dissoc-paths
            (get-in parent '(:comp))
@@ -60,7 +57,7 @@
           comps 
           (deref (future
                    (lightning-bolt
-                    comp-spec (get-lex parent :comp cache lexicon)
+                    comp-spec (get-lex parent :comp lexicon)
                     comp-phrases-for-parent
                     0
                     cache (conj path (str "C " " " (show-spec comp-spec))))))]
@@ -81,7 +78,7 @@
     (let [parent (first parents)
           cache (get-cache phrases lexicon)]
       (lazy-seq
-       (let [result (overh parent (get-lex parent :head cache lexicon))]
+       (let [result (overh parent (get-lex parent :head lexicon))]
          (cons {:parent parent
                 :headed-phrases result}
                (lexical-headed-phrases (rest parents) lexicon phrases depth)))))))

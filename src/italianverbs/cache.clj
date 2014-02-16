@@ -101,13 +101,14 @@
           (log/trace (str "overc size of result: " (.size result))))
         result))))
 
-(defn get-lex [schema head-or-comp cache lexicon]
+(defn get-lex [schema head-or-comp lexicon]
   (if (not (map? schema))
     (throw (Exception. (str "'schema' not a map: " schema))))
   (log/debug (str "get-lex for schema: " (:comment schema)))
   (if (nil? (:comment schema))
     (log/error (str "no schema for: " schema)))
-  (let [result (cond (= :head head-or-comp)
+  (let [cache lex-cache
+        result (cond (= :head head-or-comp)
                      (if (and (= :head head-or-comp)
                               (not (nil? (:head (get cache (:comment schema))))))
                        (do
@@ -158,7 +159,7 @@
   (log/trace (str "overc-with-cache with parents type: " (type parents)))
   (if (not (empty? parents))
     (let [parent (first parents)]
-      (lazy-cat (overc-with-cache-1 parent (get-lex parent :comp cache lexicon))
+      (lazy-cat (overc-with-cache-1 parent (get-lex parent :comp lexicon))
                 (overc-with-cache (rest parents) cache lexicon)))))
 
 (defn overh-with-cache-1 [parent lex]
@@ -170,5 +171,5 @@
   (if (not (empty? parents))
     (lazy-seq
      (let [parent (first parents)]
-       (lazy-cat (overh-with-cache-1 parent (get-lex parent :head cache lexicon))
+       (lazy-cat (overh-with-cache-1 parent (get-lex parent :head lexicon))
                  (overh-with-cache (rest parents) cache lexicon))))))
