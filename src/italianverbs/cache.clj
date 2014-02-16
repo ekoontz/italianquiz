@@ -114,18 +114,6 @@
       (lazy-cat (overc-with-cache-1 parent (get-lex parent :comp lexicon))
                 (overc-with-cache (rest parents) lexicon)))))
 
-(defn overh-with-cache-1 [parent lex]
-  (if (not (empty? lex))
-    (lazy-seq (cons (overh parent (first lex))
-                    (overh-with-cache-1 parent (rest lex))))))
-
-(defn overh-with-cache [parents lexicon]
-  (if (not (empty? parents))
-    (lazy-seq
-     (let [parent (first parents)]
-       (lazy-cat (overh-with-cache-1 parent (get-lex parent :head lexicon))
-                 (overh-with-cache (rest parents) lexicon))))))
-
 (defn get-lex [schema head-or-comp lexicon]
   (if (not (map? schema))
     (throw (Exception. (str "'schema' not a map: " schema))))
