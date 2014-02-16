@@ -4,8 +4,8 @@
    [clojure.core :as core]
    [clojure.set :refer :all]
    [clojure.tools.logging :as log]
-   [italianverbs.cache :refer (get-cache get-comp-phrases-of get-head-phrases-of get-lex
-                                         overc overh overc-complement-is-lexeme)]
+   [italianverbs.cache :refer (initialize-cache get-comp-phrases-of get-head-phrases-of get-lex
+                                                overc overh overc-complement-is-lexeme)]
    [italianverbs.lexicon :refer (it)]
    [italianverbs.morphology :refer (fo fo-ps)]
    [italianverbs.unify :as unify]
@@ -219,7 +219,7 @@
 
         parents-at-this-depth (lazy-shuffle (parents-at-this-depth head phrases depth))
 
-        cache (get-cache phrases lexicon)]
+        cache (initialize-cache phrases lexicon)]
     (cond
 
      (empty? parents-at-this-depth)

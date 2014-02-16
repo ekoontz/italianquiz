@@ -68,6 +68,9 @@
         lex-cache)
     lex-cache))
 
+(defn initialize-cache [grammar lexicon]
+  (get-cache grammar lexicon))
+
 (defn get-lex [schema head-or-comp lexicon]
   "get the non-fail subset of every way of adding each lexeme as either the head
    or the comp (depending on head-or-comp) to the phrase indicated by the given schema" ;; TODO: document
