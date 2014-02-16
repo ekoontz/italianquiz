@@ -71,7 +71,7 @@
 (defn get-lex [schema head-or-comp lexicon]
   "" ;; TODO: document
   (if (not (map? schema))
-    (throw (Exception. (str "'schema' not a map: " schema))))
+    (throw (Exception. (str "get-lex was passed with the wrong type of arguments. This (schema) should be a map: " schema))))
   (log/debug (str "get-lex for schema: " (:comment schema)))
   (if (nil? (:comment schema))
     (log/error (str "no schema for: " schema)))
