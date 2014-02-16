@@ -28,7 +28,7 @@
                       (= (get-in x '(:italian :infinitive)) "volere")))
                    lexicon))
 
-(def test-cache (build-lex-sch-cache grammar lexicon grammar))
+(def test-cache (get-cache grammar lexicon))
 
 (defn lightning-bolt [spec]
   (forest/lightning-bolt spec lexicon grammar 0 test-cache))

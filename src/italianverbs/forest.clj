@@ -4,8 +4,8 @@
    [clojure.core :as core]
    [clojure.set :refer :all]
    [clojure.tools.logging :as log]
-   [italianverbs.cache :refer (build-lex-sch-cache get-cache get-comp-phrases-of get-head-phrases-of get-lex
-                                                   overc overh overc-with-cache overh-with-cache)]
+   [italianverbs.cache :refer (get-cache get-comp-phrases-of get-head-phrases-of get-lex
+                                         overc overh overc-with-cache overh-with-cache)]
    [italianverbs.lexicon :refer (it)]
    [italianverbs.morphology :refer (fo fo-ps)]
    [italianverbs.unify :as unify]
@@ -43,7 +43,7 @@
           cache (if cache cache
                     (do
                       (log/info (str "building cache (" (.size phrases) ")"))
-                      (build-lex-sch-cache phrases lexicon)))
+                      (get-cache phrases lexicon)))
           comp-spec
           (dissoc-paths
            (get-in parent '(:comp))
@@ -75,7 +75,7 @@
 
 (def can-log-if-in-sandbox-mode false)
 
-(defn lexical-headed-phrases [parents lexicon phrases depth cache]
+(defn lexical-headed-phrases [parents lexicon phrases depth]
   "return a lazy seq of phrases (maps) whose heads are lexemes."
   (if (not (empty? parents))
     (let [parent (first parents)
@@ -84,7 +84,7 @@
        (let [result (overh parent (get-lex parent :head cache lexicon))]
          (cons {:parent parent
                 :headed-phrases result}
-               (lexical-headed-phrases (rest parents) lexicon phrases depth cache)))))))
+               (lexical-headed-phrases (rest parents) lexicon phrases depth)))))))
 
 (defn phrasal-headed-phrases [parents lexicon phrases depth cache path]
   "return a lazy seq of phrases (maps) whose heads are themselves phrases."
@@ -227,7 +227,7 @@
 
         parents-at-this-depth (lazy-shuffle (parents-at-this-depth head phrases depth))
 
-        cache (if cache cache (build-lex-sch-cache phrases lexicon phrases))]
+        cache (get-cache phrases lexicon)]
     (cond
 
      (empty? parents-at-this-depth)
@@ -249,8 +249,7 @@
              (let [lexical-headed-phrases (lexical-headed-phrases parents-at-this-depth
                                                                   (lazy-shuffle lexicon)
                                                                   phrases
-                                                                  depth
-                                                                  cache)]
+                                                                  depth)]
                (if (empty? lexical-headed-phrases)
                  (log/debug (str "no lexical-headed-phrases."))
                  (log/debug (str "lexical-headed-phrases is non-empty; the first is: " (fo (first lexical-headed-phrases)))))
