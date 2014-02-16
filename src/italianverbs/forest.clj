@@ -4,7 +4,7 @@
    [clojure.core :as core]
    [clojure.set :refer :all]
    [clojure.tools.logging :as log]
-   [italianverbs.cache :refer (build-lex-sch-cache get-comp-phrases-of get-head-phrases-of get-lex
+   [italianverbs.cache :refer (build-lex-sch-cache get-cache get-comp-phrases-of get-head-phrases-of get-lex
                                                    overc overh overc-with-cache overh-with-cache)]
    [italianverbs.lexicon :refer (it)]
    [italianverbs.morphology :refer (fo fo-ps)]
@@ -79,8 +79,7 @@
   "return a lazy seq of phrases (maps) whose heads are lexemes."
   (if (not (empty? parents))
     (let [parent (first parents)
-          cache  (do (log/warn (str "lexical-headed-parents given null cache: building cache from: (" (.size phrases) ")"))
-                     (build-lex-sch-cache phrases lexicon phrases))]
+          cache (get-cache phrases lexicon)]
       (lazy-seq
        (let [result (overh parent (get-lex parent :head cache lexicon))]
          (cons {:parent parent

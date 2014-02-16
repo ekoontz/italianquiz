@@ -23,6 +23,7 @@
 
 (def head-cache {})
 (def comp-cache {})
+(def lex-cache nil)
 
 (defn build-lex-sch-cache [phrases lexicon all-phrases]
   "Build a mapping of phrases onto subsets of the lexicon. The two values (subsets of the lexicon) to be
@@ -60,6 +61,12 @@
                lexicon)}}
      (build-lex-sch-cache (rest phrases) lexicon all-phrases))
     {}))
+
+(defn get-cache [phrases lexicon]
+  (if (nil? lex-cache)
+    (do (set-cache phrases lexicon phrases)
+        lex-cache)
+    lex-cache))
 
 (defn over [parents child1 & [child2]]
   (over/over parents child1 child2))
