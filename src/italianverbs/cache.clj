@@ -73,22 +73,24 @@
    or the comp (depending on head-or-comp) to the phrase indicated by the given schema" ;; TODO: document
   (if (not (map? schema))
     (throw (Exception. (str "get-lex was passed with the wrong type of arguments. This (schema) should be a map: " schema))))
-  (log/debug (str "get-lex for schema: " (:comment schema)))
   (if (nil? (:comment schema))
-    (log/error (str "no schema for: " schema)))
-  (let [cache lex-cache
-        result (cond (and (= :head head-or-comp)
-                          (not (nil? (:head (get cache (:comment schema))))))
-                     (:head (get cache (:comment schema)))
+    (throw (Exception. (str "schema has no comment (no key to lookup in the cache)"))))
+  (log/debug (str "get-lex for schema: " (:comment schema)))
+  (let [cache-entry (get lex-cache (:comment schema))]
+    (if (nil? cache-entry)
+      (throw (Exception. (str "no cache entry for key: " (:comment schema)))))
 
-                     (and (= :comp head-or-comp)
-                          (not (nil? (:comp (get cache (:comment schema))))))
-                     (:comp (get cache (:comment schema)))
+    (lazy-shuffle (cond (and (= :head head-or-comp)
+                             (not (nil? (:head cache-entry))))
+                        (:head cache-entry)
 
-                     true
-                     (throw (Exception. (str "get-lex called incorrectly or cache is empty."))))]
-    (lazy-shuffle result)))
+                        (and (= :comp head-or-comp)
+                             (not (nil? (:comp cache-entry))))
+                        (:comp cache-entry)
 
+                        true
+                        (throw (Exception. (str "get-lex called incorrectly: head-or-comp was:" head-or-comp)))))))
+  
 (defn over [parents child1 & [child2]]
   (over/over parents child1 child2))
 
