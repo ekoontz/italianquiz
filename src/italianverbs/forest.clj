@@ -75,18 +75,17 @@
 
 (def can-log-if-in-sandbox-mode false)
 
-(defn lexical-headed-phrases [parents lexicon phrases depth cache path]
+(defn lexical-headed-phrases [parents lexicon phrases depth cache]
   "return a lazy seq of phrases (maps) whose heads are lexemes."
   (if (not (empty? parents))
     (let [parent (first parents)
-          cache (if cache cache
-                    (do (log/warn (str "lexical-headed-parents given null cache: building cache from: (" (.size phrases) ")"))
-                        (build-lex-sch-cache phrases lexicon)))]
+          cache  (do (log/warn (str "lexical-headed-parents given null cache: building cache from: (" (.size phrases) ")"))
+                     (build-lex-sch-cache phrases lexicon phrases))]
       (lazy-seq
        (let [result (overh parent (get-lex parent :head cache lexicon))]
          (cons {:parent parent
                 :headed-phrases result}
-               (lexical-headed-phrases (rest parents) lexicon phrases depth cache path)))))))
+               (lexical-headed-phrases (rest parents) lexicon phrases depth cache)))))))
 
 (defn phrasal-headed-phrases [parents lexicon phrases depth cache path]
   "return a lazy seq of phrases (maps) whose heads are themselves phrases."
@@ -252,8 +251,7 @@
                                                                   (lazy-shuffle lexicon)
                                                                   phrases
                                                                   depth
-                                                                  cache
-                                                                  path)]
+                                                                  cache)]
                (if (empty? lexical-headed-phrases)
                  (log/debug (str "no lexical-headed-phrases."))
                  (log/debug (str "lexical-headed-phrases is non-empty; the first is: " (fo (first lexical-headed-phrases)))))
