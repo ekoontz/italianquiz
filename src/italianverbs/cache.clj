@@ -121,23 +121,21 @@
             (log/debug (str "survivors are empty."))))
         result))))
 
-(declare overc-with-cache)
-
 (defn overc [parent comp]
   (over/overc parent comp))
 
-(defn overc-with-cache-1 [parent lex]
-  (log/trace (str "overc-with-cache-1 with parent: " (fo-ps parent)))
+(defn overc-complement-is-lexeme-1 [parent lex]
+  (log/trace (str "overc-complement-is-lexeme-1 with parent: " (fo-ps parent)))
   (if (not (empty? lex))
     (lazy-cat (overc parent (first lex))
-              (overc-with-cache-1 parent (rest lex)))))
+              (overc-complement-is-lexeme-1 parent (rest lex)))))
 
-(defn overc-with-cache [parents lexicon]
-  (log/trace (str "overc-with-cache with parents type: " (type parents)))
+(defn overc-complement-is-lexeme [parents lexicon]
+  (log/trace (str "overc-complement-is-lexeme with parents type: " (type parents)))
   (if (not (empty? parents))
     (let [parent (first parents)]
-      (lazy-cat (overc-with-cache-1 parent (get-lex parent :comp lexicon))
-                (overc-with-cache (rest parents) lexicon)))))
+      (lazy-cat (overc-complement-is-lexeme-1 parent (get-lex parent :comp lexicon))
+                (overc-complement-is-lexeme (rest parents) lexicon)))))
 
 (defn get-head-phrases-of [parent]
   (let [cache lex-cache 

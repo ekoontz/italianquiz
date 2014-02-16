@@ -5,7 +5,7 @@
    [clojure.set :refer :all]
    [clojure.tools.logging :as log]
    [italianverbs.cache :refer (get-cache get-comp-phrases-of get-head-phrases-of get-lex
-                                         overc overh overc-with-cache)]
+                                         overc overh overc-complement-is-lexeme)]
    [italianverbs.lexicon :refer (it)]
    [italianverbs.morphology :refer (fo fo-ps)]
    [italianverbs.unify :as unify]
@@ -298,7 +298,7 @@
              (let [parents-with-lexical-heads (parents-with-lexical-heads)
                    one-level-trees
                    (if (not (empty? parents-with-lexical-heads))
-                     (overc-with-cache parents-with-lexical-heads (lazy-shuffle lexicon)))]
+                     (overc-complement-is-lexeme parents-with-lexical-heads (lazy-shuffle lexicon)))]
                (if (empty? one-level-trees)
                  (log/debug (str "one-level-trees is empty."))
                  (log/debug (str "one-level-trees is not empty; first is: " (fo (first one-level-trees)))))
@@ -323,18 +323,18 @@
              (lazy-cat
               (one-level-trees)
               (with-phrasal-comps)
-              (overc-with-cache (parents-with-phrasal-head) lexicon))
+              (overc-complement-is-lexeme (parents-with-phrasal-head) lexicon))
 
 
              (= rand-order 1) ;; rand2 + hLcL + hPcL
              (lazy-cat
               (with-phrasal-comps)
               (one-level-trees)
-              (overc-with-cache (parents-with-phrasal-head) lexicon))
+              (overc-complement-is-lexeme (parents-with-phrasal-head) lexicon))
 
              (= rand-order 2) ;; hPcL + rand2 + hLcL
              (lazy-cat
-              (overc-with-cache (parents-with-phrasal-head) lexicon)
+              (overc-complement-is-lexeme (parents-with-phrasal-head) lexicon)
               (with-phrasal-comps)
               (one-level-trees)))))))
 
