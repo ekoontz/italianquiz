@@ -36,11 +36,10 @@
 
 (declare lightning-bolt)
 
-(defn headed-phrase-add-comp [parents phrases lexicon & [iter cache path]]
+(defn headed-phrase-add-comp [parents phrases lexicon & [iter path]]
   (if (not (empty? parents))
     (let [iter (if (nil? iter) 0 iter)
           parent (first parents)
-          cache (get-cache phrases lexicon)
           comp-spec
           (dissoc-paths
            (get-in parent '(:comp))
@@ -67,8 +66,8 @@
           (log/debug (str "headed-phrase-add-comp: first comp is: " (fo-ps (first comps)) " which we will add to parent: " (fo-ps parent)))
           (lazy-cat
            (overc parent comps)
-           (headed-phrase-add-comp (rest parents) phrases lexicon (+ 1 iter) cache path)))
-        (headed-phrase-add-comp (rest parents) phrases lexicon (+ 1 iter) cache path)))))
+           (headed-phrase-add-comp (rest parents) phrases lexicon (+ 1 iter) path)))
+        (headed-phrase-add-comp (rest parents) phrases lexicon (+ 1 iter) path)))))
 
 (def can-log-if-in-sandbox-mode false)
 
@@ -85,8 +84,7 @@
 (defn phrasal-headed-phrases [parents lexicon phrases depth path]
   "return a lazy seq of phrases (maps) whose heads are themselves phrases."
   (if (not (empty? parents))
-    (let [cache (get-cache phrases lexicon)
-          parent (first parents)
+    (let [parent (first parents)
           headed-phrases-of-parent (get-head-phrases-of parent)
           headed-phrases-of-parent (if (nil? headed-phrases-of-parent)
                                      (list)
@@ -313,7 +311,7 @@
                                             (parents-with-phrasal-heads-for-comp-phrases)
                                             (parents-with-lexical-heads-for-comp-phrases)
                                             rand-parent-type-order)
-                                           phrases (lazy-shuffle lexicon) 0 cache path)]
+                                           phrases (lazy-shuffle lexicon) 0 path)]
                (if (empty? with-phrasal-comps)
                  (log/debug (str "cP is empty."))
                  (log/debug (str "cP is not empty; first is: " (fo-ps (first with-phrasal-comps)))))
