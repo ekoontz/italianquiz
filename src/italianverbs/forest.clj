@@ -56,7 +56,7 @@
           comps 
           (deref (future
                    (lightning-bolt
-                    comp-spec (get-lex parent :comp lexicon)
+                    comp-spec (get-lex parent :comp)
                     comp-phrases-for-parent
                     0
                     (conj path (str "C " " " (show-spec comp-spec))))))]
@@ -76,7 +76,7 @@
   (if (not (empty? parents))
     (let [parent (first parents)]
       (lazy-seq
-       (let [result (overh parent (get-lex parent :head lexicon))]
+       (let [result (overh parent (get-lex parent :head))]
          (cons {:parent parent
                 :headed-phrases result}
                (lexical-headed-phrases (rest parents) lexicon phrases depth)))))))

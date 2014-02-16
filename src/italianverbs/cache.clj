@@ -71,7 +71,7 @@
 (defn initialize-cache [grammar lexicon]
   (get-cache grammar lexicon))
 
-(defn get-lex [schema head-or-comp lexicon]
+(defn get-lex [schema head-or-comp]
   "get the non-fail subset of every way of adding each lexeme as either the head
    or the comp (depending on head-or-comp) to the phrase indicated by the given schema" ;; TODO: document
   (if (not (map? schema))
@@ -113,15 +113,10 @@
   (log/trace (str "overc-complement-is-lexeme with parents type: " (type parents)))
   (mapcat (fn [parent]
             (mapcat (fn [lexeme]
-                      (let [result (overc parent lexeme)]
-                        (if (not (fail? result))
-                          (do
-                            (log/debug (str "overc-complement-is-lexeme succeeded: " (fo-ps parent) " over " (fo lexeme)))
-                            result)
-                          :fail)))
-                    (if (future? (get-lex parent :comp lexicon))
-                      (lazy-seq (deref (get-lex parent :comp lexicon)))
-                      (lazy-seq (get-lex parent :comp lexicon)))))
+                      (overc parent lexeme))
+                    (if (future? (get-lex parent :comp))
+                      (lazy-seq (deref (get-lex parent :comp)))
+                      (get-lex parent :comp))))
           parents))
 
 (defn get-head-phrases-of [parent]
@@ -130,7 +125,7 @@
         result (if (nil? result) (list) result)]
     (if (empty? result)
       (log/warn (str "headed-phrases of parent: " (:comment parent) " is empty.")))
-    (lazy-shuffle result)))
+    result))
 
 (defn get-comp-phrases-of [parent]
   (let [cache lex-cache
