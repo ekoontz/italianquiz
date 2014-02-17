@@ -34,4 +34,4 @@
   (generate {:synsem {:cat :verb :subcat '()}}))
 
 (defn nounphrase [ & [ with ]]
-  (generate (first (take 1 (generate {:synsem {:cat :noun :subcat '()}})))))
+  (generate {:synsem {:cat :noun :subcat '()}}))
