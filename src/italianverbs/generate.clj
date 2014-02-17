@@ -5,10 +5,9 @@
    [clojure.test :refer :all]
    [clojure.tools.logging :as log]
 
-   [italianverbs.cache :refer (build-lex-sch-cache) ]
    [italianverbs.forest :exclude (lightning-bolt) ]
    [italianverbs.forest :as forest]
-   [italianverbs.grammar :refer (grammar)]
+   [italianverbs.grammar :refer :all]
    [italianverbs.html :as html]
    [italianverbs.lexicon :refer (lexicon it en)]
    [italianverbs.morphology :refer (fo fo-ps)]
