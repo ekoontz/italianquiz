@@ -228,8 +228,8 @@
         rand-parent-type-order (rand-int 2 0)
 
         ;; short-circuits for dev/testing
-        rand-order 1
-        rand-parent-type-order 0
+;        rand-order 1
+;        rand-parent-type-order 0
 
         path (if path (conj path
                             (str (decode-generation-ordering rand-order rand-parent-type-order) ": "
