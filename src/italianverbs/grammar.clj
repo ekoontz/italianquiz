@@ -14,6 +14,9 @@
 
 ;; TODO: s/unifyc/unify/
 
+
+;; TODO: don't override :comment; simply add a new feature like :rule or :name.
+;; also would avoid need for (merge), since we could use unify instead.
 (def grammar (list (merge (unifyc hh21
                                   {:synsem {:cat :adjective}})
                           {:comment "adjective-phrase"})
