@@ -244,7 +244,7 @@
 
     (cond
 
-     (= (.size matching-rules) 0)
+     (= (.size parents) 0)
      nil
 
 ;     (> depth maxdepth)
