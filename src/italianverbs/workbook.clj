@@ -12,7 +12,7 @@
    [hiccup.core :refer :all]
 
    [italianverbs.benchmark :refer :all]
-   [italianverbs.cache :refer [get-cache]]
+   [italianverbs.cache :refer [get-cache initialize-cache]]
    [italianverbs.forest :refer :all :exclude [lightning-bolt unifyc deref future rand-int]]
    [italianverbs.generate :refer [generate nounphrase sentence]]
    [italianverbs.grammar :refer :all]
@@ -24,6 +24,8 @@
    [italianverbs.ug :refer :all]
    [italianverbs.unify :refer :all :exclude [unify]]))
 
+
+(initialize-cache grammar lexicon)
 (def avoid-init-errors (nounphrase))
 
 ;; Sandbox specification derived from:

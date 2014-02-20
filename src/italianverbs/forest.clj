@@ -212,12 +212,6 @@
                                               spec))))
                         grammar)
 
-        log (log/info (str " subset of grammar that matches spec: " 
-                           (string/join " " (map (fn [rule]
-                                           (str (:comment rule)))
-                                         parents))))
-
-
         remove-top-values (remove-top-values-log spec)
         debug (log/debug "")
         debug (log/debug "===start===")
@@ -238,8 +232,13 @@
                  [ (str (decode-generation-ordering rand-order rand-parent-type-order) ": "
                         remove-top-values)])
 
+        log (log/info "<path>")
         log (log-path path)
-
+        log (log/info "</path>")
+        log (log/info (str " subset of grammar that matches spec: " 
+                           (string/join " " (map (fn [rule]
+                                                   (str (:comment rule)))
+                                                 parents))))
         ]
 
     (cond
@@ -276,7 +275,7 @@
              (mapcat (fn [each-kv]
                        (let [phrases (:headed-phrases each-kv)]
                          parents))
-                     parents-with-phrasal-head-map))
+                     (parents-with-phrasal-head-map)))
 
            parents-with-lexical-heads 
            (fn []

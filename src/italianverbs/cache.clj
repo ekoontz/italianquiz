@@ -73,6 +73,13 @@
     (get-cache grammar lexicon)
     (.size lex-cache)))
 
+(defn add-lex [schema lexicon grammar]
+  ;; TODO: use schema arg to add just a single entry: 
+  ;; currently it does the entire grammar.
+  (get-cache lexicon grammar)
+)
+
+
 (defn get-lex [schema head-or-comp]
   "get the non-fail subset of every way of adding each lexeme as either the head
    or the comp (depending on head-or-comp) to the phrase indicated by the given schema" ;; TODO: document
@@ -83,18 +90,20 @@
   (log/debug (str "get-lex for schema: " (:comment schema)))
   (let [cache-entry (get lex-cache (:comment schema))]
     (if (nil? cache-entry)
-      (throw (Exception. (str "no cache entry for key: " (:comment schema)))))
+      (throw (Exception. (str "no cache entry for key: s-future. You need to run (initialize-cache)."))))
 
-    (lazy-shuffle (cond (and (= :head head-or-comp)
-                             (not (nil? (:head cache-entry))))
-                        (:head cache-entry)
-
-                        (and (= :comp head-or-comp)
-                             (not (nil? (:comp cache-entry))))
-                        (deref (:comp cache-entry))
+      ;; TODO: don't do lazy-shuffle here: (lazy-shuffle (:head cache)) instead.
+;    (lazy-shuffle
+     (cond (and (= :head head-or-comp)
+                (not (nil? (:head cache-entry))))
+           (:head cache-entry)
+           
+           (and (= :comp head-or-comp)
+                (not (nil? (:comp cache-entry))))
+           (deref (:comp cache-entry))
 
                         true
-                        (throw (Exception. (str "get-lex called incorrectly: head-or-comp was:" head-or-comp)))))))
+                        (throw (Exception. (str "get-lex called incorrectly: head-or-comp was:" head-or-comp))))))
   
 (defn over [parents child1 & [child2]]
   (over/over parents child1 child2))
