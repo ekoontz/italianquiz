@@ -65,7 +65,7 @@
   (over/over parents child1 child2))
 
 (defn overh [parent head]
-  (if (or true (not (seq? head)))
+  (if (not (seq? head))
     (over/overh parent head)
     (do
       (log/debug (str "overh head: " (show-spec (get-in parent '(:head :synsem)))))
