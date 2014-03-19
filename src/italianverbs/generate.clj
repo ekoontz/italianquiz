@@ -61,7 +61,8 @@
                     (if cache
                       (str "size: " (.size cache))
                       (str "doesn't exist yet."))))
-    (generate (unify spec {:synsem {:cat :verb :subcat '()}})
+    (generate (unify spec {:synsem {:cat (first (shuffle (list :verb :sent-modifier)))
+                                    :subcat '()}})
               lexicon
               grammar
               cache)))
