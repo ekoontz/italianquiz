@@ -327,7 +327,8 @@
    {:synsem {:sem {:tense :futuro}}}
 
    (= question-type :imperfetto)
-   {:synsem {:sem {:tense :imperfetto}}}
+   {:synsem {:infl :imperfetto
+             :sem {:tense :imperfetto}}}
 
    (= question-type :passato)
    {:synsem {:infl :present
@@ -629,6 +630,7 @@
   (let [params (if (= (get request :request-method) :get)
                  (get request :query-params)
                  (get request :form-params))
+        debug (log/debug (str "Question: " question))
         session (session/request-to-session request)
         stored (if (get params "id") ;; if id is nil, then there is no existing question: TODO: figure out under what circumstances id can be nil.
                  (db/fetch-one :question
