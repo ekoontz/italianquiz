@@ -189,8 +189,8 @@
          parents-with-lexical-heads parents-with-phrasal-heads)]
     (do
       (if (not (empty? cats))
-        (log/debug (str "first headed-phrases: " (fo-ps (first cats))))
-        (log/debug (str " no headed-phrases.")))
+        (log/trace (str "first headed-phrases: " (fo-ps (first cats))))
+        (log/trace (str " no headed-phrases.")))
       cats)))
 
 (defn log-path [path log-fn & [ depth]]
