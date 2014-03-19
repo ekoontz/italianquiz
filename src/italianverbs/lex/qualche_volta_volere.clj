@@ -352,7 +352,7 @@
                        :sem {:pred :stamattina}
                        :subcat {:1 {:subcat '()
                                     :infl :futuro
-                                    :sem {:tense :future
+                                    :sem {:tense :futuro
                                           :activity true}}}}
               :english "this morning"})
 

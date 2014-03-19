@@ -54,11 +54,11 @@
                                      :sem {:tense :past}}})
 
                    (unifyc cc10
-                          {:rule "s-future"
+                          {:rule "s-futuro"
                            :synsem {:aux false
                                     :infl :futuro
                                     :cat :verb
-                                    :sem {:tense :future}}})
+                                    :sem {:tense :futuro}}})
 
 
                    (unifyc cc10
@@ -104,7 +104,7 @@
                               :italian {:b {:obj-agr obj-agr}}}))
 
                    (unifyc hh21
-                           {:rule "vp-future"
+                           {:rule "vp-futuro"
                             :synsem {:aux false
                                      :infl :futuro
                                      :cat :verb}})
@@ -135,6 +135,13 @@
                             :rule "vp-pronoun"
                             :synsem {:cat :verb
                                      :infl {:not :past}}})
+
+                   (unifyc hh10
+                           {:head {:phrasal false
+                                   :synsem {:cat :sent-modifier}}
+                            :rule "s-modifier"})
+
+
 ))
 
 

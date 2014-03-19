@@ -668,7 +668,7 @@
            {:synsem {:cat :sent-modifier
                      :sem {:pred :dopodomani}
                      :subcat {:1 {:infl :futuro
-                                  :sem {:tense :future}
+                                  :sem {:tense :futuro}
                                   :subcat '()}}}
             :italian "dopodomani"
             :english "the day after tomorrow"})
