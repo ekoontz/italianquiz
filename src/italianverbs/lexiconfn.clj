@@ -285,9 +285,11 @@ storing a deserialized form of each lexical entry avoids the need to serialize e
                                 :2 '()}}})
 
 (def sentential-adverb
-  (let [sentential-sem (ref :top)]
+  (let [tense (ref :top)
+        sentential-sem (ref {:tense tense})]
     {:synsem {:cat :sent-modifier
-              :sem {:subj sentential-sem}
+              :sem {:subj sentential-sem
+                    :tense tense}
               :subcat {:1 {:sem sentential-sem
                            :subcat '()}}}}))
 

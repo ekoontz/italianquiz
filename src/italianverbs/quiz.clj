@@ -324,10 +324,10 @@
 (defn question-type-to-sentence-spec [question-type]
   (cond
    (= question-type :futuro)
-   {:synsem {:infl :futuro}}
+   {:synsem {:sem {:tense :futuro}}}
 
    (= question-type :imperfetto)
-   {:synsem {:infl :imperfetto}}
+   {:synsem {:sem {:tense :imperfetto}}}
 
    (= question-type :passato)
    {:synsem {:infl :present
