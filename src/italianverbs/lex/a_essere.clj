@@ -574,7 +574,16 @@
                     :iobj {:animate true}
                     :obj {:buyable true}
                     :pred :dare}}}
-               
+
+    {:italian {:infinitive "dare"}
+     :english {:infinitive "to give"
+               :irregular {:past "gave"}}
+     :synsem {:cat :verb
+              :essere false
+              :sem {:subj {:human true}
+                    :iobj {:human true}
+                    :obj {:pred :schiaffo}
+                    :pred :dare}}}
 
     (unify
      transitive

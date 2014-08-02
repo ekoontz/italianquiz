@@ -128,6 +128,13 @@
                                      :sem {:tense :present}
                                      :cat :verb}})
 
+                   (unifyc hh32
+                           {:rule "vp-present-ditransitive"
+                            :synsem {:aux false
+                                     :infl :present
+                                     :sem {:tense :present}
+                                     :cat :verb}})
+
                    (unifyc ch21
                            {:comp {:phrasal false
                                    :synsem {:cat :noun

@@ -40,22 +40,18 @@
 
 (defn it [italian]
   "same as it but no type conversion of singleton sets to take the first member."
-  (let [result
-        (union (set (lookup {:italian italian}))
-               (set (lookup {:italian {:infinitive italian}}))
-               (set (lookup {:italian {:infinitive {:infinitive italian}}}))
-               (set (lookup {:italian {:italian italian}}))
-               (set (lookup {:italian {:irregular {:passato italian}}})))]
-    result))
+  (union (set (lookup {:italian italian}))
+         (set (lookup {:italian {:infinitive italian}}))
+         (set (lookup {:italian {:infinitive {:infinitive italian}}}))
+         (set (lookup {:italian {:italian italian}}))
+         (set (lookup {:italian {:irregular {:passato italian}}}))))
 
 (defn en [english]
-  (let [result
-        (union (set (lookup {:english english}))
-               (set (lookup {:english {:infinitive english}}))
-               (set (lookup {:english {:infinitive {:infinitive english}}}))
-               (set (lookup {:english {:english english}}))
-               (set (lookup {:english {:irregular {:passato english}}})))]
-    result))
+  (union (set (lookup {:english english}))
+         (set (lookup {:english {:infinitive english}}))
+         (set (lookup {:english {:infinitive {:infinitive english}}}))
+         (set (lookup {:english {:english english}}))
+         (set (lookup {:english {:irregular "past"}}))))
 
 (clear!)
 
@@ -151,9 +147,15 @@
              (not (nil? (get-in lexical-entry '(:synsem :sem :iobj)))))
         (unifyc
          lexical-entry
-         (let [ref (ref :top)]
-           {:synsem {:subcat {:3 {:sem ref}}
-                     :sem {:iobj ref}}}))
+         (unifyc (let [ref (ref :top)]
+                   {:synsem {:subcat {:1 {:sem ref}}
+                             :sem {:subj ref}}})
+                 (let [ref (ref :top)]
+                   {:synsem {:subcat {:2 {:sem ref}}
+                             :sem {:iobj ref}}})
+                 (let [ref (ref :top)]
+                   {:synsem {:subcat {:3 {:sem ref}}
+                             :sem {:obj ref}}})))
         true
         lexical-entry))
 
@@ -223,7 +225,8 @@
 
 (defn transitive-verb-rule [lexical-entry]
   (cond (and (= (get-in lexical-entry [:synsem :cat]) :verb)
-             (not (nil? (get-in lexical-entry '(:synsem :sem :obj)))))
+             (not (nil? (get-in lexical-entry '(:synsem :sem :obj))))
+             (= :notfound (get-in lexical-entry '(:synsem :sem :iobj) :notfound)))
         (unifyc
          lexical-entry
          transitive-but-object-cat-not-set)
@@ -258,7 +261,8 @@
                  pronoun-and-propernouns
                  semantic-implicature
                  transitive-verb-rule
-                 verb-rule))
+                 verb-rule
+))
 
 ;; Modifying rules: so-named because they modify the lexical entry in
 ;; such a way that is non-monotonic and dependent on the order of rule

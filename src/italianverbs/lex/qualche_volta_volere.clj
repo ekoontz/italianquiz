@@ -283,6 +283,15 @@
                        :obj {:legible true}
                        :pred :ricordare}}})
 
+      (unify agreement-noun
+             common-noun
+             countable-noun
+             masculine-noun
+             {:italian {:italian "schiaffo"}
+              :english {:english "slap"}
+              :synsem {:sem {:pred :schiaffo
+                             :buyable false}}})
+
       (unify
        transitive
        {:italian {:infinitive "scrivere"}
