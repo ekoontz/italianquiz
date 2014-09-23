@@ -208,7 +208,6 @@
         (unify
          verb-subjective
          modal
-         {:synsem {:infl {:not :imperfetto}}} ;; disabling imperfetto because it sounds unnatural: "he was being able to.."
          {:italian {:infinitive "potere"
                     :drop-e true
                     :irregular {:present {:1sing "posso"
@@ -218,7 +217,10 @@
                                           :2plur "potete"
                                           :3plur "possono"}}}
           :english {:infinitive "to be able to"
+                    :comment {:imperfetto "had the ability to.. but it's not specified whether or not did or didn't"}
                     :irregular {:past "could have"
+                                :future "will be able to"
+                                :imperfetto "could"
                                 ;; TODO: enhance morphology.clj to handle one irregular for all agreements: {:present "can"}.
                                 :present {:1sing "can"
                                           :2sing "can"
@@ -226,8 +228,7 @@
                                           :1plur "can"
                                           :2plur "can"
                                           :3plur "can"}}}
-          :synsem {:essere false
-                   :modal true
+          :synsem {:modal true
                    :sem {:pred {:pred pred-of-complement
                                 :mod :potere}
                          :activity false

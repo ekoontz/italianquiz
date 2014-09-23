@@ -150,6 +150,14 @@
                                               :modified true}] ;; TODO: document what purpose :modified serves (if any: if none, remove).
                              {:rule "intensifier-phrase"
                               :synsem head-synsem}))
+                   
+                   (unifyc h21
+                           (let [essere-agreement (ref :top)]
+                             {:rule "modal-verb-phrase"
+                              :synsem {:essere essere-agreement}
+                              :comp {:synsem {:essere essere-agreement}}
+                              :head {:synsem {:cat :verb
+                                              :modal true}}}))
 
                    (unifyc h11-comp-subcat-1
                            (let [head-synsem {:cat :noun
