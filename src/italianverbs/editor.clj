@@ -226,38 +226,40 @@
                   {:action (str "/editor/game/edit/" game-id)
                    :enctype "multipart/form-data"
                    :method :post
-                   :fields [{:name :name :size 50 :label "Name"}
-                            {:name :source :type :select 
-                             :label "Source Language"
-                             :options [{:value "en" :label "English"}
-                                       {:value "it" :label "Italian"}
-                                       {:value "es" :label "Spanish"}]}
-                            
-                            {:name :target :type :select 
-                             :label "Target Language"
-                             :options [{:value "en" :label "English"}
-                                       {:value "it" :label "Italian"}
-                                       {:value "es" :label "Spanish"}]}
-                          
-                            {:name :source_groupings
-                             :label "Source Lists"
-                             :type :checkboxes
-                             :cols 3
-                             :options (map (fn [grouping]
-                                             {:value (:id grouping)
-                                              :label (:name grouping)})
-                                           all-groups)}
+                   :fields (concat [{:name :name :size 50 :label "Name"}
+                                    {:name :source :type :select 
+                                     :label "Source Language"
+                                     :options [{:value "en" :label "English"}
+                                               {:value "it" :label "Italian"}
+                                               {:value "es" :label "Spanish"}]}
+                                    
+                                    {:name :target :type :select 
+                                     :label "Target Language"
+                                     :options [{:value "en" :label "English"}
+                                               {:value "it" :label "Italian"}
+                                               {:value "es" :label "Spanish"}]}]
 
-                            {:name :target_groupings
-                             :label "Target Lists"
-                             :type :checkboxes
-                             :cols 3
-                             :options (map (fn [grouping]
-                                             {:value (:id grouping)
-                                              :label (:name grouping)})
-                                           all-groups)}
-
-                            ]
+                                   (if show-source-lists
+                                     [{:name :source_groupings
+                                       :label "Source Lists"
+                                       :type :checkboxes
+                                       :cols 3
+                                       :options (map (fn [grouping]
+                                                       {:value (:id grouping)
+                                                        :label (:name grouping)})
+                                                     all-groups)}]
+                                     [])
+                                   [
+                                    {:name :target_groupings
+                                     :label (if show-source-lists 
+                                              "Target Lists"
+                                              "Lists")
+                                     :type :checkboxes
+                                     :cols 3
+                                     :options (map (fn [grouping]
+                                                     {:value (:id grouping)
+                                                      :label (:name grouping)})
+                                                   all-groups)}])
                    
                    :cancel-href "/editor"
                    :values {:name (:game_name result)
