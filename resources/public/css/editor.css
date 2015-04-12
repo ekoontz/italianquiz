@@ -203,3 +203,11 @@ div.delete {
     float:right;
     width:40%;
 }
+
+div.dangerzone {
+    width:100%;
+    background:
+    lightsalmon;
+    float:left;
+    padding:0.5em;
+}

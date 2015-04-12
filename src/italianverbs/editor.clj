@@ -269,8 +269,7 @@
                                   :method "post"
                                   :problems problems]]})
 
-                 [:hr]
-                 [:div {:style "width:100%;background:lightsalmon;float:left;padding:0.5em"}
+                 [:div.dangerzone
                   [:h4 "Delete game"]
 
                   [:div {:style "float:right"}
@@ -1125,7 +1124,7 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
 
                                                                                      (get-in % [:synsem :sem :tense] nil)))
                                                                      specs)))]
-                                                    (log/debug (str "gathered tenses: " tenses))
+                                                    (log/trace (str "gathered tenses: " tenses))
                                                     tenses)
 
 
@@ -1156,6 +1155,18 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
                                   :action "/editor"
                                   :method "post"
                                   :problems problems]]})
+
+
+                 [:div.dangerzone
+                  [:h4 "Delete list"]
+                  
+                  [:div {:style "float:right"}
+                   [:form
+                    {:method "POST"
+                    :action (str "/editor/group/delete/" group-id)}
+                    [:button.confirm_delete {:onclick (str "submit();")} "Delete List"]]]
+                  ]
+
                  ]))
 
             results)))
