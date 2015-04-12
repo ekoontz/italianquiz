@@ -216,16 +216,18 @@
 
                     source-group-ids (:source_group_ids result)
                     source-groups (if source-group-ids
-                                    (vec (map str (remove nil? (.getArray (:source_group_ids result)))))
+                                    (vec (remove #(or (nil? %)
+                                                      (= "" (string/trim (str %))))
+                                                 (.getArray (:source_group_ids result))))
                                     [])
                     target-group-ids (:target_group_ids result)
                     target-groups (if target-group-ids
-                                    (vec (map str (remove #(or (nil? %)
-                                                               (= "" (string/trim (str %))))
-                                                          (.getArray (:target_group_ids result)))))
+                                    (vec (remove #(or (nil? %)
+                                                      (= "" (string/trim (str %))))
+                                                 (.getArray (:target_group_ids result))))
                                     [])
-                    debug (log/debug (str "SOURCE GROUPS: " source-groups))
-                    debug (log/debug (str "TARGET GROUPS: " target-groups))
+                    debug (log/debug (str "creating checkbox form with currently-selected source-groups: " source-groups))
+                    debug (log/debug (str "creating checkbox form with currently-selected target-groups: " target-groups))
                     ]
                 [:div.editgame
                  {:id (str "editgame" game-id)}
@@ -269,11 +271,6 @@
                                                      {:value (:id grouping)
                                                       :label (:name grouping)})
                                                    all-groups)
-;                                     :options [{:value "123"
-;                                                :label "foo"
-;                                                }
-;                                               {:value "456"
-;                                                :label "bar"}]
                                      }
                                     ]
                                    )
@@ -283,7 +280,7 @@
                             :target (:target result)
                             :source (:source result)
                             :source_groupings source-groups
-                            ;;:target_groupings target-groups
+                            :target_groupings target-groups
                             }
 
                    :validations [[:required [:name]   
@@ -738,28 +735,29 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
      :headers {"Location" (str "/editor/" "?message=no+group+to+delete")}}))
 
 (defn update-game [game-id params]
-  (log/debug (str "UPDATING GAME WITH PARAMS: " params))
-
-  ;; TODO: convert strings with possible '[]' to keywords without '[]': e.g. "source_groupings[]" to :source_groupings
-  (log/debug (str "UPDATING GAME WITH PARAMS (convert to keywords)" (zipmap (map #(keyword %)
-                                                                                 (keys params))
-                                                                            (vals params))))
-                                                                                 
-  (log/debug (str "UPDATING GAME WITH PARAM KEYS: " (keys params)))
-  (log/debug (str "UPDATING GAME WITH PARAM VALS: " (vals params)))
-  (log/debug (str "UPDATING GAME WITH TARGET_GROUPINGS: " (get params "target_groupings")))
   (let [game-id game-id
+        params (zipmap (map #(keyword %)
+                            (map #(string/replace % "[]" "")
+                                 (keys params)))
+                       (vals params))
+        debug  (log/debug (str "UPDATING GAME WITH PARAMS (converted to keywords): " params))
+
         source-grouping-set (if (string? (:source_groupings params))
-                              (do (log/warn (str "source_groupings is unexpectedly a string:"
+                              (do (log/error (str "source_groupings is unexpectedly a string:"
                                                  (:source_groupings params) "; splitting."))
-                                  (string/split (:source_groupings params) #"[ ]"))
-                              (:source_groupings params))
+                                  (throw (Exception. (str "Could not update game: " game-id "; no :source_groupings found in input params: " params))))
+                              (filter #(not (= (string/trim %) ""))
+                                      (:source_groupings params)))
 
         target-grouping-set (if (string? (:target_groupings params))
-                              (do (log/warn (str "target_groupings is unexpectedly a string:"
+                              (do (log/error (str "target_groupings is unexpectedly a string:"
                                                  (:target_groupings params) "; splitting."))
-                                  (string/split (:target_groupings params) #"[ ]"))
-                              (:target_groupings params))
+                                  (throw (Exception. (str "Could not update game: " game-id "; no :target_groupings found in input params: " params))))
+                              (filter #(not (= (string/trim %) ""))
+                                      (:target_groupings params)))
+
+
+        debug (log/debug (str "project name will be updated to: " (:name params)))
 
         debug (log/debug (str "edit: source-groupings type(1):" (type source-grouping-set)))
         debug (log/debug (str "edit: target-groupings type(1):" (type target-grouping-set)))
