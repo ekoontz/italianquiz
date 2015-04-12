@@ -52,12 +52,7 @@
     (show-games {:game-to-delete game-to-delete
                  :game-to-edit game-to-edit})
     ]
-   
-   [:div.section [:h3 "Lists"]
-    (show-groups {:group-to-delete group-to-delete
-                  :group-to-edit group-to-edit})
-                  
-    ]
+
    ))
 
 (defn insert-game [name source target source-set target-set]
