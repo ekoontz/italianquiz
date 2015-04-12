@@ -45,15 +45,24 @@
                        group-to-edit :group-to-edit
                        group-to-delete :group-to-delete
                        message :message} ]]
-  (html
-   [:div.user-alert message]
+  (let [show-groups-table false]
+    (html
+     [:div.user-alert message]
    
-   [:div.section [:h3 "Games"]
-    (show-games {:game-to-delete game-to-delete
-                 :game-to-edit game-to-edit})
-    ]
+     [:div.section [:h3 "Games"]
+      (show-games {:game-to-delete game-to-delete
+                   :game-to-edit game-to-edit})
+      ]
 
-   ))
+     (if show-groups-table
+       [:div.section
+        [:h3 "Groups"]
+        (show-groups {:group-to-delete game-to-delete
+                      :group-to-edit game-to-edit})
+        ]
+       ;; else, just show the hidden forms, that are made visible
+       ;; if the user clicks on a group within a game.
+       (show-group-edit-forms)))))
 
 (defn insert-game [name source target source-set target-set]
   "Create a game with a name, a source and target language and two
@@ -97,18 +106,11 @@
 
      [:table {:class "striped padded"}
       [:tr
-       [:th {:style "width:9%"} 
-        (cond
-         (or game-to-edit game-to-delete)
-         "Cancel"
-         :else "")
-        ]
-
        [:th {:style "width:15%"} "Name"]
        [:th {:style "width:5%"} "Source"]
        [:th {:style "width:5%"} "Target"]
        (if show-source-lists [:th {:style "width:15%"} "Source Lists"])
-       [:th {:style "width:auto"} "Target Lists"]
+       [:th {:style "width:auto"} "Lists"]
        (cond
         game-to-edit [:th "Update"]
         game-to-delete [:th "Delete"]
@@ -119,29 +121,10 @@
              (let [game-id (:id result)]
                [:tr 
                 [:td
-                 (cond (not (or game-to-edit game-to-delete))
-                       [:div {:style "width:100%"}
-                        [:div.edit
-                         [:button 
-                          {:onclick (str "edit_game_dialog(" game-id ");")}
-                          "Edit"]]
-                        [:div.delete
-                         [:button
-                         {:onclick (str "document.location='/editor/game/delete/" game-id "';" )}
-                          "Delete"]]]
-                       
-                       (or (= game-to-edit game-id)
-                           (= game-to-delete game-id))
-                       [:a
-                        {:href "/editor"} "Cancel"]
-
-                       true "")]
-
-                [:td
                  (if (= game-to-edit game-id)
                    [:input {:size (+ 5 (.length (:game_name result))) 
                             :value (:game_name result)}]
-                   (:game_name result)
+                   [:div.edit_game {:onclick (str "edit_game_dialog(" game-id ")")}  (:game_name result)]
                    )]
                 [:td (unabbrev (:source result))]
                 [:td (unabbrev (:target result))]
@@ -883,9 +866,11 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
 
 ;; sqlnames: 'english','espanol' <- note: no accent on 'n' ,'italiano', ..
 (declare sqlname-from-match)
+(declare show-group-edit-forms)
 
 (defn show-groups [ & [{group-to-edit :group-to-edit
-                        group-to-delete :group-to-delete}]]
+                        group-to-delete :group-to-delete
+                        show-group-table :show-group-table}]]
   (let [group-to-edit (if group-to-edit (Integer. group-to-edit))
         group-to-delete (if group-to-delete (Integer. group-to-delete))
         results (k/exec-raw ["SELECT id,name,any_of 
@@ -903,7 +888,7 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
                [:tr 
               [:td [:div.group {:onclick (str "edit_group_dialog(" group-id ")")}  (:name result)]]
               [:td
-               (string/join ","
+               (string/join ", "
                             (map #(let [edn-form (json-read-str  ;; Extensible Data Notation, i.e., a Clojure map.
                                                   %)]
                                     ;; TODO: do not enumerate languages explicitly here:
@@ -950,6 +935,9 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
       [:button {:onclick (str "document.location='/editor/group/new';")} "New List"]
       ]
 
+     (show-group-edit-forms))))
+
+(defn show-group-edit-forms []
      (let [results
            ;; add more stuff to SELECT; this is just to get things working.
            (k/exec-raw ["SELECT id,name AS group_name,any_of FROM grouping"] :results)]
@@ -1147,7 +1135,7 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
                                   :action "/editor"
                                   :method "post"
                                   :problems problems]]})]))
-            results)))))
+            results)))
 
 ;; shortnames: 'en','es','it', ..
 (defn shortname-from-match [match-string]
