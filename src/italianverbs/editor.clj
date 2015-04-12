@@ -265,17 +265,26 @@
                                               "Lists")
                                      :type :checkboxes
                                      :cols 3
-                                     :options (map (fn [grouping]
-                                                     {:value (:id grouping)
-                                                      :label (:name grouping)})
-                                                   all-groups)}])
+                                     ;:options (map (fn [grouping]
+                                     ;                {:value (:id grouping)
+                                     ;                 :label (:name grouping)})
+                                     ;              all-groups)
+                                     :options [{:value "foo"
+                                                :label "foo"
+                                                }
+                                               {:value "bar"
+                                                :label "bar"}]
+                                     }
+                                    ]
+                                   )
                    
                    :cancel-href "/editor"
                    :values {:name (:game_name result)
                             :target (:target result)
                             :source (:source result)
                             :source_groupings source-groups
-                            :target_groupings target-groups}
+                            ;;:target_groupings target-groups
+                            }
 
                    :validations [[:required [:name]   
                                   :action "/editor"
