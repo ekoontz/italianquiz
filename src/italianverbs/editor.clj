@@ -739,6 +739,8 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
 
 (defn update-game [game-id params]
   (log/debug (str "UPDATING GAME WITH PARAMS: " params))
+
+  ;; TODO: convert strings with possible '[]' to keywords without '[]': e.g. "source_groupings[]" to :source_groupings
   (log/debug (str "UPDATING GAME WITH PARAMS (convert to keywords)" (zipmap (map #(keyword %)
                                                                                  (keys params))
                                                                             (vals params))))
