@@ -154,6 +154,9 @@
 
                    (if (not (empty? (remove nil? (seq (.getArray (:source_groups result))))))
                      (str 
+                      ;; TODO: Make lists clickable
+;;              [:td [:div.group {:onclick (str "edit_group_dialog(" group-id ")")}  (:name result)]]
+
                       "<div class='group sourcegroup'>"
                       (string/join "</div><div class='group sourcegroup'>" (sort (.getArray (:source_groups result))))
                       "</div>")
@@ -774,6 +777,16 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
                       (string/split (:lexemes params) #"[ ]"))
                   (:lexemes params))
 
+        tenses (filter #(not (= (string/trim %) ""))
+                       (:tenses params))
+
+        tense-specs
+        (map (fn [each-tense]
+               {:synsem {:sem {:tense 
+                               (keyword
+                                (string/replace each-tense ":" ""))}}})
+             tenses)
+
         debug (log/debug (str "lexical-specs as form params: " lexemes))
 
         lexical-specs 
@@ -792,12 +805,15 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
 
         debug (log/debug (str "filtered-specs: " filtered-specs))
 
+        debug (log/debug (str "tense-specs: " tense-specs))
+
         ;; TODO: remove duplicates.
         specs-as-json (map json/write-str
-                       (concat lexical-specs filtered-specs))
+                       (concat lexical-specs filtered-specs tense-specs))
 
         spec-array (if (and (empty? filtered-specs)
-                            (empty? lexical-specs))
+                            (empty? lexical-specs)
+                            (empty? tense-specs))
                      (str "ARRAY[]::jsonb[]")
                      (str "ARRAY['" 
                           (string/join "'::jsonb,'"
@@ -874,44 +890,18 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
     (html
      [:table {:class "striped padded"}
       [:tr
-       [:th {:style "width:9%"} 
-        (cond
-         (or group-to-edit group-to-delete)
-         "Cancel"
-         :else "")
-        ]
-
        [:th "Name"]
-       [:th "Members"]
+       [:th {:style "display:none"} "Members"]
 
        ]
       (map (fn [result]
              (let [group-id (:id result)]
                [:tr 
-                [:td
-                 (cond (not (or group-to-edit group-to-delete))
-                       [:div {:style "width:100%"}
-                        [:div.edit
-                         [:button 
-                          {:onclick (str "edit_group_dialog(" group-id ");")}
-                          "Edit"]]
-                        [:div.delete
-                         [:button
-                          {:onclick (str "document.location='/editor/group/delete/" group-id "';" )}
-                          "Delete"]]]
-                       
-                       (or (= group-to-edit group-id)
-                           (= group-to-delete group-id))
-                       [:a
-                        {:href "/editor"} "Cancel"]
-
-                     true "")]
-
-              [:td [:div.group (:name result)]]
-              [:td 
+              [:td [:div.group {:onclick (str "edit_group_dialog(" group-id ")")}  (:name result)]]
+              [:td {:style "display:none"}
                (let [get-array (.getArray (:any_of result))]
                  (if (not (empty? get-array))
-                   (str "<div class='anyof'>" 
+                   (str "<div class='anyof'>"
                         (string/join 
                          "</div><div class='anyof'>" 
                          (map #(let [edn-form (json-read-str  ;; Extensible Data Notation, i.e., a Clojure map.
@@ -958,7 +948,7 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
               
            results)]
      [:div.new
-      [:button {:onclick (str "document.location='/editor/group/new';")} "New Group"]
+      [:button {:onclick (str "document.location='/editor/group/new';")} "New List"]
       ]
 
      (let [results
@@ -1019,15 +1009,23 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
                               [{:name :tenses
                                 :type :checkboxes
                                 :cols 8
-                                :options [{:value "present"
+                                :options [
+                                          {:value ":conditional"
+                                           :label "Conditional"}
+
+                                          {:value ":present"
                                            :label "Present"}
-                                          {:value "future"
+
+                                          {:value ":futuro"
                                            :label "Future"}
-                                          {:value "past"
+
+                                          {:value ":past"
                                            :label "Past"}
-                                          {:value "imperfect"
+
+                                          {:value ":imperfect"
                                            :label "Imperfect"}
-                                          {:value "infinitive"
+
+                                          {:value ":infinitive"
                                            :label "Infinitive"}]}]
                               [])
 
@@ -1107,7 +1105,24 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
                                    (cons {:name (:group_name result)
                                           :new_spec ""
                                           :language language-short-name
-                                          ;; convert all specs that denote head lexemes (i.e. that are the form of [:head <language> <language>])
+                                          :tenses (let 
+                                                      [tenses (vec (remove nil?
+                                                                           (map #(let [path (vec (list (:synsem :sem :tense)))]
+                                                                                   (do
+                                                                                     (log/debug (str "THE SPEC IS: " %))
+                                                                                     (log/debug (str "THE TYPE OF THE PATH IS:"
+                                                                                                     (type (get-in % [:synsem :sem :tense] nil))))
+                                                                                     (log/debug (str "THE VALUE OF THE PATH IS:"
+                                                                                                     (get-in % [:synsem :sem :tense] nil)))
+
+                                                                                     (get-in % [:synsem :sem :tense] nil)))
+                                                                     specs)))]
+                                                    (log/debug (str "gathered tenses: " tenses))
+                                                    tenses)
+
+
+                                          ;; Convert all specs that denote head lexemes 
+                                          ;; (i.e. that are the form of [:head <language> <language>])
                                           ;; into checkbox tics.
                                           :lexemes (vec (remove nil?
                                                                 (map #(let [path [:head (keyword language-long-name) (keyword language-long-name)]]
@@ -1123,6 +1138,7 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
                                                        ]
                                                    val-edn
                                                    )})
+
                                               (if (not (empty? ad-hoc-specs))
                                                 (range 0 (.size ad-hoc-specs))
                                                 []))))
