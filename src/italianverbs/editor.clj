@@ -95,7 +95,9 @@
                            LEFT JOIN grouping AS source_groupings 
                                   ON source_groupings.id = ANY(source_groupings) 
                            LEFT JOIN grouping AS target_groupings 
-                                  ON target_groupings.id = ANY(target_groupings) GROUP BY game.id ORDER BY game.id"] :results)]
+                                  ON target_groupings.id = ANY(target_groupings) GROUP BY game.id ORDER BY game.id"]
+                            
+                            :results)]
     (html
 
      [:table {:class "striped padded"}
@@ -166,11 +168,18 @@
                   )
 
                 [:td
-                 (if (not (empty? (remove nil? (seq (.getArray (:target_groups result))))))
-                   (str "<div class='group targetgroup'>"
-                        (string/join "</div><div class='group targetgroup'>" (sort (.getArray (:target_groups result))))
-                        "</div>")
-                   [:i "No target-language groups."])]
+                 (let [id2name (zipmap
+                                (.getArray (:target_group_ids result))
+                                (.getArray (:target_groups result)))]
+                   (string/join ""
+                                (map (fn [target-group-index]
+                                       (html [:div {:class "group targetgroup"
+                                                    :onclick (str "edit_group_dialog('"
+                                                                  target-group-index
+                                                                  "')")}
+                                              (get id2name target-group-index)
+                                              ]))
+                                     (.getArray (:target_group_ids result)))))]
 
                 [:td 
                  (cond (= game-to-edit game-id)
@@ -898,33 +907,28 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
              (let [group-id (:id result)]
                [:tr 
               [:td [:div.group {:onclick (str "edit_group_dialog(" group-id ")")}  (:name result)]]
-              [:td {:style "display:none"}
-               (let [get-array (.getArray (:any_of result))]
-                 (if (not (empty? get-array))
-                   (str "<div class='anyof'>"
-                        (string/join 
-                         "</div><div class='anyof'>" 
-                         (map #(let [edn-form (json-read-str  ;; Extensible Data Notation, i.e., a Clojure map.
-                                               %)]
-                                 ;; TODO: do not enumerate languages explicitly here:
-                                 ;; use something like (get-head-lexeme-if-any edn-form)
-                                 (cond (not (nil? (get-in edn-form [:head :italiano :italiano] nil)))
-                                       (str "<i>" (get-in edn-form [:head :italiano :italiano]) "</i>")
-
-                                       (not (nil? (get-in edn-form [:head :english :english] nil)))
-                                       (str "<i>" (get-in edn-form [:head :english :english]) "</i>")
-
-                                       (not (nil? (get-in edn-form [:head :espanol :espanol] nil)))
-                                       (str "<i>" (get-in edn-form [:head :espanol :espanol]) "</i>")
-
-                                       (not (nil? (get-in edn-form [:synsem :sem :tense] nil)))
-                                       (str "<b>" (string/replace (get-in edn-form [:synsem :sem :tense]) ":" "") "</b>" )
-                                       
-                                       ;; else, just show edn form
-                                       :else
-                                       edn-form))
-                              (.getArray (:any_of result))))
-                        "</div>")))]
+              [:td
+               (string/join ","
+                            (map #(let [edn-form (json-read-str  ;; Extensible Data Notation, i.e., a Clojure map.
+                                                  %)]
+                                    ;; TODO: do not enumerate languages explicitly here:
+                                    ;; use something like (get-head-lexeme-if-any edn-form)
+                                    (cond (not (nil? (get-in edn-form [:head :italiano :italiano] nil)))
+                                          (str "<i>" (get-in edn-form [:head :italiano :italiano]) "</i>")
+                                          
+                                          (not (nil? (get-in edn-form [:head :english :english] nil)))
+                                          (str "<i>" (get-in edn-form [:head :english :english]) "</i>")
+                                          
+                                          (not (nil? (get-in edn-form [:head :espanol :espanol] nil)))
+                                          (str "<i>" (get-in edn-form [:head :espanol :espanol]) "</i>")
+                                          
+                                          (not (nil? (get-in edn-form [:synsem :sem :tense] nil)))
+                                          (str "<b>" (string/replace (get-in edn-form [:synsem :sem :tense]) ":" "") "</b>" )
+                                              
+                                          ;; else, just show edn form
+                                          :else
+                                          edn-form))
+                                 (.getArray (:any_of result))))]
 
                 [:td 
                  (cond (= group-to-edit group-id)
@@ -968,7 +972,7 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
 
                     ;; filter out non-ad-hoc specs: specs that either specify a head-lexeme 
                     ;; (e.g. {:head {:italiano {:italiano "andare"}}})
-                    ;; or a tense (TODO).
+                    ;; or a tense (e.g. {:synsem {:sem {:tense :futuro}}})
                     ad-hoc-specs 
                     (filter
                      #(let [the-keys (seq (keys %))
@@ -1004,7 +1008,7 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
                             ;; fixed fields:
                             [{:name :name :size 50 :label "Name"}]
                             
-                            (if (= language-short-name "(none detected)")
+                            (if (re-find #"tense" (string/lower-case (:group_name result)))
                               ;; standard fields, part 1: tenses
                               [{:name :tenses
                                 :type :checkboxes
