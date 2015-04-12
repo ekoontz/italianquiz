@@ -266,7 +266,19 @@
                    :validations [[:required [:name]   
                                   :action "/editor"
                                   :method "post"
-                                  :problems problems]]})]
+                                  :problems problems]]})
+
+                 [:hr]
+                 [:div {:style "width:100%;background:lightsalmon;float:left;padding:0.25em"}
+                  [:h4 "Delete game"]
+
+                  [:div {:style "float:right"}
+                  [:form
+                   {:method "POST"
+                    :action (str "/editor/game/delete/" game-id)}
+                   [:button.confirm_delete {:onclick (str "submit();")} "Delete Game"]]]
+                  ]
+                 ]
                 ))
             results))
      )))
@@ -1086,7 +1098,7 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
                               :label "New Spec:"
                               :type :textarea
                               :rows 3
-                              :cols 80}]
+                              :cols 60}]
                             )
 
                    :cancel-href "/editor"
@@ -1137,7 +1149,9 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
                    :validations [[:required [:name]   
                                   :action "/editor"
                                   :method "post"
-                                  :problems problems]]})]))
+                                  :problems problems]]})
+                 ]))
+
             results)))
 
 ;; shortnames: 'en','es','it', ..
