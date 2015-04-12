@@ -131,34 +131,35 @@
                 [:td (unabbrev (:target result))]
 
                 (if show-source-lists
-                  [:td 
 
-                   (if (not (empty? (remove nil? (seq (.getArray (:source_groups result))))))
-                     (str 
-                      ;; TODO: Make lists clickable
-;;              [:td [:div.group {:onclick (str "edit_group_dialog(" group-id ")")}  (:name result)]]
-
-                      "<div class='group sourcegroup'>"
-                      (string/join "</div><div class='group sourcegroup'>" (sort (.getArray (:source_groups result))))
-                      "</div>")
-                     [:i "No source-language groups."])
-                   
-                   ]
-                  )
+                 (let [id2name (zipmap
+                                (.getArray (:source_group_ids result))
+                                (.getArray (:source_groups result)))]
+                   (string/join ""
+                                (map (fn [group-index]
+                                       (html [:div {:class "group sourcegroup"
+                                                    :onclick (str "edit_group_dialog('"
+                                                                  group-index
+                                                                  "')")}
+                                              (get id2name group-index)
+                                              ]))
+                                     (.getArray (:source_group_ids result))))))
 
                 [:td
-                 (let [id2name (zipmap
+                 (let [debug (log/debug (str "target groups for: " (:game_name result) " : " (.getArray (:target_groups result))))
+                       id2name (zipmap
                                 (.getArray (:target_group_ids result))
-                                (.getArray (:target_groups result)))]
+                                (.getArray (:target_groups result)))
+                       debug (log/debug (str "id2name: " id2name))]
                    (string/join ""
-                                (map (fn [target-group-index]
+                                (map (fn [group-index]
                                        (html [:div {:class "group targetgroup"
                                                     :onclick (str "edit_group_dialog('"
-                                                                  target-group-index
+                                                                  group-index
                                                                   "')")}
-                                              (get id2name target-group-index)
+                                              (get id2name group-index)
                                               ]))
-                                     (.getArray (:target_group_ids result)))))]
+                                     (remove nil? (.getArray (:target_group_ids result))))))]
 
                 [:td 
                  (cond (= game-to-edit game-id)
@@ -269,7 +270,7 @@
                                   :problems problems]]})
 
                  [:hr]
-                 [:div {:style "width:100%;background:lightsalmon;float:left;padding:0.25em"}
+                 [:div {:style "width:100%;background:lightsalmon;float:left;padding:0.5em"}
                   [:h4 "Delete game"]
 
                   [:div {:style "float:right"}

@@ -91,7 +91,6 @@ table.padded th,td {
 }
 
 div.anyof {
-/*    font-family:monospace;*/
     -moz-border-radius:5px;
     -webkit-border-radius:5px;
     border-radius:5px;
@@ -105,18 +104,21 @@ div.anyof {
 }
 
 div.edit_game {
-/*    font-family:monospace;*/
     -moz-border-radius:5px;
     -webkit-border-radius:5px;
     border-radius:5px;
     border:1px solid #18ab29;
     float:left;
-    background:ivory;
+    background:#fffff0;
     padding:0.25em;
     width:auto;
     margin-right:1em;
     text-align:center;
     margin-bottom:0.25em;
+}
+
+div.edit_game:hover {
+    background:#e9ecae;
 }
 
 div.sourcegroup {
@@ -135,6 +137,10 @@ div.group {
     background:lightblue;
     padding:0.5em;
     margin-right:1em;
+}
+
+div.group:hover {
+    background:#e9ecae;
 }
 
 .new {
