@@ -536,23 +536,23 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
    (POST "/game/edit/:game-to-edit" request
          (do (log/debug (str "Doing POST /game/edit/:game-to-edit with request: " request))
              (is-admin (update-game (:game-to-edit (:route-params request))
-                                    (:params request)))))
+                                    (:multipart-params request)))))
 
    (POST "/group/edit/:group-to-edit" request
          (is-admin (update-group (:group-to-edit (:route-params request))
-                                 (:params request))))
+                                 (:multipart-params request))))
 
    (POST "/game/new" request
          (is-admin
           (do
             ;; Defaults: source language=English.
-            (insert-game (:name (:params request)) "en" (:language (:params request)) [] [])
-            {:status 302 :headers {"Location" (str "/editor/" (:language (:params request)))}})))
+            (insert-game (:name (:multipart-params request)) "en" (:language (:multipart-params request)) [] [])
+            {:status 302 :headers {"Location" (str "/editor/" (:language (:multipart-params request)))}})))
 
    (POST "/group/new" request
         (is-admin
          (do
-           (insert-grouping (:name (:params request)) [{}])
+           (insert-grouping (:name (:multipart-params request)) [{}])
            {:status 302 :headers {"Location" "/editor"}})))
 
    ;; which game(s) will be active (more than one are possible).
