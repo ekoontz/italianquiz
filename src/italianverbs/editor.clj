@@ -45,13 +45,15 @@
                        game-to-edit :game-to-edit
                        group-to-edit :group-to-edit
                        group-to-delete :group-to-delete
+                       language :language
                        message :message} ]]
   (let [show-groups-table true]
     (html
      [:div.user-alert message]
    
-     [:div.section [:h3 "Games"]
+     [:div.section [:h3 (str "Games")]
       (show-games {:game-to-delete game-to-delete
+                   :language language
                    :game-to-edit game-to-edit})
       ]
 
@@ -59,8 +61,8 @@
        [:div.section
         [:h3 "Lists"]
         (show-groups {:group-to-delete game-to-delete
-                      :group-to-edit game-to-edit})
-        ]
+                      :group-to-edit game-to-edit
+                      :language language})]
        ;; else, just show the hidden forms, that are made visible
        ;; if the user clicks on a group within a game.
        (show-group-edit-forms)))))
@@ -85,12 +87,14 @@
 
 (defn show-games [ & [ {game-to-edit :game-to-edit
                         game-to-delete :game-to-delete
-                        name-of-game :name-of-game} ]]
+                        name-of-game :name-of-game
+                        language :language} ]]
   (let [show-source-lists false
         game-to-edit (if game-to-edit (Integer. game-to-edit))
         game-to-delete (if game-to-delete (Integer. game-to-delete))
-        results (k/exec-raw [
-                             "SELECT game.name AS game_name,game.id AS id,
+        language (if language language "")
+        debug (log/debug (str "THE LANGUAGE IS: " language))
+        sql "SELECT game.name AS game_name,game.id AS id,
                                      source,target,
                                      uniq(array_agg(source_groupings.name)) AS source_groups,
                                      uniq(array_agg(source_groupings.id)) AS source_group_ids,
@@ -100,8 +104,14 @@
                            LEFT JOIN grouping AS source_groupings 
                                   ON source_groupings.id = ANY(source_groupings) 
                            LEFT JOIN grouping AS target_groupings 
-                                  ON target_groupings.id = ANY(target_groupings) GROUP BY game.id ORDER BY game.id"]
-                            
+                                  ON target_groupings.id = ANY(target_groupings)
+                               WHERE ((game.target = ?) OR (? = ''))
+                            GROUP BY game.id 
+                            ORDER BY game.name"
+        debug (log/debug (str "GAME-CHOOSING LANGUAGE: " language))
+        debug (log/debug (str "GAME-CHOOSING SQL: " sql))
+        results (k/exec-raw [sql
+                             [language language] ]
                             :results)]
     (html
 
@@ -187,7 +197,8 @@
       [:form {:method "POST"
               :action "/editor/game/new"}
        
-       [:input {:name "name"} ]
+       [:input {:name "name" :size "50"} ]
+       [:input {:type "hidden" :name "language" :value language} ]
 
        [:button {:onclick "submit();"} "New Game"]
        ]]
@@ -474,6 +485,15 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
         (is-admin
          {:status 302
           :headers {"Location" "/editor"}}))
+
+   ;; language-specific: show only games and lists appropriate to a given language
+   (GET "/:language" request
+        (is-admin {:body (body (str "Editor: " (short-language-name-to-long (:language (:route-params request))))
+                               (home-page (conj request
+                                                {:language (:language (:route-params request))}))
+                               request)
+                   :status 200
+                   :headers headers}))
   
    (POST "/create" request
          (is-admin (create request)))
@@ -521,9 +541,9 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
    (POST "/game/new" request
          (is-admin
           (do
-            ;; Defaults: source language=English, target language=Italian.
-            (insert-game (:name (:params request)) "en" "it" [] [])
-            {:status 302 :headers {"Location" "/editor"}})))
+            ;; Defaults: source language=English.
+            (insert-game (:name (:params request)) "en" (:language (:params request)) [] [])
+            {:status 302 :headers {"Location" (str "/editor/" (:language (:params request)))}})))
 
    (POST "/group/new" request
         (is-admin
@@ -533,7 +553,9 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
 
    ;; which game(s) will be active (more than one are possible).
    (POST "/use" request
-         (is-admin (set-as-default request)))))
+         (is-admin (set-as-default request)))
+
+))
 
 (def all-inflections
   (map #(string/replace-first (str %) ":" "")
@@ -561,16 +583,33 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
                                            ON games_to_use.game = games.id")] :results))))
 
 (defn body [title content request]
-  (html/page 
-   title
-   (html
-    [:div {:class "major"}
-     [:h2 "Game Editor"]
-     content])
-   request
-   {:css "/css/editor.css"
-    :jss ["/js/editor.js" "/js/gen.js"]
-    :onload (onload)}))
+  (let [language (:language (:route-params request))]
+    (html/page 
+     title
+     (html
+      [:div {:class "major"}
+       [:h2 "Game Editor"]
+       [:div {:style "margin-left:0.5em;float:left;width:auto"}
+        "Show games for:"
+        [:div {:style "float:right;padding-left:1em;width:auto;"}
+         [:form {:method "get"}
+          [:select#edit_which_language {:name "language" :onchange (str "document.location='/editor/' + this.value")}
+           (map (fn [lang-pair]
+                  (let [label (:label lang-pair)
+                        value (:value lang-pair)]
+                    [:option (conj {:value value}
+                                   (if (= language (:value lang-pair))
+                                     {:selected "selected"}
+                                     {}))
+                     label]))
+                [{:value "" :label "All Languages"}
+                 {:value "es" :label "Español"}
+                 {:value "it" :label "Italiano"}])]]]]
+      content])
+     request
+     {:css "/css/editor.css"
+      :jss ["/js/editor.js" "/js/gen.js"]
+      :onload (onload)})))
 
 ;; TODO: consider using https://github.com/jkk/honeysql:
 ;; "SQL as Clojure data structures. Build queries programmatically -- even at runtime -- without having to bash strings together."
@@ -950,7 +989,7 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
       [:form {:method "POST"
               :action "/editor/group/new"}
        
-       [:input {:name "name"} ]
+       [:input {:name "name" :size "50"} ]
 
        [:button {:onclick "submit();"} "New List"]
        ]]
@@ -1116,10 +1155,10 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
                                                       [tenses (vec (remove nil?
                                                                            (map #(let [path (vec (list (:synsem :sem :tense)))]
                                                                                    (do
-                                                                                     (log/debug (str "THE SPEC IS: " %))
-                                                                                     (log/debug (str "THE TYPE OF THE PATH IS:"
+                                                                                     (log/trace (str "THE SPEC IS: " %))
+                                                                                     (log/trace (str "THE TYPE OF THE PATH IS:"
                                                                                                      (type (get-in % [:synsem :sem :tense] nil))))
-                                                                                     (log/debug (str "THE VALUE OF THE PATH IS:"
+                                                                                     (log/trace (str "THE VALUE OF THE PATH IS:"
                                                                                                      (get-in % [:synsem :sem :tense] nil)))
 
                                                                                      (get-in % [:synsem :sem :tense] nil)))
