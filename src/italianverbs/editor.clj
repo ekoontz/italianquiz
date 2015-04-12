@@ -220,7 +220,9 @@
                                     [])
                     target-group-ids (:target_group_ids result)
                     target-groups (if target-group-ids
-                                    (vec (map str (remove nil? (.getArray (:target_group_ids result)))))
+                                    (vec (map str (remove #(or (nil? %)
+                                                               (= "" (string/trim (str %))))
+                                                          (.getArray (:target_group_ids result)))))
                                     [])
                     debug (log/debug (str "SOURCE GROUPS: " source-groups))
                     debug (log/debug (str "TARGET GROUPS: " target-groups))
@@ -532,7 +534,7 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
 
    (POST "/game/edit/:game-to-edit" request
          (is-admin (update-game (:game-to-edit (:route-params request))
-                              (:params request))))
+                                (:params request))))
 
    (POST "/group/edit/:group-to-edit" request
          (is-admin (update-group (:group-to-edit (:route-params request))
@@ -1170,8 +1172,11 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
                                           ;; Convert all specs that denote head lexemes 
                                           ;; (i.e. that are the form of [:head <language> <language>])
                                           ;; into checkbox tics.
-                                          :lexemes (vec (remove nil?
-                                                                (map #(let [path [:head (keyword language-long-name) (keyword language-long-name)]]
+                                          :lexemes (vec (remove #(or (nil? %)
+                                                                     (= "" %))
+                                                                (map #(let [path [:head (keyword language-long-name) (keyword language-long-name)]
+                                                                            debug (log/debug (str "CHECKBOX TICK: ["
+                                                                                                  (get-in % path nil) "]"))]
                                                                         (get-in % path nil))
                                                                      specs)))
                                           }
@@ -1292,4 +1297,3 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
 
 (defn unabbrev [lang]
   (short-language-name-to-long lang))
-
