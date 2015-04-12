@@ -534,8 +534,9 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
          (is-admin (delete-group (:group-to-delete (:route-params request)))))
 
    (POST "/game/edit/:game-to-edit" request
-         (is-admin (update-game (:game-to-edit (:route-params request))
-                                (:params request))))
+         (do (log/debug (str "Doing POST /game/edit/:game-to-edit with request: " request))
+             (is-admin (update-game (:game-to-edit (:route-params request))
+                                    (:params request)))))
 
    (POST "/group/edit/:group-to-edit" request
          (is-admin (update-group (:group-to-edit (:route-params request))
