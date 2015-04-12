@@ -269,10 +269,10 @@
                                      ;                {:value (:id grouping)
                                      ;                 :label (:name grouping)})
                                      ;              all-groups)
-                                     :options [{:value "foo"
+                                     :options [{:value "123"
                                                 :label "foo"
                                                 }
-                                               {:value "bar"
+                                               {:value "456"
                                                 :label "bar"}]
                                      }
                                     ]
