@@ -533,14 +533,6 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
    (POST "/group/delete/:group-to-delete" request
          (is-admin (delete-group (:group-to-delete (:route-params request)))))
 
-   (GET "/game/edit/:game-to-edit" request
-        (let [game-to-edit (:game-to-edit (:route-params request))]
-          (is-admin {:body (body (str "Editor: Editing game: " game-to-edit)
-                                 (home-page {:game-to-edit game-to-edit}) 
-                                 request)
-                     :status 200
-                     :headers headers})))
-
    (POST "/game/edit/:game-to-edit" request
          (is-admin (update-game (:game-to-edit (:route-params request))
                                 (:params request))))
