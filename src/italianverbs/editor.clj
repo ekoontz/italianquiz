@@ -265,15 +265,15 @@
                                               "Lists")
                                      :type :checkboxes
                                      :cols 3
-                                     ;:options (map (fn [grouping]
-                                     ;                {:value (:id grouping)
-                                     ;                 :label (:name grouping)})
-                                     ;              all-groups)
-                                     :options [{:value "123"
-                                                :label "foo"
-                                                }
-                                               {:value "456"
-                                                :label "bar"}]
+                                     :options (map (fn [grouping]
+                                                     {:value (:id grouping)
+                                                      :label (:name grouping)})
+                                                   all-groups)
+;                                     :options [{:value "123"
+;                                                :label "foo"
+;                                                }
+;                                               {:value "456"
+;                                                :label "bar"}]
                                      }
                                     ]
                                    )
@@ -739,6 +739,9 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
 
 (defn update-game [game-id params]
   (log/debug (str "UPDATING GAME WITH PARAMS: " params))
+  (log/debug (str "UPDATING GAME WITH PARAM KEYS: " (keys params)))
+  (log/debug (str "UPDATING GAME WITH PARAM VALS: " (vals params)))
+  (log/debug (str "UPDATING GAME WITH TARGET_GROUPINGS: " (:target_groupings params)))
   (let [game-id game-id
         source-grouping-set (if (string? (:source_groupings params))
                               (do (log/warn (str "source_groupings is unexpectedly a string:"
@@ -759,12 +762,13 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
         debug (log/debug (str "edit: target-groupings(1):" target-grouping-set))
 
         ;; cleanup
-        source-grouping-set (vec (map #(do (log/debug (str "update-game: trying to parse:" %))
+        source-grouping-set (vec (map #(do (log/debug (str "update-game: trying to parse source-grouping-set:" %))
                                            (Integer/parseInt %))
                                       (remove #(= "" %)
                                               source-grouping-set)))
         
-        target-grouping-set (vec (map #(Integer/parseInt %)
+        target-grouping-set (vec (map #(do (log/debug (str "update-game: trying to parse target-grouping-set:" %))
+                                           (Integer/parseInt %))
                                       (remove #(= "" %)
                                               target-grouping-set)))
                                  
