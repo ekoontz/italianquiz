@@ -739,9 +739,13 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
 
 (defn update-game [game-id params]
   (log/debug (str "UPDATING GAME WITH PARAMS: " params))
+  (log/debug (str "UPDATING GAME WITH PARAMS (convert to keywords)" (zipmap (map #(keyword %)
+                                                                                 (keys params))
+                                                                            (vals params))))
+                                                                                 
   (log/debug (str "UPDATING GAME WITH PARAM KEYS: " (keys params)))
   (log/debug (str "UPDATING GAME WITH PARAM VALS: " (vals params)))
-  (log/debug (str "UPDATING GAME WITH TARGET_GROUPINGS: " (:target_groupings params)))
+  (log/debug (str "UPDATING GAME WITH TARGET_GROUPINGS: " (get params "target_groupings")))
   (let [game-id game-id
         source-grouping-set (if (string? (:source_groupings params))
                               (do (log/warn (str "source_groupings is unexpectedly a string:"
