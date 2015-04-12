@@ -22,6 +22,7 @@
    [korma.core :as k]
 ))
 
+(declare show-group-edit-forms)
 (declare show-games)
 (declare show-groups)
 (declare unabbrev)
@@ -181,10 +182,14 @@
                 
            results)]
 
-     ;; TODO: should be a POST (form submit), not a GET.
      [:div.new
-      [:button {:onclick (str "document.location='/editor/game/new';")} "New Game"]
-      ]
+      [:form {:method "POST"
+              :action "/editor/game/new"}
+       
+       [:input {:name "name"} ]
+
+       [:button {:onclick "submit();"} "New Game"]
+       ]]
      
      (let [all-groups
            (k/exec-raw ["SELECT id,name FROM grouping"] :results)]
@@ -501,13 +506,12 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
          (is-admin (update-group (:group-to-edit (:route-params request))
                                  (:params request))))
 
-   ;; TODO: should be a POST
-   (GET "/game/new" request
-        (do
-          ;; Defaults: source language=English, target language=Italian.
-          (insert-game "untitled" "en" "it" [] [])
-          (is-admin {:status 302
-                     :headers {"Location" "/editor"}})))
+   (POST "/game/new" request
+         (is-admin
+          (do
+            ;; Defaults: source language=English, target language=Italian.
+            (insert-game (:name (:params request)) "en" "it" [] [])
+            {:status 302 :headers {"Location" "/editor"}})))
 
    (GET "/group/new" request
         (is-admin
@@ -866,7 +870,6 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
 
 ;; sqlnames: 'english','espanol' <- note: no accent on 'n' ,'italiano', ..
 (declare sqlname-from-match)
-(declare show-group-edit-forms)
 
 (defn show-groups [ & [{group-to-edit :group-to-edit
                         group-to-delete :group-to-delete
