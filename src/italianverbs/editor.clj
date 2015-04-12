@@ -46,7 +46,7 @@
                        group-to-edit :group-to-edit
                        group-to-delete :group-to-delete
                        message :message} ]]
-  (let [show-groups-table false]
+  (let [show-groups-table true]
     (html
      [:div.user-alert message]
    
@@ -57,7 +57,7 @@
 
      (if show-groups-table
        [:div.section
-        [:h3 "Groups"]
+        [:h3 "Lists"]
         (show-groups {:group-to-delete game-to-delete
                       :group-to-edit game-to-edit})
         ]
@@ -146,11 +146,11 @@
                                      (.getArray (:source_group_ids result))))))
 
                 [:td
-                 (let [debug (log/debug (str "target groups for: " (:game_name result) " : " (.getArray (:target_groups result))))
+                 (let [debug (log/trace (str "target groups for: " (:game_name result) " : " (.getArray (:target_groups result))))
                        id2name (zipmap
                                 (.getArray (:target_group_ids result))
                                 (.getArray (:target_groups result)))
-                       debug (log/debug (str "id2name: " id2name))]
+                       debug (log/trace (str "id2name: " id2name))]
                    (string/join ""
                                 (map (fn [group-index]
                                        (html [:div {:class "group targetgroup"
@@ -183,7 +183,7 @@
                 
            results)]
 
-     [:div.new
+     [:div.new {:style "float:left;width:45%;text-align:left"}
       [:form {:method "POST"
               :action "/editor/game/new"}
        
@@ -191,7 +191,7 @@
 
        [:button {:onclick "submit();"} "New Game"]
        ]]
-     
+
      (let [all-groups
            (k/exec-raw ["SELECT id,name FROM grouping"] :results)]
 
@@ -526,12 +526,11 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
             (insert-game (:name (:params request)) "en" "it" [] [])
             {:status 302 :headers {"Location" "/editor"}})))
 
-   (GET "/group/new" request
+   (POST "/group/new" request
         (is-admin
          (do
-           (insert-grouping "untitled" [{}])
-           {:status 302
-            :headers {"Location" "/editor"}})))
+           (insert-grouping (:name (:params request)) [{}])
+           {:status 302 :headers {"Location" "/editor"}})))
 
    ;; which game(s) will be active (more than one are possible).
    (POST "/use" request
@@ -895,37 +894,37 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
     (html
      [:table {:class "striped padded"}
       [:tr
-       [:th "Name"]
-       [:th {:style "display:none"} "Members"]
+       [:th {:style "width:20%"} "Name"]
+       [:th {:style "width:80%"} "Members"]
 
        ]
       (map (fn [result]
              (let [group-id (:id result)]
                [:tr 
-              [:td [:div.group {:onclick (str "edit_group_dialog(" group-id ")")}  (:name result)]]
-              [:td
-               (string/join ", "
-                            (map #(let [edn-form (json-read-str  ;; Extensible Data Notation, i.e., a Clojure map.
-                                                  %)]
-                                    ;; TODO: do not enumerate languages explicitly here:
-                                    ;; use something like (get-head-lexeme-if-any edn-form)
-                                    (cond (not (nil? (get-in edn-form [:head :italiano :italiano] nil)))
-                                          (str "<i>" (get-in edn-form [:head :italiano :italiano]) "</i>")
-                                          
-                                          (not (nil? (get-in edn-form [:head :english :english] nil)))
-                                          (str "<i>" (get-in edn-form [:head :english :english]) "</i>")
-                                          
-                                          (not (nil? (get-in edn-form [:head :espanol :espanol] nil)))
-                                          (str "<i>" (get-in edn-form [:head :espanol :espanol]) "</i>")
-                                          
-                                          (not (nil? (get-in edn-form [:synsem :sem :tense] nil)))
-                                          (str "<b>" (string/replace (get-in edn-form [:synsem :sem :tense]) ":" "") "</b>" )
-                                              
-                                          ;; else, just show edn form
-                                          :else
-                                          edn-form))
-                                 (.getArray (:any_of result))))]
-
+                [:td [:div.group {:onclick (str "edit_group_dialog(" group-id ")")}  (:name result)]]
+                [:td
+                 (string/join ", "
+                              (map #(let [edn-form (json-read-str  ;; Extensible Data Notation, i.e., a Clojure map.
+                                                    %)]
+                                      ;; TODO: do not enumerate languages explicitly here:
+                                      ;; use something like (get-head-lexeme-if-any edn-form)
+                                      (cond (not (nil? (get-in edn-form [:head :italiano :italiano] nil)))
+                                            (str "<i>" (get-in edn-form [:head :italiano :italiano]) "</i>")
+                                            
+                                            (not (nil? (get-in edn-form [:head :english :english] nil)))
+                                            (str "<i>" (get-in edn-form [:head :english :english]) "</i>")
+                                            
+                                            (not (nil? (get-in edn-form [:head :espanol :espanol] nil)))
+                                            (str "<i>" (get-in edn-form [:head :espanol :espanol]) "</i>")
+                                            
+                                            (not (nil? (get-in edn-form [:synsem :sem :tense] nil)))
+                                            (str "<b>" (string/replace (get-in edn-form [:synsem :sem :tense]) ":" "") "</b>" )
+                                            
+                                            ;; else, just show edn form
+                                            :else
+                                            edn-form))
+                                   (.getArray (:any_of result))))]
+                
                 [:td 
                  (cond (= group-to-edit group-id)
                        [:div
@@ -947,9 +946,15 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
                        "")]]))
               
            results)]
-     [:div.new
-      [:button {:onclick (str "document.location='/editor/group/new';")} "New List"]
-      ]
+
+     [:div.new {:style "float:left;width:45%;text-align:left"}
+      [:form {:method "POST"
+              :action "/editor/group/new"}
+       
+       [:input {:name "name"} ]
+
+       [:button {:onclick "submit();"} "New List"]
+       ]]
 
      (show-group-edit-forms))))
 
@@ -975,8 +980,8 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
                     ad-hoc-specs 
                     (filter
                      #(let [the-keys (seq (keys %))
-                            debug (log/debug (str "CHECKING FOR BEING AD-HOC: " %))
-                            debug (log/debug (str "CHECKING FOR BEING AD-HOC: " (empty? (seq (keys %)))))]
+                            debug (log/trace (str "CHECKING FOR BEING AD-HOC: " %))
+                            debug (log/trace (str "CHECKING FOR BEING AD-HOC: " (empty? (seq (keys %)))))]
                         (and (not (empty? (seq (keys %))))
                              (map? %)
                              (or (and (nil? (get-in % [:head language-keyword language-keyword] nil))
@@ -989,8 +994,8 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
                                       (not (string? (get-in % [:head language-keyword language-keyword] nil)))))))
                      specs)
 
-                    debug (log/debug (str "type of ad-hoc-specs: " (type ad-hoc-specs)))
-                    debug (log/debug (str "size of ad-hoc-specs: " (.size ad-hoc-specs)))
+                    debug (log/trace (str "type of ad-hoc-specs: " (type ad-hoc-specs)))
+                    debug (log/trace (str "size of ad-hoc-specs: " (.size ad-hoc-specs)))
                     debug (log/debug (str "ad-hoc-specs: " (string/join ";" ad-hoc-specs)))
 
                     ]
