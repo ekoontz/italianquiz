@@ -22,6 +22,105 @@
    [korma.core :as k]
 ))
 
+(declare body)
+(declare delete-game)
+(declare delete-group)
+(declare headers)
+(declare home-page)
+(declare insert-game)
+(declare insert-grouping)
+(declare multipart-to-edn)
+(declare set-as-default)
+(declare short-language-name-to-long)
+(declare shortname-from-match)
+(declare update-game)
+(declare update-group)
+
+(def routes
+  (compojure/routes
+   (GET "/" request
+        (is-admin {:body (body "Editor: Top-level" (home-page request) request)
+                   :status 200
+                   :headers headers}))
+
+   ;; alias for '/editor' (above)
+   (GET "/home" request
+        (is-admin
+         {:status 302
+          :headers {"Location" "/editor"}}))
+
+   ;; language-specific: show only games and lists appropriate to a given language
+   (GET "/:language" request
+        (is-admin {:body (body (str "Editor: " (short-language-name-to-long (:language (:route-params request))))
+                               (home-page (conj request
+                                                {:language (:language (:route-params request))}))
+                               request)
+                   :status 200
+                   :headers headers}))
+
+   (GET "/game/delete/:game-to-delete" request
+        (is-admin
+         (let [game-to-delete (:game-to-delete (:route-params request))]
+           {:body (body (str "Editor: Confirm: delete game: " game-to-delete)
+                        (home-page {:game-to-delete game-to-delete}) 
+                        request)
+            :status 200
+            :headers headers})))
+
+   (GET "/group/delete/:group-to-delete" request
+        (is-admin
+         (let [group-to-delete (:group-to-delete (:route-params request))]
+           {:body (body (str "Editor: Confirm: delete group: " group-to-delete)
+                        (home-page {:group-to-delete group-to-delete})
+                        request)
+            :status 200
+            :headers headers})))
+
+   (POST "/game/delete/:game-to-delete" request
+         (is-admin (delete-game (:game-to-delete (:route-params request)))))
+
+   (POST "/group/delete/:group-to-delete" request
+         (is-admin (delete-group (:group-to-delete (:route-params request)))))
+
+   (POST "/game/edit/:game-to-edit" request
+         (do (log/debug (str "Doing POST /game/edit/:game-to-edit with request: " request))
+             (is-admin (update-game (:game-to-edit (:route-params request))
+                                    (multipart-to-edn (:multipart-params request))))))
+
+   (POST "/group/edit/:group-to-edit" request
+         (is-admin (update-group (:group-to-edit (:route-params request))
+                                 (multipart-to-edn (:multipart-params request)))))
+
+   (POST "/game/new" request
+         (is-admin
+          (let [params (multipart-to-edn (:multipart-params request))
+                language (cond (and (:language params)
+                                    (not (= (string/trim (:language params)) "")))
+                               (:language params)
+
+                               true
+                               (do (log/debug (str "POST /game/new: trying to guess language from game's name: " (:name params)))
+                                   (let [result (shortname-from-match (:name params))]
+                                     (log/debug (str "guess was: " result))
+                                     result)))]
+            ;; Defaults: source language=English.
+            (insert-game (:name params) "en" language
+                         (:source_groupings params)
+                         (:target_groupings params))
+            {:status 302 :headers {"Location" (str "/editor/" language)}})))
+
+   (POST "/group/new" request
+        (is-admin
+         (let [params (multipart-to-edn (:multipart-params request))
+               language (if (:language params) (:language params) "")]
+           (insert-grouping (:name params) [])
+           {:status 302 :headers {"Location" (str "/editor/" language)}})))
+
+   ;; which game(s) will be active (more than one are possible).
+   (POST "/use" request
+         (is-admin (set-as-default request)))))
+
+
 (defn multipart-to-edn [params]
   (log/debug (str "multipart-to-edn input: " params))
   (let [output
@@ -33,6 +132,8 @@
     (log/debug (str "multipart-to-edn output: " output))
     output))
 
+
+(def headers {"Content-Type" "text/html;charset=utf-8"})
 
 (declare show-group-edit-forms)
 (declare show-games)
@@ -205,8 +306,8 @@
                 
            results)]
 
-     [:div.new {:style "float:left;width:45%;text-align:left"}
-      [:form {:method "POST"
+     [:div.new {:style "float:left;width:100%;text-align:left"}
+      [:form {:method "post"
               :enctype "multipart/form-data"
               :action "/editor/game/new"}
        
@@ -306,7 +407,7 @@
 
                   [:div {:style "float:right"}
                   [:form
-                   {:method "POST"
+                   {:method "post"
                     :action (str "/editor/game/delete/" game-id)}
                    [:button.confirm_delete {:onclick (str "submit();")} "Delete Game"]]]
                   ]
@@ -495,85 +596,6 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
                                 (list (json-read-str (:source_grouping result)))
                                 (list (json-read-str (:target_grouping result)))))
              results)]))))
-
-(def headers {"Content-Type" "text/html;charset=utf-8"})
-
-(def routes
-  (compojure/routes
-   (GET "/" request
-        (is-admin {:body (body "Editor: Top-level" (home-page request) request)
-                   :status 200
-                   :headers headers}))
-
-   ;; alias for '/editor' (above)
-   (GET "/home" request
-        (is-admin
-         {:status 302
-          :headers {"Location" "/editor"}}))
-
-   ;; language-specific: show only games and lists appropriate to a given language
-   (GET "/:language" request
-        (is-admin {:body (body (str "Editor: " (short-language-name-to-long (:language (:route-params request))))
-                               (home-page (conj request
-                                                {:language (:language (:route-params request))}))
-                               request)
-                   :status 200
-                   :headers headers}))
-  
-   (POST "/create" request
-         (is-admin (create request)))
-
-   (GET "/game/delete/:game-to-delete" request
-        (is-admin
-         (let [game-to-delete (:game-to-delete (:route-params request))]
-           {:body (body (str "Editor: Confirm: delete game: " game-to-delete)
-                        (home-page {:game-to-delete game-to-delete}) 
-                        request)
-            :status 200
-            :headers headers})))
-
-   (GET "/group/delete/:group-to-delete" request
-        (is-admin
-         (let [group-to-delete (:group-to-delete (:route-params request))]
-           {:body (body (str "Editor: Confirm: delete group: " group-to-delete)
-                        (home-page {:group-to-delete group-to-delete})
-                        request)
-            :status 200
-            :headers headers})))
-
-   (POST "/game/delete/:game-to-delete" request
-         (is-admin (delete-game (:game-to-delete (:route-params request)))))
-
-   (POST "/group/delete/:group-to-delete" request
-         (is-admin (delete-group (:group-to-delete (:route-params request)))))
-
-   (POST "/game/edit/:game-to-edit" request
-         (do (log/debug (str "Doing POST /game/edit/:game-to-edit with request: " request))
-             (is-admin (update-game (:game-to-edit (:route-params request))
-                                    (multipart-to-edn (:multipart-params request))))))
-
-   (POST "/group/edit/:group-to-edit" request
-         (is-admin (update-group (:group-to-edit (:route-params request))
-                                 (multipart-to-edn (:multipart-params request)))))
-
-   (POST "/game/new" request
-         (is-admin
-          (let [params (multipart-to-edn (:multipart-params request))]
-            ;; Defaults: source language=English.
-            (insert-game (:name params) "en" (:language params)
-                         (:source_groupings params)
-                         (:target_groupings params))
-            {:status 302 :headers {"Location" (str "/editor/" (:language params))}})))
-
-   (POST "/group/new" request
-        (is-admin
-         (let [params (multipart-to-edn (:multipart-params request))]
-           (insert-grouping (:name params) [])
-           {:status 302 :headers {"Location" "/editor"}})))
-
-   ;; which game(s) will be active (more than one are possible).
-   (POST "/use" request
-         (is-admin (set-as-default request)))))
 
 (def all-inflections
   (map #(string/replace-first (str %) ":" "")
