@@ -93,7 +93,7 @@
         game-to-edit (if game-to-edit (Integer. game-to-edit))
         game-to-delete (if game-to-delete (Integer. game-to-delete))
         language (if language language "")
-        debug (log/debug (str "THE LANGUAGE IS: " language))
+        debug (log/debug (str "THE LANGUAGE OF THE GAME IS: " language))
         sql "SELECT game.name AS game_name,game.id AS id,
                                      source,target,
                                      uniq(array_agg(source_groupings.name)) AS source_groups,
@@ -935,12 +935,18 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
 
 (defn show-groups [ & [{group-to-edit :group-to-edit
                         group-to-delete :group-to-delete
-                        show-group-table :show-group-table}]]
+                        show-group-table :show-group-table
+                        language :language}]]
   (let [group-to-edit (if group-to-edit (Integer. group-to-edit))
         group-to-delete (if group-to-delete (Integer. group-to-delete))
-        results (k/exec-raw ["SELECT id,name,any_of 
-                                FROM grouping 
-                            ORDER BY name ASC"] :results)]
+        language (if language (str "%" (string/lower-case (short-language-name-to-long language)) "%") "")
+        sql "SELECT id,name,any_of 
+                                FROM grouping
+                               WHERE ((name ILIKE ?) OR (? = ''))
+                            ORDER BY name ASC"
+        debug (log/debug (str "show-groups sql: " sql))
+        debug (log/debug (str "show-groups language: " language))
+        results (k/exec-raw [sql [language language]] :results)]
     (html
      [:table {:class "striped padded"}
       [:tr
