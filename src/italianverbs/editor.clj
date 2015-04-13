@@ -29,6 +29,7 @@
 (declare home-page)
 (declare insert-game)
 (declare insert-grouping)
+(declare json-read-str)
 (declare multipart-to-edn)
 (declare set-as-default)
 (declare short-language-name-to-long)
@@ -139,20 +140,6 @@
 (declare show-games)
 (declare show-groups)
 (declare unabbrev)
-
-(defn json-read-str [json]
-  (json/read-str json
-                 :key-fn keyword
-                 :value-fn (fn [k v]
-                             (cond 
-                              (and (or (= k :english) 
-                                       (= k :espanol)
-                                       (= k :italiano))
-                                   (not (map? v)))
-                              (str v)
-                              (string? v)
-                              (keyword v)
-                              :else v))))
 
 (defn home-page [ & [ {game-to-delete :game-to-delete
                        game-to-edit :game-to-edit
@@ -445,60 +432,6 @@ game to find what expressions are appropriate for particular game."
          (k/exec-raw [sql
                       [name]] :results))))
 
-(defn expressions-for-game [game-id]
-  "Return possible source->target mappings given a game-id."
-  (let [sql "SELECT source.surface AS source,source.structure AS source_structure,
-                    target.surface AS target,target.structure AS target_structure
-  FROM (SELECT surface AS surface,structure AS structure
-          FROM (SELECT DISTINCT surface,structure,count(target_grouping.id) AS groups
-                           FROM (SELECT DISTINCT surface,structure,language
-                                            FROM expression) AS target_expression
-                     INNER JOIN grouping AS target_grouping
-                             ON target_expression.structure @> ANY(target_grouping.any_of)
-                     INNER JOIN game
-                             ON game.id = ?
-                            AND target_grouping.id = ANY(game.target_groupings)
-                            AND game.target = target_expression.language
-                       GROUP BY surface,structure) AS targets
-         WHERE groups = (SELECT COUNT(*)
-                           FROM grouping AS target_grouping
-                     INNER JOIN game
-                             ON target_grouping.id = ANY(game.target_groupings)
-                            AND game.id = ?)) AS target
-
-INNER JOIN (SELECT surface AS surface,structure AS structure
-              FROM (SELECT DISTINCT surface,structure,count(source_grouping.id) AS groups
-                               FROM (SELECT DISTINCT surface,structure,language
-                                                FROM expression) AS source_expression
-                         INNER JOIN grouping AS source_grouping
-                                 ON source_expression.structure @> ANY(source_grouping.any_of)
-                         INNER JOIN game
-                                 ON game.id = ?
-                                AND source_grouping.id = ANY(game.source_groupings)
-                                AND game.source = source_expression.language
-                           GROUP BY surface,structure) AS sources
-             WHERE groups = (SELECT COUNT(*)
-                               FROM grouping AS source_grouping
-                         INNER JOIN game
-                                 ON source_grouping.id = ANY(game.source_groupings)
-                                AND game.id = ?)) AS source
-       ON ((target.structure->'synsem'->'sem') @> (source.structure->'synsem'->'sem')
-           OR
-           (source.structure->'synsem'->'sem') @> (target.structure->'synsem'->'sem'))"]
-
-    ;; Parse the returned JSON in clojure maps.  TODO: the :value-fns
-    ;; below are wrongfully converting things to keywords that should
-    ;; legitimately stay strings (e.g. values of the :espanol,
-    ;; :italiano, and :english keys).
-    (map (fn [row]
-           {:source (:source row)
-            :target (:target row)
-            :source-structure (json-read-str (str (:source_structure row)))
-            :target-structure (json-read-str (str (:target_structure row)))})
-
-         (k/exec-raw [sql
-                      [game-id game-id game-id game-id]] :results))))
-
 (declare body)
 (declare control-panel)
 (declare create)
@@ -582,21 +515,6 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
             results)
        ]])))
 
-(defn show-expressions []
-  (let [select (str "SELECT name,source,target,source_grouping::text AS source_grouping ,target_grouping::text AS target_grouping FROM expression_select")
-        results (k/exec-raw [select] :results)]
-    (html
-     (if (empty? results)
-       (str "no expressions to show.")
-       [:div {:style "float:left"}
-        (map (fn [result]
-               (show-expression (:name result)
-                                (:source result)
-                                (:target result)
-                                (list (json-read-str (:source_grouping result)))
-                                (list (json-read-str (:target_grouping result)))))
-             results)]))))
-
 (def all-inflections
   (map #(string/replace-first (str %) ":" "")
        [:conditional :present :future :imperfect :passato]))
@@ -668,37 +586,6 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
                                  ORDER BY source.id LIMIT 10") [(Integer. game-id)]]
                             :results)]
     results))
-
-(defn example-table [request]
-  (html
-   [:div {:style "width:100%"}
-    [:h4 "Examples"]
-    (let [examples (examples-per-game (:game (:params request)))]
-      [:div#exampletable
-       [:table.striped
-        [:tr
-         [:th "Source"]
-         [:th "Target"]
-         [:th "Source sem"]
-         [:th "Target sem"]
-         ]
-
-        (map (fn [row]
-               (let [debug (log/debug (str "source expression:"
-                                           (:source row)))
-                     source (:source row)
-                     target (:target row)
-                     source_sem (let [sem (str (:source_sem row))]
-                                  (json-read-str sem))
-
-                     target_sem (let [sem (str (:target_sem row))]
-                                  (json-read-str sem))]
-                 [:tr 
-                  [:td source]
-                  [:td target]
-                  [:td [:div {:onclick "toggle_expand(this);" :style "height:100px; width:200px ;overflow:scroll"} (html/tablize source_sem)]]
-                  [:td [:div {:onclick "toggle_expand(this);" :style "height:100px; width:200px ;overflow:scroll"} (html/tablize target_sem)]]]))
-             examples)]])]))
 
 (defn update-verb-for-game [game-id words]
   (if (not (empty? words))
@@ -1357,3 +1244,119 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
 
 (defn unabbrev [lang]
   (short-language-name-to-long lang))
+
+(defn json-read-str [json]
+  (json/read-str json
+                 :key-fn keyword
+                 :value-fn (fn [k v]
+                             (cond 
+                              (and (or (= k :english) 
+                                       (= k :espanol)
+                                       (= k :italiano))
+                                   (not (map? v)))
+                              (str v)
+                              (string? v)
+                              (keyword v)
+                              :else v))))
+
+(defn expressions-for-game [game-id]
+  "Return possible source->target mappings given a game-id."
+  (let [sql "SELECT source.surface AS source,source.structure AS source_structure,
+                    target.surface AS target,target.structure AS target_structure
+  FROM (SELECT surface AS surface,structure AS structure
+          FROM (SELECT DISTINCT surface,structure,count(target_grouping.id) AS groups
+                           FROM (SELECT DISTINCT surface,structure,language
+                                            FROM expression) AS target_expression
+                     INNER JOIN grouping AS target_grouping
+                             ON target_expression.structure @> ANY(target_grouping.any_of)
+                     INNER JOIN game
+                             ON game.id = ?
+                            AND target_grouping.id = ANY(game.target_groupings)
+                            AND game.target = target_expression.language
+                       GROUP BY surface,structure) AS targets
+         WHERE groups = (SELECT COUNT(*)
+                           FROM grouping AS target_grouping
+                     INNER JOIN game
+                             ON target_grouping.id = ANY(game.target_groupings)
+                            AND game.id = ?)) AS target
+
+INNER JOIN (SELECT surface AS surface,structure AS structure
+              FROM (SELECT DISTINCT surface,structure,count(source_grouping.id) AS groups
+                               FROM (SELECT DISTINCT surface,structure,language
+                                                FROM expression) AS source_expression
+                         INNER JOIN grouping AS source_grouping
+                                 ON source_expression.structure @> ANY(source_grouping.any_of)
+                         INNER JOIN game
+                                 ON game.id = ?
+                                AND source_grouping.id = ANY(game.source_groupings)
+                                AND game.source = source_expression.language
+                           GROUP BY surface,structure) AS sources
+             WHERE groups = (SELECT COUNT(*)
+                               FROM grouping AS source_grouping
+                         INNER JOIN game
+                                 ON source_grouping.id = ANY(game.source_groupings)
+                                AND game.id = ?)) AS source
+       ON ((target.structure->'synsem'->'sem') @> (source.structure->'synsem'->'sem')
+           OR
+           (source.structure->'synsem'->'sem') @> (target.structure->'synsem'->'sem'))"]
+
+    ;; Parse the returned JSON in clojure maps.  TODO: the :value-fns
+    ;; below are wrongfully converting things to keywords that should
+    ;; legitimately stay strings (e.g. values of the :espanol,
+    ;; :italiano, and :english keys).
+    (map (fn [row]
+           {:source (:source row)
+            :target (:target row)
+            :source-structure (json-read-str (str (:source_structure row)))
+            :target-structure (json-read-str (str (:target_structure row)))})
+
+         (k/exec-raw [sql
+                      [game-id game-id game-id game-id]] :results))))
+
+
+(defn show-expressions []
+  (let [select (str "SELECT name,source,target,source_grouping::text AS source_grouping ,target_grouping::text AS target_grouping FROM expression_select")
+        results (k/exec-raw [select] :results)]
+    (html
+     (if (empty? results)
+       (str "no expressions to show.")
+       [:div {:style "float:left"}
+        (map (fn [result]
+               (show-expression (:name result)
+                                (:source result)
+                                (:target result)
+                                (list (json-read-str (:source_grouping result)))
+                                (list (json-read-str (:target_grouping result)))))
+             results)]))))
+
+(defn example-table [request]
+  (html
+   [:div {:style "width:100%"}
+    [:h4 "Examples"]
+    (let [examples (examples-per-game (:game (:params request)))]
+      [:div#exampletable
+       [:table.striped
+        [:tr
+         [:th "Source"]
+         [:th "Target"]
+         [:th "Source sem"]
+         [:th "Target sem"]
+         ]
+
+        (map (fn [row]
+               (let [debug (log/debug (str "source expression:"
+                                           (:source row)))
+                     source (:source row)
+                     target (:target row)
+                     source_sem (let [sem (str (:source_sem row))]
+                                  (json-read-str sem))
+
+                     target_sem (let [sem (str (:target_sem row))]
+                                  (json-read-str sem))]
+                 [:tr 
+                  [:td source]
+                  [:td target]
+                  [:td [:div {:onclick "toggle_expand(this);" :style "height:100px; width:200px ;overflow:scroll"} (html/tablize source_sem)]]
+                  [:td [:div {:onclick "toggle_expand(this);" :style "height:100px; width:200px ;overflow:scroll"} (html/tablize target_sem)]]]))
+             examples)]])]))
+
