@@ -560,7 +560,9 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
          (is-admin
           (let [params (multipart-to-edn (:multipart-params request))]
             ;; Defaults: source language=English.
-            (insert-game (:name params) "en" (:language (:name params)) [] [])
+            (insert-game (:name params) "en" (:language params)
+                         (:source_groupings params)
+                         (:target_groupings params))
             {:status 302 :headers {"Location" (str "/editor/" (:language params))}})))
 
    (POST "/group/new" request
