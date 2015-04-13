@@ -931,7 +931,7 @@ game to find what expressions are appropriate for particular game."
               :action "/editor/group/new"}
        
        [:input {:name "name" :size "50"} ]
-       [:input {;;:type "hidden" 
+       [:input {:type "hidden" 
                 :name "language" :value short-language} ]
        [:button {:onclick "submit();"} "New List"]
        ]]
