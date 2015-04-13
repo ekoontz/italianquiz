@@ -22,6 +22,18 @@
    [korma.core :as k]
 ))
 
+(defn multipart-to-edn [params]
+  (log/debug (str "multipart-to-edn input: " params))
+  (let [output
+        (zipmap (map #(keyword %)
+                     (map #(string/replace % ":" "")
+                          (map #(string/replace % "[]" "")
+                               (keys params))))
+                (vals params))]
+    (log/debug (str "multipart-to-edn output: " output))
+    output))
+
+
 (declare show-group-edit-forms)
 (declare show-games)
 (declare show-groups)
@@ -76,7 +88,7 @@
   (log/debug (str "source-set: " source-set))
   (log/debug (str "source-set with commas: " (str "ARRAY[" (string/join "," (map #(str "" (string/join "," %) "") source-set)) "]")))
   (log/debug (str "target-set with commas: " (str "ARRAY[" (string/join "," (map #(str "" (string/join "," %) "") target-set)) "]")))
-
+  
   (let [source-grouping-str (str "ARRAY[" (string/join "," (map #(str "" (string/join "," %) "") source-set)) "]::integer[]")
         target-grouping-str (str "ARRAY[" (string/join "," (map #(str "" (string/join "," %) "") target-set)) "]::integer[]")
         sql (str "INSERT INTO game (name,source_groupings,target_groupings,source,target) 
@@ -195,6 +207,7 @@
 
      [:div.new {:style "float:left;width:45%;text-align:left"}
       [:form {:method "POST"
+              :enctype "multipart/form-data"
               :action "/editor/game/new"}
        
        [:input {:name "name" :size "50"} ]
@@ -312,15 +325,19 @@ semantics are evaluated by OR-ing together the selects
 when (expressions-per-game) evaluates the grouping for a particular
 game to find what expressions are appropriate for particular game."
 
-  (let [selects (if (not (seq? selects))
-                  (vec selects)
-                  selects)
+  (let [selects (cond (empty? selects) [{}]
+                      (not (seq? selects))
+                      (vec selects)
+                      :else selects)
+        debug (log/debug "insert-grouping: the selects are: " selects)
+
+        ;; TODO: this is hard to read and modify:
         as-json-array (str "ARRAY['"
                            (string/join "'::jsonb,'"
                                         (map #(json/write-str (strip-refs %))
                                              selects))
-
                            "'::jsonb]")
+
         sql (str "INSERT INTO grouping (name,any_of) VALUES (?," as-json-array ") RETURNING id")]
     (log/debug (str "inserting new anyof-set with sql: " sql))
     (map #(:id %)
@@ -533,30 +550,28 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
    (POST "/game/edit/:game-to-edit" request
          (do (log/debug (str "Doing POST /game/edit/:game-to-edit with request: " request))
              (is-admin (update-game (:game-to-edit (:route-params request))
-                                    (:multipart-params request)))))
+                                    (multipart-to-edn (:multipart-params request))))))
 
    (POST "/group/edit/:group-to-edit" request
          (is-admin (update-group (:group-to-edit (:route-params request))
-                                 (:multipart-params request))))
+                                 (multipart-to-edn (:multipart-params request)))))
 
    (POST "/game/new" request
          (is-admin
-          (do
+          (let [params (multipart-to-edn (:multipart-params request))]
             ;; Defaults: source language=English.
-            (insert-game (:name (:multipart-params request)) "en" (:language (:multipart-params request)) [] [])
-            {:status 302 :headers {"Location" (str "/editor/" (:language (:multipart-params request)))}})))
+            (insert-game (:name params) "en" (:language (:name params)) [] [])
+            {:status 302 :headers {"Location" (str "/editor/" (:language params))}})))
 
    (POST "/group/new" request
         (is-admin
-         (do
-           (insert-grouping (:name (:multipart-params request)) [{}])
+         (let [params (multipart-to-edn (:multipart-params request))]
+           (insert-grouping (:name params) [])
            {:status 302 :headers {"Location" "/editor"}})))
 
    ;; which game(s) will be active (more than one are possible).
    (POST "/use" request
-         (is-admin (set-as-default request)))
-
-))
+         (is-admin (set-as-default request)))))
 
 (def all-inflections
   (map #(string/replace-first (str %) ":" "")
@@ -736,23 +751,20 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
 
 (defn update-game [game-id params]
   (let [game-id game-id
-        params (zipmap (map #(keyword %)
-                            (map #(string/replace % "[]" "")
-                                 (keys params)))
-                       (vals params))
+        params (multipart-to-edn params)
         debug  (log/debug (str "UPDATING GAME WITH PARAMS (converted to keywords): " params))
 
         source-grouping-set (if (string? (:source_groupings params))
                               (do (log/error (str "source_groupings is unexpectedly a string:"
                                                  (:source_groupings params) "; splitting."))
-                                  (throw (Exception. (str "Could not update game: " game-id "; no :source_groupings found in input params: " params))))
+                                  (throw (Exception. (str "editor/update-game: could not update game: " game-id "; no :source_groupings found in input params: " params))))
                               (filter #(not (= (string/trim %) ""))
                                       (:source_groupings params)))
 
         target-grouping-set (if (string? (:target_groupings params))
                               (do (log/error (str "target_groupings is unexpectedly a string:"
                                                  (:target_groupings params) "; splitting."))
-                                  (throw (Exception. (str "Could not update game: " game-id "; no :target_groupings found in input params: " params))))
+                                  (throw (Exception. (str "editor/update-game: could not update game: " game-id "; no :target_groupings found in input params: " params))))
                               (filter #(not (= (string/trim %) ""))
                                       (:target_groupings params)))
 
@@ -809,10 +821,11 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
 ;; "SQL as Clojure data structures. Build queries programmatically -- even at runtime -- without having to bash strings together."
 (declare sqlname-from-match)
 (defn update-group [group-id params]
-  (log/debug (str "UPDATING GROUP WITH PARAMS: " params))
-  (log/debug (str "Editing group with id= " group-id))
+  (let [debug (log/debug (str "UPDATING GROUP WITH PARAMS: " params))
+        debug (log/debug (str "Editing group with id= " group-id))
 
-  (let [name (:name params)
+        debug  (log/debug (str "UPDATING GAME WITH PARAMS (converted to keywords): " params))
+        name (:name params)
 
         ;; TODO: needs checks
         language-name (keyword (sqlname-from-match name))
@@ -939,14 +952,15 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
                         language :language}]]
   (let [group-to-edit (if group-to-edit (Integer. group-to-edit))
         group-to-delete (if group-to-delete (Integer. group-to-delete))
-        language (if language (str "%" (string/lower-case (short-language-name-to-long language)) "%") "")
+        short-language (if language language "")
+        sql-language-match (if short-language (str "%" (string/lower-case (short-language-name-to-long short-language)) "%") "")
         sql "SELECT id,name,any_of 
                                 FROM grouping
                                WHERE ((name ILIKE ?) OR (? = ''))
                             ORDER BY name ASC"
         debug (log/debug (str "show-groups sql: " sql))
-        debug (log/debug (str "show-groups language: " language))
-        results (k/exec-raw [sql [language language]] :results)]
+        debug (log/debug (str "show-groups language: " short-language))
+        results (k/exec-raw [sql [sql-language-match short-language]] :results)]
     (html
      [:table {:class "striped padded"}
       [:tr
@@ -1005,10 +1019,11 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
 
      [:div.new {:style "float:left;width:45%;text-align:left"}
       [:form {:method "POST"
+              :enctype "multipart/form-data"
               :action "/editor/group/new"}
        
        [:input {:name "name" :size "50"} ]
-
+       [:input {:type "hidden" :name "language" :value short-language} ]
        [:button {:onclick "submit();"} "New List"]
        ]]
 
@@ -1068,7 +1083,8 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
                             ;; fixed fields:
                             [{:name :name :size 50 :label "Name"}]
                             
-                            (if (re-find #"tense" (string/lower-case (:group_name result)))
+                            (if (and (:group_name result)
+                                     (re-find #"tense" (string/lower-case (:group_name result))))
                               ;; standard fields, part 1: tenses
                               [{:name :tenses
                                 :type :checkboxes
@@ -1233,7 +1249,9 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
 
 ;; shortnames: 'en','es','it', ..
 (defn shortname-from-match [match-string]
-  (cond (re-find #"espanol" (string/lower-case match-string))
+  (cond (nil? match-string)
+        (str "(no shortname for language: (nil) detected).")
+        (re-find #"espanol" (string/lower-case match-string))
         "es"
         (re-find #"español" (string/lower-case match-string))
         "es"
@@ -1246,11 +1264,13 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
         (re-find #"spanish" (string/lower-case match-string))
         "es"
         :else
-        "(none detected)"))
+        (str "(no shortname for language:" match-string " detected.")))
 
 ;; sqlnames: 'english','espanol' <- note: no accent on 'n' ,'italiano', ..
 (defn sqlname-from-match [match-string]
-  (cond (re-find #"espanol" (string/lower-case match-string))
+  (cond (nil? match-string)
+        (str "(no sqlname for language: (nil) detected).")
+        (re-find #"espanol" (string/lower-case match-string))
         "espanol"
         (re-find #"español" (string/lower-case match-string))
         "espanol"
@@ -1263,7 +1283,7 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
         (re-find #"spanish" (string/lower-case match-string))
         "espanol"
         :else
-        "(none detected)"))
+        (str "(no sqlname for language:" match-string " detected.")))
 
 (defn tenses-per-game [game-id]
   (log/info (str "verbs-per-game: " game-id))
