@@ -8,15 +8,11 @@
    [compojure.core :as compojure :refer [GET PUT POST DELETE ANY]]
 
    [formative.core :as f]
-   [formative.parse :as fp]
 
    [italianverbs.auth :refer [is-admin is-authenticated]]
    [italianverbs.borges.reader :refer :all]
    [italianverbs.html :as html]
-   [italianverbs.morphology :refer (fo)]
-   [italianverbs.korma :as db]
    [italianverbs.unify :refer [get-in strip-refs]]
-   [italianverbs.verb :refer [generation-table predicates-from-lexicon]]
 
    [hiccup.core :refer (html)]
    [korma.core :as k]
@@ -34,6 +30,10 @@
 (declare set-as-default)
 (declare short-language-name-to-long)
 (declare shortname-from-match)
+(declare show-games)
+(declare show-group-edit-forms)
+(declare show-groups)
+(declare unabbrev)
 (declare update-game)
 (declare update-group)
 
@@ -68,29 +68,13 @@
             :status 200
             :headers headers})))
 
-   (GET "/group/delete/:group-to-delete" request
-        (is-admin
-         (let [group-to-delete (:group-to-delete (:route-params request))]
-           {:body (body (str "Editor: Confirm: delete group: " group-to-delete)
-                        (home-page {:group-to-delete group-to-delete})
-                        request)
-            :status 200
-            :headers headers})))
-
    (POST "/game/delete/:game-to-delete" request
          (is-admin (delete-game (:game-to-delete (:route-params request)))))
-
-   (POST "/group/delete/:group-to-delete" request
-         (is-admin (delete-group (:group-to-delete (:route-params request)))))
 
    (POST "/game/edit/:game-to-edit" request
          (do (log/debug (str "Doing POST /game/edit/:game-to-edit with request: " request))
              (is-admin (update-game (:game-to-edit (:route-params request))
                                     (multipart-to-edn (:multipart-params request))))))
-
-   (POST "/group/edit/:group-to-edit" request
-         (is-admin (update-group (:group-to-edit (:route-params request))
-                                 (multipart-to-edn (:multipart-params request)))))
 
    (POST "/game/new" request
          (is-admin
@@ -110,6 +94,22 @@
                          (:target_groupings params))
             {:status 302 :headers {"Location" (str "/editor/" language)}})))
 
+   (GET "/group/delete/:group-to-delete" request
+        (is-admin
+         (let [group-to-delete (:group-to-delete (:route-params request))]
+           {:body (body (str "Editor: Confirm: delete group: " group-to-delete)
+                        (home-page {:group-to-delete group-to-delete})
+                        request)
+            :status 200
+            :headers headers})))
+
+   (POST "/group/delete/:group-to-delete" request
+         (is-admin (delete-group (:group-to-delete (:route-params request)))))
+
+   (POST "/group/edit/:group-to-edit" request
+         (is-admin (update-group (:group-to-edit (:route-params request))
+                                 (multipart-to-edn (:multipart-params request)))))
+
    (POST "/group/new" request
         (is-admin
          (let [params (multipart-to-edn (:multipart-params request))
@@ -120,26 +120,6 @@
    ;; which game(s) will be active (more than one are possible).
    (POST "/use" request
          (is-admin (set-as-default request)))))
-
-
-(defn multipart-to-edn [params]
-  (log/debug (str "multipart-to-edn input: " params))
-  (let [output
-        (zipmap (map #(keyword %)
-                     (map #(string/replace % ":" "")
-                          (map #(string/replace % "[]" "")
-                               (keys params))))
-                (vals params))]
-    (log/debug (str "multipart-to-edn output: " output))
-    output))
-
-
-(def headers {"Content-Type" "text/html;charset=utf-8"})
-
-(declare show-group-edit-forms)
-(declare show-games)
-(declare show-groups)
-(declare unabbrev)
 
 (defn home-page [ & [ {game-to-delete :game-to-delete
                        game-to-edit :game-to-edit
@@ -1373,4 +1353,25 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
                   [:td [:div {:onclick "toggle_expand(this);" :style "height:100px; width:200px ;overflow:scroll"} (html/tablize source_sem)]]
                   [:td [:div {:onclick "toggle_expand(this);" :style "height:100px; width:200px ;overflow:scroll"} (html/tablize target_sem)]]]))
              examples)]])]))
+
+
+
+(defn multipart-to-edn [params]
+  (log/debug (str "multipart-to-edn input: " params))
+  (let [output
+        (zipmap (map #(keyword %)
+                     (map #(string/replace % ":" "")
+                          (map #(string/replace % "[]" "")
+                               (keys params))))
+                (vals params))]
+    (log/debug (str "multipart-to-edn output: " output))
+    output))
+
+
+(def headers {"Content-Type" "text/html;charset=utf-8"})
+
+(declare show-group-edit-forms)
+(declare show-games)
+(declare show-groups)
+(declare unabbrev)
 
