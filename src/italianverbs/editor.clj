@@ -386,7 +386,7 @@
 
 ;; TODO: consider using https://github.com/jkk/honeysql:
 ;; "SQL as Clojure data structures. Build queries programmatically -- even at runtime -- without having to bash strings together."
-(defn insert-grouping [name selects]
+(defn insert-grouping [name selects & [language]]
   "Create a grouping. This is a set of specifications, any of which may be
 true for an expression to be part of the grouping. The grouping's
 semantics are evaluated by OR-ing together the selects
@@ -397,6 +397,7 @@ game to find what expressions are appropriate for particular game."
                       (not (seq? selects))
                       (vec selects)
                       :else selects)
+        language (if language language "NULL")
         debug (log/debug "insert-grouping: the selects are: " selects)
 
         ;; TODO: this is hard to read and modify:
@@ -406,11 +407,11 @@ game to find what expressions are appropriate for particular game."
                                              selects))
                            "'::jsonb]")
 
-        sql (str "INSERT INTO grouping (name,any_of) VALUES (?," as-json-array ") RETURNING id")]
+        sql (str "INSERT INTO grouping (name,any_of,language) VALUES (?," as-json-array ",?) RETURNING id")]
     (log/debug (str "inserting new anyof-set with sql: " sql))
     (map #(:id %)
          (k/exec-raw [sql
-                      [name]] :results))))
+                      [name,language]] :results))))
 
 (declare body)
 (declare control-panel)
@@ -874,7 +875,9 @@ game to find what expressions are appropriate for particular game."
 
        ]
       (map (fn [result]
-             (let [group-id (:id result)]
+             (let [group-id (:id result)
+                   any-of (:any_of result)
+                   any-of (if any-of (.getArray any-of))]
                [:tr 
                 [:td [:div.group {:onclick (str "edit_group_dialog(" group-id ")")}  (:name result)]]
                 [:td
@@ -898,7 +901,7 @@ game to find what expressions are appropriate for particular game."
                                             ;; else, just show edn form
                                             :else
                                             edn-form))
-                                   (.getArray (:any_of result))))]
+                                   any-of))]
                 
                 [:td 
                  (cond (= group-to-edit group-id)
@@ -928,7 +931,8 @@ game to find what expressions are appropriate for particular game."
               :action "/editor/group/new"}
        
        [:input {:name "name" :size "50"} ]
-       [:input {:type "hidden" :name "language" :value short-language} ]
+       [:input {;;:type "hidden" 
+                :name "language" :value short-language} ]
        [:button {:onclick "submit();"} "New List"]
        ]]
 
@@ -944,7 +948,9 @@ game to find what expressions are appropriate for particular game."
               (let [result row
                     group-id (:id result)
                     debug (log/debug (str "show-groups: (json) " result))
-                    specs (map json-read-str (seq (.getArray (:any_of result))))
+                    specs (:any_of result)
+                    specs (if (not (nil? specs)) (seq (.getArray specs)))
+                    specs (map json-read-str specs)
                     problems nil ;; TODO: should be optional param of this (defn)
                     language-short-name (shortname-from-match (:group_name row))
                     language-long-name (sqlname-from-match (:group_name row))

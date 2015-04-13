@@ -1,6 +1,15 @@
 DROP TABLE grouping CASCADE;
 DROP TABLE game CASCADE;
-CREATE TABLE grouping (id bigint NOT NULL, name text, any_of jsonb[]);
+CREATE TABLE grouping (id bigint NOT NULL, 
+                       name text, 
+                       any_of jsonb[],
+
+		       -- "en","fr","es","it",.. TOCONSIDER: use a PostgreSQL enum.
+		       language text,
+
+		       -- "lexical","grammatical",..  -- TOCONSIDER: use a PostgreSQL enum.
+		       type text);
+
 DROP SEQUENCE grouping_id_seq;
 CREATE SEQUENCE grouping_id_seq
                      START WITH 1
@@ -8,8 +17,14 @@ CREATE SEQUENCE grouping_id_seq
                      NO MINVALUE
                      NO MAXVALUE
                      CACHE 1;
+
 ALTER TABLE ONLY grouping ALTER COLUMN id SET DEFAULT nextval('grouping_id_seq'::regclass);
+ALTER TABLE ONLY grouping ALTER COLUMN type SET DEFAULT 'lexical';
 ALTER TABLE ONLY grouping ADD CONSTRAINT grouping_key PRIMARY KEY (id);
+
+INSERT INTO grouping (name,type,any_of) VALUES('Imperfect Tense','grammatical',ARRAY['{"synsem": {"sem": {"tense":"imperfect"}}}'::jsonb]);
+INSERT INTO grouping (name,type,any_of) VALUES('Future Tense',   'grammatical',ARRAY['{"synsem": {"sem": {"tense":"futuro"}}}'::jsonb]);
+INSERT INTO grouping (name,type,any_of) VALUES('Present Tense',  'grammatical',ARRAY['{"synsem": {"sem": {"tense":"present"}}}'::jsonb]);
 
 CREATE TABLE game (id bigint NOT NULL, 
                    source_groupings bigint[], -- the game's source_groupings is the set of groupings that select the source sentences.
