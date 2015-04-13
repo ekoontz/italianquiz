@@ -211,3 +211,7 @@ div.dangerzone {
     float:left;
     padding:0.5em;
 }
+
+div.new button {
+    margin-left:1em;
+}
