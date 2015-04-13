@@ -1,6 +1,7 @@
 (ns italianverbs.about
   (:require
    [compojure.core :refer [GET]]
+   [italianverbs.auth :refer [haz-admin]]
    [italianverbs.html :as html]))
 
 (declare about)
@@ -28,7 +29,7 @@
      ]
 
 
-    [:div#flags
+    [:div.flags
      [:div.flag
 
       [:a {:href "/tour/it"}
@@ -59,7 +60,7 @@
        [:div.language "Español"]
        ]
       ]
-     ]
+     
 
      [:div.flag
 
@@ -67,8 +68,39 @@
       [:div.language "Français"]
 
       [:i {:style "text-align:center;color:#ccc"} "Coming soon" ]]
+     ]
 
-])
+    (if (haz-admin)
+      [:div.flags
+
+       [:h3 "Manage Games"]
+
+       [:div.flag
+        [:a {:href "/editor/it"}
+          [:img {:src "/png/Flag_of_Italy.svg.png" }]]
+        [:a {:href "/editor/it"}
+         [:div.language "Italiano"]
+         ]
+        ]
+
+       [:div.flag
+        [:a {:href "/editor/es"}
+         [:img {:src "/png/Flag_of_Spain.svg.png" }]]
+        [:a {:href "/editor/es"}
+         [:div.language "Español"]
+         ]
+        ]
+       
+       [:div.flag
+        [:img {:src "/png/Flag_of_France.svg.png" }]
+        [:div.language "Français"]
+        [:i {:style "text-align:center;color:#ccc"} "Coming soon"]]]
+      )
+    
+    ])
+
+    
+
 
 
 
