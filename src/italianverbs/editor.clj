@@ -665,19 +665,33 @@ game to find what expressions are appropriate for particular game."
         params (multipart-to-edn params)
         debug  (log/debug (str "UPDATING GAME WITH PARAMS (converted to keywords): " params))
 
-        source-grouping-set (if (string? (:source_groupings params))
-                              (do (log/error (str "source_groupings is unexpectedly a string:"
+        source-grouping-set (cond
+                             (nil? (:source_groupings params))
+                             []
+                             (and (string? (:source_groupings params))
+                                  (= (string/trim (:source_groupings params)) ""))
+                             []
+                             (string? (:source_groupings params))
+                             (do (log/error (str "source_groupings is unexpectedly a string:"
                                                  (:source_groupings params) "; splitting."))
-                                  (throw (Exception. (str "editor/update-game: could not update game: " game-id "; no :source_groupings found in input params: " params))))
-                              (filter #(not (= (string/trim %) ""))
-                                      (:source_groupings params)))
+                                 (throw (Exception. (str "editor/update-game: could not update game: " game-id "; no :source_groupings found in input params: " params))))
+                             true
+                             (filter #(not (= (string/trim %) ""))
+                                     (:source_groupings params)))
 
-        target-grouping-set (if (string? (:target_groupings params))
-                              (do (log/error (str "target_groupings is unexpectedly a string:"
+        target-grouping-set (cond
+                             (nil? (:target_groupings params))
+                             []
+                             (and (string? (:target_groupings params))
+                                  (= (string/trim (:target_groupings params)) ""))
+                             []
+                             (string? (:target_groupings params))
+                             (do (log/error (str "target_groupings is unexpectedly a string:"
                                                  (:target_groupings params) "; splitting."))
-                                  (throw (Exception. (str "editor/update-game: could not update game: " game-id "; no :target_groupings found in input params: " params))))
-                              (filter #(not (= (string/trim %) ""))
-                                      (:target_groupings params)))
+                                 (throw (Exception. (str "editor/update-game: could not update game: " game-id "; no :target_groupings found in input params: " params))))
+                             true
+                             (filter #(not (= (string/trim %) ""))
+                                     (:target_groupings params)))
 
 
         debug (log/debug (str "project name will be updated to: " (:name params)))
