@@ -273,7 +273,7 @@
                 
            results)]
 
-     [:div.new {:style "float:left;width:100%;text-align:left"}
+     [:div.new
       [:form {:method "post"
               :enctype "multipart/form-data"
               :action "/editor/game/new"}
@@ -922,7 +922,7 @@ game to find what expressions are appropriate for particular game."
               
            results)]
 
-     [:div.new {:style "float:left;width:45%;text-align:left"}
+     [:div.new
       [:form {:method "POST"
               :enctype "multipart/form-data"
               :action "/editor/group/new"}

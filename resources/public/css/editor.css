@@ -212,6 +212,12 @@ div.dangerzone {
     padding:0.5em;
 }
 
+div.new {
+    float:left;
+    width:100%;
+    text-align:left;
+}
+
 div.new button {
     margin-left:1em;
 }
