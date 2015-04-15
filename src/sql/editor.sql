@@ -29,6 +29,10 @@ INSERT INTO grouping (name,type,any_of) VALUES('Present Tense',  'grammatical',A
 CREATE TABLE game (id bigint NOT NULL, 
                    source_groupings bigint[], -- the game's source_groupings is the set of groupings that select the source sentences.
        		   target_groupings bigint[], -- the game's target_groupings is the set of groupings that select the target sentences.
+		   source_lex jsonb[],
+		   source_grammar jsonb[],
+		   target_lex jsonb[],
+		   target_grammar jsonb[],
                    name text, source text,target text);
 
 DROP SEQUENCE game_id_seq;
@@ -40,7 +44,22 @@ CREATE SEQUENCE game_id_seq
                      CACHE 1;
 
 ALTER TABLE ONLY game ALTER COLUMN id SET DEFAULT nextval('game_id_seq'::regclass);
+ALTER TABLE ONLY game ALTER COLUMN source_lex SET DEFAULT ARRAY['{}'::jsonb];
+ALTER TABLE ONLY game ALTER COLUMN source_grammar SET DEFAULT ARRAY['{}'::jsonb];
+ALTER TABLE ONLY game ALTER COLUMN target_lex SET DEFAULT ARRAY['{}'::jsonb];
+ALTER TABLE ONLY game ALTER COLUMN target_grammar SET DEFAULT ARRAY['{}'::jsonb];
 ALTER TABLE ONLY game ADD CONSTRAINT game_pkey PRIMARY KEY (id);
+
+INSERT INTO game (name,source,target,target_lex,target_grammar) VALUES
+   ('Beginning Italian Game','en','it',ARRAY['{"head":{"italiano":{"italiano":"mangiare"}}}',
+                                             '{"head":{"italiano":{"italiano":"parlare"}}}'::jsonb],
+                                       ARRAY['{"synsem":{"sem":{"tense":"present"}}}'::jsonb]);
+
+INSERT INTO game (name,source,target,target_lex,target_grammar) VALUES
+   ('Intermediate Italian Game','en','it',ARRAY['{"head":{"italiano":{"italiano":"andare"}}}',
+                                                '{"head":{"italiano":{"italiano":"essere"}}}'::jsonb],
+                                          ARRAY['{"synsem":{"sem":{"tense":"futuro"}}}',
+                                                '{"synsem":{"sem":{"tense":"past"}}}'::jsonb]);
 
 DROP TABLE city CASCADE;
 DROP SEQUENCE city_id_seq CASCADE;

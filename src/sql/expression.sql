@@ -15,9 +15,10 @@ CREATE TABLE expression (
     serialized text
 );
 
-CREATE INDEX ON expression USING gin ((((structure -> 'synsem'::text) -> 'sem'::text)));
+CREATE INDEX ON expression USING gin ((((structure -> 'synsem') -> 'sem')));
 
 -- maybe needed, maybe not.
+CREATE INDEX ON expression USING gin (structure);
 -- CREATE INDEX ON expression language;
 
 -- maybe needed, maybe not.
