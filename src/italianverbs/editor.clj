@@ -274,7 +274,7 @@
                                              {:value "es" :label "Spanish"}]}])
 
                    
-                   :cancel-href "/editor"
+                   :cancel-href (str "/editor/" language)
                    :values {:name (:game_name result)
                             :target (:target result)
                             :source (:source result)
