@@ -127,7 +127,7 @@
                        group-to-delete :group-to-delete
                        language :language
                        message :message} ]]
-  (let [show-groups-table true]
+  (let [show-groups-table false]
     (html
      [:div.user-alert message]
    
@@ -175,19 +175,11 @@
         language (if language language "")
         debug (log/debug (str "THE LANGUAGE OF THE GAME IS: " language))
         sql "SELECT game.name AS game_name,game.id AS id,
-                                     source,target,
-                                     uniq(array_agg(source_groupings.name)) AS source_groups,
-                                     uniq(array_agg(source_groupings.id)) AS source_group_ids,
-                                     uniq(array_agg(target_groupings.name)) AS target_groups,
-                                     uniq(array_agg(target_groupings.id)) AS target_group_ids
-                                FROM game 
-                           LEFT JOIN grouping AS source_groupings 
-                                  ON source_groupings.id = ANY(source_groupings) 
-                           LEFT JOIN grouping AS target_groupings 
-                                  ON target_groupings.id = ANY(target_groupings)
-                               WHERE ((game.target = ?) OR (? = ''))
-                            GROUP BY game.id 
-                            ORDER BY game.name"
+                    source,target,
+                    target_lex,target_grammar
+               FROM game 
+              WHERE ((game.target = ?) OR (? = ''))
+           ORDER BY game.name"
         debug (log/debug (str "GAME-CHOOSING LANGUAGE: " language))
         debug (log/debug (str "GAME-CHOOSING SQL: " sql))
         results (k/exec-raw [sql
@@ -197,15 +189,9 @@
 
      [:table {:class "striped padded"}
       [:tr
-       [:th {:style "width:15%"} "Name"]
-       [:th {:style "width:5%"} "Source"]
-       [:th {:style "width:5%"} "Target"]
-       (if show-source-lists [:th {:style "width:15%"} "Source Lists"])
-       [:th {:style "width:auto"} "Lists"]
-       (cond
-        game-to-edit [:th "Update"]
-        game-to-delete [:th "Delete"]
-        :else "")
+       [:th {:style "width:auto"} "Name"]
+       [:th {:style "width:auto"} "Verbs"]
+       [:th {:style "width:auto"} "Tenses"]
        ]
 
       (map (fn [result]
@@ -217,144 +203,76 @@
                             :value (:game_name result)}]
                    [:div.edit_game {:onclick (str "edit_game_dialog(" game-id ")")}  (:game_name result)]
                    )]
-                [:td (unabbrev (:source result))]
-                [:td (unabbrev (:target result))]
 
-                (if show-source-lists
+                [:td (string/join ", " (map #(html [:i %])
+                                           (map #(get-in % [:head :italiano :italiano]) 
+                                                (map json-read-str (.getArray (:target_lex result))))))]
 
-                 (let [id2name (zipmap
-                                (.getArray (:source_group_ids result))
-                                (.getArray (:source_groups result)))]
-                   (string/join ""
-                                (map (fn [group-index]
-                                       (html [:div {:class "group sourcegroup"
-                                                    :onclick (str "edit_group_dialog('"
-                                                                  group-index
-                                                                  "')")}
-                                              (get id2name group-index)
-                                              ]))
-                                     (.getArray (:source_group_ids result))))))
+                [:td (string/join ", " (map #(html [:b %])
+                                           (map #(get-in % [:synsem :sem :tense]) 
+                                                (map json-read-str (.getArray (:target_grammar result))))))]
 
-                [:td
-                 (let [debug (log/trace (str "target groups for: " (:game_name result) " : " (.getArray (:target_groups result))))
-                       id2name (zipmap
-                                (.getArray (:target_group_ids result))
-                                (.getArray (:target_groups result)))
-                       debug (log/trace (str "id2name: " id2name))]
-                   (string/join ""
-                                (map (fn [group-index]
-                                       (html [:div {:class "group targetgroup"
-                                                    :onclick (str "edit_group_dialog('"
-                                                                  group-index
-                                                                  "')")}
-                                              (get id2name group-index)
-                                              ]))
-                                     (remove nil? (.getArray (:target_group_ids result))))))]
 
-                [:td 
-                 (cond (= game-to-edit game-id)
-                       [:div
-                        [:form#update_game
-                         {:method "POST"
-                          :action (str "/editor/game/edit/" game-id)}]
-
-                        [:button {:onclick (str "$(\"#update_game\").submit();")} "Confirm"]]
-
-                       (= game-to-delete game-id)
-                       [:div
-                        [:form#confirm_delete_game
-                         {:method "POST"
-                          :action (str "/editor/game/delete/" game-id)}]
-
-                        [:button.confirm_delete {:onclick (str "$(\"#confirm_delete_game\").submit();")} "Confirm"]]
-
-                       true
-                       "")]]))
-                
+                ]
+               ))
            results)]
 
-     [:div.new
-      [:form {:method "post"
-              :enctype "multipart/form-data"
-              :action "/editor/game/new"}
+     (if (not (= "" language)) ;; don't show "New Game" if no language - confusing to users.
+       [:div.new
+        [:form {:method "post"
+                :enctype "multipart/form-data"
+                :action "/editor/game/new"}
        
-       [:input {:name "name" :size "50"} ]
-       [:input {:type "hidden" :name "language" :value language} ]
+         [:input {:name "name" :size "50"} ]
+         [:input {:type "hidden" :name "language" :value language} ]
 
-       [:button {:onclick "submit();"} "New Game"]
-       ]]
+         [:button {:onclick "submit();"} "New Game"]
+         ]])
 
-     (let [all-groups
-           (k/exec-raw ["SELECT id,name FROM grouping"] :results)]
+     ;; make the hidden game-editing forms.
+     (map (fn [result]
+            (let [game-id (:id result)
+                  debug (log/debug (str "ALL GAME INFO: " result))
+                  game-to-edit game-to-edit
+                  problems nil ;; TODO: should be optional param of this (defn)
+                  game-to-delete game-to-delete
 
-       ;; make the hidden game-editing forms.
-       (map (fn [result]
-              (let [game-id (:id result)
-                    debug (log/debug (str "ALL GAME INFO: " result))
-                    game-to-edit game-to-edit
-                    problems nil ;; TODO: should be optional param of this (defn)
-                    game-to-delete game-to-delete
+                  source-group-ids (:source_group_ids result)
+                  source-groups (if source-group-ids
+                                  (vec (remove #(or (nil? %)
+                                                    (= "" (string/trim (str %))))
+                                               (.getArray (:source_group_ids result))))
+                                  [])
+                  target-group-ids (:target_group_ids result)
+                  target-groups (if target-group-ids
+                                  (vec (remove #(or (nil? %)
+                                                    (= "" (string/trim (str %))))
+                                               (.getArray (:target_group_ids result))))
+                                  [])
+                  debug (log/debug (str "creating checkbox form with currently-selected source-groups: " source-groups))
+                  debug (log/debug (str "creating checkbox form with currently-selected target-groups: " target-groups))
+                  ]
+              [:div.editgame
+               {:id (str "editgame" game-id)}
+               [:h2 (str "Editing game: " (:game_name result))]
 
-                    source-group-ids (:source_group_ids result)
-                    source-groups (if source-group-ids
-                                    (vec (remove #(or (nil? %)
-                                                      (= "" (string/trim (str %))))
-                                                 (.getArray (:source_group_ids result))))
-                                    [])
-                    target-group-ids (:target_group_ids result)
-                    target-groups (if target-group-ids
-                                    (vec (remove #(or (nil? %)
-                                                      (= "" (string/trim (str %))))
-                                                 (.getArray (:target_group_ids result))))
-                                    [])
-                    debug (log/debug (str "creating checkbox form with currently-selected source-groups: " source-groups))
-                    debug (log/debug (str "creating checkbox form with currently-selected target-groups: " target-groups))
-                    ]
-                [:div.editgame
-                 {:id (str "editgame" game-id)}
-                 [:h2 (str "Editing game: " (:game_name result))]
+               (f/render-form 
+                {:action (str "/editor/game/edit/" game-id)
+                 :enctype "multipart/form-data"
+                 :method :post
+                 :fields (concat [{:name :name :size 50 :label "Name"}
+                                  {:name :source :type :select 
+                                   :label "Source Language"
+                                   :options [{:value "en" :label "English"}
+                                             {:value "it" :label "Italian"}
+                                             {:value "es" :label "Spanish"}]}
 
-                 (f/render-form 
-                  {:action (str "/editor/game/edit/" game-id)
-                   :enctype "multipart/form-data"
-                   :method :post
-                   :fields (concat [{:name :name :size 50 :label "Name"}
-                                    {:name :source :type :select 
-                                     :label "Source Language"
-                                     :options [{:value "en" :label "English"}
-                                               {:value "it" :label "Italian"}
-                                               {:value "es" :label "Spanish"}]}
-                                    
-                                    {:name :target :type :select 
-                                     :label "Target Language"
-                                     :options [{:value "en" :label "English"}
-                                               {:value "it" :label "Italian"}
-                                               {:value "es" :label "Spanish"}]}]
+                                  {:name :target :type :select 
+                                   :label "Target Language"
+                                   :options [{:value "en" :label "English"}
+                                             {:value "it" :label "Italian"}
+                                             {:value "es" :label "Spanish"}]}])
 
-                                   (if show-source-lists
-                                     [{:name :source_groupings
-                                       :label "Source Lists"
-                                       :type :checkboxes
-                                       :cols 3
-                                       :options (map (fn [grouping]
-                                                       {:value (:id grouping)
-                                                        :label (:name grouping)})
-                                                     all-groups)}]
-                                     [])
-                                   [
-                                    {:name :target_groupings
-                                     :label (if show-source-lists 
-                                              "Target Lists"
-                                              "Lists")
-                                     :type :checkboxes
-                                     :cols 3
-                                     :options (map (fn [grouping]
-                                                     {:value (:id grouping)
-                                                      :label (:name grouping)})
-                                                   all-groups)
-                                     }
-                                    ]
-                                   )
                    
                    :cancel-href "/editor"
                    :values {:name (:game_name result)
@@ -381,7 +299,7 @@
                  ]
                 ))
             results))
-     )))
+     ))
 
 
 ;; TODO: consider using https://github.com/jkk/honeysql:
@@ -925,16 +843,17 @@ game to find what expressions are appropriate for particular game."
               
            results)]
 
-     [:div.new
-      [:form {:method "POST"
-              :enctype "multipart/form-data"
-              :action "/editor/group/new"}
+     (if (and language (not (= "" language)))
+       [:div.new
+        [:form {:method "POST"
+                :enctype "multipart/form-data"
+                :action "/editor/group/new"}
        
-       [:input {:name "name" :size "50"} ]
-       [:input {:type "hidden" 
-                :name "language" :value short-language} ]
-       [:button {:onclick "submit();"} "New List"]
-       ]]
+         [:input {:name "name" :size "50"} ]
+         [:input {:type "hidden" 
+                  :name "language" :value short-language} ]
+         [:button {:onclick "submit();"} "New List"]
+         ]])
 
      (show-group-edit-forms))))
 
