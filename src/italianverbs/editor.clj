@@ -251,7 +251,21 @@
                                   [])
                   debug (log/debug (str "creating checkbox form with currently-selected source-groups: " source-groups))
                   debug (log/debug (str "creating checkbox form with currently-selected target-groups: " target-groups))
-                  ]
+
+                  language-short-name language
+                  language-keyword-name
+                  (str "" (sqlname-from-match (short-language-name-to-long language)) "")
+
+                  debug (log/debug 
+                         (str "SELECT DISTINCT structure->'head'->" language-keyword-name "->" language-keyword-name "
+                                            AS lexeme 
+                                          FROM expression
+                                         WHERE language=" language-short-name "
+                                      ORDER BY lexeme"))
+
+
+ 
+                 ]
               [:div.editgame
                {:id (str "editgame" game-id)}
                [:h2 (str "Editing game: " (:game_name result))]
@@ -278,14 +292,25 @@
                                   {:name :target_lex
                                    :label "Target Lexicon"
                                    :type :checkboxes
-                                   :options (map (fn [lexeme]
-                                                   {:label lexeme
-                                                    :value lexeme})
-;                                                 (it/infinitive-verbs))
-;                                                 ["andare"])
-                                                 
-                                                 ["andare" "sbagliare"])
-                                   }
+                                   :cols 8
+                                   :options (map (fn [row]
+                                                   (let [lexeme (if (:lexeme row)
+                                                                  (:lexeme row)
+                                                                  "")
+                                                         lexeme (string/replace lexeme "\"" "")]
+                                                     {:label lexeme
+                                                      :value lexeme}))
+                                                 ;; TODO: be more selective: show only infinitives, and avoid irregular forms.
+                                                 (k/exec-raw [(str "SELECT DISTINCT structure->'head'->?->?
+                                                                                 AS lexeme 
+                                                                               FROM expression
+                                                                              WHERE language=?
+                                                                           ORDER BY lexeme") [language-keyword-name
+                                                                                              language-keyword-name
+                                                                                              language-short-name
+                                                                                              ]]
+                                                             :results))}
+
 
                                   ])
                    
