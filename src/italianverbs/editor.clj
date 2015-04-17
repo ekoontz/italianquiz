@@ -274,34 +274,28 @@
                 {:action (str "/editor/game/edit/" game-id)
                  :enctype "multipart/form-data"
                  :method :post
-                 :fields (concat [{:name :name :size 50 :label "Name"}
-                                  {:name :source :type :select 
-                                   :label "Source Language"
-                                   :options [{:value "en" :label "English"}
-                                             {:value "it" :label "Italian"}
-                                             {:value "es" :label "Spanish"}]}
+                 :fields (concat
 
-                                  {:name :target :type :select 
-                                   :label "Target Language"
-                                   :options [{:value "en" :label "English"}
-                                             {:value "it" :label "Italian"}
-                                             {:value "es" :label "Spanish"}]}]
+                          [{:name :name :size 50 :label "Name"}
+                           {:name :source :type :select 
+                            :label "Source Language"
+                            :options [{:value "en" :label "English"}
+                                      {:value "it" :label "Italian"}
+                                      {:value "es" :label "Spanish"}]}]
 
-                                 [
-
-                                  {:name :target_lex
-                                   :label "Target Lexicon"
-                                   :type :checkboxes
-                                   :cols 8
-                                   :options (map (fn [row]
-                                                   (let [lexeme (if (:lexeme row)
-                                                                  (:lexeme row)
-                                                                  "")
-                                                         lexeme (string/replace lexeme "\"" "")]
-                                                     {:label lexeme
-                                                      :value lexeme}))
-                                                 ;; TODO: be more selective: show only infinitives, and avoid irregular forms.
-                                                 (k/exec-raw [(str "SELECT DISTINCT structure->'head'->?->?
+                          [{:name :target_lex
+                            :label "Verbs"
+                            :type :checkboxes
+                            :cols 10
+                            :options (map (fn [row]
+                                            (let [lexeme (if (:lexeme row)
+                                                           (:lexeme row)
+                                                           "")
+                                                  lexeme (string/replace lexeme "\"" "")]
+                                              {:label lexeme
+                                               :value lexeme}))
+                                          ;; TODO: be more selective: show only infinitives, and avoid irregular forms.
+                                          (k/exec-raw [(str "SELECT DISTINCT structure->'head'->?->?
                                                                                  AS lexeme 
                                                                                FROM expression
                                                                               WHERE language=?
@@ -309,10 +303,38 @@
                                                                                               language-keyword-name
                                                                                               language-short-name
                                                                                               ]]
-                                                             :results))}
+                                                      :results))}
+                           
+                           ]
 
 
-                                  ])
+                          [{:name :target_tenses
+                            :label "Tenses"
+                            :type :checkboxes
+                            :cols 10
+                            :options (map (fn [row]
+                                            (let [lexeme (if (:tense row)
+                                                           (:tense row)
+                                                           "")
+                                                  lexeme (string/replace lexeme "\"" "")]
+                                              {:label lexeme
+                                               :value lexeme}))
+                                          ;; TODO: be more selective: show only infinitives, and avoid irregular forms.
+                                          (k/exec-raw [(str "SELECT DISTINCT structure->'synsem'->'sem'->'tense' 
+                                                                          AS tense
+                                                                        FROM expression
+                                                                    ORDER BY tense")]
+                                                      :results))}
+                           
+                           ]
+
+                          [{:name :target :type :select 
+                            :label "Target Language"
+                            :options [{:value "en" :label "English"}
+                                      {:value "it" :label "Italian"}
+                                      {:value "es" :label "Spanish"}]}]
+                          
+                          )
                    
                    :cancel-href (str "/editor/" language)
                    :values {:name (:game_name result)
