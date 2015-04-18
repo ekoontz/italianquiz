@@ -75,7 +75,18 @@
             :headers headers})))
 
    (POST "/game/delete/:game-to-delete" request
-         (is-admin (delete-game (:game-to-delete (:route-params request)))))
+         (is-admin
+          (let [message (delete-game (:game-to-delete (:route-params request)))]
+            {:status 302
+             :headers {"Location" (str "/editor/" "?message=" message)}})))
+
+   (POST "/game/delete/:language/:game-to-delete" request
+         (is-admin
+          (let [params (multipart-to-edn (:multipart-params request))
+                language (:language params)]
+            (let [message (delete-game (:game-to-delete (:route-params request)))]
+              {:status 302
+               :headers {"Location" (str "/editor/" language "?message=" message)}}))))
 
    (POST "/game/edit/:game-to-edit" request
          (do (log/debug (str "Doing POST /game/edit/:game-to-edit with request: " request))
@@ -226,9 +237,10 @@
                                            (map #(get-in % [:head language-keyword language-keyword]) 
                                                 (map json-read-str (.getArray (:target_lex result))))))]
 
-                [:td (string/join ", " (map #(html [:b %])
-                                           (map #(get-in % [:synsem :sem :tense]) 
-                                                (map json-read-str (.getArray (:target_grammar result))))))]
+                [:td (string/join ", " (map #(html [:b (str "" %)])
+                                            (map #(string/replace-first % ":" "")
+                                                 (map #(get-in % [:synsem :sem :tense]) 
+                                                      (map json-read-str (.getArray (:target_grammar result)))))))]
 
 
                 ]
@@ -269,8 +281,6 @@
                                   [])
                   debug (log/debug (str "creating checkbox form with currently-selected source-groups: " source-groups))
                   debug (log/debug (str "creating checkbox form with currently-selected target-groups: " target-groups))
-
-                  target-lex (map json-read-str (seq (.getArray (:target_lex result))))
 
                   language-short-name (:target result)
                   debug (log/debug (str "language-short-name:" language-short-name))
@@ -337,8 +347,10 @@
                                                            "")
                                                   lexeme (string/replace lexeme "\"" "")]
                                               {:label lexeme
-                                               :value lexeme}))
+                                               :value (keyword lexeme)}))
+                                          ;; Get all possible tenses from all possible expressions.
                                           ;; TODO: be more selective: show only infinitives, and avoid irregular forms.
+                                          ;; TODO: select only expressions for this game's language.
                                           (k/exec-raw [(str "SELECT DISTINCT structure->'synsem'->'sem'->'tense' 
                                                                           AS tense
                                                                         FROM expression
@@ -374,10 +386,19 @@
                             :target_lex (vec (remove #(or (nil? %)
                                                           (= "" %))
                                                      (map #(let [path [:head language-keyword language-keyword]
-                                                                 debug (log/debug (str "CHECKBOX TICK(path=" path ": ["
+                                                                 debug (log/debug (str "CHECKBOX TICK (:target_lex) (path=" path ": ["
                                                                                        (get-in % path nil) "]"))]
                                                              (get-in % path nil))
-                                                          target-lex)))
+                                                          (map json-read-str (seq (.getArray (:target_lex result)))))))
+
+
+                            :target_tenses (vec (remove #(or (nil? %)
+                                                             (= "" %))
+                                                        (map #(let [path [:synsem :sem :tense]
+                                                                    debug (log/debug (str "CHECKBOX TICK (:target_tenses) (path=" path ": ["
+                                                                                          (get-in % path nil) "]"))]
+                                                                (get-in % path nil))
+                                                             (map json-read-str (seq (.getArray (:target_grammar result)))))))
 
 
 
@@ -394,7 +415,7 @@
                   [:div {:style "float:right"}
                   [:form
                    {:method "post"
-                    :action (str "/editor/game/delete/" game-id)}
+                    :action (str "/editor/game/" language "/delete/" game-id)}
                    [:button.confirm_delete {:onclick (str "submit();")} "Delete Game"]]]
                   ]
                  ]
@@ -552,7 +573,8 @@ game to find what expressions are appropriate for particular game."
         "Show games for:"
         [:div {:style "float:right;padding-left:1em;width:auto;"}
          [:form {:method "get"}
-          [:select#edit_which_language {:name "language" :onchange (str "document.location='/editor/' + this.value")}
+          [:select#edit_which_language {:name "language" 
+                                        :onchange (str "document.location='/editor/' + this.value")}
            (map (fn [lang-pair]
                   (let [label (:label lang-pair)
                         value (:value lang-pair)]
@@ -643,10 +665,12 @@ game to find what expressions are appropriate for particular game."
             game-row (first (k/exec-raw [(str "SELECT * FROM game WHERE id=?") [game-id]] :results))]
         (log/debug (str "GAME ROW: " game-row))
         (k/exec-raw [(str "DELETE FROM game WHERE id=?") [game-id]])
-        {:status 302
-         :headers {"Location" (str "/editor/" "?message=Deleted+game:" (:name game-row))}}))
-    {:status 302
-     :headers {"Location" (str "/editor/" "?message=no+game+to+delete")}}))
+        (str "Deleted game: " (:name game-row))))
+
+    ;; game-id is null:
+    (let [error-message (str "Error: no game to delete: game-id was null.")]
+      (log/error error-message)
+      error-message)))
 
 (defn delete-group [group-id]
   (if group-id
@@ -662,6 +686,7 @@ game to find what expressions are appropriate for particular game."
      :headers {"Location" (str "/editor/" "?message=no+group+to+delete")}}))
 
 (defn update-game [game-id params]
+  ;; TODO: move 302 redirect to routing.
   (let [game-id game-id
         dump-sql false
         params (multipart-to-edn params)
@@ -704,10 +729,19 @@ game to find what expressions are appropriate for particular game."
         (map (fn [each-lexeme]
                {:head {language-name {language-name each-lexeme}}})
              (filter #(not (= (string/trim %) ""))
-                     (:target_lex params)))]
+                     (:target_lex params)))
+
+        target-tenses-as-specs 
+        (map (fn [each-tense]
+               {:synsem {:sem {:tense each-tense}}})
+             (filter #(not (= (string/trim %) ""))
+                     (:target_tenses params)))
+
+        ]
 
     (log/debug (str "Editing game with id= " game-id))
     (log/debug (str "Lexical specs: " target-lexical-specs))
+    (log/debug (str "Tense specs: " target-tenses-as-specs))
 
     (let [target-lex-as-specs
           (str "ARRAY["
@@ -719,10 +753,19 @@ game to find what expressions are appropriate for particular game."
                                  target-lexical-specs))
                "]::jsonb[]")
 
-          ;; TODO: target-tense
+          target-tenses-as-specs
+          (str "ARRAY["
+               (string/join ","
+                            (map (fn [target-tense-spec]
+                                   (str "'"
+                                        (json/write-str target-tense-spec)
+                                        "'"))
+                                 target-tenses-as-specs))
+               "]::jsonb[]")
+
           sql (str "UPDATE game "
-                   "SET (name,source,target,target_lex) "
-                   "= (?,?,?," target-lex-as-specs ") WHERE id=?")]
+                   "SET (name,source,target,target_lex,target_grammar) "
+                   "= (?,?,?," target-lex-as-specs "," target-tenses-as-specs ") WHERE id=?")]
 
       (log/debug (str "UPDATE sql: " sql))
       (if dump-sql
@@ -927,7 +970,7 @@ game to find what expressions are appropriate for particular game."
                  (cond (= group-to-edit group-id)
                        [:div
                         [:form#update_group
-                         {:method "POST"
+                         {:method "post"
                           :action (str "/editor/group/edit/" group-id)}]
                         
                         [:button {:onclick (str "$(\"#update_group\").submit();")} "Confirm"]]
@@ -935,7 +978,7 @@ game to find what expressions are appropriate for particular game."
                        (= group-to-delete group-id)
                        [:div
                         [:form#confirm_delete_group
-                         {:method "POST"
+                         {:method "post"
                           :action (str "/editor/group/delete/" group-id)}]
                         
                         [:button.confirm_delete {:onclick (str "$(\"#confirm_delete_group\").submit();")} "Confirm"]]
@@ -1170,7 +1213,7 @@ game to find what expressions are appropriate for particular game."
                   
                   [:div {:style "float:right"}
                    [:form
-                    {:method "POST"
+                    {:method "post"
                     :action (str "/editor/group/delete/" group-id)}
                     [:button.confirm_delete {:onclick (str "submit();")} "Delete List"]]]
                   ]
@@ -1282,6 +1325,11 @@ game to find what expressions are appropriate for particular game."
                                        (= k :italiano))
                                    (not (map? v)))
                               (str v)
+                              
+                              (and (string? v)
+                                   (= (nth v 0) \:))
+                              (keyword (string/replace-first v ":" ""))
+
                               (string? v)
                               (keyword v)
                               :else v))))
@@ -1403,8 +1451,4 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
 
 (def headers {"Content-Type" "text/html;charset=utf-8"})
 
-(declare show-group-edit-forms)
-(declare show-games)
-(declare show-groups)
-(declare unabbrev)
 
