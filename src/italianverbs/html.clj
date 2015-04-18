@@ -12,6 +12,7 @@
    [clojure.tools.logging :as log]
    [hiccup.element :as e]
    [hiccup.page :as h]
+   [italianverbs.auth :as auth]
    [italianverbs.menubar :as menubar]
    [italianverbs.morphology :refer [fo]]
    [italianverbs.session :as session]
@@ -812,11 +813,8 @@
                            #"^admin" "teacher")
 
 
-                         (-> identity friend/current-authentication :roles)))]
+                         (auth/get-loggedin-user-roles)))]
       [:td {:style "float:right;white-space:nowrap"} (e/link-to (str "/" "logout") "Log out") ""]]]])
-
-(defn get-loggedin-user-roles []
-  (-> identity friend/current-authentication :roles))
 
 (def login-form
   [:div 

@@ -53,3 +53,7 @@
                           :roles #{::user}}}))
 (derive ::admin ::user)
 ;; </BEGIN TEST AUTHENTICATION/AUTHORIZATION>
+
+(defn get-loggedin-user-roles []
+  (-> identity friend/current-authentication :roles))
+
