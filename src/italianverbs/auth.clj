@@ -6,7 +6,6 @@
 (require '[environ.core :refer [env]])
 (require '[italianverbs.korma :as db])
 (require '[cemerick.friend :as friend])
-(require '[cemerick.friend.workflows :as workflows])
 (require '[cemerick.friend.credentials :as creds])
 
 (defn get-user-id [fetch-fn]
