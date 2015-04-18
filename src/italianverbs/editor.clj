@@ -238,7 +238,7 @@
                                                 (map json-read-str (.getArray (:target_lex result))))))]
 
                 [:td (string/join ", " (map #(html [:b (str "" %)])
-                                            (map #(if (string? %) (string/replace-first % ":" "")
+                                            (map #(if (keyword? %) (string/replace-first (str %) ":" "")
                                                       %)
                                                  (map #(get-in % [:synsem :sem :tense]) 
                                                       (map json-read-str (.getArray (:target_grammar result)))))))]
