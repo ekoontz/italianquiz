@@ -21,7 +21,7 @@
   (log/debug (str "haz-admin: current-authentication: " (friend/current-authentication)))
   (and (not (nil? (friend/current-authentication)))
        (not (nil?
-             (:italianverbs.auth/admin
+             (:italianverbs.auth.internal/admin
               (:roles (friend/current-authentication)))))))
 
 ;; TODO: should be a macro, so that 'if-admin' is not evaluated unless (haz-admin) is true.
@@ -39,5 +39,14 @@
      :headers {"Location" "/login"}}))
 
 (defn get-loggedin-user-roles [identity]
-  (-> identity friend/current-authentication :roles))
+  (map #(str/replace
+         (str/replace (str/replace 
+                       (str %) 
+                       ":italianverbs.auth.internal/" "")
+                      #"^user" "student")
+         #"^admin" "teacher")
+
+       (-> identity friend/current-authentication :roles)))
+
+
 

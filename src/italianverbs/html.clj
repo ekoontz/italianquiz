@@ -805,15 +805,7 @@
        (str "Roles")]
       [:td {:style "white-space:nowrap"}
        (string/join ","
-                    (map #(string/replace
-                           (string/replace (string/replace 
-                                            (str %) 
-                                            ":italianverbs.auth.internal/" "")
-                                           #"^user" "student")
-                           #"^admin" "teacher")
-
-
-                         (auth/get-loggedin-user-roles identity)))]
+                    (auth/get-loggedin-user-roles identity))]
       [:td {:style "float:right;white-space:nowrap"} (e/link-to (str "/" "logout") "Log out") ""]]]])
 
 (def login-form
