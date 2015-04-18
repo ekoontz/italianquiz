@@ -61,6 +61,10 @@
                    :status 200
                    :headers headers}))
 
+   (GET "/:language/" request
+         {:status 302
+          :headers {"Location" (str "/editor/" (:language (:route-params request)))}})
+
    (GET "/game/delete/:game-to-delete" request
         (is-admin
          (let [game-to-delete (:game-to-delete (:route-params request))]
@@ -75,6 +79,11 @@
 
    (POST "/game/edit/:game-to-edit" request
          (do (log/debug (str "Doing POST /game/edit/:game-to-edit with request: " request))
+             (is-admin (update-game (:game-to-edit (:route-params request))
+                                    (multipart-to-edn (:multipart-params request))))))
+
+   (POST "/game/edit/:language/:game-to-edit" request
+         (do (log/debug (str "Doing POST /game/edit/:language/:game-to-edit with request: " request))
              (is-admin (update-game (:game-to-edit (:route-params request))
                                     (multipart-to-edn (:multipart-params request))))))
 
@@ -197,7 +206,14 @@
        ]
 
       (map (fn [result]
-             (let [game-id (:id result)]
+             (let [game-id (:id result)
+                   language-short-name (:target result)
+                   debug (log/debug (str "language-short-name:" language-short-name))
+                   language-keyword-name
+                   (str "" (sqlname-from-match (short-language-name-to-long language-short-name)) "")
+                   language-keyword
+                   (keyword language-keyword-name)]
+
                [:tr 
                 [:td
                  (if (= game-to-edit game-id)
@@ -207,7 +223,7 @@
                    )]
 
                 [:td (string/join ", " (map #(html [:i %])
-                                           (map #(get-in % [:head :italiano :italiano]) 
+                                           (map #(get-in % [:head language-keyword language-keyword]) 
                                                 (map json-read-str (.getArray (:target_lex result))))))]
 
                 [:td (string/join ", " (map #(html [:b %])
@@ -254,9 +270,15 @@
                   debug (log/debug (str "creating checkbox form with currently-selected source-groups: " source-groups))
                   debug (log/debug (str "creating checkbox form with currently-selected target-groups: " target-groups))
 
-                  language-short-name language
+                  target-lex (map json-read-str (seq (.getArray (:target_lex result))))
+
+                  language-short-name (:target result)
+                  debug (log/debug (str "language-short-name:" language-short-name))
                   language-keyword-name
-                  (str "" (sqlname-from-match (short-language-name-to-long language)) "")
+                  (str "" (sqlname-from-match (short-language-name-to-long language-short-name)) "")
+
+                  language-keyword
+                  (keyword language-keyword-name)
 
                   debug (log/debug 
                          (str "SELECT DISTINCT structure->'head'->" language-keyword-name "->" language-keyword-name "
@@ -279,13 +301,6 @@
                  :method :post
                  :fields (concat
 
-                          [{:name :name :size 50 :label "Name"}
-                           {:name :source :type :select 
-                            :label "Source Language"
-                            :options [{:value "en" :label "English"}
-                                      {:value "it" :label "Italian"}
-                                      {:value "es" :label "Spanish"}]}]
-
                           [{:name :target_lex
                             :label "Verbs"
                             :type :checkboxes
@@ -302,10 +317,11 @@
                                                                                  AS lexeme 
                                                                                FROM expression
                                                                               WHERE language=?
-                                                                           ORDER BY lexeme") [language-keyword-name
-                                                                                              language-keyword-name
-                                                                                              language-short-name
-                                                                                              ]]
+                                                                           ORDER BY lexeme") 
+                                                       [language-keyword-name
+                                                        language-keyword-name
+                                                        language-short-name
+                                                        ]]
                                                       :results))}
                            
                            ]
@@ -331,6 +347,15 @@
                            
                            ]
 
+
+                          [{:name :name :size 50 :label "Name"}
+                           {:name :source :type :select 
+                            :label "Source Language"
+                            :options [{:value "en" :label "English"}
+                                      {:value "it" :label "Italian"}
+                                      {:value "es" :label "Spanish"}]}]
+
+
                           [{:name :target :type :select 
                             :label "Target Language"
                             :options [{:value "en" :label "English"}
@@ -345,6 +370,17 @@
                             :source (:source result)
                             :source_groupings source-groups
                             :target_groupings target-groups
+
+                            :target_lex (vec (remove #(or (nil? %)
+                                                          (= "" %))
+                                                     (map #(let [path [:head language-keyword language-keyword]
+                                                                 debug (log/debug (str "CHECKBOX TICK(path=" path ": ["
+                                                                                       (get-in % path nil) "]"))]
+                                                             (get-in % path nil))
+                                                          target-lex)))
+
+
+
                             }
 
                    :validations [[:required [:name]   
@@ -626,7 +662,7 @@ game to find what expressions are appropriate for particular game."
 
 (defn update-game [game-id params]
   (let [game-id game-id
-        dump-sql true
+        dump-sql false
         params (multipart-to-edn params)
         debug  (log/debug (str "UPDATING GAME WITH PARAMS (converted to keywords): " params))
 
@@ -673,19 +709,21 @@ game to find what expressions are appropriate for particular game."
     (log/debug (str "Lexical specs: " target-lexical-specs))
 
     (let [target-lex-as-specs
-          (if (empty? target-lexical-specs)
-            (str "ARRAY[]::jsonb[]")
-            (str "ARRAY['" 
-                 (string/join "'::jsonb,'"
-                              (map json/write-str
-                                   target-lexical-specs))
-                 "'::jsonb]"))
+          (str "ARRAY["
+               (string/join ","
+                            (map (fn [target-lexical-spec]
+                                   (str "'"
+                                        (json/write-str target-lexical-spec)
+                                        "'"))
+                                 target-lexical-specs))
+               "]::jsonb[]")
 
           ;; TODO: target-tense
-          sql (str "UPDATE game SET (name,source,target,target_lex) = (?,?,?," target-lex-as-specs ") WHERE id=?")]
+          sql (str "UPDATE game "
+                   "SET (name,source,target,target_lex) "
+                   "= (?,?,?," target-lex-as-specs ") WHERE id=?")]
 
       (log/debug (str "UPDATE sql: " sql))
-      (log/debug (str "dump-sql: " dump-sql))
       (if dump-sql
         {:headers {"Content-type" "application/json;charset=utf-8"}
          :body (json/write-str {:sql sql
@@ -702,7 +740,7 @@ game to find what expressions are appropriate for particular game."
                           (Integer. game-id)]])
 
             {:status 302
-             :headers {"Location" (str "/editor/" "?message=Edited+game:" game-id)}})))))
+             :headers {"Location" (str "/editor/" (:target params) "/?message=Edited+game:" game-id)}})))))
 
 ;; TODO: consider using https://github.com/jkk/honeysql:
 ;; "SQL as Clojure data structures. Build queries programmatically -- even at runtime -- without having to bash strings together."
