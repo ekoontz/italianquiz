@@ -16,7 +16,8 @@
    [environ.core :refer [env]]
    [hiccup.page :as h]
    [italianverbs.about :as about]
-   [italianverbs.auth :as auth :refer [confirm-and-create-user get-user-id haz-admin is-authenticated users]]
+   [italianverbs.auth :as auth :refer [confirm-and-create-user get-user-id haz-admin is-authenticated]]
+   [italianverbs.auth.internal :as internal]
    [italianverbs.class :as class]
    [italianverbs.editor :as editor]
    [italianverbs.html :as html]
@@ -105,7 +106,7 @@
                                                          [:p "You do not have sufficient privileges to access " (:uri %) "."]]) %)
                              resp/response
                              (resp/status 401))
-     :credential-fn #(creds/bcrypt-credential-fn @auth/users %)
+     :credential-fn #(creds/bcrypt-credential-fn @internal/users %)
      ;; in the above, the @users map functions as 1-arg fn: (fn [user]) that returns a user's
      ;; authentication and authorization info, so if you "call" @users with a given argument, (i.e. get the given
      ;; key in the @users map, e.g.:

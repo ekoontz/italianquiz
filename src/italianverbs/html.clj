@@ -808,12 +808,12 @@
                     (map #(string/replace
                            (string/replace (string/replace 
                                             (str %) 
-                                            ":italianverbs.auth/" "")
+                                            ":italianverbs.auth.internal/" "")
                                            #"^user" "student")
                            #"^admin" "teacher")
 
 
-                         (auth/get-loggedin-user-roles)))]
+                         (auth/get-loggedin-user-roles identity)))]
       [:td {:style "float:right;white-space:nowrap"} (e/link-to (str "/" "logout") "Log out") ""]]]])
 
 (def login-form

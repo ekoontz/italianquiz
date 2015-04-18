@@ -38,22 +38,6 @@
     {:status 302
      :headers {"Location" "/login"}}))
 
-;; <BEGIN TEST AUTHENTICATION/AUTHORIZATION>
-(def users (atom {"franco" {:username "franco"
-                            :password (creds/hash-bcrypt "franco")
-                            :roles #{::user ::admin}}
-
-                  "michael" {:username "michael"
-                             :password (creds/hash-bcrypt "marcheschi")
-                             :roles #{::user ::admin}}
-
-
-                  "gino" {:username "gino"
-                          :password (creds/hash-bcrypt "gino")
-                          :roles #{::user}}}))
-(derive ::admin ::user)
-;; </BEGIN TEST AUTHENTICATION/AUTHORIZATION>
-
-(defn get-loggedin-user-roles []
+(defn get-loggedin-user-roles [identity]
   (-> identity friend/current-authentication :roles))
 
