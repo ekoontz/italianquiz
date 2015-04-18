@@ -546,7 +546,8 @@ game to find what expressions are appropriate for particular game."
      title
      (html
       [:div {:class "major"}
-       [:h2 "Game Editor"]
+       [:h2 (str "Game Editor" (if language (str ": " 
+                                                  (short-language-name-to-long language))))]
        [:div {:style "margin-left:0.5em;float:left;width:auto"}
         "Show games for:"
         [:div {:style "float:right;padding-left:1em;width:auto;"}
