@@ -40,9 +40,7 @@
 
 (defn get-loggedin-user-roles [identity]
   (map #(str/replace
-         (str/replace (str/replace 
-                       (str %) 
-                       ":italianverbs.auth.internal/" "")
+         (str/replace %
                       #"^user" "student")
          #"^admin" "teacher")
 
