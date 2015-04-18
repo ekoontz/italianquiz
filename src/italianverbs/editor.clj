@@ -34,6 +34,7 @@
 (declare show-games)
 (declare show-group-edit-forms)
 (declare show-groups)
+(declare sqlname-from-match)
 (declare unabbrev)
 (declare update-game)
 (declare update-group)
