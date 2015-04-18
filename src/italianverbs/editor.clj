@@ -28,6 +28,7 @@
 (declare json-read-str)
 (declare multipart-to-edn)
 (declare set-as-default)
+(declare short-language-name-to-edn)
 (declare short-language-name-to-long)
 (declare shortname-from-match)
 (declare show-games)
@@ -263,8 +264,9 @@
                                          WHERE language=" language-short-name "
                                       ORDER BY lexeme"))
 
+                  debug (log/debug (str "language-keyword-name: " language-keyword-name))
+                  debug (log/debug (str "language-short-name: " language-short-name))
 
- 
                  ]
               [:div.editgame
                {:id (str "editgame" game-id)}
@@ -623,6 +625,7 @@ game to find what expressions are appropriate for particular game."
 
 (defn update-game [game-id params]
   (let [game-id game-id
+        dump-sql true
         params (multipart-to-edn params)
         debug  (log/debug (str "UPDATING GAME WITH PARAMS (converted to keywords): " params))
 
@@ -656,52 +659,49 @@ game to find what expressions are appropriate for particular game."
 
 
         debug (log/debug (str "project name will be updated to: " (:name params)))
+ 
+        language-name (short-language-name-to-edn (:target params))
 
-        debug (log/debug (str "edit: source-groupings type(1):" (type source-grouping-set)))
-        debug (log/debug (str "edit: target-groupings type(1):" (type target-grouping-set)))
-
-        debug (log/debug (str "edit: source-groupings(1):" source-grouping-set))
-        debug (log/debug (str "edit: target-groupings(1):" target-grouping-set))
-
-        ;; cleanup
-        source-grouping-set (vec (map #(do (log/debug (str "update-game: trying to parse source-grouping-set:" %))
-                                           (Integer/parseInt %))
-                                      (remove #(= "" %)
-                                              source-grouping-set)))
-        
-        target-grouping-set (vec (map #(do (log/debug (str "update-game: trying to parse target-grouping-set:" %))
-                                           (Integer/parseInt %))
-                                      (remove #(= "" %)
-                                              target-grouping-set)))
-                                 
-        debug (log/debug (str "edit: source-groupings length(2):" (.length source-grouping-set)))
-        debug (log/debug (str "edit: target-groupings length(2):" (.length target-grouping-set)))
-
-        debug (log/debug (str "edit: source-groupings type(2):" (type source-grouping-set)))
-        debug (log/debug (str "edit: target-groupings type(2):" (type target-grouping-set)))
-
-        debug (log/debug (str "edit: source-groupings(2):" source-grouping-set))
-        debug (log/debug (str "edit: target-groupings(2):" target-grouping-set))
-
-
-        source-grouping-str (str "ARRAY[" (string/join "," source-grouping-set) "]::integer[]")
-
-        target-grouping-str (str "ARRAY[" (string/join "," target-grouping-set) "]::integer[]")]
+        target-lexical-specs 
+        (map (fn [each-lexeme]
+               {:head {language-name {language-name each-lexeme}}})
+             (filter #(not (= (string/trim %) ""))
+                     (:target_lex params)))]
 
     (log/debug (str "Editing game with id= " game-id))
+    (log/debug (str "Lexical specs: " target-lexical-specs))
 
-    (let [sql (str "UPDATE game SET (name,source,target,source_groupings,target_groupings) = (?,?,?," 
-                   source-grouping-str "," target-grouping-str ") WHERE id=?")]
+    (let [target-lex-as-specs
+          (if (empty? target-lexical-specs)
+            (str "ARRAY[]::jsonb[]")
+            (str "ARRAY['" 
+                 (string/join "'::jsonb,'"
+                              (map json/write-str
+                                   target-lexical-specs))
+                 "'::jsonb]"))
+
+          ;; TODO: target-tense
+          sql (str "UPDATE game SET (name,source,target,target_lex) = (?,?,?," target-lex-as-specs ") WHERE id=?")]
 
       (log/debug (str "UPDATE sql: " sql))
-      (k/exec-raw [sql
-                   [(:name params)
-                    (:source params)
-                    (:target params)
-                    (Integer. game-id)]])
+      (log/debug (str "dump-sql: " dump-sql))
+      (if dump-sql
+        {:headers {"Content-type" "application/json;charset=utf-8"}
+         :body (json/write-str {:sql sql
+                                :params params
+                                :name (:name params)
+                                :source (:source params)
+                                :target (:target params)
+                                :game-id (Integer. game-id)})}
+          (do
+            (k/exec-raw [sql
+                         [(:name params)
+                          (:source params)
+                          (:target params)
+                          (Integer. game-id)]])
 
-      {:status 302
-       :headers {"Location" (str "/editor/" "?message=Edited+game:" game-id)}})))
+            {:status 302
+             :headers {"Location" (str "/editor/" "?message=Edited+game:" game-id)}})))))
 
 ;; TODO: consider using https://github.com/jkk/honeysql:
 ;; "SQL as Clojure data structures. Build queries programmatically -- even at runtime -- without having to bash strings together."
@@ -1222,6 +1222,12 @@ game to find what expressions are appropriate for particular game."
         (= lang "en") "English"
         (= lang "es") "Spanish"
         true "???"))
+
+(defn short-language-name-to-edn [lang]
+  (cond (= lang "it") :italiano
+        (= lang "en") :english
+        (= lang "es") :espanol
+        true (str "unknown lang: " lang)))
 
 (defn unabbrev [lang]
   (short-language-name-to-long lang))
