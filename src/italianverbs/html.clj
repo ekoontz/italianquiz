@@ -807,7 +807,7 @@
                     (map #(string/replace
                            (string/replace (string/replace 
                                             (str %) 
-                                            ":italianverbs.core/" "")
+                                            ":italianverbs.auth/" "")
                                            #"^user" "student")
                            #"^admin" "teacher")
 
