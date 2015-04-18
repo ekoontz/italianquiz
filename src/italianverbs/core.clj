@@ -16,7 +16,7 @@
    [environ.core :refer [env]]
    [hiccup.page :as h]
    [italianverbs.about :as about]
-   [italianverbs.auth :as auth :refer [confirm-and-create-user get-user-id haz-admin is-authenticated]]
+   [italianverbs.auth :as auth :refer [confirm-and-create-user get-user-id haz-admin is-authenticated users]]
    [italianverbs.class :as class]
    [italianverbs.editor :as editor]
    [italianverbs.html :as html]
@@ -89,23 +89,6 @@
 ;  (route/not-found (html/page "Non posso trovare questa pagina (page not found)." (str "Non posso trovare questa pagina. Sorry, page not found. ")))
 )
 
-;; <BEGIN TEST AUTHENTICATION/AUTHORIZATION>
-;; TODO: move to dedicated namespace.
-(def users (atom {"franco" {:username "franco"
-                            :password (creds/hash-bcrypt "franco")
-                            :roles #{::user ::admin}}
-
-                  "michael" {:username "michael"
-                             :password (creds/hash-bcrypt "marcheschi")
-                             :roles #{::user ::admin}}
-
-
-                  "gino" {:username "gino"
-                          :password (creds/hash-bcrypt "gino")
-                          :roles #{::user}}}))
-(derive ::admin ::user)
-;; </BEGIN TEST AUTHENTICATION/AUTHORIZATION>
-
 ;; TODO: clear out cache of sentences-per-user session when starting up.
 (def app
   (handler/site 
@@ -122,7 +105,7 @@
                                                          [:p "You do not have sufficient privileges to access " (:uri %) "."]]) %)
                              resp/response
                              (resp/status 401))
-     :credential-fn #(creds/bcrypt-credential-fn @users %)
+     :credential-fn #(creds/bcrypt-credential-fn @auth/users %)
      ;; in the above, the @users map functions as 1-arg fn: (fn [user]) that returns a user's
      ;; authentication and authorization info, so if you "call" @users with a given argument, (i.e. get the given
      ;; key in the @users map, e.g.:

@@ -21,7 +21,7 @@
   (log/debug (str "haz-admin: current-authentication: " (friend/current-authentication)))
   (and (not (nil? (friend/current-authentication)))
        (not (nil?
-             (:italianverbs.core/admin
+             (:italianverbs.auth/admin
               (:roles (friend/current-authentication)))))))
 
 ;; TODO: should be a macro, so that 'if-admin' is not evaluated unless (haz-admin) is true.
@@ -38,3 +38,18 @@
     {:status 302
      :headers {"Location" "/login"}}))
 
+;; <BEGIN TEST AUTHENTICATION/AUTHORIZATION>
+(def users (atom {"franco" {:username "franco"
+                            :password (creds/hash-bcrypt "franco")
+                            :roles #{::user ::admin}}
+
+                  "michael" {:username "michael"
+                             :password (creds/hash-bcrypt "marcheschi")
+                             :roles #{::user ::admin}}
+
+
+                  "gino" {:username "gino"
+                          :password (creds/hash-bcrypt "gino")
+                          :roles #{::user}}}))
+(derive ::admin ::user)
+;; </BEGIN TEST AUTHENTICATION/AUTHORIZATION>

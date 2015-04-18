@@ -23,7 +23,7 @@
 
 (defn menubar [session-row current-url haz-authentication & [suffixes]]
   (let [roles (:roles haz-authentication)
-        haz-admin? (not (nil? (:italianverbs.core/admin roles)))]
+        haz-admin? (not (nil? (:italianverbs.auth/admin roles)))]
 
     (log/debug (str "Drawing menubar with current-url=" current-url))
     (log/debug (str "Menubar with suffixes: " suffixes))
