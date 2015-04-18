@@ -6,8 +6,7 @@
    [ring.util.response :as resp]
 
    [cemerick.friend :as friend]
-   (cemerick.friend [workflows :as workflows]
-                    [credentials :as creds])
+   (cemerick.friend [workflows :as workflows])
    [clojure.java.io :as io]
    [clojure.tools.logging :as log]
    [compojure.core :refer [context defroutes GET PUT POST DELETE ANY]]
@@ -106,7 +105,7 @@
                                                          [:p "You do not have sufficient privileges to access " (:uri %) "."]]) %)
                              resp/response
                              (resp/status 401))
-     :credential-fn #(creds/bcrypt-credential-fn @internal/users %)
+     :credential-fn #(auth/credential-fn %)
      ;; in the above, the @users map functions as 1-arg fn: (fn [user]) that returns a user's
      ;; authentication and authorization info, so if you "call" @users with a given argument, (i.e. get the given
      ;; key in the @users map, e.g.:

@@ -4,6 +4,8 @@
 (require '[clojure.string :as str])
 (require '[digest])
 (require '[environ.core :refer [env]])
+(require '[italianverbs.auth.internal :as internal])
+(require '[italianverbs.auth.google :as google])
 (require '[italianverbs.korma :as db])
 (require '[cemerick.friend :as friend])
 (require '[cemerick.friend.credentials :as creds])
@@ -46,5 +48,6 @@
 
        (-> identity friend/current-authentication :roles)))
 
-
+(defn credential-fn [arg]
+  (creds/bcrypt-credential-fn @internal/users arg))
 
