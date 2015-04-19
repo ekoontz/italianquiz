@@ -1,5 +1,6 @@
 (ns italianverbs.auth)
 
+;; TODO: cleanup (require)s.
 (require '[clojure.tools.logging :as log])
 (require '[clojure.string :as str])
 (require '[compojure.core :as compojure :refer [context GET PUT POST DELETE ANY]])
@@ -67,6 +68,7 @@
 
        (-> identity friend/current-authentication :roles)))
 
+;; TODO: add function to designate google users who are admins.
 (defn credential-fn [arg]
   (log/debug (str "calling credential-fn with arg: " arg))
   (creds/bcrypt-credential-fn @internal/users arg))
@@ -93,18 +95,28 @@
        [:th "Password"][:td [:input {:type "password" :name "password" :size "10"}]]
        [:td [:input {:type "submit" :class "button" :value "Login"}]]]]]]])
 
+(defn token2username [access-token]
+  (str "EUGENE J KOONTZ"))
+
 (defn logged-in-content [req identity]
   (log/debug (str "logged-in-content with identity: " identity))
-  [:div {:class "login major"}
-    [:table {:style "border:0px"}
-     [:tr
-      [:th
-       (str "User")]
-      [:td
-       (:current identity)]
-      [:th
-       (str "Roles")]
-      [:td {:style "white-space:nowrap"}
-       (str/join ","
-                    (get-loggedin-user-roles identity))]
-      [:td {:style "float:right;white-space:nowrap"} [:a {:href "/auth/logout"} "Log out"]]]]])
+  (let [username (cond (string? (:current identity))
+                       (:current identity)
+                       (map? (:current identity))
+                       ;; assume google for now
+                       (token2username (-> identity :current :access-token)))]
+    
+    [:div {:class "login major"}
+     [:table {:style "border:0px"}
+      [:tr
+       [:th
+        (str "User")]
+       [:td
+        username]
+       [:th
+        (str "Roles")]
+       [:td {:style "white-space:nowrap"}
+        (str/join ","
+                  (get-loggedin-user-roles identity))]
+       [:td {:style "float:right;white-space:nowrap"} [:a {:href "/auth/logout"} "Log out"]]]]]))
+
