@@ -1,6 +1,7 @@
 (ns italianverbs.auth.google
   (:require [cemerick.friend [workflows :as workflows]]
             [cemerick.friend :as friend]
+            [clojure.tools.logging :as log]
             [compojure.core :as compojure :refer [ANY GET]]
             [compojure.handler :as handler]
             [compojure.route :as route]
@@ -8,14 +9,22 @@
             [friend-oauth2.util :refer [format-config-uri]]
             [italianverbs.auth :as auth]))
 
+(derive ::admin ::user)
+
+;(def client-config
+;  {:client-id "946241140791-833sod9itqgm9v8ihi0gj4ca9c3oevcr.apps.googleusercontent.com"
+;   :client-secret "pAD9FWexu96vw8YPH0fbPAoB"
+;   :callback {:domain "http://localhost:3000" :path "/oauth2callback"}})
+
+;; verbcoach-workstation
+(def client-config
+  {:client-id "652200734300-3tbdfqhisnlctt6vh70boofrc08qc6a7.apps.googleusercontent.com"
+   :client-secret "Nvj41la8ao_wsnXQunbp5arR"
+   :callback {:domain "http://localhost:3000" :path "/oauth2callback"}})
+
 (defn credential-fn [token]
   ;;lookup token in DB or whatever to fetch appropriate :roles
   {:identity token :roles #{::user}})
-
-(def client-config
-  {:client-id "946241140791-833sod9itqgm9v8ihi0gj4ca9c3oevcr.apps.googleusercontent.com"
-   :client-secret "pAD9FWexu96vw8YPH0fbPAoB"
-   :callback {:domain "http://localhost:3000" :path "/oauth2callback"}})
 
 (def uri-config
   {:authentication-uri {:url "https://accounts.google.com/o/oauth2/auth"
@@ -30,11 +39,6 @@
                               :grant_type "authorization_code"
                               :redirect_uri (format-config-uri client-config)}}})
 
-;  (GET "/authlink" request
-;       (friend/authorize #{::user} "Authorized page."))
-;       (friend/authorize #{:italianverbs.auth.internal/user :italianverbs.auth.google/user} "Authorized page."))
-
-
 (def auth-config {:client-config client-config
                   :uri-config uri-config
                   :credential-fn credential-fn})
@@ -43,8 +47,9 @@
 (defn is-authenticated [if-authenticated]
   (if (not (nil? (friend/current-authentication)))
     if-authenticated
-    {:status 302
-     :headers {"Location" "/login"}}))
+     (do (log/debug (str "is-authenticated: not authenticated; redirecting to /"))
+         {:status 302
+          :headers {"Location" "/"}})))
 
 (def routes
   (compojure/routes
@@ -56,14 +61,16 @@
                (str "<p>We've hit the session page " (:count session)
                     " times.</p><p>The current session: " session "</p>"))
               (assoc :session session))))
-   (GET "/authlink" request
-        (do (friend/authorize #{::user} "Authorized page.")
-            (is-authenticated
-             {:status 302
-              :headers {"Location" "/"}})))
 
-   (GET "/authlink2" request
-        (friend/authorize #{::user} "Authorized page 2."))
+
+
+   (GET "/login" request
+        (do
+          (friend/authorize #{::user} "Authorized page.")
+          (is-authenticated
+           {:status 302
+            :headers {"Location" "/"}})))
+        
    (GET "/admin" request
         (friend/authorize #{::admin} "Only admins can see this page."))))
 
