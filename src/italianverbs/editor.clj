@@ -15,8 +15,7 @@
    [italianverbs.unify :refer [get-in strip-refs]]
 
    [hiccup.core :refer (html)]
-   [korma.core :as k]
-))
+   [korma.core :as k]))
 
 (declare body)
 (declare delete-game)
