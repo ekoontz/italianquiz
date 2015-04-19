@@ -65,7 +65,6 @@
    (GET "/authlink2" request
         (friend/authorize #{::user} "Authorized page 2."))
    (GET "/admin" request
-        (friend/authorize #{::admin} "Only admins can see this page."))
-   (friend/logout (ANY "/logout" request (ring.util.response/redirect "/")))))
+        (friend/authorize #{::admin} "Only admins can see this page."))))
 
   
