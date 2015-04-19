@@ -22,7 +22,7 @@
                                                     com.sun.jdmk/jmxtools
                                                     com.sun.jmx/jmxri]]
 
-                 [friend-oauth2 "0.0.3"]
+                 [friend-oauth2 "0.1.3"]
 
                  [org.clojure/clojure "1.6.0"]
                  [org.clojure/core.async "0.1.278.0-76b25b-alpha"] 
@@ -42,7 +42,7 @@
             [lein-environ "1.0.0"]
             [lein-localrepo "0.4.0"]
             [lein-pprint "1.1.1"]
-            [lein-ring "0.7.3"]]
+            [lein-ring "0.9.3"]]
 
   ;; The 'eugene' repository hosts my slightly-modified Postgres JDBC
   ;; driver that copes with JSONB-typed columns.  Source code
