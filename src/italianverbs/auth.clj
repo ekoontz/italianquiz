@@ -39,6 +39,7 @@
          :headers {"Location" "/?msg=cleared"}})))
 
 (defn get-user-id [fetch-fn]
+  (log/debug (str "getting user id with current authentication: " (friend/current-authentication)))
   (let [username (:username (friend/current-authentication))]
     (:id (first (fetch-fn :student {:username username})))))
 
@@ -102,3 +103,19 @@
        [:th "User"][:td [:input {:type "text" :name "username" :size "10"}]]
        [:th "Password"][:td [:input {:type "password" :name "password" :size "10"}]]
        [:td [:input {:type "submit" :class "button" :value "Login"}]]]]]]])
+
+(defn logged-in-content [req identity]
+  (log/debug (str "logged-in-content with identity: " identity))
+  [:div {:class "login major"}
+    [:table {:style "border:0px"}
+     [:tr
+      [:th
+       (str "User")]
+      [:td
+       (:current identity)]
+      [:th
+       (str "Roles")]
+      [:td {:style "white-space:nowrap"}
+       (str/join ","
+                    (get-loggedin-user-roles identity))]
+      [:td {:style "float:right;white-space:nowrap"} [:a {:href "/auth/logout"} "Log out"]]]]])
