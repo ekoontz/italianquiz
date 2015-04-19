@@ -360,21 +360,6 @@
                            
                            ]
 
-
-                          [{:name :name :size 50 :label "Name"}
-                           {:name :source :type :select 
-                            :label "Source Language"
-                            :options [{:value "en" :label "English"}
-                                      {:value "it" :label "Italian"}
-                                      {:value "es" :label "Spanish"}]}]
-
-
-                          [{:name :target :type :select 
-                            :label "Target Language"
-                            :options [{:value "en" :label "English"}
-                                      {:value "it" :label "Italian"}
-                                      {:value "es" :label "Spanish"}]}]
-                          
                           )
                    
                    :cancel-href (str "/editor/" language)
