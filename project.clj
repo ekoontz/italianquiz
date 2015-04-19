@@ -22,6 +22,7 @@
                                                     com.sun.jdmk/jmxtools
                                                     com.sun.jmx/jmxri]]
 
+                 [friend-oauth2 "0.0.3"]
 
                  [org.clojure/clojure "1.6.0"]
                  [org.clojure/core.async "0.1.278.0-76b25b-alpha"] 

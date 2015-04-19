@@ -2,11 +2,13 @@
 
 (require '[clojure.tools.logging :as log])
 (require '[clojure.string :as str])
-(require '[compojure.core :as compojure :refer [GET PUT POST DELETE ANY]])
+(require '[compojure.core :as compojure :refer [context GET PUT POST DELETE ANY]])
 (require '[digest])
 (require '[environ.core :refer [env]])
+(require '[friend-oauth2.workflow :as oauth2])
 (require '[italianverbs.auth.google :as google])
 (require '[italianverbs.auth.internal :as internal])
+(require '[italianverbs.auth.openid :as openid])
 (require '[italianverbs.korma :as db])
 (require '[italianverbs.session :as session])
 (require '[cemerick.friend :as friend])
@@ -15,6 +17,9 @@
 
 (def routes
   (compojure/routes
+
+   (context "/openid" []
+            openid/routes)
    (GET "/login" request
         (resp/redirect "/"))
    (GET "/login/" request
@@ -94,3 +99,23 @@
        [:th "User"][:td [:input {:type "text" :name "username" :size "10"}]]
        [:th "Password"][:td [:input {:type "password" :name "password" :size "10"}]]
        [:td [:input {:type "submit" :class "button" :value "Login"}]]]]]]])
+
+(def client-config
+  {:client-id (System/getenv "github_client_id")
+   :client-secret (System/getenv "github_client_secret")
+   ;; TODO get friend-oauth2 to support :context, :path-info
+   :callback {:domain (System/getenv "github_client_domain") :path "/oauth-github/github.callback"}})
+
+(def uri-config
+  {:authentication-uri {:url "https://github.com/login/oauth/authorize"
+                        :query {:client_id (:client-id client-config)
+                                :response_type "code"
+                                :redirect_uri (oauth2/format-config-uri client-config)
+                                :scope ""}}
+
+   :access-token-uri {:url "https://github.com/login/oauth/access_token"
+                      :query {:client_id (:client-id client-config)
+                              :client_secret (:client-secret client-config)
+                              :grant_type "authorization_code"
+                              :redirect_uri (oauth2/format-config-uri client-config)
+                              :code ""}}})

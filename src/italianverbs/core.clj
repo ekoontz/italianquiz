@@ -1,18 +1,14 @@
 (ns italianverbs.core
   (:require
-   [compojure.core :refer [context defroutes GET PUT POST DELETE ANY]]
-   [italianverbs.html :as html]
-   [italianverbs.tour :as tour]
-   [ring.util.response :as resp]
-
    [cemerick.friend :as friend]
-   (cemerick.friend [workflows :as workflows])
+   [cemerick.friend [workflows :as workflows]]
    [clojure.java.io :as io]
    [clojure.tools.logging :as log]
    [compojure.core :refer [context defroutes GET PUT POST DELETE ANY]]
    [compojure.route :as route]
    [compojure.handler :as handler]
    [environ.core :refer [env]]
+   [friend-oauth2.workflow :as oauth2]
    [hiccup.page :as h]
    [italianverbs.about :as about]
    [italianverbs.auth :as auth :refer [confirm-and-create-user get-user-id haz-admin is-authenticated]]
@@ -27,6 +23,8 @@
    [ring.adapter.jetty :as jetty]
    [ring.middleware.session.cookie :as cookie]
    [ring.middleware.stacktrace :as trace]
+   [ring.util.codec :as codec]
+   [ring.util.response :as resp]
 ))
 
 ;; not used at the moment, but might be handy someday:
@@ -86,7 +84,13 @@
                              resp/response
                              (resp/status 401))
      :credential-fn #(auth/credential-fn %)
-     :workflows [(workflows/interactive-form)]})))
+     :workflows [(workflows/interactive-form)
+                 (oauth2/workflow
+                             {:client-config auth/client-config
+                              :uri-config auth/uri-config
+                              :config-auth {:roles #{::auth/user}}
+                              :access-token-parsefn #(-> % :body codec/form-decode (get "access_token"))})]})))
+
 
 (defn wrap-error-page [handler]
   (fn [req]
