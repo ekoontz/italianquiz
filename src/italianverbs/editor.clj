@@ -400,7 +400,7 @@
                   [:div {:style "float:right"}
                   [:form
                    {:method "post"
-                    :action (str "/editor/game/" language "/delete/" game-id)}
+                    :action (str "/editor/game/delete/" language "/" game-id)}
                    [:button.confirm_delete {:onclick (str "submit();")} "Delete Game"]]]
                   ]
                  ]
