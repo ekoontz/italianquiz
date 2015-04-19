@@ -806,7 +806,7 @@
       [:td {:style "white-space:nowrap"}
        (string/join ","
                     (auth/get-loggedin-user-roles identity))]
-      [:td {:style "float:right;white-space:nowrap"} (e/link-to (str "/" "logout") "Log out") ""]]]])
+      [:td {:style "float:right;white-space:nowrap"} (e/link-to (str "/auth/" "logout") "Log out") ""]]]])
 
 (defn page-body [content req & [ title options]]
   (let [title (if title title "default page title")]
