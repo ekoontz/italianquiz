@@ -39,6 +39,9 @@
        {:status 302
         :headers {"Location" "/about"}})
 
+  (context "/auth" []
+           auth/routes)
+
   (context "/class" []
            class/routes)
 
@@ -57,29 +60,6 @@
   (GET "/about" request
        about/routes)
 
-  (GET "/login" request
-       (resp/redirect "/"))
-  (GET "/login/" request
-       (resp/redirect "/"))
-
-  (POST "/login" request
-        (resp/redirect "/"))
-
-  (GET "/logout" request
-    (friend/logout* (resp/redirect "/login")))
-
-  ;; TODO: make this a POST with 'username' and 'password' params so that users can login.
-  (GET "/session/set/" request
-       {:side-effect (session/register request)
-        :session (get request :session)
-        :status 302
-        :headers {"Location" "/?msg=set"}})
-
-  (GET "/session/clear/" request
-       {:side-effect (session/unregister request)
-        :status 302
-        :headers {"Location" "/?msg=cleared"}})
-
   (route/resources "/webjars" {:root "META-INF/resources/webjars/foundation/4.0.4/"})
   (route/resources "/")
 
@@ -95,7 +75,7 @@
    (friend/authenticate
     main-routes
     {:allow-anon? true
-     :login-uri "/login"
+     :login-uri "/auth/login"
      :default-landing-uri "/"
      :unauthorized-handler #(-> 
                              (html/page "Unauthorized" (h/html5 
@@ -106,14 +86,6 @@
                              resp/response
                              (resp/status 401))
      :credential-fn #(auth/credential-fn %)
-     ;; in the above, the @users map functions as 1-arg fn: (fn [user]) that returns a user's
-     ;; authentication and authorization info, so if you "call" @users with a given argument, (i.e. get the given
-     ;; key in the @users map, e.g.:
-     ;; (@users "friend")
-     ;; the "return value" (i.e. value for that key) is:
-     ;; {:username "friend", 
-     ;;  :password "$2a$10$48TyZw9Ii6bpc.uwJtoXuuMHiRtwNPgC3yczPcpTLao0m0kaIVo02", 
-     ;;  :roles #{:friend-interactive-form.users/user}}
      :workflows [(workflows/interactive-form)]})))
 
 (defn wrap-error-page [handler]

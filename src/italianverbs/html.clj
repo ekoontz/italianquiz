@@ -808,17 +808,6 @@
                     (auth/get-loggedin-user-roles identity))]
       [:td {:style "float:right;white-space:nowrap"} (e/link-to (str "/" "logout") "Log out") ""]]]])
 
-(def login-form
-  [:div 
-
-  [:div {:class "login major"}
-   [:form {:method "POST" :action "/login"}
-    [:table
-     [:tr
-      [:th "User"][:td [:input {:type "text" :name "username" :size "10"}]]
-      [:th "Password"][:td [:input {:type "password" :name "password" :size "10"}]]
-      [:td [:input {:type "submit" :class "button" :value "Login"}]]]]]]])
-
 (defn page-body [content req & [ title options]]
   (let [title (if title title "default page title")]
     (log/debug (str "page-body with options: " options))
@@ -829,7 +818,7 @@
       (if login-enabled
         (if-let [identity (friend/identity req)]
           (logged-in-content req identity)
-          login-form))
+          auth/login-form))
 
        content))))
       
