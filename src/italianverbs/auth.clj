@@ -95,26 +95,24 @@
        [:th "Password"][:td [:input {:type "password" :name "password" :size "10"}]]
        [:td [:input {:type "submit" :class "button" :value "Login"}]]]]]]])
 
-(defn token2username [access-token]
-  (str "EUGENE J KOONTZ"))
-
 (defn logged-in-content [req identity]
-  (log/debug (str "logged-in-content with identity: " identity))
+  (log/trace (str "logged-in-content with identity: " identity))
   (let [username (cond (string? (:current identity))
                        (:current identity)
+
                        (map? (:current identity))
-                       ;; assume google for now
-                       (token2username (-> identity :current :access-token)))]
+                       ;; if it's a map, google is only possibility for now.
+                       (google/token2username (-> identity :current :access-token)))]
     
+    (log/debug (str "verbcoach username: " username))
+
     [:div {:class "login major"}
      [:table {:style "border:0px"}
       [:tr
-       [:th
-        (str "User")]
        [:td
         username]
        [:th
-        (str "Roles")]
+        (str "Roles:")]
        [:td {:style "white-space:nowrap"}
         (str/join ","
                   (get-loggedin-user-roles identity))]

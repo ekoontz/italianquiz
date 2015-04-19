@@ -7,7 +7,8 @@
             [compojure.route :as route]
             [friend-oauth2.workflow :as oauth2]
             [friend-oauth2.util :refer [format-config-uri]]
-            [italianverbs.auth :as auth]))
+            [italianverbs.auth :as auth]
+            [korma.core :as k]))
 
 (derive ::admin ::user)
 
@@ -57,6 +58,12 @@
          {:status 302
           :headers {"Location" "/"}})))
 
+(defn token2username [access-token]
+  (let [email "ekoontz@gmail.com"]
+    (k/exec-raw [(str "INSERT INTO vc_user (access_token,email) VALUES (?,?)") [access-token email]])
+    (log/debug (str "token2username: " access-token " => " email))
+    email))
+
 (def routes
   (compojure/routes
    (GET "/" request "open.")
@@ -73,8 +80,12 @@
           (friend/authorize #{::user} "Authorized page.")
           (is-authenticated
            (do
-             (log/debug (str "Logging in user with access token: " 
-                             (-> request :session :cemerick.friend/identity :current :access-token)))
+             (let [username (token2username
+                             (-> request :session :cemerick.friend/identity :current :access-token))]
+;               (log/info (str "INSERT INTO users words_per_game (game,word) " game-id "," word))
+
+               (log/debug (str "Logging in user with access token: " 
+                               (-> request :session :cemerick.friend/identity :current :access-token))))
              {:status 302
               :headers {"Location" "/"}}))))
         
