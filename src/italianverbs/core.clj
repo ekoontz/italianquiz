@@ -56,10 +56,6 @@
   (context "/tour" []
            tour/routes)
 
-  (GET "/authlink" request
-;       (friend/authorize #{::user} "Authorized page."))
-       (friend/authorize #{:italianverbs.auth.internal/user :italianverbs.auth.google/user} "Authorized page."))
-
   (GET "/about" request
        about/routes)
 
@@ -90,10 +86,7 @@
                              (resp/status 401))
      :credential-fn #(auth/credential-fn %)
      :workflows [(workflows/interactive-form)
-                 (oauth2/workflow
-                  {:client-config google/client-config
-                   :uri-config google/uri-config
-                   :credential-fn google/credential-fn})]})))
+                 (oauth2/workflow google/auth-config)]})))
 
 (defn wrap-error-page [handler]
   (fn [req]

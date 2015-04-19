@@ -25,8 +25,8 @@
         (resp/redirect "/"))
    (POST "/login" request
          (resp/redirect "/"))
-   (ANY "/logout" request
-        (friend/logout* (resp/redirect "/auth/login")))
+   (friend/logout (ANY "/logout" request (ring.util.response/redirect "/")))
+
    ;; TODO: make this a POST with 'username' and 'password' params so that users can login.
    (GET "/session/set/" request
         {:side-effect (session/register request)
@@ -50,6 +50,7 @@
 (defn haz-admin []
   (log/debug (str "haz-admin: current-authentication: " (friend/current-authentication)))
   (and (not (nil? (friend/current-authentication)))
+       ;; TODO: add support for google-authenticated administrators.
        (not (nil?
              (:italianverbs.auth.internal/admin
               (:roles (friend/current-authentication)))))))
@@ -93,29 +94,11 @@
 (def login-form
   [:div 
    [:div {:class "login major"}
+
+    [:a {:href "/auth/google/authlink"} "Login with Google"]
     [:form {:method "POST" :action "/auth/login"}
      [:table
       [:tr
        [:th "User"][:td [:input {:type "text" :name "username" :size "10"}]]
        [:th "Password"][:td [:input {:type "password" :name "password" :size "10"}]]
        [:td [:input {:type "submit" :class "button" :value "Login"}]]]]]]])
-
-(def client-config
-  {:client-id (System/getenv "github_client_id")
-   :client-secret (System/getenv "github_client_secret")
-   ;; TODO get friend-oauth2 to support :context, :path-info
-   :callback {:domain (System/getenv "github_client_domain") :path "/oauth-github/github.callback"}})
-
-(def uri-config
-  {:authentication-uri {:url "https://github.com/login/oauth/authorize"
-                        :query {:client_id (:client-id client-config)
-                                :response_type "code"
-;                                :redirect_uri (oauth2/format-config-uri client-config)
-                                :scope ""}}
-
-   :access-token-uri {:url "https://github.com/login/oauth/access_token"
-                      :query {:client_id (:client-id client-config)
-                              :client_secret (:client-secret client-config)
-                              :grant_type "authorization_code"
-;                              :redirect_uri (oauth2/format-config-uri client-config)
-                              :code ""}}})

@@ -1,12 +1,13 @@
 (ns italianverbs.auth.google
-  (:require [compojure.core :as compojure :refer [ANY GET]]
+  (:require [cemerick.friend [workflows :as workflows]]
+            [cemerick.friend :as friend]
+            [compojure.core :as compojure :refer [ANY GET]]
             [compojure.handler :as handler]
             [compojure.route :as route]
-            [cemerick.friend :as friend]
             [friend-oauth2.workflow :as oauth2]
             [friend-oauth2.util :refer [format-config-uri]]
-            (cemerick.friend [workflows :as workflows]
-                             [credentials :as creds])))
+            [italianverbs.auth :as auth]))
+
 (defn credential-fn [token]
   ;;lookup token in DB or whatever to fetch appropriate :roles
   {:identity token :roles #{::user}})
@@ -29,6 +30,22 @@
                               :grant_type "authorization_code"
                               :redirect_uri (format-config-uri client-config)}}})
 
+;  (GET "/authlink" request
+;       (friend/authorize #{::user} "Authorized page."))
+;       (friend/authorize #{:italianverbs.auth.internal/user :italianverbs.auth.google/user} "Authorized page."))
+
+
+(def auth-config {:client-config client-config
+                  :uri-config uri-config
+                  :credential-fn credential-fn})
+
+;; TODO: should be one level above this (italianverbs.auth)
+(defn is-authenticated [if-authenticated]
+  (if (not (nil? (friend/current-authentication)))
+    if-authenticated
+    {:status 302
+     :headers {"Location" "/login"}}))
+
 (def routes
   (compojure/routes
    (GET "/" request "open.")
@@ -40,7 +57,11 @@
                     " times.</p><p>The current session: " session "</p>"))
               (assoc :session session))))
    (GET "/authlink" request
-        (friend/authorize #{::user} "Authorized page."))
+        (do (friend/authorize #{::user} "Authorized page.")
+            (is-authenticated
+             {:status 302
+              :headers {"Location" "/"}})))
+
    (GET "/authlink2" request
         (friend/authorize #{::user} "Authorized page 2."))
    (GET "/admin" request
