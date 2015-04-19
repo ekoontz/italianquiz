@@ -17,14 +17,14 @@
 (def routes
   (compojure/routes
 
+   ;; Google Authentication
    (context "/google" []
             google/routes)
-   (GET "/login" request
-        (resp/redirect "/"))
-   (GET "/login/" request
-        (resp/redirect "/"))
-   (POST "/login" request
-         (resp/redirect "/"))
+
+   ;; Verbcoach-internal Authentication
+   (context "/internal" []
+            internal/routes)
+
    (friend/logout (ANY "/logout" request (ring.util.response/redirect "/")))
 
    ;; TODO: make this a POST with 'username' and 'password' params so that users can login.
@@ -96,8 +96,8 @@
   [:div 
    [:div {:class "login major"}
 
-    [:a {:href "/auth/google/authlink"} "Login with Google"]
-    [:form {:method "POST" :action "/auth/login"}
+    [:a {:href "/auth/google/login"} "Login with Google"]
+    [:form {:method "POST" :action "/auth/internal/login"}
      [:table
       [:tr
        [:th "User"][:td [:input {:type "text" :name "username" :size "10"}]]

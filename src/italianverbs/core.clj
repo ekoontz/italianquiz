@@ -74,7 +74,7 @@
    (friend/authenticate
     main-routes
     {:allow-anon? true
-     :login-uri "/auth/login"
+     :login-uri "/auth/internal/login"
      :default-landing-uri "/"
      :unauthorized-handler #(-> 
                              (html/page "Unauthorized" (h/html5 
