@@ -13,7 +13,7 @@
 
 ;; verbcoach-workstation
 (def workstation-google-api-config
-;; TODO: checked in to source code: remove here and in Google console and replace with env settings.
+  ;; TODO: checked in to source code: remove here and in Google console and replace with env settings.
   {:client-id "652200734300-3tbdfqhisnlctt6vh70boofrc08qc6a7.apps.googleusercontent.com"
    :client-secret "Nvj41la8ao_wsnXQunbp5arR"
    :callback {:domain "http://localhost:3000" :path "/oauth2callback"}})
@@ -72,8 +72,11 @@
         (do
           (friend/authorize #{::user} "Authorized page.")
           (is-authenticated
-           {:status 302
-            :headers {"Location" "/"}})))
+           (do
+             (log/debug (str "Logging in user with access token: " 
+                             (-> request :session :cemerick.friend/identity :current :access-token)))
+             {:status 302
+              :headers {"Location" "/"}}))))
         
    (GET "/admin" request
         (friend/authorize #{::admin} "Only admins can see this page."))))
