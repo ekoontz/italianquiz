@@ -25,18 +25,7 @@
    (context "/internal" []
             internal/routes)
 
-   (friend/logout (ANY "/logout" request (ring.util.response/redirect "/")))
-
-   ;; TODO: make this a POST with 'username' and 'password' params so that users can login.
-   (GET "/session/set/" request
-        {:side-effect (session/register request)
-         :session (get request :session)
-         :status 302
-         :headers {"Location" "/?msg=set"}})
-   (GET "/session/clear/" request
-        {:side-effect (session/unregister request)
-         :status 302
-         :headers {"Location" "/?msg=cleared"}})))
+   (friend/logout (ANY "/logout" request (ring.util.response/redirect "/")))))
 
 (defn get-user-id [fetch-fn]
   (log/debug (str "getting user id with current authentication: " (friend/current-authentication)))
