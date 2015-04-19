@@ -13,6 +13,7 @@
    [italianverbs.about :as about]
    [italianverbs.auth :as auth :refer [confirm-and-create-user get-user-id haz-admin is-authenticated]]
    [italianverbs.auth.internal :as internal]
+   [italianverbs.auth.google :as google]
    [italianverbs.class :as class]
    [italianverbs.editor :as editor]
    [italianverbs.html :as html]
@@ -55,6 +56,10 @@
   (context "/tour" []
            tour/routes)
 
+  (GET "/authlink" request
+;       (friend/authorize #{::user} "Authorized page."))
+       (friend/authorize #{:italianverbs.auth.internal/user :italianverbs.auth.google/user} "Authorized page."))
+
   (GET "/about" request
        about/routes)
 
@@ -86,11 +91,9 @@
      :credential-fn #(auth/credential-fn %)
      :workflows [(workflows/interactive-form)
                  (oauth2/workflow
-                             {:client-config auth/client-config
-                              :uri-config auth/uri-config
-                              :config-auth {:roles #{::auth/user}}
-                              :access-token-parsefn #(-> % :body codec/form-decode (get "access_token"))})]})))
-
+                  {:client-config google/client-config
+                   :uri-config google/uri-config
+                   :credential-fn google/credential-fn})]})))
 
 (defn wrap-error-page [handler]
   (fn [req]

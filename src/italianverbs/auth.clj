@@ -8,7 +8,6 @@
 (require '[friend-oauth2.workflow :as oauth2])
 (require '[italianverbs.auth.google :as google])
 (require '[italianverbs.auth.internal :as internal])
-(require '[italianverbs.auth.openid :as openid])
 (require '[italianverbs.korma :as db])
 (require '[italianverbs.session :as session])
 (require '[cemerick.friend :as friend])
@@ -18,8 +17,8 @@
 (def routes
   (compojure/routes
 
-   (context "/openid" []
-            openid/routes)
+   (context "/google" []
+            google/routes)
    (GET "/login" request
         (resp/redirect "/"))
    (GET "/login/" request
@@ -78,6 +77,7 @@
        (-> identity friend/current-authentication :roles)))
 
 (defn credential-fn [arg]
+  (log/debug (str "calling credential-fn with arg: " arg))
   (creds/bcrypt-credential-fn @internal/users arg))
 
 ;; in the above, the @internal/users map works as a 1-arg fn: (fn [user]) that 
@@ -110,12 +110,12 @@
   {:authentication-uri {:url "https://github.com/login/oauth/authorize"
                         :query {:client_id (:client-id client-config)
                                 :response_type "code"
-                                :redirect_uri (oauth2/format-config-uri client-config)
+;                                :redirect_uri (oauth2/format-config-uri client-config)
                                 :scope ""}}
 
    :access-token-uri {:url "https://github.com/login/oauth/access_token"
                       :query {:client_id (:client-id client-config)
                               :client_secret (:client-secret client-config)
                               :grant_type "authorization_code"
-                              :redirect_uri (oauth2/format-config-uri client-config)
+;                              :redirect_uri (oauth2/format-config-uri client-config)
                               :code ""}}})
