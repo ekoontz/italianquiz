@@ -1,12 +1,14 @@
 (ns italianverbs.auth.google
   (:require [cemerick.friend [workflows :as workflows]]
             [cemerick.friend :as friend]
+            [clojure.data.json :as json]
             [clojure.tools.logging :as log]
             [compojure.core :as compojure :refer [ANY GET]]
             [compojure.handler :as handler]
             [compojure.route :as route]
             [friend-oauth2.workflow :as oauth2]
             [friend-oauth2.util :refer [format-config-uri]]
+            [org.httpkit.client :as http]
             [italianverbs.auth :as auth]
             [korma.core :as k]))
 
@@ -59,10 +61,24 @@
           :headers {"Location" "/"}})))
 
 (defn token2username [access-token]
-  (let [email "ekoontz@gmail.com"]
-    (k/exec-raw [(str "INSERT INTO vc_user (access_token,email) VALUES (?,?)") [access-token email]])
-    (log/debug (str "token2username: " access-token " => " email))
-    email))
+  (log/info (str "querying: https://www.googleapis.com/oauth2/v1/userinfo?access_token=<input access token>"))
+  (let [{:keys [status headers body error] :as resp} 
+        @(http/get 
+          (str "https://www.googleapis.com/oauth2/v1/userinfo?access_token=" access-token))]
+    (if error
+      (log/info "Failed, exception: " error)
+      (log/info "HTTP GET success: " status))
+    (log/info (str "body: " body))
+    (log/info (str "type(body): " (type body)))
+    (let [body (json/read-str body
+                              :key-fn keyword
+                              :value-fn (fn [k v]
+                                          v))]
+      (let [email (get body :email)]
+        (log/info (str "Google says user's email is: " email))
+        (k/exec-raw [(str "INSERT INTO vc_user (access_token,email) VALUES (?,?)") [access-token email]])
+        (log/debug (str "token2username: " access-token " => " email))
+        email))))
 
 (def routes
   (compojure/routes
