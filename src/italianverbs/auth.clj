@@ -51,14 +51,14 @@
   (if (haz-admin)
     if-admin
     {:status 302
-     :headers {"Location" "/login"}}))
+     :headers {"Location" "/auth/login"}}))
 
 ;; TODO: should also be a macro.
 (defn is-authenticated [if-authenticated]
   (if (not (nil? (friend/current-authentication)))
     if-authenticated
     {:status 302
-     :headers {"Location" "/login"}}))
+     :headers {"Location" "/auth/login"}}))
 
 (defn get-loggedin-user-roles [identity]
   (map #(str/replace

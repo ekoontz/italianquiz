@@ -33,7 +33,7 @@
       (menuitem {:selected?
                  (or (and (not (nil? current-url))
                           (re-find #"/login" current-url))
-                     (= current-url "/login")
+                     (= current-url "/auth/login")
                      (and (not (nil? current-url))
                           (re-find #"/about" current-url)))
                  :show? true
