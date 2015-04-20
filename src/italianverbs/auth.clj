@@ -51,7 +51,7 @@
   (if (haz-admin)
     if-admin
     {:status 302
-     :headers {"Location" "/auth/login"}}))
+     :headers {"Location" "/"}}))
 
 ;; TODO: should also be a macro.
 (defn is-authenticated [if-authenticated]
