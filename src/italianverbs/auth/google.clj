@@ -52,24 +52,28 @@
           :headers {"Location" "/"}})))
 
 (defn token2username [access-token]
-  (log/info (str "querying: https://www.googleapis.com/oauth2/v1/userinfo?access_token=<input access token>"))
-  (let [{:keys [status headers body error] :as resp} 
-        @(http/get 
-          (str "https://www.googleapis.com/oauth2/v1/userinfo?access_token=" access-token))]
-    (if error
-      (log/info "Failed, exception: " error)
-      (log/info "HTTP GET success: " status))
-    (log/info (str "body: " body))
-    (log/info (str "type(body): " (type body)))
-    (let [body (json/read-str body
-                              :key-fn keyword
-                              :value-fn (fn [k v]
-                                          v))]
-      (let [email (get body :email)]
-        (log/info (str "Google says user's email is: " email))
-        (k/exec-raw [(str "INSERT INTO vc_user (access_token,email) VALUES (?,?)") [access-token email]])
-        (log/debug (str "token2username: " access-token " => " email))
-        email))))
+  (let [user-in-db (first (k/exec-raw [(str "SELECT email FROM vc_user WHERE access_token=?") [access-token]] :results))]
+    (if user-in-db
+      (do (log/info (str "found user and access-token in database; email: " (:email user-in-db)))
+          (:email user-in-db))
+      (do
+        (log/info (str "did not find user in database: querying: https://www.googleapis.com/oauth2/v1/userinfo?access_token=<input access token>"))
+        (let [{:keys [status headers body error] :as resp} 
+              @(http/get 
+                (str "https://www.googleapis.com/oauth2/v1/userinfo?access_token=" access-token))]
+          (if error
+            (log/info "Failed, exception: " error)
+            (log/info "HTTP GET success: " status))
+          (log/debug (str "body: " body))
+          (let [body (json/read-str body
+                                    :key-fn keyword
+                                    :value-fn (fn [k v]
+                                                v))]
+            (let [email (get body :email)]
+              (log/info (str "Google says user's email is: " email))
+              (k/exec-raw [(str "INSERT INTO vc_user (access_token,email) VALUES (?,?)") [access-token email]])
+              (log/debug (str "token2username: " access-token " => " email))
+            email)))))))
 
 (def routes
   (compojure/routes
