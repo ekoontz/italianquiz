@@ -12,24 +12,15 @@
             [italianverbs.auth :as auth]
             [korma.core :as k]))
 
+(require '[environ.core :refer [env]])
+
 (derive ::admin ::user)
 
-;; verbcoach-workstation
-(def workstation-google-api-config
-  ;; TODO: checked in to source code: remove here and in Google console and replace with env settings.
-  {:client-id "652200734300-3tbdfqhisnlctt6vh70boofrc08qc6a7.apps.googleusercontent.com"
-   :client-secret "Nvj41la8ao_wsnXQunbp5arR"
-   :callback {:domain "http://localhost:3000" :path "/oauth2callback"}})
-
-;; verbcoach-dev
-;; TODO: checked in to source code: remove here and in Google console and replace with env settings.
-(def verbcoach-dev-google-api-config
-  {:client-id "845033688568-1emrraqe25pnlj984s3cndfpd6s963vh.apps.googleusercontent.com"
-   :client-secret "Y6dqv5fFna2QB4E5Xm-Yz8y3"
-   :callback {:domain "http://verbcoach-dev.herokuapp.com" :path "/oauth2callback"}})
-
-;; TODO: move to environment setting
-(def client-config workstation-google-api-config)
+(def client-config
+  {:client-id (env :google-client-id)
+   :client-secret (env :google-client-secret)
+   :callback {:domain (env :google-callback-domain)
+              :path "/oauth2callback"}})
 
 (defn credential-fn [token]
   ;;lookup token in DB or whatever to fetch appropriate :roles
