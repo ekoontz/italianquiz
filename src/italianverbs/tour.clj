@@ -87,33 +87,32 @@
           {:status 302
            :headers {"Location" "/tour/it/generate-q-and-a"}}))))
 
-(defn get-game-spec [source-language target-language game-name]
-  (log/debug (str "get-game-spec: game=" game-name))
+(defn get-game-spec [source-language target-language game]
+  (log/debug (str "get-game-spec: game=" game))
   (log/debug (str "source-language: " source-language))
   (log/debug (str "target-language: " target-language))
 
   ;; no game chosen: use :top for both source and spec.
-  (cond (= game-name :any)
+  (cond (= game :any)
         {:source-spec :top
          :target_spec :top}
 
         true
-        (let [game (first 
-                    (k/exec-raw
-                     [(str "SELECT * 
+        (let [game-result (first 
+                           (k/exec-raw
+                            [(str "SELECT * 
                           FROM game 
-                         WHERE name=? AND source=? AND target=? LIMIT 1")
-                      [game-name source-language target-language]] :results))
+                         WHERE id=? AND source=? AND target=? LIMIT 1")
+                             [game source-language target-language]] :results))
               target-lexemes (map (fn [each-lexeme]
                                     each-lexeme)
-                                  (map json-read-str (.getArray (:target_lex game))))
+                                  (map json-read-str (.getArray (:target_lex game-result))))
               target-tenses (map (fn [each-tense]
                                    each-tense)
-                                 (map json-read-str (.getArray (:target_grammar game))))]
+                                 (map json-read-str (.getArray (:target_grammar game-result))))]
 
-          (log/debug (str "THE GAME IS: " game))
-          (log/debug (str "target lexicon: " (string/join "," target-lexemes)))
-          (log/debug (str "target tenses: " (string/join "," target-tenses)))
+          (log/debug (str "game's target lexicon: " (string/join "," target-lexemes)))
+          (log/debug (str "game's target tenses: " (string/join "," target-tenses)))
       
           (let [target-lexeme 
                 (if (empty? target-lexemes)
@@ -132,10 +131,11 @@
              :source_spec :top}))))
 
 (defn active-games [target-language]
+  (log/debug (str "Selecting an active game from language:" target-language))
   (k/exec-raw [(str "SELECT * FROM game
                              WHERE active=true
                                AND target=?")
-               [target-language]]))
+               [target-language]] :results))
 
 (defn generate-q-and-a [target-language target-locale request]
   "generate a question in English and a set of possible correct answers in the target language, given parameters in request"
@@ -145,11 +145,11 @@
                  "Expires" "0"}]
     (try (let [game (get (:params request) :game :any)
                game (if (= game :any)
-                      (let [active (active-games target-language :any)]
+                      (let [active (active-games target-language)]
                         (if (empty? active)
                           :any
-                          (nth active
-                               (rand-int (.size active)))))
+                          (:id (nth active
+                                    (rand-int (.size active))))))
                       game)
                debug (log/debug (str "game:" game))
                debug (log/debug (str "param keys:" (keys (:params request))))
