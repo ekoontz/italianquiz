@@ -34,6 +34,7 @@
 (declare show-group-edit-forms)
 (declare show-groups)
 (declare sqlname-from-match)
+(declare toggle-activation)
 (declare unabbrev)
 (declare update-game)
 (declare update-group)
@@ -72,6 +73,15 @@
                         request)
             :status 200
             :headers headers})))
+
+   (POST "/game/activate/:game" request
+         ;; toggle activation of this game
+         (is-admin
+          (let [debug (log/debug (str "PARAMS: " (:params request)))
+                message (toggle-activation (:game (:route-params request)) (= "on" (:active (:params request))))
+                language (:language (:params request))]
+            {:status 302
+             :headers {"Location" (str "/editor/" language "?message=" message)}})))
 
    (POST "/game/delete/:game-to-delete" request
          (is-admin
@@ -195,7 +205,7 @@
         game-to-delete (if game-to-delete (Integer. game-to-delete))
         language (if language language "")
         debug (log/debug (str "THE LANGUAGE OF THE GAME IS: " language))
-        sql "SELECT game.name AS game_name,game.id AS id,
+        sql "SELECT game.name AS game_name,game.id AS id,active,
                     source,target,
                     target_lex,target_grammar
                FROM game 
@@ -210,7 +220,8 @@
 
      [:table {:class "striped padded"}
       [:tr
-       [:th {:style "width:auto"} "Name"]
+       [:th {:style "width:auto"} "Active?"]
+       [:th {:style "width:10em"} "Name"]
        [:th {:style "width:auto"} "Verbs"]
        [:th {:style "width:auto"} "Tenses"]
        ]
@@ -225,6 +236,20 @@
                    (keyword language-keyword-name)]
 
                [:tr 
+
+                [:td
+                 [:form {:method "post"
+                         :enctype "multipart/form-data"
+                         :action (str "/editor/game/activate/" game-id)}
+                  [:input {:name "language"
+                           :type "hidden"
+                           :value language-short-name}]
+                  [:input (merge {:type "checkbox"
+                                  :onclick "submit()"
+                                  :name "active"}
+                                 (if (:active result)
+                                   {:checked "on"}))]]]
+
                 [:td
                  (if (= game-to-edit game-id)
                    [:input {:size (+ 5 (.length (:game_name result))) 
@@ -1450,5 +1475,9 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
 
 
 (def headers {"Content-Type" "text/html;charset=utf-8"})
+
+(defn toggle-activation [game active]
+  (do (k/exec-raw ["UPDATE game SET active=? WHERE id=?" [active (Integer. game)]])
+      (str "successfully toggled activation of game: " game)))
 
 
