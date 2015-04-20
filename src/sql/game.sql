@@ -1,2 +1,2 @@
-
+ALTER TABLE game ADD COLUMN active BOOLEAN DEFAULT true;
 
