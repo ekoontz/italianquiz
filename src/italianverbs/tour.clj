@@ -105,14 +105,29 @@
                 [game-name source-language target-language]] :results))
           target-lexemes (map (fn [each-lexeme]
                                 each-lexeme)
-                              (map json-read-str (.getArray (:target_lex game))))]
+                              (map json-read-str (.getArray (:target_lex game))))
+          target-tenses (map (fn [each-tense]
+                               each-tense)
+                             (map json-read-str (.getArray (:target_grammar game))))]
+
       (log/debug (str "THE GAME IS: " game))
       (log/debug (str "target lexicon: " (string/join "," target-lexemes)))
+      (log/debug (str "target tenses: " (string/join "," target-tenses)))
       
-      (let [target-lexeme (nth target-lexemes (rand-int (.size target-lexemes)))]
+      (let [target-lexeme 
+            (if (empty? target-lexemes)
+              :top
+              (nth target-lexemes (rand-int (.size target-lexemes))))
+
+            target-tense (if (empty? target-tenses)
+                           :top
+                           (nth target-tenses (rand-int (.size target-tenses))))]
+
         (log/debug (str "target lexeme: " target-lexeme))
+        (log/debug (str "target tense: " target-tense))
+        ;; TODO: throw exception if (unify target-lexeme target-tense) would result in a fail.
         {:target_spec
-         target-lexeme
+         (unify target-lexeme target-tense)
          :source_spec 
          :top}))))
 
