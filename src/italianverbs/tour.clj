@@ -2,9 +2,11 @@
   (:refer-clojure :exclude [get-in merge])
   (:require
    [clojure.data.json :refer [write-str]]
+   [clojure.string :as string]
    [clojure.tools.logging :as log]
    [compojure.core :as compojure :refer [GET PUT POST DELETE ANY]]
    [italianverbs.borges.reader :refer [generate-question-and-correct-set]]
+   [italianverbs.editor :refer [json-read-str]]
    [italianverbs.html :refer [page]]
    [italianverbs.morphology :refer (fo remove-parens)]
    [italianverbs.unify :refer (get-in unify)]
@@ -85,17 +87,34 @@
           {:status 302
            :headers {"Location" "/tour/it/generate-q-and-a"}}))))
 
-(defn get-game-spec [target-language]
-  (let [results (k/exec-raw
-                 [(str "SELECT name,source,target,
-                              source_spec::text AS source_spec,
-                             target_spec::text AS target_spec 
-                          FROM translation_select
-                         WHERE target=? LIMIT 1") [target-language]] :results)]
-    {:target_spec
-     (get (first results) :target_spec)
-     :source_spec
-     (get (first results) :source_spec)}))
+(defn get-game-spec [source-language target-language game-name]
+  (log/debug (str "get-game-spec: game=" game-name))
+  (log/debug (str "source-language: " source-language))
+  (log/debug (str "target-language: " target-language))
+
+  ;; no game chosen: use :top for both source and spec.
+  (if (= game-name :any)
+    {:source-spec :top
+     :target_spec :top}
+
+    (let [game (first 
+                (k/exec-raw
+                 [(str "SELECT * 
+                          FROM game 
+                         WHERE name=? AND source=? AND target=? LIMIT 1")
+                [game-name source-language target-language]] :results))
+          target-lexemes (map (fn [each-lexeme]
+                                each-lexeme)
+                              (map json-read-str (.getArray (:target_lex game))))]
+      (log/debug (str "THE GAME IS: " game))
+      (log/debug (str "target lexicon: " (string/join "," target-lexemes)))
+      
+      (let [target-lexeme (nth target-lexemes (rand-int (.size target-lexemes)))]
+        (log/debug (str "target lexeme: " target-lexeme))
+        {:target_spec
+         target-lexeme
+         :source_spec 
+         :top}))))
 
 (defn generate-q-and-a [target-language target-locale request]
   "generate a question in English and a set of possible correct answers in the target language, given parameters in request"
@@ -103,11 +122,16 @@
                  "Cache-Control" "no-cache, no-store, must-revalidate"
                  "Pragma" "no-cache"
                  "Expires" "0"}]
-    (try (let [spec (get (:form-params request) "spec" :top)
-               game-spec (get-game-spec target-language)
+    (try (let [game (get (:params request) :game :any)
+               debug (log/debug (str "game:" game))
+               debug (log/debug (str "param keys:" (keys (:params request))))
+               game-spec (get-game-spec "en" target-language game)
                debug (log/debug (str "game-spec: " game-spec))
+               debug (log/debug (str "target-spec: " (get game-spec :target_spec)))
+               spec :top
                pair 
-               (generate-question-and-correct-set spec source-language source-locale
+               (generate-question-and-correct-set (:target_spec game-spec)
+                                                  source-language source-locale
                                                   target-language target-locale)]
            {:status 200
             :headers headers
