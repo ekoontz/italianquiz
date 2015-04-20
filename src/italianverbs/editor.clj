@@ -336,6 +336,8 @@
                  :method :post
                  :fields (concat
 
+                          [{:name :name :size 50 :label "Name"}]
+
                           [{:name :target_lex
                             :label "Verbs"
                             :type :checkboxes
@@ -384,9 +386,7 @@
                            
                            ]
 
-
-                          [{:name :name :size 50 :label "Name"}
-                           {:name :source :type :hidden
+                          [{:name :source :type :hidden
                             :label "Source Language"
                             :options [{:value "en" :label "English"}
                                       {:value "it" :label "Italian"}
