@@ -17,6 +17,20 @@
    [hiccup.core :refer (html)]
    [korma.core :as k]))
 
+(def tenses-as-editables
+  [{:label "conditional"
+    :value (json/write-str {:synsem {:sem {:tense :conditional}}})}
+   {:label "future"
+    :value (json/write-str {:synsem {:sem {:tense :future}}})}
+   {:label "imperfect"
+    :value (json/write-str {:synsem {:sem {:tense :past
+                                           :aspect :progressive}}})}
+   {:label "past"
+    :value (json/write-str {:synsem {:sem {:tense :past
+                                           :aspect :perfect}}})}
+   {:label "present"
+    :value (json/write-str {:synsem {:sem {:tense :present}}})}])
+
 (declare body)
 (declare delete-game)
 (declare delete-group)
@@ -220,7 +234,7 @@
 
      [:table {:class "striped padded"}
       [:tr
-       [:th {:style "width:auto"} "Active?"]
+       [:th {:style "width:2em"} "Active?"]
        [:th {:style "width:10em"} "Name"]
        [:th {:style "width:auto"} "Verbs"]
        [:th {:style "width:auto"} "Tenses"]
@@ -254,7 +268,7 @@
                  (if (= game-to-edit game-id)
                    [:input {:size (+ 5 (.length (:game_name result))) 
                             :value (:game_name result)}]
-                   [:div.edit_game {:onclick (str "edit_game_dialog(" game-id ")")}  (:game_name result)]
+                   [:div.edit_game {:onclick (str "edit_game_dialog(" game-id ")")} (:game_name result) ]
                    )]
 
                 [:td (string/join ", " (map #(html [:i %])
@@ -278,7 +292,7 @@
                 :enctype "multipart/form-data"
                 :action "/editor/game/new"}
        
-         [:input {:name "name" :size "50"} ]
+         [:input {:name "name" :size "50" :placeholder "Type the name of the new game"} ]
          [:input {:type "hidden" :name "language" :value language} ]
 
          [:button {:onclick "submit();"} "New Game"]
@@ -359,39 +373,21 @@
                                                         language-keyword-name
                                                         language-short-name
                                                         ]]
-                                                      :results))}
-                           
-                           ]
-
-
+                                                      :results))}]
                           [{:name :target_tenses
                             :label "Tenses"
                             :type :checkboxes
-                            :cols 10
+                            :cols 12
                             :options (map (fn [row]
-                                            (let [lexeme (if (:tense row)
-                                                           (:tense row)
-                                                           "")
-                                                  lexeme (string/replace lexeme "\"" "")]
-                                              {:label lexeme
-                                               :value (keyword lexeme)}))
-                                          ;; Get all possible tenses from all possible expressions.
-                                          ;; TODO: be more selective: show only infinitives, and avoid irregular forms.
-                                          ;; TODO: select only expressions for this game's language.
-                                          (k/exec-raw [(str "SELECT DISTINCT structure->'synsem'->'sem'->'tense' 
-                                                                          AS tense
-                                                                        FROM expression
-                                                                    ORDER BY tense")]
-                                                      :results))}
-                           
-                           ]
+                                            {:label (:label row)
+                                             :value (:value row)})
+                                          tenses-as-editables)}]
 
                           [{:name :source :type :hidden
                             :label "Source Language"
                             :options [{:value "en" :label "English"}
                                       {:value "it" :label "Italian"}
                                       {:value "es" :label "Spanish"}]}]
-
 
                           [{:name :target :type :hidden
                             :label "Target Language"
@@ -419,11 +415,11 @@
 
                             :target_tenses (vec (remove #(or (nil? %)
                                                              (= "" %))
-                                                        (map #(let [path [:synsem :sem :tense]
-                                                                    debug (log/debug (str "CHECKBOX TICK (:target_tenses) (path=" path ": ["
-                                                                                          (get-in % path nil) "]"))]
-                                                                (get-in % path nil))
-                                                             (map json-read-str (seq (.getArray (:target_grammar result)))))))
+                                                        (map #(let [debug (log/debug (str "tense: " %))
+                                                                    data (json-read-str %)]
+                                                                (log/debug (str "the data is: " data))
+                                                                (json/write-str data))
+                                                             (seq (.getArray (:target_grammar result))))))
 
 
 
@@ -750,23 +746,24 @@ game to find what expressions are appropriate for particular game."
  
         language-name (short-language-name-to-edn (:target params))
 
+        ;; wrap every lexeme in a {:head {<language> <lexeme}}.
         target-lexical-specs 
         (map (fn [each-lexeme]
                {:head {language-name {language-name each-lexeme}}})
              (filter #(not (= (string/trim %) ""))
                      (:target_lex params)))
 
+        ;; tenses are given as specs already, so no need to convert: just remove blanks.
         target-tenses-as-specs 
-        (map (fn [each-tense]
-               {:synsem {:sem {:tense each-tense}}})
-             (filter #(not (= (string/trim %) ""))
-                     (:target_tenses params)))
+        (filter #(not (= (string/trim %) ""))
+                (:target_tenses params))
 
         ]
 
     (log/debug (str "Editing game with id= " game-id))
     (log/debug (str "Lexical specs: " target-lexical-specs))
-    (log/debug (str "Tense specs: " target-tenses-as-specs))
+    (log/debug (str "Target tenses: " (:target_tenses params)))
+    (log/debug (str "Tense specs: " (string/join "," target-tenses-as-specs)))
 
     (let [target-lex-as-specs
           (str "ARRAY["
@@ -783,7 +780,7 @@ game to find what expressions are appropriate for particular game."
                (string/join ","
                             (map (fn [target-tense-spec]
                                    (str "'"
-                                        (json/write-str target-tense-spec)
+                                        target-tense-spec
                                         "'"))
                                  target-tenses-as-specs))
                "]::jsonb[]")
@@ -1139,12 +1136,12 @@ game to find what expressions are appropriate for particular game."
 
                                               ;; TODO: be more selective: show only infinitives, and avoid irregular forms.
                                               (k/exec-raw [(str "SELECT DISTINCT structure->'head'->?->?
-                                                                           AS lexeme 
-                                                                         FROM expression
-                                                                        WHERE language=?
-                                                                     ORDER BY lexeme") [language-long-name
-                                                                                        language-long-name
-                                                                                        language-short-name]]
+                                                                              AS lexeme 
+                                                                            FROM expression
+                                                                           WHERE language=?
+                                                                        ORDER BY lexeme") [language-long-name
+                                                                                           language-long-name
+                                                                                           language-short-name]]
                                                           :results))}])
 
                             ;; TODO: only show this if there *are* arbitrary specs.
