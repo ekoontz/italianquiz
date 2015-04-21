@@ -31,6 +31,13 @@
    {:label "present"
     :value (json/write-str {:synsem {:sem {:tense :present}}})}])
 
+(def tenses-human-readable
+  {{:synsem {:sem {:tense :conditional}}} "conditional"
+   {:synsem {:sem {:tense :future}}} "future"
+   {:synsem {:sem {:tense :past :aspect :progressive}}} "imperfect"
+   {:synsem {:sem {:tense :past :aspect :perfect}}} "past"
+   {:synsem {:sem {:tense :present}}} "present"})
+
 (declare body)
 (declare delete-game)
 (declare delete-group)
@@ -221,8 +228,15 @@
         debug (log/debug (str "THE LANGUAGE OF THE GAME IS: " language))
         sql "SELECT game.name AS game_name,game.id AS id,active,
                     source,target,
-                    target_lex,target_grammar
+                    target_lex,target_grammar,counts.expressions_per_game
                FROM game 
+          LEFT JOIN (SELECT game.id AS game,count(*) AS expressions_per_game
+                       FROM expression 
+                 INNER JOIN game 
+                         ON structure @> ANY(target_lex) 
+                        AND structure @> ANY(target_grammar) 
+                   GROUP BY game.id) AS counts
+                 ON (counts.game = game.id)
               WHERE ((game.target = ?) OR (? = ''))
            ORDER BY game.name"
         debug (log/debug (str "GAME-CHOOSING LANGUAGE: " language))
@@ -235,9 +249,10 @@
      [:table {:class "striped padded"}
       [:tr
        [:th {:style "width:2em"} "Active?"]
-       [:th {:style "width:10em"} "Name"]
+       [:th {:style "width:20em"} "Name"]
        [:th {:style "width:auto"} "Verbs"]
        [:th {:style "width:auto"} "Tenses"]
+       [:th {:style "width:auto;text-align:right"} "Count"]
        ]
 
       (map (fn [result]
@@ -275,12 +290,15 @@
                                            (map #(get-in % [:head language-keyword language-keyword]) 
                                                 (map json-read-str (.getArray (:target_lex result))))))]
 
-                [:td (string/join ", " (map #(html [:b (str "" %)])
-                                            (map #(if (keyword? %) (string/replace-first (str %) ":" "")
-                                                      %)
-                                                 (map #(get-in % [:synsem :sem :tense]) 
-                                                      (map json-read-str (.getArray (:target_grammar result)))))))]
+                [:td (string/join ", " (map #(html [:b (str %)])
+                                            (remove nil?
+                                                    (map #(get tenses-human-readable %)
+                                                         (map json-read-str (.getArray (:target_grammar result)))))))]
 
+
+                [:td {:style "text-align:right"} [:a {:href ""} (if (nil? (:expressions_per_game result))
+                                                                  0
+                                                                  (:expressions_per_game result))]]
 
                 ]
                ))
