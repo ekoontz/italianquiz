@@ -131,10 +131,12 @@
                                     (multipart-to-edn (:multipart-params request))))))
 
    (GET "/game/expressions/:game" request
-        (is-admin 
-         {:body (body "Expressions" (show-expressions-for-game (:game (:route-params request))) request)
-          :status 200
-          :headers headers}))
+        (is-admin
+         (let [game-id (Integer. (:game (:route-params request)))
+               game (first (k/exec-raw ["SELECT * FROM game WHERE id=?" [(Integer. game-id)]] :results))]
+           {:body (body (:name game) (show-expressions-for-game (:game (:route-params request))) request)
+            :status 200
+            :headers headers})))
 
    (POST "/game/new" request
          (is-admin
@@ -226,6 +228,7 @@
     ;; return the row ID of the game that has been inserted.
     (:id (first (k/exec-raw [sql [name source target]] :results)))))
 
+;; TODO: has fallen into parameteritis (too many unnamed parameters)
 (defn game-editor-form [game game-to-edit game-to-delete & [editpopup] ]
   (let [game-id (:id game)
         language (:language game)
@@ -368,7 +371,8 @@
      ]
     ))
 
-(defn show-games [ & [ {game-to-edit :game-to-edit
+(defn show-games [ & [ {editor-is-popup :editor-is-popup
+                        game-to-edit :game-to-edit
                         game-to-delete :game-to-delete
                         name-of-game :name-of-game
                         language :language} ]]
@@ -458,7 +462,12 @@
                  (if (= game-to-edit game-id)
                    [:input {:size (+ 5 (.length (:name result))) 
                             :value (:name result)}]
-                   [:div.edit_game {:onclick (str "edit_game_dialog(" game-id ")")} game-name-display])]
+                   (if (not editor-is-popup)
+                     ;; show as link
+                     [:a {:href (str "/editor/game/expressions/" game-id)} game-name-display]
+
+                     ;; show as popup
+                     [:div.edit_game {:onclick (str "edit_game_dialog(" game-id ")")} game-name-display]))]
 
                 [:td (string/join ", " (map #(html [:i %])
                                            (map #(get-in % [:head language-keyword language-keyword]) 
@@ -840,7 +849,7 @@ game to find what expressions are appropriate for particular game."
                           (Integer. game-id)]])
 
             {:status 302
-             :headers {"Location" (str "/editor/" (:target params) "/?message=Edited+game:" game-id)}})))))
+             :headers {"Location" (str "/editor/game/expressions/" game-id "?message=Edited+game:" game-id)}})))))
 
 ;; TODO: consider using https://github.com/jkk/honeysql:
 ;; "SQL as Clojure data structures. Build queries programmatically -- even at runtime -- without having to bash strings together."
@@ -1449,30 +1458,31 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
   (let [game-id (Integer. game-id)
         game (first (k/exec-raw ["SELECT * FROM game WHERE id=?" [(Integer. game-id)]] :results))]
     (html
-     [:h3 {:style "float:left;width:100%"} (str (:name game))]
-     (let [sql "SELECT surface 
+     (let [sql "SELECT DISTINCT surface 
                   FROM expression
             INNER JOIN game
                     ON structure @> ANY(target_lex) 
                    AND structure @> ANY(target_grammar)
-                   AND game.id = ?"
+                   AND game.id = ? 
+              ORDER BY surface"
            results (k/exec-raw [sql
                               [game-id] ]
                                :results)]
-       (html
+       [:div {:style "float:left;width:100%;margin-top:1em"}
 
-        [:div {:style "border:0px dashed green"}
+        [:div {:style "border:0px dashed green;float:right;width:60%;"}
          (game-editor-form game nil nil)]
 
-        [:table {:class "striped padded"}
-         [:tr
-          [:th "Expression"]]
+        [:div {:style "float:left;width:40%"}
+         [:table {:class "striped padded"}
+          [:tr
+           [:th "Expressions"]]
 
-         (map (fn [result]
-                [:tr 
-                 [:td
-                  (:surface result)]])
-              results)])))))
+          (map (fn [result]
+                 [:tr 
+                  [:td
+                   (:surface result)]])
+               results)]]]))))
 
 (defn show-expressions []
   (let [select (str "SELECT name,source,target,source_grouping::text AS source_grouping ,target_grouping::text AS target_grouping FROM expression_select")
