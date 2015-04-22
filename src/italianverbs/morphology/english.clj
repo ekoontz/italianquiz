@@ -843,7 +843,8 @@
                              :merge-fn
                              (fn [val]
                                {:synsem {:cat :verb
-                                         :subcat {:1 {:number :sing}}}
+                                         :subcat {:1 {:agr {:number :sing
+                                                            :person :1st}}}}
                                 :english {:infl :past
                                           :english (get-in val [:english :past :1sing])}})}
 
@@ -851,7 +852,8 @@
                              :merge-fn
                              (fn [val]
                                {:synsem {:cat :verb
-                                         :subcat {:2 {:number :sing}}}
+                                         :subcat {:1 {:agr {:number :sing
+                                                            :person :2nd}}}}
                                 :english {:infl :past
                                           :english (get-in val [:english :past :2sing])}})}
 
@@ -859,7 +861,8 @@
                              :merge-fn
                              (fn [val]
                                {:synsem {:cat :verb
-                                         :subcat {:3 {:number :sing}}}
+                                         :subcat {:1 {:agr {:number :sing
+                                                            :person :3rd}}}}
                                 :english {:infl :past
                                           :english (get-in val [:english :past :3sing])}})}
 
@@ -867,7 +870,8 @@
                              :merge-fn
                              (fn [val]
                                {:synsem {:cat :verb
-                                         :subcat {:1 {:number :plur}}}
+                                         :subcat {:1 {:agr {:number :plur
+                                                            :person :1st}}}}
                                 :english {:infl :past
                                           :english (get-in val [:english :past :1plur])}})}
 
@@ -875,7 +879,8 @@
                              :merge-fn
                              (fn [val]
                                {:synsem {:cat :verb
-                                         :subcat {:2 {:number :plur}}}
+                                         :subcat {:2 {:agr {:number :plur
+                                                            :person :2nd}}}}
                                 :english {:infl :present
                                           :english (get-in val [:english :past :2plur])}})}
 
@@ -883,7 +888,8 @@
                              :merge-fn
                              (fn [val]
                                {:synsem {:cat :verb
-                                         :subcat {:3 {:number :plur}}}
+                                         :subcat {:3 {:agr {:number :plur
+                                                            :person :3rd}}}}
                                 :english {:infl :past
                                           :english (get-in val [:english :past :3plur])}})}
 
@@ -901,7 +907,8 @@
                              :merge-fn
                              (fn [val]
                                {:synsem {:cat :verb
-                                         :subcat {:1 {:number :sing}}}
+                                         :subcat {:1 {:agr {:number :sing
+                                                            :person :1st}}}}
                                 :english {:infl :present
                                           :english (get-in val [:english :present :1sing])}})}
 
@@ -909,7 +916,8 @@
                              :merge-fn
                              (fn [val]
                                {:synsem {:cat :verb
-                                         :subcat {:2 {:number :sing}}}
+                                         :subcat {:1 {:agr {:number :sing
+                                                            :person :2nd}}}}
                                 :english {:infl :present
                                           :english (get-in val [:english :present :2sing])}})}
 
@@ -917,7 +925,8 @@
                              :merge-fn
                              (fn [val]
                                {:synsem {:cat :verb
-                                         :subcat {:3 {:number :sing}}}
+                                         :subcat {:1 {:agr {:number :sing
+                                                            :person :3rd}}}}
                                 :english {:infl :present
                                           :english (get-in val [:english :present :3sing])}})}
 
@@ -925,7 +934,8 @@
                              :merge-fn
                              (fn [val]
                                {:synsem {:cat :verb
-                                         :subcat {:1 {:number :plur}}}
+                                         :subcat {:1 {:agr {:number :plur
+                                                            :person :1st}}}}
                                 :english {:infl :present
                                           :english (get-in val [:english :present :1plur])}})}
 
@@ -933,7 +943,8 @@
                              :merge-fn
                              (fn [val]
                                {:synsem {:cat :verb
-                                         :subcat {:2 {:number :plur}}}
+                                         :subcat {:1 {:agr {:number :plur
+                                                            :person :2nd}}}}
                                 :english {:infl :present
                                           :english (get-in val [:english :present :2plur])}})}
 
@@ -941,7 +952,8 @@
                              :merge-fn
                              (fn [val]
                                {:synsem {:cat :verb
-                                         :subcat {:3 {:number :plur}}}
+                                         :subcat {:1 {:agr {:number :plur
+                                                            :person :3rd}}}}
                                 :english {:infl :present
                                           :english (get-in val [:english :present :3plur])}})}
 
