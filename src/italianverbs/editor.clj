@@ -51,6 +51,8 @@
 (declare short-language-name-to-edn)
 (declare short-language-name-to-long)
 (declare shortname-from-match)
+(declare show-expressions)
+(declare show-expressions-for-game)
 (declare show-games)
 (declare show-group-edit-forms)
 (declare show-groups)
@@ -127,6 +129,12 @@
          (do (log/debug (str "Doing POST /game/edit/:language/:game-to-edit with request: " request))
              (is-admin (update-game (:game-to-edit (:route-params request))
                                     (multipart-to-edn (:multipart-params request))))))
+
+   (GET "/game/expressions/:game" request
+        (is-admin 
+         {:body (body "Editor: Expressions" (show-expressions-for-game (:game (:route-params request))) request)
+          :status 200
+          :headers headers}))
 
    (POST "/game/new" request
          (is-admin
@@ -217,6 +225,146 @@
     ;; return the row ID of the game that has been inserted.
     (:id (first (k/exec-raw [sql [name source target]] :results)))))
 
+(defn game-editor-form [result game-to-edit game-to-delete language]
+  (let [game-id (:id result)
+        debug (log/debug (str "ALL GAME INFO: " result))
+        game-to-edit game-to-edit
+        problems nil ;; TODO: should be optional param of this (defn)
+        game-to-delete game-to-delete
+
+        source-group-ids (:source_group_ids result)
+        source-groups (if source-group-ids
+                        (vec (remove #(or (nil? %)
+                                          (= "" (string/trim (str %))))
+                                     (.getArray (:source_group_ids result))))
+                        [])
+        target-group-ids (:target_group_ids result)
+        target-groups (if target-group-ids
+                        (vec (remove #(or (nil? %)
+                                          (= "" (string/trim (str %))))
+                                     (.getArray (:target_group_ids result))))
+                        [])
+        debug (log/debug (str "creating checkbox form with currently-selected source-groups: " source-groups))
+        debug (log/debug (str "creating checkbox form with currently-selected target-groups: " target-groups))
+
+        language-short-name (:target result)
+        debug (log/debug (str "language-short-name:" language-short-name))
+        language-keyword-name
+        (str "" (sqlname-from-match (short-language-name-to-long language-short-name)) "")
+
+        language-keyword
+        (keyword language-keyword-name)
+
+        debug (log/debug 
+               (str "SELECT DISTINCT structure->'head'->" language-keyword-name "->" language-keyword-name "
+                                            AS lexeme 
+                                          FROM expression
+                                         WHERE language=" language-short-name "
+                                      ORDER BY lexeme"))
+        
+        debug (log/debug (str "language-keyword-name: " language-keyword-name))
+        debug (log/debug (str "language-short-name: " language-short-name))
+        
+        ]
+    [:div.editgame
+     {:id (str "editgame" game-id)}
+     [:h2 (str "Editing game: " (:game_name result))]
+     
+     (f/render-form 
+      {:action (str "/editor/game/edit/" game-id)
+       :enctype "multipart/form-data"
+       :method :post
+       :fields (concat
+                
+                [{:name :name :size 50 :label "Name"}]
+                
+                [{:name :target_lex
+                  :label "Verbs"
+                  :type :checkboxes
+                  :cols 10
+                  :options (map (fn [row]
+                                  (let [lexeme (if (:lexeme row)
+                                                 (:lexeme row)
+                                                 "")
+                                        lexeme (string/replace lexeme "\"" "")]
+                                    {:label lexeme
+                                     :value lexeme}))
+                                ;; TODO: be more selective: show only infinitives, and avoid irregular forms.
+                                (k/exec-raw [(str "SELECT DISTINCT structure->'head'->?->?
+                                                                                 AS lexeme 
+                                                                               FROM expression
+                                                                              WHERE language=?
+                                                                           ORDER BY lexeme") 
+                                             [language-keyword-name
+                                              language-keyword-name
+                                              language-short-name
+                                              ]]
+                                            :results))}]
+                [{:name :target_tenses
+                  :label "Tenses"
+                  :type :checkboxes
+                  :cols 12
+                  :options (map (fn [row]
+                                  {:label (:label row)
+                                   :value (:value row)})
+                                tenses-as-editables)}]
+                
+                [{:name :source :type :hidden
+                  :label "Source Language"
+                  :options [{:value "en" :label "English"}
+                            {:value "it" :label "Italian"}
+                            {:value "es" :label "Spanish"}]}]
+                
+                [{:name :target :type :hidden
+                  :label "Target Language"
+                  :options [{:value "en" :label "English"}
+                            {:value "it" :label "Italian"}
+                            {:value "es" :label "Spanish"}]}]
+                
+                )
+       
+       :cancel-href (str "/editor/" language)
+       :values {:name (:game_name result)
+                :target (:target result)
+                :source (:source result)
+                :source_groupings source-groups
+                :target_groupings target-groups
+                
+                :target_lex (vec (remove #(or (nil? %)
+                                              (= "" %))
+                                         (map #(let [path [:head language-keyword language-keyword]
+                                                     debug (log/debug (str "CHECKBOX TICK (:target_lex) (path=" path ": ["
+                                                                           (get-in % path nil) "]"))]
+                                                 (get-in % path nil))
+                                              (map json-read-str (seq (.getArray (:target_lex result)))))))
+                
+                
+                :target_tenses (vec (remove #(or (nil? %)
+                                                 (= "" %))
+                                            (map #(let [debug (log/debug (str "tense: " %))
+                                                        data (json-read-str %)]
+                                                    (log/debug (str "the data is: " data))
+                                                    (json/write-str data))
+                                                 (seq (.getArray (:target_grammar result))))))
+                }
+
+       :validations [[:required [:name]   
+                      :action "/editor"
+                      :method "post"
+                      :problems problems]]})
+
+     [:div.dangerzone
+      [:h4 "Delete game"]
+      
+      [:div {:style "float:right"}
+       [:form
+        {:method "post"
+         :action (str "/editor/game/delete/" language "/" game-id)}
+        [:button.confirm_delete {:onclick (str "submit();")} "Delete Game"]]]
+      ]
+     ]
+    ))
+
 (defn show-games [ & [ {game-to-edit :game-to-edit
                         game-to-delete :game-to-delete
                         name-of-game :name-of-game
@@ -249,14 +397,20 @@
      [:table {:class "striped padded"}
       [:tr
        [:th {:style "width:2em"} "Active?"]
-       [:th {:style "width:20em"} "Name"]
+       [:th {:style "width:15em"} "Name"]
        [:th {:style "width:auto"} "Verbs"]
        [:th {:style "width:auto"} "Tenses"]
        [:th {:style "width:auto;text-align:right"} "Count"]
        ]
 
-      (map (fn [result]
-             (let [game-id (:id result)
+      (map 
+       (fn [result]
+             (let [game-name-display
+                   (let [game-name (string/trim (:game_name result))]
+                     (if (= game-name "")
+                       "(untitled)"
+                       game-name))
+                   game-id (:id result)
                    language-short-name (:target result)
                    debug (log/debug (str "language-short-name:" language-short-name))
                    language-keyword-name
@@ -283,8 +437,7 @@
                  (if (= game-to-edit game-id)
                    [:input {:size (+ 5 (.length (:game_name result))) 
                             :value (:game_name result)}]
-                   [:div.edit_game {:onclick (str "edit_game_dialog(" game-id ")")} (:game_name result) ]
-                   )]
+                   [:div.edit_game {:onclick (str "edit_game_dialog(" game-id ")")} game-name-display])]
 
                 [:td (string/join ", " (map #(html [:i %])
                                            (map #(get-in % [:head language-keyword language-keyword]) 
@@ -296,9 +449,10 @@
                                                          (map json-read-str (.getArray (:target_grammar result)))))))]
 
 
-                [:td {:style "text-align:right"} [:a {:href ""} (if (nil? (:expressions_per_game result))
-                                                                  0
-                                                                  (:expressions_per_game result))]]
+                [:td {:style "text-align:right"} [:a {:href (str "/editor/game/expressions/" game-id)   } 
+                                                  (if (nil? (:expressions_per_game result))
+                                                    0
+                                                    (:expressions_per_game result))]]
 
                 ]
                ))
@@ -318,150 +472,8 @@
 
      ;; make the hidden game-editing forms.
      (map (fn [result]
-            (let [game-id (:id result)
-                  debug (log/debug (str "ALL GAME INFO: " result))
-                  game-to-edit game-to-edit
-                  problems nil ;; TODO: should be optional param of this (defn)
-                  game-to-delete game-to-delete
-
-                  source-group-ids (:source_group_ids result)
-                  source-groups (if source-group-ids
-                                  (vec (remove #(or (nil? %)
-                                                    (= "" (string/trim (str %))))
-                                               (.getArray (:source_group_ids result))))
-                                  [])
-                  target-group-ids (:target_group_ids result)
-                  target-groups (if target-group-ids
-                                  (vec (remove #(or (nil? %)
-                                                    (= "" (string/trim (str %))))
-                                               (.getArray (:target_group_ids result))))
-                                  [])
-                  debug (log/debug (str "creating checkbox form with currently-selected source-groups: " source-groups))
-                  debug (log/debug (str "creating checkbox form with currently-selected target-groups: " target-groups))
-
-                  language-short-name (:target result)
-                  debug (log/debug (str "language-short-name:" language-short-name))
-                  language-keyword-name
-                  (str "" (sqlname-from-match (short-language-name-to-long language-short-name)) "")
-
-                  language-keyword
-                  (keyword language-keyword-name)
-
-                  debug (log/debug 
-                         (str "SELECT DISTINCT structure->'head'->" language-keyword-name "->" language-keyword-name "
-                                            AS lexeme 
-                                          FROM expression
-                                         WHERE language=" language-short-name "
-                                      ORDER BY lexeme"))
-
-                  debug (log/debug (str "language-keyword-name: " language-keyword-name))
-                  debug (log/debug (str "language-short-name: " language-short-name))
-
-                 ]
-              [:div.editgame
-               {:id (str "editgame" game-id)}
-               [:h2 (str "Editing game: " (:game_name result))]
-
-               (f/render-form 
-                {:action (str "/editor/game/edit/" game-id)
-                 :enctype "multipart/form-data"
-                 :method :post
-                 :fields (concat
-
-                          [{:name :name :size 50 :label "Name"}]
-
-                          [{:name :target_lex
-                            :label "Verbs"
-                            :type :checkboxes
-                            :cols 10
-                            :options (map (fn [row]
-                                            (let [lexeme (if (:lexeme row)
-                                                           (:lexeme row)
-                                                           "")
-                                                  lexeme (string/replace lexeme "\"" "")]
-                                              {:label lexeme
-                                               :value lexeme}))
-                                          ;; TODO: be more selective: show only infinitives, and avoid irregular forms.
-                                          (k/exec-raw [(str "SELECT DISTINCT structure->'head'->?->?
-                                                                                 AS lexeme 
-                                                                               FROM expression
-                                                                              WHERE language=?
-                                                                           ORDER BY lexeme") 
-                                                       [language-keyword-name
-                                                        language-keyword-name
-                                                        language-short-name
-                                                        ]]
-                                                      :results))}]
-                          [{:name :target_tenses
-                            :label "Tenses"
-                            :type :checkboxes
-                            :cols 12
-                            :options (map (fn [row]
-                                            {:label (:label row)
-                                             :value (:value row)})
-                                          tenses-as-editables)}]
-
-                          [{:name :source :type :hidden
-                            :label "Source Language"
-                            :options [{:value "en" :label "English"}
-                                      {:value "it" :label "Italian"}
-                                      {:value "es" :label "Spanish"}]}]
-
-                          [{:name :target :type :hidden
-                            :label "Target Language"
-                            :options [{:value "en" :label "English"}
-                                      {:value "it" :label "Italian"}
-                                      {:value "es" :label "Spanish"}]}]
-                          
-                          )
-                   
-                   :cancel-href (str "/editor/" language)
-                   :values {:name (:game_name result)
-                            :target (:target result)
-                            :source (:source result)
-                            :source_groupings source-groups
-                            :target_groupings target-groups
-
-                            :target_lex (vec (remove #(or (nil? %)
-                                                          (= "" %))
-                                                     (map #(let [path [:head language-keyword language-keyword]
-                                                                 debug (log/debug (str "CHECKBOX TICK (:target_lex) (path=" path ": ["
-                                                                                       (get-in % path nil) "]"))]
-                                                             (get-in % path nil))
-                                                          (map json-read-str (seq (.getArray (:target_lex result)))))))
-
-
-                            :target_tenses (vec (remove #(or (nil? %)
-                                                             (= "" %))
-                                                        (map #(let [debug (log/debug (str "tense: " %))
-                                                                    data (json-read-str %)]
-                                                                (log/debug (str "the data is: " data))
-                                                                (json/write-str data))
-                                                             (seq (.getArray (:target_grammar result))))))
-
-
-
-                            }
-
-                   :validations [[:required [:name]   
-                                  :action "/editor"
-                                  :method "post"
-                                  :problems problems]]})
-
-                 [:div.dangerzone
-                  [:h4 "Delete game"]
-
-                  [:div {:style "float:right"}
-                  [:form
-                   {:method "post"
-                    :action (str "/editor/game/delete/" language "/" game-id)}
-                   [:button.confirm_delete {:onclick (str "submit();")} "Delete Game"]]]
-                  ]
-                 ]
-                ))
-            results))
-     ))
-
+            (game-editor-form result game-to-edit game-to-delete language))
+          results))))
 
 ;; TODO: consider using https://github.com/jkk/honeysql:
 ;; "SQL as Clojure data structures. Build queries programmatically -- even at runtime -- without having to bash strings together."
@@ -1428,6 +1440,31 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
          (k/exec-raw [sql
                       [game-id game-id game-id game-id]] :results))))
 
+
+(defn show-expressions-for-game [game-id]
+  (html
+   [:div (str "Expressions for game: " game-id)]
+
+   (let [game-id (Integer. game-id)
+         sql "SELECT surface 
+                FROM expression
+          INNER JOIN game
+                  ON structure @> ANY(target_lex) 
+                 AND structure @> ANY(target_grammar)
+                 AND game.id = ?"
+         results (k/exec-raw [sql
+                              [game-id] ]
+                             :results)]
+     (html
+      [:table {:class "striped padded"}
+       [:tr
+        [:th "Expression"]]
+
+       (map (fn [result]
+              [:tr 
+               [:td
+                (:surface result)]])
+            results)]))))
 
 (defn show-expressions []
   (let [select (str "SELECT name,source,target,source_grouping::text AS source_grouping ,target_grouping::text AS target_grouping FROM expression_select")
