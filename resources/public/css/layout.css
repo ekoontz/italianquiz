@@ -39,6 +39,7 @@ div.menubar div {
 }
 
 div.major {
+    width:100%;
     float:left;
 }
 
