@@ -152,19 +152,24 @@ button.confirm_delete {
     background:red;
 }
 
-div.editgame {
-    background:#e9ecae;
-    -moz-border-radius:5px;
-    -webkit-border-radius:5px;
-    border-radius:5px;
-    border:solid #aee6ec 5px;
-    padding:3px;
+div.editpopup {
     display:none;
     z-index:2;
     position:absolute;
     left:10%;
     top:40%;
     width:80%;
+    -moz-border-radius:5px;
+    -webkit-border-radius:5px;
+    border-radius:5px;
+    border:solid #aee6ec 5px;
+}
+
+
+div.editgame {
+    float:left;
+    background:#e9ecae;
+    padding:3px;
 }
 
 div.editgroup {

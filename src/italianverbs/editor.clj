@@ -226,7 +226,7 @@
     ;; return the row ID of the game that has been inserted.
     (:id (first (k/exec-raw [sql [name source target]] :results)))))
 
-(defn game-editor-form [game game-to-edit game-to-delete language]
+(defn game-editor-form [game game-to-edit game-to-delete & [editpopup] ]
   (let [game-id (:id game)
         language (:language game)
         debug (log/debug (str "ALL GAME INFO: " game))
@@ -268,9 +268,10 @@
         debug (log/debug (str "language-short-name: " language-short-name))
         
         ]
-    [:div.editgame
-     {:id (str "editgame" game-id)}
-     [:h2 (str "Editing game: " (:game_name game))]
+    [:div
+     {:class (str "editgame " (if editpopup "editpopup"))
+      :id (str "editgame" game-id)}
+;;     [:h2 (str "Editing game: " (:name game))]
      
      (f/render-form 
       {:action (str "/editor/game/edit/" game-id)
@@ -326,7 +327,7 @@
                 )
        
        :cancel-href (str "/editor/" language)
-       :values {:name (:game_name game)
+       :values {:name (:name game)
                 :target (:target game)
                 :source (:source game)
                 :source_groupings source-groups
@@ -376,7 +377,7 @@
         game-to-delete (if game-to-delete (Integer. game-to-delete))
         language (if language language "")
         debug (log/debug (str "THE LANGUAGE OF THE GAME IS: " language))
-        sql "SELECT game.name AS game_name,game.id AS id,active,
+        sql "SELECT game.name AS name,game.id AS id,active,
                     source,target,
                     target_lex,target_grammar,counts.expressions_per_game
                FROM game 
@@ -426,7 +427,7 @@
       (map 
        (fn [result]
              (let [game-name-display
-                   (let [game-name (string/trim (:game_name result))]
+                   (let [game-name (string/trim (:name result))]
                      (if (= game-name "")
                        "(untitled)"
                        game-name))
@@ -455,8 +456,8 @@
 
                 [:td
                  (if (= game-to-edit game-id)
-                   [:input {:size (+ 5 (.length (:game_name result))) 
-                            :value (:game_name result)}]
+                   [:input {:size (+ 5 (.length (:name result))) 
+                            :value (:name result)}]
                    [:div.edit_game {:onclick (str "edit_game_dialog(" game-id ")")} game-name-display])]
 
                 [:td (string/join ", " (map #(html [:i %])
@@ -493,7 +494,7 @@
 
      ;; make the hidden game-editing forms.
      (map (fn [result]
-            (game-editor-form result game-to-edit game-to-delete language))
+            (game-editor-form result game-to-edit game-to-delete true))
           results))))
 
 ;; TODO: consider using https://github.com/jkk/honeysql:
@@ -639,7 +640,7 @@ game to find what expressions are appropriate for particular game."
      title
      (html
       [:div {:class "major"}
-       [:h2 (str "Game Editor" (if (not (= "" (string/trim title))) (str ": " title)))]
+       [:h2 [:a {:href "/editor"} (str "Game Editor") ] (if (not (= "" (string/trim title))) (str ": " title))]
       content])
      request
      {:css "/css/editor.css"
@@ -1459,6 +1460,10 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
                               [game-id] ]
                                :results)]
        (html
+
+        [:div {:style "border:0px dashed green"}
+         (game-editor-form game nil nil)]
+
         [:table {:class "striped padded"}
          [:tr
           [:th "Expression"]]
