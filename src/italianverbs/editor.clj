@@ -42,7 +42,7 @@
 (declare delete-game)
 (declare delete-group)
 (declare headers)
-(declare home-page)
+(declare show-games)
 (declare insert-game)
 (declare insert-grouping)
 (declare json-read-str)
@@ -65,7 +65,7 @@
 (def routes
   (compojure/routes
    (GET "/" request
-        (is-admin {:body (body "Editor: Top-level" (home-page request) request)
+        (is-admin {:body (body "" (show-games request) request)
                    :status 200
                    :headers headers}))
 
@@ -77,8 +77,8 @@
 
    ;; language-specific: show only games and lists appropriate to a given language
    (GET "/:language" request
-        (is-admin {:body (body (str "Editor: " (short-language-name-to-long (:language (:route-params request))))
-                               (home-page (conj request
+        (is-admin {:body (body (str (short-language-name-to-long (:language (:route-params request))))
+                               (show-games (conj request
                                                 {:language (:language (:route-params request))}))
                                request)
                    :status 200
@@ -92,7 +92,7 @@
         (is-admin
          (let [game-to-delete (:game-to-delete (:route-params request))]
            {:body (body (str "Editor: Confirm: delete game: " game-to-delete)
-                        (home-page {:game-to-delete game-to-delete}) 
+                        (show-games {:game-to-delete game-to-delete}) 
                         request)
             :status 200
             :headers headers})))
@@ -132,7 +132,7 @@
 
    (GET "/game/expressions/:game" request
         (is-admin 
-         {:body (body "Editor: Expressions" (show-expressions-for-game (:game (:route-params request))) request)
+         {:body (body "Expressions" (show-expressions-for-game (:game (:route-params request))) request)
           :status 200
           :headers headers}))
 
@@ -158,7 +158,7 @@
         (is-admin
          (let [group-to-delete (:group-to-delete (:route-params request))]
            {:body (body (str "Editor: Confirm: delete group: " group-to-delete)
-                        (home-page {:group-to-delete group-to-delete})
+                        (show-games {:group-to-delete group-to-delete})
                         request)
             :status 200
             :headers headers})))
@@ -181,16 +181,17 @@
    (POST "/use" request
          (is-admin (set-as-default request)))))
 
-(defn home-page [ & [ {game-to-delete :game-to-delete
-                       game-to-edit :game-to-edit
-                       group-to-edit :group-to-edit
-                       group-to-delete :group-to-delete
-                       language :language
-                       message :message} ]]
+;; TODO: this is pretty similar to show-games except it shows groups as well.
+(defn show-games-old [ & [ {game-to-delete :game-to-delete
+                            game-to-edit :game-to-edit
+                            group-to-edit :group-to-edit
+                            group-to-delete :group-to-delete
+                            language :language
+                            message :message} ]]
   (let [show-groups-table false]
     (html
      [:div.user-alert message]
-   
+     
      [:div.section [:h3 (str "Games")]
       (show-games {:game-to-delete game-to-delete
                    :language language
@@ -199,7 +200,7 @@
 
      (if show-groups-table
        [:div.section
-        [:h3 "Lists"]
+        [:h3 "Groups"]
         (show-groups {:group-to-delete game-to-delete
                       :group-to-edit game-to-edit
                       :language language})]
@@ -225,29 +226,30 @@
     ;; return the row ID of the game that has been inserted.
     (:id (first (k/exec-raw [sql [name source target]] :results)))))
 
-(defn game-editor-form [result game-to-edit game-to-delete language]
-  (let [game-id (:id result)
-        debug (log/debug (str "ALL GAME INFO: " result))
+(defn game-editor-form [game game-to-edit game-to-delete language]
+  (let [game-id (:id game)
+        language (:language game)
+        debug (log/debug (str "ALL GAME INFO: " game))
         game-to-edit game-to-edit
         problems nil ;; TODO: should be optional param of this (defn)
         game-to-delete game-to-delete
 
-        source-group-ids (:source_group_ids result)
+        source-group-ids (:source_group_ids game)
         source-groups (if source-group-ids
                         (vec (remove #(or (nil? %)
                                           (= "" (string/trim (str %))))
-                                     (.getArray (:source_group_ids result))))
+                                     (.getArray (:source_group_ids game))))
                         [])
-        target-group-ids (:target_group_ids result)
+        target-group-ids (:target_group_ids game)
         target-groups (if target-group-ids
                         (vec (remove #(or (nil? %)
                                           (= "" (string/trim (str %))))
-                                     (.getArray (:target_group_ids result))))
+                                     (.getArray (:target_group_ids game))))
                         [])
         debug (log/debug (str "creating checkbox form with currently-selected source-groups: " source-groups))
         debug (log/debug (str "creating checkbox form with currently-selected target-groups: " target-groups))
 
-        language-short-name (:target result)
+        language-short-name (:target game)
         debug (log/debug (str "language-short-name:" language-short-name))
         language-keyword-name
         (str "" (sqlname-from-match (short-language-name-to-long language-short-name)) "")
@@ -268,7 +270,7 @@
         ]
     [:div.editgame
      {:id (str "editgame" game-id)}
-     [:h2 (str "Editing game: " (:game_name result))]
+     [:h2 (str "Editing game: " (:game_name game))]
      
      (f/render-form 
       {:action (str "/editor/game/edit/" game-id)
@@ -324,9 +326,9 @@
                 )
        
        :cancel-href (str "/editor/" language)
-       :values {:name (:game_name result)
-                :target (:target result)
-                :source (:source result)
+       :values {:name (:game_name game)
+                :target (:target game)
+                :source (:source game)
                 :source_groupings source-groups
                 :target_groupings target-groups
                 
@@ -336,7 +338,7 @@
                                                      debug (log/debug (str "CHECKBOX TICK (:target_lex) (path=" path ": ["
                                                                            (get-in % path nil) "]"))]
                                                  (get-in % path nil))
-                                              (map json-read-str (seq (.getArray (:target_lex result)))))))
+                                              (map json-read-str (seq (.getArray (:target_lex game)))))))
                 
                 
                 :target_tenses (vec (remove #(or (nil? %)
@@ -345,7 +347,7 @@
                                                         data (json-read-str %)]
                                                     (log/debug (str "the data is: " data))
                                                     (json/write-str data))
-                                                 (seq (.getArray (:target_grammar result))))))
+                                                 (seq (.getArray (:target_grammar game))))))
                 }
 
        :validations [[:required [:name]   
@@ -393,6 +395,24 @@
                              [language language] ]
                             :results)]
     (html
+
+     [:div.dropdown {:style "margin-left:0.5em;float:left;width:auto"}
+      "Show games for:"
+      [:div {:style "float:right;padding-left:1em;width:auto;"}
+       [:form {:method "get"}
+        [:select#edit_which_language {:name "language" 
+                                      :onchange (str "document.location='/editor/' + this.value")}
+         (map (fn [lang-pair]
+                (let [label (:label lang-pair)
+                      value (:value lang-pair)]
+                  [:option (conj {:value value}
+                                 (if (= language (:value lang-pair))
+                                   {:selected "selected"}
+                                   {}))
+                   label]))
+              [{:value "" :label "All Languages"}
+               {:value "es" :label "Español"}
+               {:value "it" :label "Italiano"}])]]]]
 
      [:table {:class "striped padded"}
       [:tr
@@ -464,10 +484,11 @@
                 :enctype "multipart/form-data"
                 :action "/editor/game/new"}
        
-         [:input {:name "name" :size "50" :placeholder "Type the name of the new game"} ]
+         [:input {:onclick "submit_new_game.disabled = false;"
+                  :name "name" :size "50" :placeholder (str "Type the name of a new " (short-language-name-to-long language) " game")} ]
          [:input {:type "hidden" :name "language" :value language} ]
 
-         [:button {:onclick "submit();"} "New Game"]
+         [:button {:name "submit_new_game" :disabled true :onclick "submit();"} "New Game"]
          ]])
 
      ;; make the hidden game-editing forms.
@@ -512,7 +533,7 @@ game to find what expressions are appropriate for particular game."
 (declare delete-group)
 (declare update-game)
 (declare update-group)
-(declare home-page)
+(declare show-games)
 (declare links)
 (declare onload)
 (declare read-request)
@@ -618,25 +639,7 @@ game to find what expressions are appropriate for particular game."
      title
      (html
       [:div {:class "major"}
-       [:h2 (str "Game Editor" (if language (str ": " 
-                                                  (short-language-name-to-long language))))]
-       [:div {:style "margin-left:0.5em;float:left;width:auto"}
-        "Show games for:"
-        [:div {:style "float:right;padding-left:1em;width:auto;"}
-         [:form {:method "get"}
-          [:select#edit_which_language {:name "language" 
-                                        :onchange (str "document.location='/editor/' + this.value")}
-           (map (fn [lang-pair]
-                  (let [label (:label lang-pair)
-                        value (:value lang-pair)]
-                    [:option (conj {:value value}
-                                   (if (= language (:value lang-pair))
-                                     {:selected "selected"}
-                                     {}))
-                     label]))
-                [{:value "" :label "All Languages"}
-                 {:value "es" :label "Español"}
-                 {:value "it" :label "Italiano"}])]]]]
+       [:h2 (str "Game Editor" (if (not (= "" (string/trim title))) (str ": " title)))]
       content])
      request
      {:css "/css/editor.css"
@@ -1442,29 +1445,29 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
 
 
 (defn show-expressions-for-game [game-id]
-  (html
-   [:div (str "Expressions for game: " game-id)]
-
-   (let [game-id (Integer. game-id)
-         sql "SELECT surface 
-                FROM expression
-          INNER JOIN game
-                  ON structure @> ANY(target_lex) 
-                 AND structure @> ANY(target_grammar)
-                 AND game.id = ?"
-         results (k/exec-raw [sql
+  (let [game-id (Integer. game-id)
+        game (first (k/exec-raw ["SELECT * FROM game WHERE id=?" [(Integer. game-id)]] :results))]
+    (html
+     [:h3 {:style "float:left;width:100%"} (str (:name game))]
+     (let [sql "SELECT surface 
+                  FROM expression
+            INNER JOIN game
+                    ON structure @> ANY(target_lex) 
+                   AND structure @> ANY(target_grammar)
+                   AND game.id = ?"
+           results (k/exec-raw [sql
                               [game-id] ]
-                             :results)]
-     (html
-      [:table {:class "striped padded"}
-       [:tr
-        [:th "Expression"]]
+                               :results)]
+       (html
+        [:table {:class "striped padded"}
+         [:tr
+          [:th "Expression"]]
 
-       (map (fn [result]
-              [:tr 
-               [:td
-                (:surface result)]])
-            results)]))))
+         (map (fn [result]
+                [:tr 
+                 [:td
+                  (:surface result)]])
+              results)])))))
 
 (defn show-expressions []
   (let [select (str "SELECT name,source,target,source_grouping::text AS source_grouping ,target_grouping::text AS target_grouping FROM expression_select")
