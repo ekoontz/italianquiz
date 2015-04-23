@@ -484,7 +484,7 @@
                                                          (map json-read-str (.getArray (:target_grammar result)))))))]
 
 
-                [:td {:style "text-align:right"} [:a {:href (str "/editor/game/expressions/" game-id)   } 
+                [:td {:style "text-align:right"} [:a {:href (str "/editor/game/" game-id)   } 
                                                   (if (nil? (:expressions_per_game result))
                                                     0
                                                     (:expressions_per_game result))]]
