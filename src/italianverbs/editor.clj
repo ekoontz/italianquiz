@@ -88,15 +88,6 @@
          {:status 302
           :headers {"Location" (str "/editor/" (:language (:route-params request)))}})
 
-   (GET "/game/delete/:game-to-delete" request
-        (is-admin
-         (let [game-to-delete (:game-to-delete (:route-params request))]
-           {:body (body (str "Editor: Confirm: delete game: " game-to-delete)
-                        (show-games {:game-to-delete game-to-delete}) 
-                        request)
-            :status 200
-            :headers headers})))
-
    (POST "/game/activate/:game" request
          ;; toggle activation of this game
          (is-admin
@@ -106,19 +97,20 @@
             {:status 302
              :headers {"Location" (str "/editor/" language "?message=" message)}})))
 
+   (GET "/game/delete/:game-to-delete" request
+        (is-admin
+         (let [game-to-delete (:game-to-delete (:route-params request))]
+           {:body (body (str "Editor: Confirm: delete game: " game-to-delete)
+                        (show-games {:game-to-delete game-to-delete}) 
+                        request)
+            :status 200
+            :headers headers})))
+
    (POST "/game/delete/:game-to-delete" request
          (is-admin
           (let [message (delete-game (:game-to-delete (:route-params request)))]
             {:status 302
              :headers {"Location" (str "/editor/" "?message=" message)}})))
-
-   (POST "/game/delete/:language/:game-to-delete" request
-         (is-admin
-          (let [params (multipart-to-edn (:multipart-params request))
-                language (:language params)]
-            (let [message (delete-game (:game-to-delete (:route-params request)))]
-              {:status 302
-               :headers {"Location" (str "/editor/" language "?message=" message)}}))))
 
    (POST "/game/edit/:game-to-edit" request
          (do (log/debug (str "Doing POST /game/edit/:game-to-edit with request: " request))
@@ -127,11 +119,6 @@
                                       (multipart-to-edn (:multipart-params request)))
                          {:status 302
                           :headers {"Location" (str "/editor/game/" game-id "?message=Edited+game:" game-id)}}))))
-
-   (POST "/game/edit/:language/:game-to-edit" request
-         (do (log/debug (str "Doing POST /game/edit/:language/:game-to-edit with request: " request))
-             (is-admin (update-game (:game-to-edit (:route-params request))
-                                    (multipart-to-edn (:multipart-params request))))))
 
    (GET "/game/:game" request
         (is-admin
@@ -157,61 +144,7 @@
             (insert-game (:name params) "en" language
                          (:source_groupings params)
                          (:target_groupings params))
-            {:status 302 :headers {"Location" (str "/editor/" language)}})))
-
-   (GET "/group/delete/:group-to-delete" request
-        (is-admin
-         (let [group-to-delete (:group-to-delete (:route-params request))]
-           {:body (body (str "Editor: Confirm: delete group: " group-to-delete)
-                        (show-games {:group-to-delete group-to-delete})
-                        request)
-            :status 200
-            :headers headers})))
-
-   (POST "/group/delete/:group-to-delete" request
-         (is-admin (delete-group (:group-to-delete (:route-params request)))))
-
-   (POST "/group/edit/:group-to-edit" request
-         (is-admin (update-group (:group-to-edit (:route-params request))
-                                 (multipart-to-edn (:multipart-params request)))))
-
-   (POST "/group/new" request
-        (is-admin
-         (let [params (multipart-to-edn (:multipart-params request))
-               language (if (:language params) (:language params) "")]
-           (insert-grouping (:name params) [])
-           {:status 302 :headers {"Location" (str "/editor/" language)}})))
-
-   ;; which game(s) will be active (more than one are possible).
-   (POST "/use" request
-         (is-admin (set-as-default request)))))
-
-;; TODO: this is pretty similar to show-games except it shows groups as well.
-(defn show-games-old [ & [ {game-to-delete :game-to-delete
-                            game-to-edit :game-to-edit
-                            group-to-edit :group-to-edit
-                            group-to-delete :group-to-delete
-                            language :language
-                            message :message} ]]
-  (let [show-groups-table false]
-    (html
-     [:div.user-alert message]
-     
-     [:div.section [:h3 (str "Games")]
-      (show-games {:game-to-delete game-to-delete
-                   :language language
-                   :game-to-edit game-to-edit})
-      ]
-
-     (if show-groups-table
-       [:div.section
-        [:h3 "Groups"]
-        (show-groups {:group-to-delete game-to-delete
-                      :group-to-edit game-to-edit
-                      :language language})]
-       ;; else, just show the hidden forms, that are made visible
-       ;; if the user clicks on a group within a game.
-       (show-group-edit-forms)))))
+            {:status 302 :headers {"Location" (str "/editor/" language)}})))))
 
 (defn insert-game [name source target source-set target-set]
   "Create a game with a name, a source and target language and two
@@ -510,35 +443,6 @@
      (map (fn [result]
             (game-editor-form result game-to-edit game-to-delete true))
           results))))
-
-;; TODO: consider using https://github.com/jkk/honeysql:
-;; "SQL as Clojure data structures. Build queries programmatically -- even at runtime -- without having to bash strings together."
-(defn insert-grouping [name selects & [language]]
-  "Create a grouping. This is a set of specifications, any of which may be
-true for an expression to be part of the grouping. The grouping's
-semantics are evaluated by OR-ing together the selects
-when (expressions-per-game) evaluates the grouping for a particular
-game to find what expressions are appropriate for particular game."
-
-  (let [selects (cond (empty? selects) [{}]
-                      (not (seq? selects))
-                      (vec selects)
-                      :else selects)
-        language (if language language "NULL")
-        debug (log/debug "insert-grouping: the selects are: " selects)
-
-        ;; TODO: this is hard to read and modify:
-        as-json-array (str "ARRAY['"
-                           (string/join "'::jsonb,'"
-                                        (map #(json/write-str (strip-refs %))
-                                             selects))
-                           "'::jsonb]")
-
-        sql (str "INSERT INTO grouping (name,any_of,language) VALUES (?," as-json-array ",?) RETURNING id")]
-    (log/debug (str "inserting new anyof-set with sql: " sql))
-    (map #(:id %)
-         (k/exec-raw [sql
-                      [name,language]] :results))))
 
 (declare body)
 (declare control-panel)
