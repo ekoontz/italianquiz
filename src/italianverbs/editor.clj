@@ -122,8 +122,11 @@
 
    (POST "/game/edit/:game-to-edit" request
          (do (log/debug (str "Doing POST /game/edit/:game-to-edit with request: " request))
-             (is-admin (update-game (:game-to-edit (:route-params request))
-                                    (multipart-to-edn (:multipart-params request))))))
+             (is-admin (let [game-id (:game-to-edit (:route-params request))]
+                         (update-game (:game-to-edit (:route-params request))
+                                      (multipart-to-edn (:multipart-params request)))
+                         {:status 302
+                          :headers {"Location" (str "/editor/game/" game-id "?message=Edited+game:" game-id)}}))))
 
    (POST "/game/edit/:language/:game-to-edit" request
          (do (log/debug (str "Doing POST /game/edit/:language/:game-to-edit with request: " request))
@@ -846,10 +849,7 @@ game to find what expressions are appropriate for particular game."
                          [(:name params)
                           (:source params)
                           (:target params)
-                          (Integer. game-id)]])
-
-            {:status 302
-             :headers {"Location" (str "/editor/game/expressions/" game-id "?message=Edited+game:" game-id)}})))))
+                          (Integer. game-id)]]))))))
 
 ;; TODO: consider using https://github.com/jkk/honeysql:
 ;; "SQL as Clojure data structures. Build queries programmatically -- even at runtime -- without having to bash strings together."
