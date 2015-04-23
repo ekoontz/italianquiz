@@ -17,6 +17,24 @@
    [hiccup.core :refer (html)]
    [korma.core :as k]))
 
+(declare body)
+(declare delete-game)
+(declare game-editor-form)
+(declare headers)
+(declare insert-game)
+(declare json-read-str)
+(declare multipart-to-edn)
+(declare onload)
+(declare series)
+(declare show-games)
+(declare short-language-name-to-edn)
+(declare short-language-name-to-long)
+(declare short-language-name-from-match)
+(declare show-expressions-for-game)
+(declare sqlname-from-match)
+(declare toggle-activation)
+(declare update-game)
+
 (def tenses-as-editables
   [{:label "conditional"
     :value (json/write-str {:synsem {:sem {:tense :conditional}}})}
@@ -37,30 +55,6 @@
    {:synsem {:sem {:tense :past :aspect :progressive}}} "imperfect"
    {:synsem {:sem {:tense :past :aspect :perfect}}} "past"
    {:synsem {:sem {:tense :present}}} "present"})
-
-(declare body)
-(declare delete-game)
-(declare delete-group)
-(declare headers)
-(declare show-games)
-(declare insert-game)
-(declare insert-grouping)
-(declare json-read-str)
-(declare multipart-to-edn)
-(declare set-as-default)
-(declare short-language-name-to-edn)
-(declare short-language-name-to-long)
-(declare shortname-from-match)
-(declare show-expressions)
-(declare show-expressions-for-game)
-(declare show-games)
-(declare show-group-edit-forms)
-(declare show-groups)
-(declare sqlname-from-match)
-(declare toggle-activation)
-(declare unabbrev)
-(declare update-game)
-(declare update-group)
 
 (def routes
   (compojure/routes
@@ -137,7 +131,7 @@
 
                                true
                                (do (log/debug (str "POST /game/new: trying to guess language from game's name: " (:name params)))
-                                   (let [result (shortname-from-match (:name params))]
+                                   (let [result (short-language-name-from-match (:name params))]
                                      (log/debug (str "guess was: " result))
                                      result)))]
             ;; Defaults: source language=English.
@@ -146,166 +140,18 @@
                          (:target_groupings params))
             {:status 302 :headers {"Location" (str "/editor/" language)}})))))
 
-(defn insert-game [name source target source-set target-set]
-  "Create a game with a name, a source and target language and two
-  arrays, one for the source language and one for the target
-  language. Each array is an integer which refers to a set of
-  'anyof-sets', each member of which is a possible specification in its
-  respective language. See example usage in test/editor.clj."
-  (log/debug (str "source-set: " source-set))
-  (log/debug (str "source-set with commas: " (str "ARRAY[" (string/join "," (map #(str "" (string/join "," %) "") source-set)) "]")))
-  (log/debug (str "target-set with commas: " (str "ARRAY[" (string/join "," (map #(str "" (string/join "," %) "") target-set)) "]")))
-  
-  (let [source-grouping-str (str "ARRAY[" (string/join "," (map #(str "" (string/join "," %) "") source-set)) "]::integer[]")
-        target-grouping-str (str "ARRAY[" (string/join "," (map #(str "" (string/join "," %) "") target-set)) "]::integer[]")
-        sql (str "INSERT INTO game (name,source_groupings,target_groupings,source,target) 
-                       SELECT ?, " source-grouping-str "," target-grouping-str ",?,? RETURNING id")]
-    (log/debug (str "inserting new game with sql: " sql))
-    ;; return the row ID of the game that has been inserted.
-    (:id (first (k/exec-raw [sql [name source target]] :results)))))
-
-;; TODO: has fallen into parameteritis (too many unnamed parameters)
-(defn game-editor-form [game game-to-edit game-to-delete & [editpopup] ]
-  (let [game-id (:id game)
-        language (:language game)
-        debug (log/debug (str "ALL GAME INFO: " game))
-        game-to-edit game-to-edit
-        problems nil ;; TODO: should be optional param of this (defn)
-        game-to-delete game-to-delete
-
-        source-group-ids (:source_group_ids game)
-        source-groups (if source-group-ids
-                        (vec (remove #(or (nil? %)
-                                          (= "" (string/trim (str %))))
-                                     (.getArray (:source_group_ids game))))
-                        [])
-        target-group-ids (:target_group_ids game)
-        target-groups (if target-group-ids
-                        (vec (remove #(or (nil? %)
-                                          (= "" (string/trim (str %))))
-                                     (.getArray (:target_group_ids game))))
-                        [])
-        debug (log/debug (str "creating checkbox form with currently-selected source-groups: " source-groups))
-        debug (log/debug (str "creating checkbox form with currently-selected target-groups: " target-groups))
-
-        language-short-name (:target game)
-        debug (log/debug (str "language-short-name:" language-short-name))
-        language-keyword-name
-        (str "" (sqlname-from-match (short-language-name-to-long language-short-name)) "")
-
-        language-keyword
-        (keyword language-keyword-name)
-
-        debug (log/debug 
-               (str "SELECT DISTINCT structure->'head'->" language-keyword-name "->" language-keyword-name "
-                                            AS lexeme 
-                                          FROM expression
-                                         WHERE language=" language-short-name "
-                                      ORDER BY lexeme"))
-        
-        debug (log/debug (str "language-keyword-name: " language-keyword-name))
-        debug (log/debug (str "language-short-name: " language-short-name))
-        
-        ]
-    [:div
-     {:class (str "editgame " (if editpopup "editpopup"))
-      :id (str "editgame" game-id)}
-;;     [:h2 (str "Editing game: " (:name game))]
-     
-     (f/render-form 
-      {:action (str "/editor/game/edit/" game-id)
-       :enctype "multipart/form-data"
-       :method :post
-       :fields (concat
-                
-                [{:name :name :size 50 :label "Name"}]
-                
-                [{:name :target_lex
-                  :label "Verbs"
-                  :type :checkboxes
-                  :cols 10
-                  :options (map (fn [row]
-                                  (let [lexeme (if (:lexeme row)
-                                                 (:lexeme row)
-                                                 "")
-                                        lexeme (string/replace lexeme "\"" "")]
-                                    {:label lexeme
-                                     :value lexeme}))
-                                ;; TODO: be more selective: show only infinitives, and avoid irregular forms.
-                                (k/exec-raw [(str "SELECT DISTINCT structure->'head'->?->?
-                                                                                 AS lexeme 
-                                                                               FROM expression
-                                                                              WHERE language=?
-                                                                           ORDER BY lexeme") 
-                                             [language-keyword-name
-                                              language-keyword-name
-                                              language-short-name
-                                              ]]
-                                            :results))}]
-                [{:name :target_tenses
-                  :label "Tenses"
-                  :type :checkboxes
-                  :cols 12
-                  :options (map (fn [row]
-                                  {:label (:label row)
-                                   :value (:value row)})
-                                tenses-as-editables)}]
-                
-                [{:name :source :type :hidden
-                  :label "Source Language"
-                  :options [{:value "en" :label "English"}
-                            {:value "it" :label "Italian"}
-                            {:value "es" :label "Spanish"}]}]
-                
-                [{:name :target :type :hidden
-                  :label "Target Language"
-                  :options [{:value "en" :label "English"}
-                            {:value "it" :label "Italian"}
-                            {:value "es" :label "Spanish"}]}]
-                
-                )
-       
-       :cancel-href (str "/editor/" language)
-       :values {:name (:name game)
-                :target (:target game)
-                :source (:source game)
-                :source_groupings source-groups
-                :target_groupings target-groups
-                
-                :target_lex (vec (remove #(or (nil? %)
-                                              (= "" %))
-                                         (map #(let [path [:head language-keyword language-keyword]
-                                                     debug (log/debug (str "CHECKBOX TICK (:target_lex) (path=" path ": ["
-                                                                           (get-in % path nil) "]"))]
-                                                 (get-in % path nil))
-                                              (map json-read-str (seq (.getArray (:target_lex game)))))))
-                
-                
-                :target_tenses (vec (remove #(or (nil? %)
-                                                 (= "" %))
-                                            (map #(let [debug (log/debug (str "tense: " %))
-                                                        data (json-read-str %)]
-                                                    (log/debug (str "the data is: " data))
-                                                    (json/write-str data))
-                                                 (seq (.getArray (:target_grammar game))))))
-                }
-
-       :validations [[:required [:name]   
-                      :action "/editor"
-                      :method "post"
-                      :problems problems]]})
-
-     [:div.dangerzone
-      [:h4 "Delete game"]
-      
-      [:div {:style "float:right"}
-       [:form
-        {:method "post"
-         :action (str "/editor/game/delete/" (if language (str language "/")) game-id)}
-        [:button.confirm_delete {:onclick (str "submit();")} "Delete Game"]]]
-      ]
-     ]
-    ))
+(defn body [title content request]
+  (let [language (:language (:route-params request))]
+    (html/page
+     title
+     (html
+      [:div {:class "major"}
+       [:h2 [:a {:href "/editor"} (str "Game Editor") ] (if (not (= "" (string/trim title))) (str ": " title))]
+      content])
+     request
+     {:css "/css/editor.css"
+      :jss ["/js/editor.js" "/js/gen.js"]
+      :onload (onload)})))
 
 (defn show-games [ & [ {editor-is-popup :editor-is-popup
                         game-to-edit :game-to-edit
@@ -320,14 +166,14 @@
         sql "SELECT game.name AS name,game.id AS id,active,
                     source,target,
                     target_lex,target_grammar,counts.expressions_per_game
-               FROM game 
+               FROM game
           LEFT JOIN (SELECT game.id AS game,
                             count(*) AS expressions_per_game
-                       FROM (SELECT DISTINCT surface,structure 
+                       FROM (SELECT DISTINCT surface,structure
                                         FROM expression) AS expression
-                 INNER JOIN game 
-                         ON structure @> ANY(target_lex) 
-                        AND structure @> ANY(target_grammar) 
+                 INNER JOIN game
+                         ON structure @> ANY(target_lex)
+                        AND structure @> ANY(target_grammar)
                    GROUP BY game.id) AS counts
                  ON (counts.game = game.id)
               WHERE ((game.target = ?) OR (? = ''))
@@ -343,7 +189,7 @@
       "Show games for:"
       [:div {:style "float:right;padding-left:1em;width:auto;"}
        [:form {:method "get"}
-        [:select#edit_which_language {:name "language" 
+        [:select#edit_which_language {:name "language"
                                       :onchange (str "document.location='/editor/' + this.value")}
          (map (fn [lang-pair]
                 (let [label (:label lang-pair)
@@ -366,7 +212,7 @@
        [:th {:style "width:auto;text-align:right"} "Count"]
        ]
 
-      (map 
+      (map
        (fn [result]
              (let [game-name-display
                    (let [game-name (string/trim (:name result))]
@@ -381,7 +227,7 @@
                    language-keyword
                    (keyword language-keyword-name)]
 
-               [:tr 
+               [:tr
 
                 [:td
                  [:form {:method "post"
@@ -398,7 +244,7 @@
 
                 [:td
                  (if (= game-to-edit game-id)
-                   [:input {:size (+ 5 (.length (:name result))) 
+                   [:input {:size (+ 5 (.length (:name result)))
                             :value (:name result)}]
                    (if (not editor-is-popup)
                      ;; show as link
@@ -408,7 +254,7 @@
                      [:div.edit_game {:onclick (str "edit_game_dialog(" game-id ")")} game-name-display]))]
 
                 [:td (string/join ", " (map #(html [:i %])
-                                           (map #(get-in % [:head language-keyword language-keyword]) 
+                                           (map #(get-in % [:head language-keyword language-keyword])
                                                 (map json-read-str (.getArray (:target_lex result))))))]
 
                 [:td (string/join ", " (map #(html [:b (str %)])
@@ -417,7 +263,7 @@
                                                          (map json-read-str (.getArray (:target_grammar result)))))))]
 
 
-                [:td {:style "text-align:right"} [:a {:href (str "/editor/game/" game-id)   } 
+                [:td {:style "text-align:right"} [:a {:href (str "/editor/game/" game-id)   }
                                                   (if (nil? (:expressions_per_game result))
                                                     0
                                                     (:expressions_per_game result))]]
@@ -431,7 +277,7 @@
         [:form {:method "post"
                 :enctype "multipart/form-data"
                 :action "/editor/game/new"}
-       
+
          [:input {:onclick "submit_new_game.disabled = false;"
                   :name "name" :size "50" :placeholder (str "Type the name of a new " (short-language-name-to-long language) " game")} ]
          [:input {:type "hidden" :name "language" :value language} ]
@@ -444,191 +290,18 @@
             (game-editor-form result game-to-edit game-to-delete true))
           results))))
 
-(declare body)
-(declare control-panel)
-(declare create)
-(declare delete)
-(declare delete-game)
-(declare delete-group)
-(declare update-game)
-(declare update-group)
-(declare show-games)
-(declare links)
-(declare onload)
-(declare read-request)
-(declare show-inflections-per-game)
-(declare show-words-per-game)
-(declare update)
-(declare update-form)
-(declare set-as-default)
-(declare tenses-per-game)
-(declare verbs-per-game)
-(declare short-language-name-to-long)
+(def headers {"Content-Type" "text/html;charset=utf-8"})
 
-(defn show-expression [name source target & [source-groupings target-groupings]]
-  (let [source-sqls (let [non-empty-groupings (filter #(not (= % {}))
-                                                  source-groupings)]
-                      (if (not (empty? non-empty-groupings))
-                        (string/join " AND " 
-                                     (map (fn [source-grouping]
-                                            (let [json-source-grouping (json/write-str (strip-refs source-grouping))]
-                                              (str "source.structure @> '" json-source-grouping "'")))
-                                          non-empty-groupings))
-                      " true "))
+;; TODO: throw exception rather than "???" for unknown languages.
+(defn short-language-name-to-long [lang]
+  (cond (= lang "it") "Italian"
+        (= lang "en") "English"
+        (= lang "es") "Spanish"
+        true "???"))
 
-        target-sqls (let [non-empty-groupings (filter #(not (= % {}))
-                                                  target-groupings)]
-                      (if (not (empty? non-empty-groupings))
-                        (string/join " AND "
-                                     (map (fn [grouping]
-                                            (let [json-grouping (json/write-str (strip-refs grouping))]
-                                              (str "target.structure @> '" json-grouping "'")))
-                                          non-empty-groupings))
-                      " true "))
-                     
-        select (str "SELECT DISTINCT * FROM (SELECT source.surface AS source, 
-                                                    target.surface AS target
-                                               FROM expression AS source
-                                         INNER JOIN expression AS target
-                                                 ON source.language = ? 
-                                                AND target.language = ? "
-                                              " AND " source-sqls
-                                              " AND " target-sqls
-                                              " AND (target.structure->'synsem'->'sem') @> (source.structure->'synsem'->'sem')) AS pairs
-                                              LIMIT 10")
-        debug (log/debug (str "expressions select sql: " select))
-        results (k/exec-raw [select [source target]] :results)]
-    (html
-     [:div.specs
-     [:h4 {:style ""} (str name)]
-      [:div.spec 
-       [:h4 (short-language-name-to-long source)]
-       (if (empty? source-groupings) [:i (str "no source grouping.")]
-           (html/tablize source-groupings))
-       ]
-
-      [:div.spec 
-       [:h4 (short-language-name-to-long target)]
-       (if (empty? target-groupings) [:i (str "no target grouping.")]
-           (html/tablize target-groupings))
-       ]
-      
-      [:table.striped
-       [:tr
-        [:th ]
-        [:th (str (short-language-name-to-long source))]
-        [:th (str (short-language-name-to-long target))]
-        ]
-       (map (fn [result]
-              [:tr 
-               [:td ]
-               [:td (:source result)]
-               [:td (:target result)]])
-            results)
-       ]])))
-
-(def all-inflections
-  (map #(string/replace-first (str %) ":" "")
-       [:conditional :present :future :imperfect :passato]))
-
-(defn predicates-from-db []
-  (map #(string/replace (str (:predicate %)) "\"" "")
-       (k/exec-raw [(str "SELECT DISTINCT structure->'synsem'->'sem'->'pred'::text
-                                       AS predicate
-                                     FROM expression
-                                 ORDER BY predicate")] :results)))
-
-(defn onload []
-  (string/join " " 
-               (map (fn [game]
-                      (let [game-id (:game game)
-                            source (:source game)
-                            target (:target game)]
-                        (str 
-                         "log(INFO,'editor onload: loading gen_per_verb( " game-id " )');"
-                         "gen_per_verb('" game-id "','" source "','" target "');")))
-                    (k/exec-raw [(str "SELECT games_to_use.game,games.source,games.target 
-                                         FROM games_to_use 
-                                   INNER JOIN games 
-                                           ON games_to_use.game = games.id")] :results))))
-
-(defn body [title content request]
-  (let [language (:language (:route-params request))]
-    (html/page 
-     title
-     (html
-      [:div {:class "major"}
-       [:h2 [:a {:href "/editor"} (str "Game Editor") ] (if (not (= "" (string/trim title))) (str ": " title))]
-      content])
-     request
-     {:css "/css/editor.css"
-      :jss ["/js/editor.js" "/js/gen.js"]
-      :onload (onload)})))
-
-;; TODO: consider using https://github.com/jkk/honeysql:
-;; "SQL as Clojure data structures. Build queries programmatically -- even at runtime -- without having to bash strings together."
-(defn examples-per-game [game-id]
-  (let [results (k/exec-raw [(str "SELECT source.surface AS source, 
-                                          target.surface AS target,
-                                          source.structure->'synsem'->'sem' AS source_sem,
-                                          target.structure->'synsem'->'sem' AS target_sem
-                                     FROM expression AS source
-                               INNER JOIN expression AS target
-                                       ON ((source.structure->'synsem'->'sem')::jsonb = (target.structure->'synsem'->'sem')::jsonb)
-                                    WHERE source.language='en' AND target.language='it'
-                                      AND source.structure->'synsem'->'sem'->'pred' 
-                                       IN (SELECT ('\"'||word||'\"')::jsonb 
-                                             FROM words_per_game WHERE game=?)
-                                 ORDER BY source.id LIMIT 10") [(Integer. game-id)]]
-                            :results)]
-    results))
-
-(defn update-verb-for-game [game-id words]
-  (if (not (empty? words))
-    (let [word (first words)]
-      (log/info (str "INSERT INTO words_per_game (game,word) " game-id "," word))
-      (k/exec-raw [(str "INSERT INTO words_per_game (game,word) VALUES (?,?)") [(Integer. game-id)
-                                                                                     word]])
-      (update-verb-for-game game-id (rest words)))))
-
-(defn update-verbs-for-game [game-id words]
-  (let [words (remove #(= % "")
-                      (get words "words[]"))]
-    (log/info (str "updating verbs for this group: " game-id " with: " (string/join "," words)))
-    (k/exec-raw [(str "DELETE FROM words_per_game WHERE game=?") [(Integer. game-id)]])
-    (update-verb-for-game game-id words)))
-
-(defn update-inflection-for-game [game-id inflections]
-  (if (not (empty? inflections))
-    (let [inflection (first inflections)]
-      (log/info (str "INSERT INTO inflections_per_game (game,inflection) " game-id "," inflection))
-      (k/exec-raw [(str "INSERT INTO inflections_per_game (game,inflection) VALUES (?,?)") [(Integer. game-id)
-                                                                                     inflection]])
-      (update-inflection-for-game game-id (rest inflections)))))
-
-(defn update-inflections-for-game [game-id inflections]
-  (let [inflections (remove #(= % "")
-                      (get inflections "inflections[]"))]
-    (log/info (str "updating verbs for this group: " game-id " with: " (string/join "," inflections)))
-    (k/exec-raw [(str "DELETE FROM inflections_per_game WHERE game=?") [(Integer. game-id)]])
-    (update-inflection-for-game game-id inflections)))
-
-(defn set-each-as-default [params]
-  (if (not (empty? params))
-    (let [param (first params)]
-      (log/debug (str "use param: " param))
-      (let [k (first param)
-            v (second param)]
-      (if (= v "on")
-        (k/exec-raw [(str "INSERT INTO games_to_use (game) VALUES (?)") [(Integer. k)]]))
-      (set-each-as-default (rest params))))))
-
-(defn set-as-default [request]
-  (let [games-to-use (:params request)]
-    (k/exec-raw [(str "DELETE FROM games_to_use")])
-    (set-each-as-default games-to-use)
-    {:status 302
-     :headers {"Location" (str "/editor/?message=updated.")}}))
+(defn toggle-activation [game active]
+  (do (k/exec-raw ["UPDATE game SET active=? WHERE id=?" [active (Integer. game)]])
+      (str "successfully toggled activation of game: " game)))
 
 (defn delete-game [game-id]
   (if game-id
@@ -644,19 +317,6 @@
     (let [error-message (str "Error: no game to delete: game-id was null.")]
       (log/error error-message)
       error-message)))
-
-(defn delete-group [group-id]
-  (if group-id
-    (do
-      (log/debug (str "DELETING GROUP: " group-id))
-      (let [group-id (Integer. group-id)
-            group-row (first (k/exec-raw [(str "SELECT * FROM grouping WHERE id=?") [group-id]] :results))]
-        (log/debug (str "GROUP ROW: " group-row))
-        (k/exec-raw [(str "DELETE FROM grouping WHERE id=?") [group-id]])
-        {:status 302
-         :headers {"Location" (str "/editor/" "?message=Deleted+group:" (:name group-row))}}))
-    {:status 302
-     :headers {"Location" (str "/editor/" "?message=no+group+to+delete")}}))
 
 (defn update-game [game-id params]
   ;; TODO: move 302 redirect to routing.
@@ -688,25 +348,26 @@
                              (string? (:target_groupings params))
                              (do (log/error (str "target_groupings is unexpectedly a string:"
                                                  (:target_groupings params) "; splitting."))
-                                 (throw (Exception. (str "editor/update-game: could not update game: " game-id "; no :target_groupings found in input params: " params))))
+                                 (throw (Exception. (str "editor/update-game: could not update game: " game-id "; no :target_groupings found in input para
+ms: " params))))
                              true
                              (filter #(not (= (string/trim %) ""))
                                      (:target_groupings params)))
 
 
         debug (log/debug (str "project name will be updated to: " (:name params)))
- 
+
         language-name (short-language-name-to-edn (:target params))
 
         ;; wrap every lexeme in a {:head {<language> <lexeme}}.
-        target-lexical-specs 
+        target-lexical-specs
         (map (fn [each-lexeme]
                {:head {language-name {language-name each-lexeme}}})
              (filter #(not (= (string/trim %) ""))
                      (:target_lex params)))
 
         ;; tenses are given as specs already, so no need to convert: just remove blanks.
-        target-tenses-as-specs 
+        target-tenses-as-specs
         (filter #(not (= (string/trim %) ""))
                 (:target_tenses params))
 
@@ -757,444 +418,54 @@
                           (:target params)
                           (Integer. game-id)]]))))))
 
-;; TODO: consider using https://github.com/jkk/honeysql:
-;; "SQL as Clojure data structures. Build queries programmatically -- even at runtime -- without having to bash strings together."
-(declare sqlname-from-match)
-(defn update-group [group-id params]
-  (let [debug (log/debug (str "UPDATING GROUP WITH PARAMS: " params))
-        debug (log/debug (str "Editing group with id= " group-id))
+(defn multipart-to-edn [params]
+  (log/debug (str "multipart-to-edn input: " params))
+  (let [output
+        (zipmap (map #(keyword %)
+                     (map #(string/replace % ":" "")
+                          (map #(string/replace % "[]" "")
+                               (keys params))))
+                (vals params))]
+    (log/debug (str "multipart-to-edn output: " output))
+    output))
 
-        debug  (log/debug (str "UPDATING GAME WITH PARAMS (converted to keywords): " params))
-        name (:name params)
-
-        ;; TODO: needs checks
-        language-name (keyword (sqlname-from-match name))
-
-        do-sql true ;; normally true
-        do-dump false ;; normally false
-        debug (log/debug (str "specs map:" (:specs params)))
-        debug (log/debug (str "language name:" language-name))
-        specs (vals (:specs params))
-        debug (log/debug (str "specs vals:" specs))
-
-        lexemes (if (string? (:lexemes params))
-                  (do (log/warn (str "lexemes is unexpectedly a string:"
-                                     (:lexemes params) "; splitting."))
-                      (string/split (:lexemes params) #"[ ]"))
-                  (:lexemes params))
-
-        tenses (filter #(not (= (string/trim %) ""))
-                       (:tenses params))
-
-        tense-specs
-        (map (fn [each-tense]
-               {:synsem {:sem {:tense 
-                               (keyword
-                                (string/replace each-tense ":" ""))}}})
-             tenses)
-
-        debug (log/debug (str "lexical-specs as form params: " lexemes))
-
-        lexical-specs 
-        (map (fn [each-lexeme]
-               {:head {language-name {language-name each-lexeme}}})
-             (filter #(not (= (string/trim %) ""))
-                     lexemes))
-
-        specs-plus-new-spec (filter #(not (= (string/trim %) ""))
-                                    (cons (:new-spec params)
-                                          specs))
-
-        debug (log/debug (str "specs-plus-new-specs (nonempty): " (string/join ";" specs-plus-new-spec)))
-
-        filtered-specs (map read-string specs-plus-new-spec)
-
-        debug (log/debug (str "filtered-specs: " filtered-specs))
-
-        debug (log/debug (str "tense-specs: " tense-specs))
-
-        ;; TODO: remove duplicates.
-        specs-as-json (map json/write-str
-                       (concat lexical-specs filtered-specs tense-specs))
-
-        spec-array (if (and (empty? filtered-specs)
-                            (empty? lexical-specs)
-                            (empty? tense-specs))
-                     (str "ARRAY[]::jsonb[]")
-                     (str "ARRAY['" 
-                          (string/join "'::jsonb,'"
-                                       specs-as-json)
-                          "'::jsonb]"))
-        sql (str "UPDATE grouping SET (name,any_of) = (?," spec-array ") WHERE id=?")]
-    
-    (log/debug (str "UPDATE sql: " sql))
-
-
-    (if do-sql
-      (k/exec-raw [sql
-                   [(:name params)
-                    (Integer. group-id)]]))
-    
-    (if (not (= true do-dump))
-      {:status 302
-       :headers {"Location" (str "/editor/" "?message=Edited+group:" group-id)}}
-
-      {:headers {"Content-type" "application/json;charset=utf-8"}
-       :body (json/write-str params)})))
-
-(def games-table "games")
-(def words-per-game-table "words_per_game")
-(def inflections-per-game-table "inflections_per_game")
-
-(defn show [request]
-  (k/exec-raw [(str "SELECT * FROM " games-table " ORDER BY name")] :results))
-
-(defn show-inflections-per-game [request]
-  (let [table-name inflections-per-game-table
-        game-id (:game (:params request))]
-    (k/exec-raw [(str "SELECT * FROM " table-name " WHERE game = ? ORDER BY inflection") [(Integer. game-id)]] :results)))
-
-(defn show-words-per-game [request]
-  (let [table-name words-per-game-table
-        game-id (:game (:params request))]
-    (k/exec-raw [(str "SELECT * FROM " table-name " WHERE game = ? ORDER BY word") [(Integer. game-id)]] :results)))
-
-(defn show-cities []
-  "Show which cities are set for which games"
-  (let [results (k/exec-raw [(str "SELECT city.name AS city ,game.name AS game 
-                                     FROM city 
-                               INNER JOIN city_game 
-                                       ON (city_game.city = city.id) 
-                               INNER JOIN game 
-                                       ON (city_game.game = game.id)
-                                 ORDER BY city.name")] :results)]
+(defn show-expressions-for-game [game-id]
+  (let [game-id (Integer. game-id)
+        game (first (k/exec-raw ["SELECT * FROM game WHERE id=?" [(Integer. game-id)]] :results))]
     (html
-     [:table.striped
-      [:tr
-       [:th "City"]
-       [:th "Game"]]
-      (map (fn [result]
-             [:tr 
-              [:td (:city result)]
-              [:td (:game result)]])
-           results)
-      ])))
+     (let [sql "SELECT DISTINCT surface
+                  FROM expression
+            INNER JOIN game
+                    ON structure @> ANY(target_lex)
+                   AND structure @> ANY(target_grammar)
+                   AND game.id = ?
+              ORDER BY surface"
+           results (k/exec-raw [sql
+                              [game-id] ]
+                               :results)]
+       [:div {:style "float:left;width:100%;margin-top:1em"}
 
-;; shortnames: 'en','es','it',..
-(declare shortname-from-match)
+        [:div {:style "border:0px dashed green;float:right;width:60%;"}
+         (game-editor-form game nil nil)]
 
-;; sqlnames: 'english','espanol' <- note: no accent on 'n' ,'italiano', ..
-(declare sqlname-from-match)
+        [:div {:style "float:left;width:40%"}
+         [:table {:class "striped padded"}
+          [:tr
+           [:th {:style "width:1em"}]
+           [:th "Expressions"]]
 
-(defn show-groups [ & [{group-to-edit :group-to-edit
-                        group-to-delete :group-to-delete
-                        show-group-table :show-group-table
-                        language :language}]]
-  (let [group-to-edit (if group-to-edit (Integer. group-to-edit))
-        group-to-delete (if group-to-delete (Integer. group-to-delete))
-        short-language (if language language "")
-        sql-language-match (if short-language (str "%" (string/lower-case (short-language-name-to-long short-language)) "%") "")
-        sql "SELECT id,name,any_of 
-                                FROM grouping
-                               WHERE ((name ILIKE ?) OR (? = ''))
-                            ORDER BY name ASC"
-        debug (log/debug (str "show-groups sql: " sql))
-        debug (log/debug (str "show-groups language: " short-language))
-        results (k/exec-raw [sql [sql-language-match short-language]] :results)]
-    (html
-     [:table {:class "striped padded"}
-      [:tr
-       [:th {:style "width:20%"} "Name"]
-       [:th {:style "width:80%"} "Members"]
+          (map (fn [result]
+                 [:tr
+                  [:th (first result)]
+                  [:td
+                   (:surface (second result))]])
+               (sort
+                (zipmap
+                 (series 1 (.size results) 1)
+                 results)))]]]))))
 
-       ]
-      (map (fn [result]
-             (let [group-id (:id result)
-                   any-of (:any_of result)
-                   any-of (if any-of (.getArray any-of))]
-               [:tr 
-                [:td [:div.group {:onclick (str "edit_group_dialog(" group-id ")")}  (:name result)]]
-                [:td
-                 (string/join ", "
-                              (map #(let [edn-form (json-read-str  ;; Extensible Data Notation, i.e., a Clojure map.
-                                                    %)]
-                                      ;; TODO: do not enumerate languages explicitly here:
-                                      ;; use something like (get-head-lexeme-if-any edn-form)
-                                      (cond (not (nil? (get-in edn-form [:head :italiano :italiano] nil)))
-                                            (str "<i>" (get-in edn-form [:head :italiano :italiano]) "</i>")
-                                            
-                                            (not (nil? (get-in edn-form [:head :english :english] nil)))
-                                            (str "<i>" (get-in edn-form [:head :english :english]) "</i>")
-                                            
-                                            (not (nil? (get-in edn-form [:head :espanol :espanol] nil)))
-                                            (str "<i>" (get-in edn-form [:head :espanol :espanol]) "</i>")
-                                            
-                                            (not (nil? (get-in edn-form [:synsem :sem :tense] nil)))
-                                            (str "<b>" (string/replace (get-in edn-form [:synsem :sem :tense]) ":" "") "</b>" )
-                                            
-                                            ;; else, just show edn form
-                                            :else
-                                            edn-form))
-                                   any-of))]
-                
-                [:td 
-                 (cond (= group-to-edit group-id)
-                       [:div
-                        [:form#update_group
-                         {:method "post"
-                          :action (str "/editor/group/edit/" group-id)}]
-                        
-                        [:button {:onclick (str "$(\"#update_group\").submit();")} "Confirm"]]
-                       
-                       (= group-to-delete group-id)
-                       [:div
-                        [:form#confirm_delete_group
-                         {:method "post"
-                          :action (str "/editor/group/delete/" group-id)}]
-                        
-                        [:button.confirm_delete {:onclick (str "$(\"#confirm_delete_group\").submit();")} "Confirm"]]
-                       
-                       true
-                       "")]]))
-              
-           results)]
-
-     (if (and language (not (= "" language)))
-       [:div.new
-        [:form {:method "POST"
-                :enctype "multipart/form-data"
-                :action "/editor/group/new"}
-       
-         [:input {:name "name" :size "50"} ]
-         [:input {:type "hidden" 
-                  :name "language" :value short-language} ]
-         [:button {:onclick "submit();"} "New List"]
-         ]])
-
-     (show-group-edit-forms))))
-
-(defn show-group-edit-forms []
-     (let [results
-           ;; add more stuff to SELECT; this is just to get things working.
-           (k/exec-raw ["SELECT id,name AS group_name,any_of FROM grouping"] :results)]
-
-       ;; make the hidden group-editing forms.
-       (map (fn [row]
-              (let [result row
-                    group-id (:id result)
-                    debug (log/debug (str "show-groups: (json) " result))
-                    specs (:any_of result)
-                    specs (if (not (nil? specs)) (seq (.getArray specs)))
-                    specs (map json-read-str specs)
-                    problems nil ;; TODO: should be optional param of this (defn)
-                    language-short-name (shortname-from-match (:group_name row))
-                    language-long-name (sqlname-from-match (:group_name row))
-                    language-keyword (keyword language-long-name)
-
-                    ;; filter out non-ad-hoc specs: specs that either specify a head-lexeme 
-                    ;; (e.g. {:head {:italiano {:italiano "andare"}}})
-                    ;; or a tense (e.g. {:synsem {:sem {:tense :futuro}}})
-                    ad-hoc-specs 
-                    (filter
-                     #(let [the-keys (seq (keys %))
-                            debug (log/trace (str "CHECKING FOR BEING AD-HOC: " %))
-                            debug (log/trace (str "CHECKING FOR BEING AD-HOC: " (empty? (seq (keys %)))))]
-                        (and (not (empty? (seq (keys %))))
-                             (map? %)
-                             (or (and (nil? (get-in % [:head language-keyword language-keyword] nil))
-                                      (nil? (get-in % [:synsem :sem :tense] nil)))
-                                 (and (not (nil? (get-in % [:head] nil)))
-                                      (> (.size (seq (keys (get-in % [:head] nil)))) 1))
-                                 (and (not (nil? (get-in % [:head language-keyword] nil)))
-                                      (> (.size (seq (keys (get-in % [:head language-keyword] nil)))) 1))
-                                 (and (not (nil? (get-in % [:head language-keyword language-keyword] nil)))
-                                      (not (string? (get-in % [:head language-keyword language-keyword] nil)))))))
-                     specs)
-
-                    debug (log/trace (str "type of ad-hoc-specs: " (type ad-hoc-specs)))
-                    debug (log/trace (str "size of ad-hoc-specs: " (.size ad-hoc-specs)))
-                    debug (log/debug (str "ad-hoc-specs: " (string/join ";" ad-hoc-specs)))
-
-                    ]
-                [:div.editgroup
-                 {:id (str "editgroup" group-id)}
-                 [:h2 (str "Editing group: " (:group_name result))]
-
-                 (f/render-form 
-                  {:action (str "/editor/group/edit/" group-id)
-                   :enctype "multipart/form-data"
-                   :method :post
-                   :fields (concat
-
-                            ;; fixed fields:
-                            [{:name :name :size 50 :label "Name"}]
-                            
-                            (if (and (:group_name result)
-                                     (re-find #"tense" (string/lower-case (:group_name result))))
-                              ;; standard fields, part 1: tenses
-                              [{:name :tenses
-                                :type :checkboxes
-                                :cols 8
-                                :options [
-                                          {:value ":conditional"
-                                           :label "Conditional"}
-
-                                          {:value ":present"
-                                           :label "Present"}
-
-                                          {:value ":futuro"
-                                           :label "Future"}
-
-                                          {:value ":past"
-                                           :label "Past"}
-
-                                          {:value ":imperfect"
-                                           :label "Imperfect"}
-
-                                          {:value ":infinitive"
-                                           :label "Infinitive"}]}]
-                              [])
-
-                            ;; standard fields, part 2: lexemes
-                            (if (= language-short-name "(none detected)")
-
-                              ;; if no language detected, we can't show lexemes since we don't know 
-                              ;; what language's lexemes to show, so this is empty.
-                              []
-                              
-                              ;; else, a language was detected, so show lexemes for it.
-                              ;; Also need language to tell the POST handler
-                              ;; how to convert the lexemes as strings into
-                              ;; map structures like {:head {:italiano {:italiano <lexeme>}}}.
-                              [{:type :hidden
-                                :name :language}
-                               {:name :lexemes
-                                :type :checkboxes
-                                :cols 8
-                                :options (map (fn [each-word-in-language]
-                                                ;; remove quotes
-                                                (let [lexeme (if (not (nil? (:lexeme each-word-in-language)))
-                                                               (:lexeme each-word-in-language)
-                                                               "(empty)")
-                                                      
-                                                      each-word (string/replace 
-                                                                 lexeme
-                                                                 #"[\"]" "")]
-                                                  {:value each-word
-                                                   :label each-word}))
-
-                                              ;; TODO: be more selective: show only infinitives, and avoid irregular forms.
-                                              (k/exec-raw [(str "SELECT DISTINCT structure->'head'->?->?
-                                                                              AS lexeme 
-                                                                            FROM expression
-                                                                           WHERE language=?
-                                                                        ORDER BY lexeme") [language-long-name
-                                                                                           language-long-name
-                                                                                           language-short-name]]
-                                                          :results))}])
-
-                            ;; TODO: only show this if there *are* arbitrary specs.
-                            (if (not (empty? ad-hoc-specs))
-                              [{:name :note :type :html
-                                :html [:div.alert.alert-info "Leave a specification blank below to remove it."]}]
-                              [])
-
-                            ;; Ad-hoc (non-standard) specifications that aren't checkbox-able in either of
-                            ;; the above.
-                            (map (fn [each-spec-index]
-                                   {:name (keyword (str "specs[" each-spec-index "]"))
-                                    :label " " ;; cannot be "" (TODO: file bug on https://github.com/jkk/formative)
-                                    :type :textarea
-                                    :rows 3
-                                    :cols 80})
-
-                                 ;; this lets us iterate over indexes: (0,1,2,..)
-                                 ;; so that we can give our form element names like
-                                 ;; specs[0],specs[1], etc. in the HTML.
-                                 (if (not (empty? ad-hoc-specs))
-                                   (range 0 (.size ad-hoc-specs))
-                                   []))
-
-                            ;; finally, a text area called new-spec that
-                            ;; allows user to insert a new spec to be added (usually this would be a ad-hoc spec that the
-                            ;; user could not already add via checkboxes above.
-                            [{:name "new-spec"
-                              :label "New Spec:"
-                              :type :textarea
-                              :rows 3
-                              :cols 60}]
-                            )
-
-                   :cancel-href "/editor"
-                   :values (reduce merge  ;; take a list of maps, each of which is a form input and its value, and combine into one big map of inputs => values.
-
-                                   (cons {:name (:group_name result)
-                                          :new_spec ""
-                                          :language language-short-name
-                                          :tenses (let 
-                                                      [tenses (vec (remove nil?
-                                                                           (map #(let [path (vec (list (:synsem :sem :tense)))]
-                                                                                   (do
-                                                                                     (log/trace (str "THE SPEC IS: " %))
-                                                                                     (log/trace (str "THE TYPE OF THE PATH IS:"
-                                                                                                     (type (get-in % [:synsem :sem :tense] nil))))
-                                                                                     (log/trace (str "THE VALUE OF THE PATH IS:"
-                                                                                                     (get-in % [:synsem :sem :tense] nil)))
-
-                                                                                     (get-in % [:synsem :sem :tense] nil)))
-                                                                     specs)))]
-                                                    (log/trace (str "gathered tenses: " tenses))
-                                                    tenses)
-
-
-                                          ;; Convert all specs that denote head lexemes 
-                                          ;; (i.e. that are the form of [:head <language> <language>])
-                                          ;; into checkbox tics.
-                                          :lexemes (vec (remove #(or (nil? %)
-                                                                     (= "" %))
-                                                                (map #(let [path [:head (keyword language-long-name) (keyword language-long-name)]
-                                                                            debug (log/debug (str "CHECKBOX TICK: ["
-                                                                                                  (get-in % path nil) "]"))]
-                                                                        (get-in % path nil))
-                                                                     specs)))
-                                          }
-
-                                         (map (fn [each-spec-index]
-                                                {(keyword (str "specs[" each-spec-index "]"))
-                                                 (let [val-edn (nth ad-hoc-specs each-spec-index)
-                                                       debug (log/debug (str "val-edn : " val-edn))
-                                                       debug (log/debug (str "val-edn type: " (type val-edn)))
-                                                       ]
-                                                   val-edn
-                                                   )})
-
-                                              (if (not (empty? ad-hoc-specs))
-                                                (range 0 (.size ad-hoc-specs))
-                                                []))))
-                   
-                   ;; TODO: catch exceptions that this generates.
-                   :validations [[:required [:name]   
-                                  :action "/editor"
-                                  :method "post"
-                                  :problems problems]]})
-
-
-                 [:div.dangerzone
-                  [:h4 "Delete list"]
-                  
-                  [:div {:style "float:right"}
-                   [:form
-                    {:method "post"
-                    :action (str "/editor/group/delete/" group-id)}
-                    [:button.confirm_delete {:onclick (str "submit();")} "Delete List"]]]
-                  ]
-
-                 ]))
-
-            results)))
-
-;; shortnames: 'en','es','it', ..
-(defn shortname-from-match [match-string]
+;; TODO: throw exception rather than "(no shortname for language)"
+(defn short-language-name-from-match [match-string]
   (cond (nil? match-string)
         (str "(no shortname for language: (nil) detected).")
         (re-find #"espanol" (string/lower-case match-string))
@@ -1203,7 +474,7 @@
         "es"
         (re-find #"english" (string/lower-case match-string))
         "en"
-        (re-find #"italiano" (string/lower-case match-string))
+       (re-find #"italiano" (string/lower-case match-string))
         "it"
         (re-find #"italian" (string/lower-case match-string))
         "it"
@@ -1211,6 +482,180 @@
         "es"
         :else
         (str "(no shortname for language:" match-string " detected.")))
+
+(defn insert-game [name source target source-set target-set]
+  "Create a game with a name, a source and target language and two
+  arrays, one for the source language and one for the target
+  language. Each array is an integer which refers to a set of
+  'anyof-sets', each member of which is a possible specification in its
+  respective language. See example usage in test/editor.clj."
+  (log/debug (str "source-set: " source-set))
+  (log/debug (str "source-set with commas: " (str "ARRAY[" (string/join "," (map #(str "" (string/join "," %) "") source-set)) "]")))
+  (log/debug (str "target-set with commas: " (str "ARRAY[" (string/join "," (map #(str "" (string/join "," %) "") target-set)) "]")))
+
+  (let [source-grouping-str (str "ARRAY[" (string/join "," (map #(str "" (string/join "," %) "") source-set)) "]::integer[]")
+        target-grouping-str (str "ARRAY[" (string/join "," (map #(str "" (string/join "," %) "") target-set)) "]::integer[]")
+        sql (str "INSERT INTO game (name,source_groupings,target_groupings,source,target)
+                       SELECT ?, " source-grouping-str "," target-grouping-str ",?,? RETURNING id")]
+    (log/debug (str "inserting new game with sql: " sql))
+    ;; return the row ID of the game that has been inserted.
+    (:id (first (k/exec-raw [sql [name source target]] :results)))))
+
+;; TODO: has fallen victim to parameteritis (too many unnamed parameters)
+(defn game-editor-form [game game-to-edit game-to-delete & [editpopup] ]
+  (let [game-id (:id game)
+        language (:language game)
+        debug (log/debug (str "ALL GAME INFO: " game))
+        game-to-edit game-to-edit
+        problems nil ;; TODO: should be optional param of this (defn)
+        game-to-delete game-to-delete
+
+        source-group-ids (:source_group_ids game)
+        source-groups (if source-group-ids
+                        (vec (remove #(or (nil? %)
+                                          (= "" (string/trim (str %))))
+                                     (.getArray (:source_group_ids game))))
+                        [])
+        target-group-ids (:target_group_ids game)
+        target-groups (if target-group-ids
+                        (vec (remove #(or (nil? %)
+                                          (= "" (string/trim (str %))))
+                                     (.getArray (:target_group_ids game))))
+                        [])
+        debug (log/debug (str "creating checkbox form with currently-selected source-groups: " source-groups))
+        debug (log/debug (str "creating checkbox form with currently-selected target-groups: " target-groups))
+
+        language-short-name (:target game)
+        debug (log/debug (str "language-short-name:" language-short-name))
+        language-keyword-name
+        (str "" (sqlname-from-match (short-language-name-to-long language-short-name)) "")
+
+        language-keyword
+        (keyword language-keyword-name)
+
+        debug (log/debug
+               (str "SELECT DISTINCT structure->'head'->" language-keyword-name "->" language-keyword-name "
+                                            AS lexeme
+                                          FROM expression
+                                         WHERE language=" language-short-name "
+                                      ORDER BY lexeme"))
+
+        debug (log/debug (str "language-keyword-name: " language-keyword-name))
+        debug (log/debug (str "language-short-name: " language-short-name))
+
+        ]
+    [:div
+     {:class (str "editgame " (if editpopup "editpopup"))
+      :id (str "editgame" game-id)}
+;;     [:h2 (str "Editing game: " (:name game))]
+
+     (f/render-form
+      {:action (str "/editor/game/edit/" game-id)
+       :enctype "multipart/form-data"
+       :method :post
+       :fields (concat
+
+                [{:name :name :size 50 :label "Name"}]
+
+                [{:name :target_lex
+                  :label "Verbs"
+                  :type :checkboxes
+                  :cols 10
+                  :options (map (fn [row]
+                                  (let [lexeme (if (:lexeme row)
+                                                 (:lexeme row)
+                                                 "")
+                                        lexeme (string/replace lexeme "\"" "")]
+                                    {:label lexeme
+                                     :value lexeme}))
+                                ;; TODO: be more selective: show only infinitives, and avoid irregular forms.
+                                (k/exec-raw [(str "SELECT DISTINCT structure->'head'->?->?
+                                                                                 AS lexeme
+                                                                               FROM expression
+                                                                              WHERE language=?
+                                                                           ORDER BY lexeme")
+                                             [language-keyword-name
+                                              language-keyword-name
+                                              language-short-name
+                                              ]]
+                                            :results))}]
+                [{:name :target_tenses
+                  :label "Tenses"
+                  :type :checkboxes
+                  :cols 12
+                  :options (map (fn [row]
+                                  {:label (:label row)
+                                   :value (:value row)})
+                                tenses-as-editables)}]
+
+                [{:name :source :type :hidden
+                  :label "Source Language"
+                  :options [{:value "en" :label "English"}
+                            {:value "it" :label "Italian"}
+                            {:value "es" :label "Spanish"}]}]
+
+                [{:name :target :type :hidden
+                  :label "Target Language"
+                  :options [{:value "en" :label "English"}
+                            {:value "it" :label "Italian"}
+                            {:value "es" :label "Spanish"}]}]
+
+                )
+
+       :cancel-href (str "/editor/" language)
+       :values {:name (:name game)
+                :target (:target game)
+                :source (:source game)
+                :source_groupings source-groups
+                :target_groupings target-groups
+
+                :target_lex (vec (remove #(or (nil? %)
+                                              (= "" %))
+                                         (map #(let [path [:head language-keyword language-keyword]
+                                                     debug (log/debug (str "CHECKBOX TICK (:target_lex) (path=" path ": ["
+                                                                           (get-in % path nil) "]"))]
+                                                 (get-in % path nil))
+                                              (map json-read-str (seq (.getArray (:target_lex game)))))))
+
+
+                :target_tenses (vec (remove #(or (nil? %)
+                                                 (= "" %))
+                                            (map #(let [debug (log/debug (str "tense: " %))
+                                                        data (json-read-str %)]
+                                                    (log/debug (str "the data is: " data))
+                                                    (json/write-str data))
+                                                 (seq (.getArray (:target_grammar game))))))
+                }
+
+       :validations [[:required [:name]
+                      :action "/editor"
+                      :method "post"
+                      :problems problems]]})
+
+     [:div.dangerzone
+      [:h4 "Delete game"]
+
+      [:div {:style "float:right"}
+       [:form
+        {:method "post"
+         :action (str "/editor/game/delete/" (if language (str language "/")) game-id)}
+        [:button.confirm_delete {:onclick (str "submit();")} "Delete Game"]]]
+      ]
+     ]))
+
+(defn onload []
+  (string/join " "
+               (map (fn [game]
+                      (let [game-id (:game game)
+                            source (:source game)
+                            target (:target game)]
+                        (str
+                         "log(INFO,'editor onload: loading gen_per_verb( " game-id " )');"
+                         "gen_per_verb('" game-id "','" source "','" target "');")))
+                    (k/exec-raw [(str "SELECT games_to_use.game,games.source,games.target
+                                         FROM games_to_use
+                                   INNER JOIN games
+                                           ON games_to_use.game = games.id")] :results))))
 
 ;; sqlnames: 'english','espanol' <- note: no accent on 'n' ,'italiano', ..
 (defn sqlname-from-match [match-string]
@@ -1231,72 +676,17 @@
         :else
         (str "(no sqlname for language:" match-string " detected.")))
 
-(defn tenses-per-game [game-id]
-  (log/info (str "verbs-per-game: " game-id))
-  (map #(:inflection %)
-       (k/exec-raw [(str "SELECT inflection
-                                  FROM " inflections-per-game-table 
-                               " WHERE game = ? ORDER BY inflection") [(Integer. game-id)]] :results)))
-
-(defn verbs-per-game [game-id]
-  (log/info (str "verbs-per-game: " game-id))
-  (let [verbs
-        (map #(:word %)
-             (k/exec-raw [(str "SELECT word
-                                  FROM " words-per-game-table 
-                               " WHERE game = ? ORDER BY word") [(Integer. game-id)]] :results))]
-    (log/debug (str "check these boxes: " (string/join "," verbs)))
-    verbs))
-
-(defn inflections-per-game [game-id]
-  (let [inflections
-        (map #(:inflection %)
-             (k/exec-raw [(str "SELECT inflection
-                                  FROM " inflections-per-game-table 
-                               " WHERE game = ? ORDER BY inflection") [(Integer. game-id)]] :results))]
-    (log/debug (str "check these boxes: " (string/join "," inflections)))
-    inflections))
-
-(def game-default-values {})
-
-(defn links [request current]
-  ;; TODO: _current_ param can be derived from request.
-  (let [method :get]
-    (html
-     [:div {:class "links"}
-
-      ;; TODO: vary these links depending on context (which can be obtained by loooking in request).
-      [:span [:a {:href (str "/editor/" (string/replace-first (str :create) ":" ""))} "Create new list"]]
-      [:span [:a {:href (str "/editor/" (string/replace-first (str :home) ":" ""))} "Show all lists"]]
-
-      ])))
-
-(defn short-language-name-to-long [lang]
-  (cond (= lang "it") "Italian"
-        (= lang "en") "English"
-        (= lang "es") "Spanish"
-        true "???"))
-
-(defn short-language-name-to-edn [lang]
-  (cond (= lang "it") :italiano
-        (= lang "en") :english
-        (= lang "es") :espanol
-        true (str "unknown lang: " lang)))
-
-(defn unabbrev [lang]
-  (short-language-name-to-long lang))
-
 (defn json-read-str [json]
   (json/read-str json
                  :key-fn keyword
                  :value-fn (fn [k v]
-                             (cond 
-                              (and (or (= k :english) 
+                             (cond
+                              (and (or (= k :english)
                                        (= k :espanol)
                                        (= k :italiano))
                                    (not (map? v)))
                               (str v)
-                              
+
                               (and (string? v)
                                    (= (nth v 0) \:))
                               (keyword (string/replace-first v ":" ""))
@@ -1305,167 +695,15 @@
                               (keyword v)
                               :else v))))
 
-(defn expressions-for-game [game-id]
-  "Return possible source->target mappings given a game-id."
-  (let [sql "SELECT source.surface AS source,source.structure AS source_structure,
-                    target.surface AS target,target.structure AS target_structure
-  FROM (SELECT surface AS surface,structure AS structure
-          FROM (SELECT DISTINCT surface,structure,count(target_grouping.id) AS groups
-                           FROM (SELECT DISTINCT surface,structure,language
-                                            FROM expression) AS target_expression
-                     INNER JOIN grouping AS target_grouping
-                             ON target_expression.structure @> ANY(target_grouping.any_of)
-                     INNER JOIN game
-                             ON game.id = ?
-                            AND target_grouping.id = ANY(game.target_groupings)
-                            AND game.target = target_expression.language
-                       GROUP BY surface,structure) AS targets
-         WHERE groups = (SELECT COUNT(*)
-                           FROM grouping AS target_grouping
-                     INNER JOIN game
-                             ON target_grouping.id = ANY(game.target_groupings)
-                            AND game.id = ?)) AS target
+;; TODO: throw exception rather than "unknown language"
+(defn short-language-name-to-edn [lang]
+  (cond (= lang "it") :italiano
+        (= lang "en") :english
+        (= lang "es") :espanol
+        true (str "unknown lang: " lang)))
 
-INNER JOIN (SELECT surface AS surface,structure AS structure
-              FROM (SELECT DISTINCT surface,structure,count(source_grouping.id) AS groups
-                               FROM (SELECT DISTINCT surface,structure,language
-                                                FROM expression) AS source_expression
-                         INNER JOIN grouping AS source_grouping
-                                 ON source_expression.structure @> ANY(source_grouping.any_of)
-                         INNER JOIN game
-                                 ON game.id = ?
-                                AND source_grouping.id = ANY(game.source_groupings)
-                                AND game.source = source_expression.language
-                           GROUP BY surface,structure) AS sources
-             WHERE groups = (SELECT COUNT(*)
-                               FROM grouping AS source_grouping
-                         INNER JOIN game
-                                 ON source_grouping.id = ANY(game.source_groupings)
-                                AND game.id = ?)) AS source
-       ON ((target.structure->'synsem'->'sem') @> (source.structure->'synsem'->'sem')
-           OR
-           (source.structure->'synsem'->'sem') @> (target.structure->'synsem'->'sem'))"]
-
-    ;; Parse the returned JSON in clojure maps.  TODO: the :value-fns
-    ;; below are wrongfully converting things to keywords that should
-    ;; legitimately stay strings (e.g. values of the :espanol,
-    ;; :italiano, and :english keys).
-    (map (fn [row]
-           {:source (:source row)
-            :target (:target row)
-            :source-structure (json-read-str (str (:source_structure row)))
-            :target-structure (json-read-str (str (:target_structure row)))})
-
-         (k/exec-raw [sql
-                      [game-id game-id game-id game-id]] :results))))
-
-;; forgot name for the proper built-in clojure function for this
-;; TODO: replace with standard clojure series-generation function.
 (defn series [from to increment]
   (if (or (< from to) (= from to))
     (cons
      from
      (series (+ from increment) to increment))))
-
-(defn show-expressions-for-game [game-id]
-  (let [game-id (Integer. game-id)
-        game (first (k/exec-raw ["SELECT * FROM game WHERE id=?" [(Integer. game-id)]] :results))]
-    (html
-     (let [sql "SELECT DISTINCT surface 
-                  FROM expression
-            INNER JOIN game
-                    ON structure @> ANY(target_lex) 
-                   AND structure @> ANY(target_grammar)
-                   AND game.id = ? 
-              ORDER BY surface"
-           results (k/exec-raw [sql
-                              [game-id] ]
-                               :results)]
-       [:div {:style "float:left;width:100%;margin-top:1em"}
-
-        [:div {:style "border:0px dashed green;float:right;width:60%;"}
-         (game-editor-form game nil nil)]
-
-        [:div {:style "float:left;width:40%"}
-         [:table {:class "striped padded"}
-          [:tr
-           [:th {:style "width:1em"}]
-           [:th "Expressions"]]
-
-          (map (fn [result]
-                 [:tr 
-                  [:th (first result)]
-                  [:td
-                   (:surface (second result))]])
-               (sort 
-                (zipmap
-                 (series 1 (.size results) 1)
-                 results)))]]]))))
-
-(defn show-expressions []
-  (let [select (str "SELECT name,source,target,source_grouping::text AS source_grouping ,target_grouping::text AS target_grouping FROM expression_select")
-        results (k/exec-raw [select] :results)]
-    (html
-     (if (empty? results)
-       (str "no expressions to show.")
-       [:div {:style "float:left"}
-        (map (fn [result]
-               (show-expression (:name result)
-                                (:source result)
-                                (:target result)
-                                (list (json-read-str (:source_grouping result)))
-                                (list (json-read-str (:target_grouping result)))))
-             results)]))))
-
-(defn example-table [request]
-  (html
-   [:div {:style "width:100%"}
-    [:h4 "Examples"]
-    (let [examples (examples-per-game (:game (:params request)))]
-      [:div#exampletable
-       [:table.striped
-        [:tr
-         [:th "Source"]
-         [:th "Target"]
-         [:th "Source sem"]
-         [:th "Target sem"]
-         ]
-
-        (map (fn [row]
-               (let [debug (log/debug (str "source expression:"
-                                           (:source row)))
-                     source (:source row)
-                     target (:target row)
-                     source_sem (let [sem (str (:source_sem row))]
-                                  (json-read-str sem))
-
-                     target_sem (let [sem (str (:target_sem row))]
-                                  (json-read-str sem))]
-                 [:tr 
-                  [:td source]
-                  [:td target]
-                  [:td [:div {:onclick "toggle_expand(this);" :style "height:100px; width:200px ;overflow:scroll"} (html/tablize source_sem)]]
-                  [:td [:div {:onclick "toggle_expand(this);" :style "height:100px; width:200px ;overflow:scroll"} (html/tablize target_sem)]]]))
-             examples)]])]))
-
-
-
-(defn multipart-to-edn [params]
-  (log/debug (str "multipart-to-edn input: " params))
-  (let [output
-        (zipmap (map #(keyword %)
-                     (map #(string/replace % ":" "")
-                          (map #(string/replace % "[]" "")
-                               (keys params))))
-                (vals params))]
-    (log/debug (str "multipart-to-edn output: " output))
-    output))
-
-
-(def headers {"Content-Type" "text/html;charset=utf-8"})
-
-(defn toggle-activation [game active]
-  (do (k/exec-raw ["UPDATE game SET active=? WHERE id=?" [active (Integer. game)]])
-      (str "successfully toggled activation of game: " game)))
-
-
