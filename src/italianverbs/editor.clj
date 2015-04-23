@@ -1455,6 +1455,13 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
          (k/exec-raw [sql
                       [game-id game-id game-id game-id]] :results))))
 
+;; forgot name for the proper built-in clojure function for this
+;; TODO: replace with standard clojure series-generation function.
+(defn series [from to increment]
+  (if (or (< from to) (= from to))
+    (cons
+     from
+     (series (+ from increment) to increment))))
 
 (defn show-expressions-for-game [game-id]
   (let [game-id (Integer. game-id)
@@ -1478,13 +1485,18 @@ INNER JOIN (SELECT surface AS surface,structure AS structure
         [:div {:style "float:left;width:40%"}
          [:table {:class "striped padded"}
           [:tr
+           [:th {:style "width:1em"}]
            [:th "Expressions"]]
 
           (map (fn [result]
                  [:tr 
+                  [:th (first result)]
                   [:td
-                   (:surface result)]])
-               results)]]]))))
+                   (:surface (second result))]])
+               (sort 
+                (zipmap
+                 (series 1 (.size results) 1)
+                 results)))]]]))))
 
 (defn show-expressions []
   (let [select (str "SELECT name,source,target,source_grouping::text AS source_grouping ,target_grouping::text AS target_grouping FROM expression_select")
