@@ -130,7 +130,7 @@
              (is-admin (update-game (:game-to-edit (:route-params request))
                                     (multipart-to-edn (:multipart-params request))))))
 
-   (GET "/game/expressions/:game" request
+   (GET "/game/:game" request
         (is-admin
          (let [game-id (Integer. (:game (:route-params request)))
                game (first (k/exec-raw ["SELECT * FROM game WHERE id=?" [(Integer. game-id)]] :results))]
@@ -464,7 +464,7 @@
                             :value (:name result)}]
                    (if (not editor-is-popup)
                      ;; show as link
-                     [:a {:href (str "/editor/game/expressions/" game-id)} game-name-display]
+                     [:a {:href (str "/editor/game/" game-id)} game-name-display]
 
                      ;; show as popup
                      [:div.edit_game {:onclick (str "edit_game_dialog(" game-id ")")} game-name-display]))]
