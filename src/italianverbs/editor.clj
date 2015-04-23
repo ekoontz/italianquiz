@@ -368,7 +368,7 @@
       [:div {:style "float:right"}
        [:form
         {:method "post"
-         :action (str "/editor/game/delete/" language "/" game-id)}
+         :action (str "/editor/game/delete/" (if language (str language "/")) game-id)}
         [:button.confirm_delete {:onclick (str "submit();")} "Delete Game"]]]
       ]
      ]
