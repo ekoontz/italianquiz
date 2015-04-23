@@ -388,8 +388,10 @@
                     source,target,
                     target_lex,target_grammar,counts.expressions_per_game
                FROM game 
-          LEFT JOIN (SELECT game.id AS game,count(*) AS expressions_per_game
-                       FROM expression 
+          LEFT JOIN (SELECT game.id AS game,
+                            count(*) AS expressions_per_game
+                       FROM (SELECT DISTINCT surface,structure 
+                                        FROM expression) AS expression
                  INNER JOIN game 
                          ON structure @> ANY(target_lex) 
                         AND structure @> ANY(target_grammar) 
