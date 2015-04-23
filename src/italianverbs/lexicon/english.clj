@@ -272,7 +272,8 @@
                        :sem {:pred :express}}}
 
    "finish" {:synsem {:cat :verb
-                      :sem {:pred :finish}}}
+                      :sem {:pred :finish}}
+             :english {:present {:3sing "finishes"}}}
 
    "form" {:synsem {:cat :verb
                     :sem {:pred :form}}}
