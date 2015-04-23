@@ -67,8 +67,7 @@
    "be"
    {:synsem {:cat :verb
              :sem {:pred :essere}}
-    :english {:english "be"
-              :present {:1sing "am"
+    :english {:present {:1sing "am"
                         :2sing "are"
                         :3sing "is"
                         :1plur "are"
@@ -85,7 +84,6 @@
                          :sem {:pred :mancare}}
                 :english {:participle "be missed"
                           :future "be missed"
-                          :english "be missed"
                           :conditional "be missed"
                           :past {:english "was missed"
                                 :2sing "were missed"
@@ -97,8 +95,7 @@
                                    :3plur "are missed"}}}
 
    "be missing"
-   {:english {:english "be missing"
-              :present {:1sing "am missing"
+   {:english {:present {:1sing "am missing"
                         :2sing "are missing"
                         :3sing "is missing"
                         :1plur "are missing"
@@ -293,8 +290,7 @@
                     :discrete false
                     :pred :andare
                     :subj {:animate true}}}
-     :english {:english "go"
-               :present {:3sing "goes"}
+     :english {:present {:3sing "goes"}
                :participle "going"
                :past "went"}}]
 
@@ -309,8 +305,7 @@
                           :pred :avere
                           :subj {:human true}
                           :obj {:buyable true}}}
-           :english {:english "have"
-                     :present {:3sing "has"}
+           :english {:present {:3sing "has"}
                              :past "had"}}
 
 
