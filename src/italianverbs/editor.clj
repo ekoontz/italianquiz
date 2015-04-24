@@ -178,14 +178,15 @@
         language (if language language "")
         debug (log/debug (str "THE LANGUAGE OF THE GAME IS: " language))
 
-        ;; TODO: the DISTINCT is too expensive below and gets worse as the number of games increase.
+        ;; TODO: doing SELECT DISTINCT surface,structure is too expensive below and gets worse as the number of games increase,
+        ;; but not doing DISTINCT is inaccurate.
         sql "SELECT game.name AS name,game.id AS id,active,
                     source,target,
                     target_lex,target_grammar,counts.expressions_per_game
                FROM game
           LEFT JOIN (SELECT game.id AS game,
                             count(*) AS expressions_per_game
-                       FROM (SELECT DISTINCT surface,structure
+                       FROM (SELECT surface,structure
                                         FROM expression) AS expression
                  INNER JOIN game
                          ON structure @> ANY(target_lex)
