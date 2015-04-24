@@ -17,6 +17,7 @@
    [hiccup.core :refer (html)]
    [korma.core :as k]))
 
+(declare banner)
 (declare body)
 (declare delete-game)
 (declare game-editor-form)
@@ -141,12 +142,25 @@
             {:status 302 :headers {"Location" (str "/editor/" language)}})))))
 
 (defn body [title content request]
-  (let [language (:language (:route-params request))]
+  (let [language (:language (:route-params request))
+        game-id (:game (:route-params request))
+        game (if game-id (first (k/exec-raw ["SELECT * FROM game WHERE id=?" [(Integer. game-id)]] :results)))
+        language (if language language
+                     (:target game))]
     (html/page
      title
      (html
       [:div {:class "major"}
-       [:h2 [:a {:href "/editor"} (str "Game Editor") ] (if (not (= "" (string/trim title))) (str ": " title))]
+       [:h2 
+        (banner (concat 
+                 [{:href "/editor" 
+                   :content "Game Editor"}]
+                 (if language
+                   [{:href (str "/editor/" language)
+                     :content (short-language-name-to-long language)}])
+                 (if game
+                   [{:href nil
+                     :content (if (= "" (string/trim title)) "(untitled)" title)}])))]
       content])
      request
      {:css "/css/editor.css"
@@ -163,6 +177,8 @@
         game-to-delete (if game-to-delete (Integer. game-to-delete))
         language (if language language "")
         debug (log/debug (str "THE LANGUAGE OF THE GAME IS: " language))
+
+        ;; TODO: the DISTINCT is too expensive below and gets worse as the number of games increase.
         sql "SELECT game.name AS name,game.id AS id,active,
                     source,target,
                     target_lex,target_grammar,counts.expressions_per_game
@@ -441,7 +457,7 @@ ms: " params))))
                    AND game.id = ?
               ORDER BY surface"
            results (k/exec-raw [sql
-                              [game-id] ]
+                                [game-id] ]
                                :results)]
        [:div {:style "float:left;width:100%;margin-top:1em"}
 
@@ -707,3 +723,12 @@ ms: " params))))
     (cons
      from
      (series (+ from increment) to increment))))
+
+(defn banner [segments]
+  (if (not (empty? segments))
+    (html (if (:href (first segments)) 
+            [:a {:href (:href (first segments))}
+             (:content (first segments))]
+            (:content (first segments)))
+          (if (not (empty? (rest segments))) " : ")
+          (banner (rest segments)))))
