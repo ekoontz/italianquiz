@@ -312,6 +312,7 @@
          number (get-in word '(:agr :number))
          stem (replace root #"^to " "")
          last-stem-char-is-e (re-find #"e$" stem)
+         penultimate-stem-char-is-vowel (re-find #"[aeiou].$" stem)
          last-stem-char-is-vowel (re-find #"[aeiouy]$" stem)
          stem-minus-final-y (replace root #"y$" "")]
      (log/debug "+else")
@@ -349,7 +350,8 @@
       (str stem "es")
 
       (and (= person :3rd) (= number :sing)
-           (= last-stem-char-is-vowel "y")) ;; "carry"+"s" => "carries"
+           (not penultimate-stem-char-is-vowel)
+           (= last-stem-char-is-vowel "y")) ;; "carry"+"s" => "carries" (but "play"+"s" => "plays")
       (str stem-minus-final-y "ies")
 
       (and (= person :3rd) (= number :sing)
