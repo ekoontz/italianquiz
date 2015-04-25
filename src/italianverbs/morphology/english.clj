@@ -352,6 +352,15 @@
            (= last-stem-char-is-vowel "y")) ;; "carry"+"s" => "carries"
       (str stem-minus-final-y "ies")
 
+      (and (= person :3rd) (= number :sing)
+           last-stem-char-is-vowel) ;; "go" => "goes"
+      (str stem-minus-final-y "ies")
+
+      (and (= person :3rd) (= number :sing)
+           (re-find #"[cs][sh]$" stem))
+      (str stem "es")
+
+      ;; default 3rd sing inflection: just add s.
       (and (= person :3rd) (= number :sing))
       (str stem "s")
 

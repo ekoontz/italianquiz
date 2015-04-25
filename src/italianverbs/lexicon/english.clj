@@ -269,8 +269,7 @@
                        :sem {:pred :express}}}
 
    "finish" {:synsem {:cat :verb
-                      :sem {:pred :finish}}
-             :english {:present {:3sing "finishes"}}}
+                      :sem {:pred :finish}}}
 
    "form" {:synsem {:cat :verb
                     :sem {:pred :form}}}
@@ -285,14 +284,12 @@
            :english {:past "gave"}}
 
    "go"
-   [{:synsem {:cat :verb
+   {:synsem {:cat :verb
               :sem {:activity true
                     :discrete false
                     :pred :andare
                     :subj {:animate true}}}
-     :english {:present {:3sing "goes"}
-               :participle "going"
-               :past "went"}}]
+    :english {:past "went"}}
 
    "grab"  {:synsem {:cat :verb
                      :sem {:pred :prendere}}
@@ -480,14 +477,12 @@
    ;; TODO: 3sing present exception used below to avoid "playies" is not an exception: it's a rule: y->ys.
    ;; the exceptional case is when "ys" is not used (e.g. "tries").
    "play" [{:comment "We are talking about playing games or sports."
-            :english {:present {:3sing "plays"}}
             :synsem {:cat :verb
                      :sem {:pred :giocare
                            :subj {:human true}
                            :obj {:games true}}}}
 
            {:comment "We are talking about playing music or sounds."
-            :english {:present {:3sing "plays"}}
             :synsem {:cat :verb
                      :sem {:pred :suonare
                            :subj {:human true}
@@ -618,8 +613,7 @@
 
    "teach"  {:synsem {:cat :verb
                       :sem {:pred :teach}}
-                            :english {:past "taught"
-                                      :present {:3sing "teaches"}}}
+                            :english {:past "taught"}}
 
    "telephone" {:synsem {:cat :verb
                          :sem {:pred :telefonare}}}
