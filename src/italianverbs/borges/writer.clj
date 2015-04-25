@@ -122,6 +122,12 @@
   (let [spec (if spec spec :top)]
     (populate num source-lm target-lm spec)))
 
+(defn populate-from [source-language-model target-language-model target-lex-set target-grammar-set]
+  "choose one random member from target-lex-set and one from target-grammar-set, and populate from this pair"
+  (let [lex-spec (nth target-lex-set (rand-int (.size target-lex-set)))
+        grammar-spec (nth target-grammar-set (rand-int (.size target-grammar-set)))]
+    (populate 1 source-language-model target-language-model (unify lex-spec grammar-spec))))
+
 (defn -main [& args]
   (if (not (nil? (first args)))
     (populate (Integer. (first args)))
