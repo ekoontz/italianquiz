@@ -11,6 +11,7 @@
 
    [italianverbs.auth :refer [is-admin is-authenticated]]
    [italianverbs.borges.reader :refer :all]
+   [italianverbs.borges.writer :refer [populate]]
    [italianverbs.html :as html]
    [italianverbs.unify :refer [get-in strip-refs]]
 
@@ -21,6 +22,7 @@
 (declare body)
 (declare delete-game)
 (declare game-editor-form)
+(declare get-game-from-db)
 (declare headers)
 (declare insert-game)
 (declare json-read-str)
@@ -301,7 +303,7 @@
                    AND target_expression.language = game.target
                    AND game.id = ?
              LEFT JOIN expression AS source_expression
-                   ON  (((source_expression.structure->'synsem'->'sem') @> (target_expression.structure->'synsem'->'sem')) OR
+                    ON (((source_expression.structure->'synsem'->'sem') @> (target_expression.structure->'synsem'->'sem')) OR
                         ((target_expression.structure->'synsem'->'sem') @> (source_expression.structure->'synsem'->'sem')))
                    AND source_expression.language = game.source
               ORDER BY target_expression.surface"
@@ -313,7 +315,7 @@
         [:div {:style "border:0px dashed green;float:right;width:60%;"}
          (if game (game-editor-form game nil nil))]
 
-        [:div {:style "float:left;width:40%"}
+        [:div {:style "border:0px dashed green;float:left;width:40%"}
          [:table {:class "striped padded"}
           [:tr
            [:th {:style "width:1em"}]
@@ -332,7 +334,42 @@
                  (sort
                   (zipmap
                    (series 1 (.size results) 1)
-                   results))))]]]))))
+                   results))))]
+
+         ;; make a form that lets us submit stuff like:
+         ;; (populate 50 en/small it/small (unify (pick one <target_grammar>) (pick one <target lex>)))
+         ;; (populate 50 en/small it/small {:head {:italiano {:italiano "esprimere"}}})
+
+         [:div {:style "border:0px dashed blue;float:left;display:block"}
+          (let [game (get-game-from-db game-id)]
+            
+            [:table
+
+             [:tr
+              [:th "target_grammar"]
+              [:td
+               [:textarea {:style "font-family:monospace" :rows "10"}
+                (string/join "," (:target_grammar game))]]]
+
+             [:tr
+              [:th "target_lex"]
+              [:td
+               [:textarea {:style "font-family:monospace" :rows "10"}
+                (string/join "," (:target_lex game))]]]
+
+             [:tr
+              [:th "source"]
+              [:td (:source game)]]
+
+             [:tr
+              [:th "target"]
+              [:td (:target game)]]
+
+
+             ])
+
+
+          ]]]))))
 
 (def headers {"Content-Type" "text/html;charset=utf-8"})
 
@@ -748,3 +785,17 @@ ms: " params))))
    {:synsem {:sem {:tense :past :aspect :progressive}}} "imperfect"
    {:synsem {:sem {:tense :past :aspect :perfect}}} "past"
    {:synsem {:sem {:tense :present}}} "present"})
+
+(defn get-game-from-db [game-id]
+  (let [result (first (k/exec-raw ["SELECT * FROM game WHERE id=?" [game-id]] :results))]
+    (merge (dissoc 
+            (dissoc 
+             (dissoc 
+              (dissoc result :target_lex)
+              :source_lex)
+             :target_grammar)
+            :source_grammar)
+           {:source_grammar (map json-read-str (.getArray (:source_grammar result)))
+            :target_grammar (map json-read-str (.getArray (:target_grammar result)))
+            :target_lex (map json-read-str (.getArray (:target_lex result)))
+            :source_lex (map json-read-str (.getArray (:source_lex result)))})))
