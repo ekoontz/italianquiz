@@ -313,7 +313,7 @@
          stem (replace root #"^to " "")
          last-stem-char-is-e (re-find #"e$" stem)
          penultimate-stem-char-is-vowel (re-find #"[aeiou].$" stem)
-         last-stem-char-is-vowel (re-find #"[aeiouy]$" stem)
+         last-stem-char-is-vowel (re-find #"[aeiou]$" stem)
          stem-minus-final-y (replace root #"y$" "")]
      (log/debug "+else")
      (log/debug (str "(english):word: " word))
