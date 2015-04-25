@@ -11,7 +11,7 @@
 
    [italianverbs.auth :refer [is-admin is-authenticated]]
    [italianverbs.borges.reader :refer :all]
-   [italianverbs.borges.writer :refer [populate]]
+   [italianverbs.borges.writer :refer [populate populate-from]]
    [italianverbs.html :as html]
    [italianverbs.unify :refer [get-in strip-refs]]
 
@@ -342,8 +342,20 @@
 
          [:div {:style "border:0px dashed blue;float:left;display:block"}
           (let [game (get-game-from-db game-id)]
+
             
             [:table
+
+             [:tr
+              [:td {:colspan "2"}
+
+               [:textarea  {:style "font-family:monospace" :cols "40" :rows "10"}
+                (str "(take 10 (repeatedly #(populate-from " 
+                     (:source game) "/small " (:target game) "/small "
+                     "(:target_lex (get-game-from-db " game-id "))"
+                     "(:target_grammar (get-game-from-db " game-id ")))))"
+                     )
+                ]]]
 
              [:tr
               [:th "target_grammar"]
