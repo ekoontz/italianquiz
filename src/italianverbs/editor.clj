@@ -33,29 +33,10 @@
 (declare short-language-name-from-match)
 (declare show-expressions-for-game)
 (declare sqlname-from-match)
+(declare tenses-as-editables)
+(declare tenses-human-readable)
 (declare toggle-activation)
 (declare update-game)
-
-(def tenses-as-editables
-  [{:label "conditional"
-    :value (json/write-str {:synsem {:sem {:tense :conditional}}})}
-   {:label "future"
-    :value (json/write-str {:synsem {:sem {:tense :future}}})}
-   {:label "imperfect"
-    :value (json/write-str {:synsem {:sem {:tense :past
-                                           :aspect :progressive}}})}
-   {:label "past"
-    :value (json/write-str {:synsem {:sem {:tense :past
-                                           :aspect :perfect}}})}
-   {:label "present"
-    :value (json/write-str {:synsem {:sem {:tense :present}}})}])
-
-(def tenses-human-readable
-  {{:synsem {:sem {:tense :conditional}}} "conditional"
-   {:synsem {:sem {:tense :future}}} "future"
-   {:synsem {:sem {:tense :past :aspect :progressive}}} "imperfect"
-   {:synsem {:sem {:tense :past :aspect :perfect}}} "past"
-   {:synsem {:sem {:tense :present}}} "present"})
 
 (def routes
   (compojure/routes
@@ -187,7 +168,7 @@
           LEFT JOIN (SELECT game.id AS game,
                             count(*) AS expressions_per_game
                        FROM (SELECT surface,structure
-                                        FROM expression) AS expression
+                               FROM expression) AS expression
                  INNER JOIN game
                          ON structure @> ANY(target_lex)
                         AND structure @> ANY(target_grammar)
@@ -306,6 +287,52 @@
      (map (fn [result]
             (game-editor-form result game-to-edit game-to-delete true))
           results))))
+
+(defn show-expressions-for-game [game-id]
+  (let [game-id (Integer. game-id)
+        game (first (k/exec-raw ["SELECT * FROM game WHERE id=?" [(Integer. game-id)]] :results))]
+    (html
+     (let [sql "SELECT DISTINCT target_expression.surface AS target,source_expression.surface AS source
+                  FROM expression AS target_expression
+            INNER JOIN game
+                    ON game.target_lex != ARRAY['{}'::jsonb]
+                   AND target_expression.structure @> ANY(game.target_lex)
+                   AND target_expression.structure @> ANY(game.target_grammar)
+                   AND target_expression.language = game.target
+                   AND game.id = ?
+             LEFT JOIN expression AS source_expression
+                   ON  (((source_expression.structure->'synsem'->'sem') @> (target_expression.structure->'synsem'->'sem')) OR
+                        ((target_expression.structure->'synsem'->'sem') @> (source_expression.structure->'synsem'->'sem')))
+                   AND source_expression.language = game.source
+              ORDER BY target_expression.surface"
+           results (k/exec-raw [sql
+                                [game-id] ]
+                               :results)]
+       [:div {:style "float:left;width:100%;margin-top:1em"}
+
+        [:div {:style "border:0px dashed green;float:right;width:60%;"}
+         (if game (game-editor-form game nil nil))]
+
+        [:div {:style "float:left;width:40%"}
+         [:table {:class "striped padded"}
+          [:tr
+           [:th {:style "width:1em"}]
+           [:th "Target"]
+           [:th "Source"]
+           ]
+          
+          (if results
+            (map (fn [result]
+                   [:tr
+                    [:th (first result)]
+                    [:td
+                     (:target (second result))]
+                    [:td
+                     (:source (second result))]])
+                 (sort
+                  (zipmap
+                   (series 1 (.size results) 1)
+                   results))))]]]))))
 
 (def headers {"Content-Type" "text/html;charset=utf-8"})
 
@@ -445,41 +472,6 @@ ms: " params))))
                 (vals params))]
     (log/debug (str "multipart-to-edn output: " output))
     output))
-
-(defn show-expressions-for-game [game-id]
-  (let [game-id (Integer. game-id)
-        game (first (k/exec-raw ["SELECT * FROM game WHERE id=?" [(Integer. game-id)]] :results))]
-    (html
-     (let [sql "SELECT DISTINCT surface
-                  FROM expression
-            INNER JOIN game
-                    ON structure @> ANY(target_lex)
-                   AND structure @> ANY(target_grammar)
-                   AND game.id = ?
-              ORDER BY surface"
-           results (k/exec-raw [sql
-                                [game-id] ]
-                               :results)]
-       [:div {:style "float:left;width:100%;margin-top:1em"}
-
-        [:div {:style "border:0px dashed green;float:right;width:60%;"}
-         (game-editor-form game nil nil)]
-
-        [:div {:style "float:left;width:40%"}
-         [:table {:class "striped padded"}
-          [:tr
-           [:th {:style "width:1em"}]
-           [:th "Expressions"]]
-
-          (map (fn [result]
-                 [:tr
-                  [:th (first result)]
-                  [:td
-                   (:surface (second result))]])
-               (sort
-                (zipmap
-                 (series 1 (.size results) 1)
-                 results)))]]]))))
 
 ;; TODO: throw exception rather than "(no shortname for language)"
 (defn short-language-name-from-match [match-string]
@@ -733,3 +725,26 @@ ms: " params))))
             (:content (first segments)))
           (if (not (empty? (rest segments))) " : ")
           (banner (rest segments)))))
+
+(def tenses-as-editables
+  [{:label "conditional"
+    :value (json/write-str {:synsem {:sem {:tense :conditional}}})}
+
+   {:label "future"
+    :value (json/write-str {:synsem {:sem {:tense :future}}})}
+
+   {:label "imperfect"
+    :value (json/write-str {:synsem {:sem {:tense :past
+                                           :aspect :progressive}}})}
+   {:label "past"
+    :value (json/write-str {:synsem {:sem {:tense :past
+                                           :aspect :perfect}}})}
+   {:label "present"
+    :value (json/write-str {:synsem {:sem {:tense :present}}})}])
+
+(def tenses-human-readable
+  {{:synsem {:sem {:tense :conditional}}} "conditional"
+   {:synsem {:sem {:tense :future}}} "future"
+   {:synsem {:sem {:tense :past :aspect :progressive}}} "imperfect"
+   {:synsem {:sem {:tense :past :aspect :perfect}}} "past"
+   {:synsem {:sem {:tense :present}}} "present"})
