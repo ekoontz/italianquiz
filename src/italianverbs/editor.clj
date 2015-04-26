@@ -303,8 +303,7 @@
                    AND target_expression.language = game.target
                    AND game.id = ?
              LEFT JOIN expression AS source_expression
-                    ON (((source_expression.structure->'synsem'->'sem') @> (target_expression.structure->'synsem'->'sem')) OR
-                        ((target_expression.structure->'synsem'->'sem') @> (source_expression.structure->'synsem'->'sem')))
+                    ON ((source_expression.structure->'synsem'->'sem') @> (target_expression.structure->'synsem'->'sem'))
                    AND source_expression.language = game.source
               ORDER BY target_expression.surface"
            results (k/exec-raw [sql
@@ -627,16 +626,21 @@ ms: " params))))
                                     {:label lexeme
                                      :value lexeme}))
                                 ;; TODO: be more selective: show only infinitives, and avoid irregular forms.
-                                (k/exec-raw [(str "SELECT DISTINCT structure->'head'->?->?
-                                                                                 AS lexeme
-                                                                               FROM expression
-                                                                              WHERE language=?
-                                                                           ORDER BY lexeme")
+
+                                (k/exec-raw [(str "SELECT DISTINCT lexeme
+                                                              FROM (SELECT surface,structure->'head'->?->? AS lexeme,
+                                                                           structure->'head'->?->'exception'::text AS exception
+                                                                      FROM expression WHERE language=?) AS expression_heads
+                                                                     WHERE expression_heads.exception IS NULL
+                                                                       AND lexeme IS NOT NULL
+                                                                  ORDER BY lexeme ASC")
                                              [language-keyword-name
                                               language-keyword-name
-                                              language-short-name
-                                              ]]
+                                              language-keyword-name
+                                              language-short-name]
+                                             ]
                                             :results))}]
+
                 [{:name :target_tenses
                   :label "Tenses"
                   :type :checkboxes
