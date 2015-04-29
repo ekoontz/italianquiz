@@ -9,7 +9,7 @@
 
    [formative.core :as f]
 
-   [italianverbs.auth :refer [is-admin is-authenticated]]
+   [italianverbs.auth :refer [is-admin]]
    [italianverbs.borges.reader :refer :all]
    [italianverbs.borges.writer :refer [populate populate-from]]
    [italianverbs.html :as html]
@@ -294,21 +294,37 @@
   (let [game-id (Integer. game-id)
         game (first (k/exec-raw ["SELECT * FROM game WHERE id=?" [(Integer. game-id)]] :results))]
     (html
-     (let [sql "SELECT DISTINCT target_expression.surface AS target,source_expression.surface AS source
-                  FROM expression AS target_expression
-            INNER JOIN game
-                    ON game.target_lex != ARRAY['{}'::jsonb]
-                   AND target_expression.structure @> ANY(game.target_lex)
-                   AND target_expression.structure @> ANY(game.target_grammar)
-                   AND target_expression.language = game.target
-                   AND game.id = ?
-             LEFT JOIN expression AS source_expression
-                    ON ((source_expression.structure->'synsem'->'sem') @> (target_expression.structure->'synsem'->'sem'))
-                   AND source_expression.language = game.source
-              ORDER BY target_expression.surface"
-           results (k/exec-raw [sql
+     (let [expressions-sql
+           "SELECT DISTINCT target_expression.surface AS target,source_expression.surface AS source
+                       FROM game 
+                  LEFT JOIN expression AS target_expression
+                         ON game.target_lex != ARRAY['{}'::jsonb]
+                        AND target_expression.structure @> ANY(game.target_lex)
+                        AND target_expression.structure @> ANY(game.target_grammar)
+                        AND target_expression.language = game.target
+                        AND game.id = ?
+                  LEFT JOIN expression AS source_expression
+                         ON ((source_expression.structure->'synsem'->'sem') @> (target_expression.structure->'synsem'->'sem'))
+                        AND source_expression.language = game.source
+                   ORDER BY target_expression.surface"
+           expressions-results (k/exec-raw [expressions-sql
                                 [game-id] ]
-                               :results)]
+                               :results)
+
+
+           grouped-by-sql
+           "SELECT target.structure->'head'->'italiano'->'italiano' AS infinitive, count(*),array_sort_unique(array_agg(target.surface))
+              FROM game
+        INNER JOIN expression AS target
+                ON target.language='it'
+               AND target.structure @> ANY(target_lex)
+               AND game.id=? 
+          GROUP BY infinitive"
+           grouped-results (k/exec-raw [grouped-by-sql
+                                        [game-id] ]
+                                       :results)
+           ]
+
        [:div {:style "float:left;width:100%;margin-top:1em"}
 
         [:div {:style "border:0px dashed green;float:right;width:60%;"}
@@ -333,7 +349,7 @@
                  (sort
                   (zipmap
                    (series 1 (.size results) 1)
-                   results))))]
+                   expressions-results))))]
 
          ;; make a form that lets us submit stuff like:
          ;; (populate 50 en/small it/small (unify (pick one <target_grammar>) (pick one <target lex>)))
@@ -411,7 +427,6 @@
       error-message)))
 
 (defn update-game [game-id params]
-  ;; TODO: move 302 redirect to routing.
   (let [game-id game-id
         dump-sql false
         params (multipart-to-edn params)
