@@ -315,10 +315,10 @@
            grouped-by-sql
            "SELECT target.structure->'head'->'italiano'->'italiano' AS infinitive,array_sort_unique(array_agg(target.surface)) AS targets
               FROM game
-        INNER JOIN expression AS target
+         LEFT JOIN expression AS target
                 ON target.language='it'
                AND target.structure @> ANY(target_lex)
-               AND game.id=? 
+               AND game.id=?
           GROUP BY infinitive"
 
            grouped-results (k/exec-raw [grouped-by-sql
