@@ -313,13 +313,14 @@
 
 
            grouped-by-sql
-           "SELECT target.structure->'head'->'italiano'->'italiano' AS infinitive, count(*),array_sort_unique(array_agg(target.surface))
+           "SELECT target.structure->'head'->'italiano'->'italiano' AS infinitive,array_sort_unique(array_agg(target.surface)) AS targets
               FROM game
         INNER JOIN expression AS target
                 ON target.language='it'
                AND target.structure @> ANY(target_lex)
                AND game.id=? 
           GROUP BY infinitive"
+
            grouped-results (k/exec-raw [grouped-by-sql
                                         [game-id] ]
                                        :results)
@@ -331,6 +332,10 @@
          (if game (game-editor-form game nil nil))]
 
         [:div {:style "border:0px dashed green;float:left;width:40%"}
+
+         [:h3 "Target -> Source"]
+
+         ;; <target -> source table>
          [:table {:class "striped padded"}
           [:tr
            [:th {:style "width:1em"}]
@@ -338,7 +343,7 @@
            [:th "Source"]
            ]
           
-          (if results
+          (if expressions-results
             (map (fn [result]
                    [:tr
                     [:th (first result)]
@@ -348,13 +353,45 @@
                      (:source (second result))]])
                  (sort
                   (zipmap
-                   (series 1 (.size results) 1)
+                   (series 1 (.size expressions-results) 1)
                    expressions-results))))]
 
-         ;; make a form that lets us submit stuff like:
+         ;; </target -> source table>
+
+         [:h3 "Grouped by infinitives"]
+
+         ;; <grouped by infinitives>
+         [:table {:class "striped padded"}
+
+          [:tr
+           [:th {:style "width:1em;"}]
+           [:th "Infinitive"]
+           [:th "Targets"]
+           ]
+          
+          (if grouped-results
+            (map (fn [result]
+                   [:tr
+                    [:th (first result)]
+                    [:td
+                     (:infinitive (second result))]
+                    [:td
+                     (:targets (second result))]
+                    
+                    ]
+                   )
+                 (sort
+                  (zipmap
+                   (series 1 (.size grouped-results) 1)
+                   grouped-results))))]
+
+         ;; </grouped by infinitives>
+
+         ;; TOFINISH: working on making a form that lets us submit stuff like:
          ;; (populate 50 en/small it/small (unify (pick one <target_grammar>) (pick one <target lex>)))
          ;; (populate 50 en/small it/small {:head {:italiano {:italiano "esprimere"}}})
 
+         ;; <form>
          [:div {:style "border:0px dashed blue;float:left;display:block"}
           (let [game (get-game-from-db game-id)]
 
@@ -393,10 +430,13 @@
               [:td (:target game)]]
 
 
-             ])
+             ])]
+
+         ;; </form>
 
 
-          ]]]))))
+
+         ]]))))
 
 (def headers {"Content-Type" "text/html;charset=utf-8"})
 
