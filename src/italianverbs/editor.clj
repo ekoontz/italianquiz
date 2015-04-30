@@ -294,36 +294,26 @@
   (let [game-id (Integer. game-id)
         game (first (k/exec-raw ["SELECT * FROM game WHERE id=?" [(Integer. game-id)]] :results))]
     (html
-     (let [expressions-sql
-           "SELECT DISTINCT target_expression.surface AS target,source_expression.surface AS source
-                       FROM game 
-                  LEFT JOIN expression AS target_expression
-                         ON game.target_lex != ARRAY['{}'::jsonb]
-                        AND target_expression.structure @> ANY(game.target_lex)
-                        AND target_expression.structure @> ANY(game.target_grammar)
-                        AND target_expression.language = game.target
-                        AND game.id = ?
-                  LEFT JOIN expression AS source_expression
-                         ON ((source_expression.structure->'synsem'->'sem') @> (target_expression.structure->'synsem'->'sem'))
-                        AND source_expression.language = game.source
-                   ORDER BY target_expression.surface"
-           expressions-results (k/exec-raw [expressions-sql
-                                [game-id] ]
-                               :results)
-
-
-           grouped-by-sql
-           "SELECT target.structure->'head'->'italiano'->'italiano' AS infinitive,array_sort_unique(array_agg(target.surface)) AS targets
+     (let [grouped-by-source-sql
+           "SELECT (array_agg(target.structure->'head'->'italiano'->'italiano'))[1] AS infinitive,
+                   source.surface AS source,
+                   array_sort_unique(array_agg(target.surface)) AS targets
               FROM game
-         LEFT JOIN expression AS target
-                ON target.language='it'
-               AND target.structure @> ANY(target_lex)
-               AND game.id=?
-          GROUP BY infinitive"
+        RIGHT JOIN expression AS source
+                ON source.language = game.source
+        RIGHT JOIN expression AS target
+                ON target.language = game.target
+               AND ((source.structure->'synsem'->'sem') @> (target.structure->'synsem'->'sem'))
+               AND target.structure @> ANY(game.target_lex)
+               AND target.structure @> ANY(game.target_grammar)
+             WHERE game.id=?
+          GROUP BY source.surface
+          ORDER BY infinitive"
 
-           grouped-results (k/exec-raw [grouped-by-sql
-                                        [game-id] ]
-                                       :results)
+           grouped-by-source-results (k/exec-raw [grouped-by-source-sql
+                                                  [game-id] ]
+                                                 :results)
+
            ]
 
        [:div {:style "float:left;width:100%;margin-top:1em"}
@@ -333,59 +323,37 @@
 
         [:div {:style "border:0px dashed green;float:left;width:40%"}
 
-         [:h3 "Target -> Source"]
+         [:h3 "Source -> Target"]
 
-         ;; <target -> source table>
-         [:table {:class "striped padded"}
-          [:tr
-           [:th {:style "width:1em"}]
-           [:th "Target"]
-           [:th "Source"]
-           ]
-          
-          (if expressions-results
-            (map (fn [result]
-                   [:tr
-                    [:th (first result)]
-                    [:td
-                     (:target (second result))]
-                    [:td
-                     (:source (second result))]])
-                 (sort
-                  (zipmap
-                   (series 1 (.size expressions-results) 1)
-                   expressions-results))))]
-
-         ;; </target -> source table>
-
-         [:h3 "Grouped by infinitives"]
-
-         ;; <grouped by infinitives>
+         ;; <grouped by source>
          [:table {:class "striped padded"}
 
           [:tr
            [:th {:style "width:1em;"}]
            [:th "Infinitive"]
+           [:th "Source"]
            [:th "Targets"]
            ]
           
-          (if grouped-results
+          (if grouped-by-source-results
             (map (fn [result]
                    [:tr
                     [:th (first result)]
+                    [:th
+                     (string/replace (:infinitive (second result)) "\"" "")]
                     [:td
-                     (:infinitive (second result))]
+                     (:source (second result))]
                     [:td
-                     (:targets (second result))]
+                     (string/join "," (.getArray (:targets (second result))))]
                     
                     ]
                    )
                  (sort
                   (zipmap
-                   (series 1 (.size grouped-results) 1)
-                   grouped-results))))]
+                   (series 1 (.size grouped-by-source-results) 1)
+                   grouped-by-source-results))))]
 
-         ;; </grouped by infinitives>
+         ;; </grouped by source>
 
          ;; TOFINISH: working on making a form that lets us submit stuff like:
          ;; (populate 50 en/small it/small (unify (pick one <target_grammar>) (pick one <target lex>)))
