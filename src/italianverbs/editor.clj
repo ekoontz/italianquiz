@@ -39,6 +39,7 @@
 (declare tenses-human-readable)
 (declare toggle-activation)
 (declare update-game)
+(declare verb-tense-table)
 
 (def routes
   (compojure/routes
@@ -323,6 +324,10 @@
 
         [:div {:style "border:0px dashed green;float:left;width:40%"}
 
+         [:h3 "Verb/Tense Table"]
+
+         (verb-tense-table game)
+
          [:h3 "Source -> Target"]
 
          ;; <grouped by source>
@@ -407,6 +412,51 @@
          ]]))))
 
 (def headers {"Content-Type" "text/html;charset=utf-8"})
+
+(defn verb-tense-table [game]
+  (let [language-short-name (:target game)
+        language-keyword-name
+        (str "" (sqlname-from-match (short-language-name-to-long language-short-name)) "")
+        language-keyword
+        (keyword language-keyword-name)]
+
+    (html
+
+     [:table.tense
+      [:tr
+       [:th {:style "width:1em"}]
+       
+       [:th {:style "text-align:center"} "Verb"]
+       
+       (map (fn [tense]
+              [:th (string/capitalize (string/replace (get-in tense [:synsem :sem :tense]) ":" ""))])
+            (map json-read-str (.getArray (:target_grammar game))))
+
+       ]
+
+      (map (fn [lexeme]
+             [:tr
+              [:th (first lexeme)]
+              [:td (str (get-in (second lexeme) [:head language-keyword language-keyword]))]
+
+              (map (fn [tense]
+                     [:td.count 
+;;                      (string/capitalize (string/replace (get-in tense [:synsem :sem :tense]) ":" ""))
+                      (str (:count (first (k/exec-raw [(str "SELECT count(*) FROM expression WHERE structure @> '" 
+                                                            "{\"synsem\": {\"sem\": {\"tense\": \"present\"}}}"                                          
+                                                            "'::jsonb")] :results))))
+
+
+                      ])
+                   (map (fn [x] x) (.getArray (:target_grammar game))))])
+
+           (sort
+            (zipmap
+             (series 1 (.size (map (fn [x] x) (.getArray (:target_lex game)))) 1)
+             (map json-read-str (.getArray (:target_lex game))))))
+      
+      ]
+)))
 
 ;; TODO: throw exception rather than "???" for unknown languages.
 (defn short-language-name-to-long [lang]

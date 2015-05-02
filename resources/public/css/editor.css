@@ -220,3 +220,11 @@ div.new {
 div.new button {
     margin-left:1em;
 }
+
+table.tense th {
+    text-align:right;
+}
+
+table.tense td.count {
+    text-align:right;
+}
