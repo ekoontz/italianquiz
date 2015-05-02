@@ -26,6 +26,7 @@
 (declare headers)
 (declare insert-game)
 (declare json-read-str)
+(declare language-to-spec-path)
 (declare multipart-to-edn)
 (declare onload)
 (declare series)
@@ -435,21 +436,33 @@
        ]
 
       (map (fn [lexeme-spec]
-             [:tr
-              [:th (first lexeme-spec)]
-              [:td (str (get-in (json-read-str (second lexeme-spec)) [:head language-keyword language-keyword]))]
+             
+             (let [lexeme (str (get-in (json-read-str (second lexeme-spec)) (language-to-spec-path language-short-name)))]
 
-              (map (fn [tense-spec]
-                     [:td.count 
-                      (str (:count (first (k/exec-raw ["SELECT count(*) 
+               [:tr
+                [:th (first lexeme-spec)]
+                [:td lexeme]
+
+                (map (fn [tense-spec]
+                       (let [tense (string/replace (get-in (json-read-str tense-spec) [:synsem :sem :tense]) ":" "")]
+                         [:td.count
+                          [:a {:href (str "/editor/game/" (:id game) "?lexeme=" lexeme "&tense=" tense )}
+                           (str (:count (first (k/exec-raw ["SELECT count(*) 
                                                           FROM expression 
                                                          WHERE structure @> ?::jsonb 
                                                            AND structure @> ?::jsonb"
-                                                       [tense-spec
-                                                        (second lexeme-spec)] ] :results))))
+                                                            [tense-spec
+                                                             (second lexeme-spec)] ] :results))))]
+                          
+                          ])) ;; end of map fn over all the possible tenses.
 
-                      ])
-                   (map (fn [x] x) (.getArray (:target_grammar game))))])
+                     ;; coerce the database's value (of type jsonb[]) into a Clojure array.
+                     (map (fn [x] x) (.getArray (:target_grammar game))))
+
+                ] ;; :tr
+               )
+
+             ) ;; end of map fn over all the possible lexemes.
 
            (sort
             (zipmap
@@ -458,6 +471,12 @@
       
       ]
 )))
+
+(defn language-to-spec-path [short-language-name]
+  "Take a language name like 'it' and turn it into an array like: [:head :italiano :italiano]."
+  (let [language-keyword-name (sqlname-from-match (short-language-name-to-long short-language-name))
+        language-keyword (keyword language-keyword-name)]
+    [:head language-keyword language-keyword]))
 
 ;; TODO: throw exception rather than "???" for unknown languages.
 (defn short-language-name-to-long [lang]

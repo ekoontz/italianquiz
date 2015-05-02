@@ -221,10 +221,15 @@ div.new button {
     margin-left:1em;
 }
 
+table.tense th,td {
+    padding:0.5em;
+}
+
 table.tense th {
     text-align:right;
 }
 
 table.tense td.count {
+    font-size:larger;
     text-align:right;
 }
