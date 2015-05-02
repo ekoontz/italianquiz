@@ -21,7 +21,7 @@
 (declare banner)
 (declare body)
 (declare delete-game)
-(declare expressions-for-spec)
+(declare expressions-for-game)
 (declare game-editor-form)
 (declare get-game-from-db)
 (declare headers)
@@ -354,35 +354,7 @@
 
          [:h3 "Expressions"]
 
-         ;; <grouped by source>
-         [:table {:class "striped padded"}
-
-          [:tr
-           [:th {:style "width:1em;"}]
-           [:th "Infinitive"]
-           [:th "Source"]
-           [:th "Targets"]
-           ]
-          
-          (if grouped-by-source-results
-            (map (fn [result]
-                   [:tr
-                    [:th (first result)]
-                    [:th
-                     (string/replace (:infinitive (second result)) "\"" "")]
-                    [:td
-                     (:source (second result))]
-                    [:td
-                     (string/join "," (.getArray (:targets (second result))))]
-                    
-                    ]
-                   )
-                 (sort
-                  (zipmap
-                   (series 1 (.size grouped-by-source-results) 1)
-                   grouped-by-source-results))))]
-
-         ;; </grouped by source>
+         (expressions-for-game game-id)
 
          ;; TOFINISH: working on making a form that lets us submit stuff like:
          ;; (populate 50 en/small it/small (unify (pick one <target_grammar>) (pick one <target lex>)))
@@ -482,9 +454,59 @@
                (series 1 (.size results) 1)
                results))))])))
 
-(defn expressions-for-spec [spec]
-  (html
-   [:i spec]))
+(defn expressions-for-game [game-id]
+  (let [grouped-by-source-sql
+           "SELECT (array_agg(target.structure->'head'->'italiano'->'italiano'))[1] AS infinitive,
+                   source.surface AS source,
+                   array_sort_unique(array_agg(target.surface)) AS targets
+              FROM game
+        RIGHT JOIN expression AS source
+                ON source.language = game.source
+        RIGHT JOIN expression AS target
+                ON target.language = game.target
+               AND ((source.structure->'synsem'->'sem') @> (target.structure->'synsem'->'sem'))
+               AND target.structure @> ANY(game.target_lex)
+               AND target.structure @> ANY(game.target_grammar)
+             WHERE game.id=?
+          GROUP BY source.surface
+          ORDER BY infinitive"
+
+        grouped-by-source-results (k/exec-raw [grouped-by-source-sql
+                                               [game-id] ]
+                                              :results)]
+
+         ;; <grouped by source>
+         [:table {:class "striped padded"}
+
+          [:tr
+           [:th {:style "width:1em;"}]
+           [:th "Infinitive"]
+           [:th "Source"]
+           [:th "Targets"]
+           ]
+          
+          (if grouped-by-source-results
+            (map (fn [result]
+                   [:tr
+                    [:th (first result)]
+                    [:th
+                     (string/replace (:infinitive (second result)) "\"" "")]
+                    [:td
+                     (:source (second result))]
+                    [:td
+                     (string/join "," (.getArray (:targets (second result))))]
+                    
+                    ]
+                   )
+                 (sort
+                  (zipmap
+                   (series 1 (.size grouped-by-source-results) 1)
+                   grouped-by-source-results))))]
+
+         ;; </grouped by source>
+
+))
+
 
 (defn verb-tense-table [game & [ {refine :refine}]]
   (let [language-short-name (:target game)
