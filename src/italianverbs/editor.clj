@@ -329,7 +329,7 @@
 
          (verb-tense-table game)
 
-         [:h3 "Source -> Target"]
+         [:h3 "Expressions"]
 
          ;; <grouped by source>
          [:table {:class "striped padded"}
