@@ -229,7 +229,21 @@ table.tense th {
     text-align:right;
 }
 
+table.tense td.lexeme {
+    font-size:larger;
+    text-align:right;
+}
+
 table.tense td.count {
     font-size:larger;
     text-align:right;
+}
+
+div.spec {
+    font-size:small;
+    display:none;
+}
+
+td.selected {
+    background:lightgreen;
 }

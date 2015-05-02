@@ -13,7 +13,7 @@
    [italianverbs.borges.reader :refer :all]
    [italianverbs.borges.writer :refer [populate populate-from]]
    [italianverbs.html :as html]
-   [italianverbs.unify :refer [get-in strip-refs]]
+   [italianverbs.unify :refer [get-in strip-refs unify]]
 
    [hiccup.core :refer (html)]
    [korma.core :as k]))
@@ -21,6 +21,7 @@
 (declare banner)
 (declare body)
 (declare delete-game)
+(declare expressions-for-spec)
 (declare game-editor-form)
 (declare get-game-from-db)
 (declare headers)
@@ -34,7 +35,8 @@
 (declare short-language-name-to-edn)
 (declare short-language-name-to-long)
 (declare short-language-name-from-match)
-(declare show-expressions-for-game)
+(declare show-game)
+(declare source-to-target-mappings)
 (declare sqlname-from-match)
 (declare tenses-as-editables)
 (declare tenses-human-readable)
@@ -104,7 +106,9 @@
         (is-admin
          (let [game-id (Integer. (:game (:route-params request)))
                game (first (k/exec-raw ["SELECT * FROM game WHERE id=?" [(Integer. game-id)]] :results))]
-           {:body (body (:name game) (show-expressions-for-game (:game (:route-params request))) request)
+           {:body (body (:name game) (show-game (:game (:route-params request))
+                                                {:refine (:refine (:params request))})
+                        request)
             :status 200
             :headers headers})))
 
@@ -144,8 +148,14 @@
                    [{:href (str "/editor/" language)
                      :content (short-language-name-to-long language)}])
                  (if game
+                   [{:href (if (:refine (:params request))
+                             (str "/editor/game/" game-id))
+                     :content (if (= "" (string/trim title)) "(untitled)" title)}])
+
+                 (if (:refine (:params request))
                    [{:href nil
-                     :content (if (= "" (string/trim title)) "(untitled)" title)}])))]
+                     :content "Refine"}])))]
+
       content])
      request
      {:css "/css/editor.css"
@@ -292,11 +302,14 @@
             (game-editor-form result game-to-edit game-to-delete true))
           results))))
 
-(defn show-expressions-for-game [game-id]
+(defn show-game [game-id & [ {refine :refine} ]]
   (let [game-id (Integer. game-id)
-        game (first (k/exec-raw ["SELECT * FROM game WHERE id=?" [(Integer. game-id)]] :results))]
+        game (first (k/exec-raw ["SELECT * FROM game WHERE id=?" [(Integer. game-id)]] :results))
+        refine (if refine (read-string refine) nil)]
     (html
-     (let [grouped-by-source-sql
+     (let [
+
+           grouped-by-source-sql
            "SELECT (array_agg(target.structure->'head'->'italiano'->'italiano'))[1] AS infinitive,
                    source.surface AS source,
                    array_sort_unique(array_agg(target.surface)) AS targets
@@ -320,14 +333,24 @@
 
        [:div {:style "float:left;width:100%;margin-top:1em"}
 
-        [:div {:style "border:0px dashed green;float:right;width:60%;"}
+        [:div {:style "border:0px dashed green;float:right;width:50%;"}
          (if game (game-editor-form game nil nil))]
 
-        [:div {:style "border:0px dashed green;float:left;width:40%"}
+        [:div {:style "border:0px dashed green;float:left;width:50%"}
+
+         (if refine
+           (html
+            [:h3 "Refine"]
+            [:div.spec
+             (html/tablize refine)]
+
+            (source-to-target-mappings game-id refine)
+
+            [:button {:disabled "disabled"} "Generate more.."]))
 
          [:h3 "Verb/Tense Table"]
 
-         (verb-tense-table game)
+         (verb-tense-table game {:refine refine})
 
          [:h3 "Expressions"]
 
@@ -414,39 +437,102 @@
 
 (def headers {"Content-Type" "text/html;charset=utf-8"})
 
-(defn verb-tense-table [game]
+(defn source-to-target-mappings [game-id spec]
+  (let [sql
+           "SELECT source.surface AS source,
+                   (array_agg(target.structure->'head'->'italiano'->'italiano'))[1] AS infinitive,
+                   array_sort_unique(array_agg(target.surface)) AS targets
+              FROM game
+        RIGHT JOIN expression AS source
+                ON source.language = game.source
+        RIGHT JOIN expression AS target
+                ON target.language = game.target
+               AND ((source.structure->'synsem'->'sem') @> (target.structure->'synsem'->'sem'))
+               AND target.structure @> ?::jsonb
+             WHERE game.id=?
+          GROUP BY source.surface
+          ORDER BY infinitive"
+
+        results (k/exec-raw [sql
+                             [(json/write-str spec)
+                              game-id] ]
+                            :results)]
+    (html
+     [:table {:class "striped padded"}
+
+      [:tr
+       [:th {:style "width:1em;"}]
+       [:th "Source"]
+       [:th "Targets"]
+       ]
+          
+      (if results
+        (map (fn [result]
+               [:tr
+                [:th (first result)]
+                [:td
+                 (:source (second result))]
+                [:td
+                 (string/join "," (.getArray (:targets (second result))))]
+                
+                ]
+               )
+             (sort
+              (zipmap
+               (series 1 (.size results) 1)
+               results))))])))
+
+(defn expressions-for-spec [spec]
+  (html
+   [:i spec]))
+
+(defn verb-tense-table [game & [ {refine :refine}]]
   (let [language-short-name (:target game)
+
         language-keyword-name
         (str "" (sqlname-from-match (short-language-name-to-long language-short-name)) "")
-        language-keyword
-        (keyword language-keyword-name)]
+
+        language-keyword (keyword language-keyword-name)]
 
     (html
 
      [:table.tense
       [:tr
        [:th {:style "width:1em"}]
-       
        [:th {:style "text-align:center"} "Verb"]
        
-       (map (fn [tense]
-              [:th (string/capitalize (string/replace (get-in tense [:synsem :sem :tense]) ":" ""))])
-            (map json-read-str (.getArray (:target_grammar game))))
-
-       ]
-
+       (map (fn [grammar-spec]
+              [:th (string/capitalize 
+                    (get tenses-human-readable
+                         grammar-spec))])
+            (map json-read-str (.getArray (:target_grammar game))))]
       (map (fn [lexeme-spec]
              
-             (let [lexeme (str (get-in (json-read-str (second lexeme-spec)) (language-to-spec-path language-short-name)))]
+             (let [lexeme-specification-json (second lexeme-spec)
+                   lexeme (str (get-in (json-read-str lexeme-specification-json)
+                                       (language-to-spec-path language-short-name)))
+                   lexeme-specification (json-read-str (second lexeme-spec)) 
+                   ]
 
                [:tr
                 [:th (first lexeme-spec)]
                 [:td lexeme]
 
                 (map (fn [tense-spec]
-                       (let [tense (string/replace (get-in (json-read-str tense-spec) [:synsem :sem :tense]) ":" "")]
-                         [:td.count
-                          [:a {:href (str "/editor/game/" (:id game) "?lexeme=" lexeme "&tense=" tense )}
+                       (let [tense-specification-json tense-spec
+                             tense-specification (json-read-str tense-specification-json)
+                             tense (string/replace 
+                                    (get-in tense-specification
+                                            [:synsem :sem :tense]) ":" "")
+                             refine-param ;; combine the tense and lexeme together.
+                             (unify 
+                              (json-read-str tense-spec)
+                              lexeme-specification)]
+                         [:td
+                          {:class (if (= refine-param refine)
+                                    "selected count" "count")}
+                                      
+                          [:a {:href (str "/editor/game/" (:id game) "?refine=" refine-param)}
                            (str (:count (first (k/exec-raw ["SELECT count(*) 
                                                           FROM expression 
                                                          WHERE structure @> ?::jsonb 
@@ -467,10 +553,7 @@
            (sort
             (zipmap
              (series 1 (.size (map (fn [x] x) (.getArray (:target_lex game)))) 1)
-             (map (fn [x] x) (.getArray (:target_lex game))))))
-      
-      ]
-)))
+             (map (fn [x] x) (.getArray (:target_lex game))))))])))
 
 (defn language-to-spec-path [short-language-name]
   "Take a language name like 'it' and turn it into an array like: [:head :italiano :italiano]."
