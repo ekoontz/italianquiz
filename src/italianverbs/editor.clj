@@ -154,7 +154,7 @@
 
                  (if (:refine (:params request))
                    [{:href nil
-                     :content "Refine"}])))]
+                     :content "Edit Verb/Tense"}])))]
 
       content])
      request
@@ -340,7 +340,7 @@
 
          (if refine
            (html
-            [:h3 "Refine"]
+            [:h3 "Edit Verb/Tense"]
             [:div.spec
              (html/tablize refine)]
 
@@ -436,6 +436,7 @@
        [:th {:style "width:1em;"}]
        [:th "Source"]
        [:th "Targets"]
+       [:th "" ]
        ]
           
       (if results
@@ -446,6 +447,10 @@
                  (:source (second result))]
                 [:td
                  (string/join "," (.getArray (:targets (second result))))]
+
+                [:td
+                 [:button {:disabled "disabled"} "Delete"]
+                 ]
                 
                 ]
                )
