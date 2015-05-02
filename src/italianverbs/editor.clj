@@ -346,7 +346,14 @@
 
             (source-to-target-mappings game-id refine)
 
-            [:button {:disabled "disabled"} "Generate more.."]))
+            [:div {:style "margin-top:0.5em; border:0px dashed blue;float:left"}
+             [:form
+              {:method "post"
+               :action "/generate"}
+              [:input {:type "hidden" :name "source" :value "en"}]
+              [:input {:type "hidden" :name "target" :value "it"}]
+              [:input {:type "hidden" :name "spec" :value refine}]
+              [:button {:type "submit"} "Generate more.."]]]))
 
          [:h3 "Verb/Tense Table"]
 
@@ -402,17 +409,13 @@
              ])]
 
          ;; </form>
-
-
-
-         ]]))))
+        ]]))))
 
 (def headers {"Content-Type" "text/html;charset=utf-8"})
 
 (defn source-to-target-mappings [game-id spec]
   (let [sql
            "SELECT source.surface AS source,
-                   (array_agg(target.structure->'head'->'italiano'->'italiano'))[1] AS infinitive,
                    array_sort_unique(array_agg(target.surface)) AS targets
               FROM game
         RIGHT JOIN expression AS source
@@ -423,26 +426,33 @@
                AND target.structure @> ?::jsonb
              WHERE game.id=?
           GROUP BY source.surface
-          ORDER BY infinitive"
+          ORDER BY source"
 
         results (k/exec-raw [sql
                              [(json/write-str spec)
                               game-id] ]
                             :results)]
-    (html
-     [:table {:class "striped padded"}
+    (if (empty? results)
+      (html [:div [:p "No matches."]])
+      (html
+       [:table {:class "striped padded"}
 
-      [:tr
-       [:th {:style "width:1em;"}]
-       [:th "Source"]
-       [:th "Targets"]
-       [:th "" ]
-       ]
+        [:tr
+         [:th {:style "width:1em;"}]
+         [:th "" ]
+         [:th "Source"]
+         [:th "Targets"]
+         [:th "" ]
+         ]
           
-      (if results
         (map (fn [result]
                [:tr
                 [:th (first result)]
+
+                [:td
+                 [:button {:disabled "disabled"} "Delete"]
+                 ]
+
                 [:td
                  (:source (second result))]
                 [:td
@@ -457,7 +467,7 @@
              (sort
               (zipmap
                (series 1 (.size results) 1)
-               results))))])))
+               results)))]))))
 
 (defn expressions-for-game [game-id]
   (let [grouped-by-source-sql
