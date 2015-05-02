@@ -21,6 +21,7 @@
 (declare banner)
 (declare body)
 (declare delete-game)
+(declare describe-spec)
 (declare expressions-for-game)
 (declare game-editor-form)
 (declare get-game-from-db)
@@ -154,7 +155,7 @@
 
                  (if (:refine (:params request))
                    [{:href nil
-                     :content "Edit Verb/Tense"}])))]
+                     :content (describe-spec (:refine (:params request)))}])))]
 
       content])
      request
@@ -308,7 +309,7 @@
         refine (if refine (read-string refine) nil)]
     (html
      (let [
-
+           ;; TODO: fix: 'italiano' is hard-wired here.
            grouped-by-source-sql
            "SELECT (array_agg(target.structure->'head'->'italiano'->'italiano'))[1] AS infinitive,
                    source.surface AS source,
@@ -340,7 +341,7 @@
 
          (if refine
            (html
-            [:h3 "Edit Verb/Tense"]
+            [:h3 (describe-spec refine)]
             [:div.spec
              (html/tablize refine)]
 
@@ -353,7 +354,15 @@
               [:input {:type "hidden" :name "source" :value "en"}]
               [:input {:type "hidden" :name "target" :value "it"}]
               [:input {:type "hidden" :name "spec" :value refine}]
-              [:button {:type "submit"} "Generate more.."]]]))
+              [:button {:type "submit"} "Generate"]
+              [:input {:name "quantity" :size 2 :value 1}]
+              " more expressions."
+
+              ]]
+            
+            ))
+
+
 
          [:h3 "Verb/Tense Table"]
 
@@ -412,6 +421,18 @@
         ]]))))
 
 (def headers {"Content-Type" "text/html;charset=utf-8"})
+
+(defn describe-spec [refine]
+  (let [lexeme
+        (cond
+         (string? (get-in refine [:head :italiano :italiano]))
+         (get-in refine [:head :italiano :italiano])
+         (string? (get-in refine [:head :english :english]))
+         (get-in refine [:head :english :english])
+         true "")
+        tense 
+        (unify (get-in refine [:synsem :sem :tense]))]
+    (string/join "," (list lexeme tense))))
 
 (defn source-to-target-mappings [game-id spec]
   (let [sql
