@@ -434,18 +434,19 @@
 
        ]
 
-      (map (fn [lexeme]
+      (map (fn [lexeme-spec]
              [:tr
-              [:th (first lexeme)]
-              [:td (str (get-in (second lexeme) [:head language-keyword language-keyword]))]
+              [:th (first lexeme-spec)]
+              [:td (str (get-in (json-read-str (second lexeme-spec)) [:head language-keyword language-keyword]))]
 
-              (map (fn [tense]
+              (map (fn [tense-spec]
                      [:td.count 
-;;                      (string/capitalize (string/replace (get-in tense [:synsem :sem :tense]) ":" ""))
-                      (str (:count (first (k/exec-raw [(str "SELECT count(*) FROM expression WHERE structure @> '" 
-                                                            "{\"synsem\": {\"sem\": {\"tense\": \"present\"}}}"                                          
-                                                            "'::jsonb")] :results))))
-
+                      (str (:count (first (k/exec-raw ["SELECT count(*) 
+                                                          FROM expression 
+                                                         WHERE structure @> ?::jsonb 
+                                                           AND structure @> ?::jsonb"
+                                                       [tense-spec
+                                                        (second lexeme-spec)] ] :results))))
 
                       ])
                    (map (fn [x] x) (.getArray (:target_grammar game))))])
@@ -453,7 +454,7 @@
            (sort
             (zipmap
              (series 1 (.size (map (fn [x] x) (.getArray (:target_lex game)))) 1)
-             (map json-read-str (.getArray (:target_lex game))))))
+             (map (fn [x] x) (.getArray (:target_lex game))))))
       
       ]
 )))
