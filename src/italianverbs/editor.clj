@@ -575,7 +575,7 @@
        [:th {:style "text-align:center"} "Verb"]
        
        (map (fn [grammar-spec]
-              [:th (string/capitalize 
+              [:th.count (string/capitalize 
                     (get tenses-human-readable
                          grammar-spec))])
             (map json-read-str (.getArray (:target_grammar game))))]

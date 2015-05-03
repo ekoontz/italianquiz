@@ -225,7 +225,7 @@ table.tense th,td {
     padding:0.5em;
 }
 
-table.tense th {
+th.count {
     text-align:right;
 }
 
@@ -234,7 +234,7 @@ table.tense td.lexeme {
     text-align:right;
 }
 
-table.tense td.count {
+td.count {
     font-size:larger;
     text-align:right;
 }
