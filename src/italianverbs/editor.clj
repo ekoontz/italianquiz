@@ -569,7 +569,7 @@
 
     (html
 
-     [:table.tense
+     [:table {:class "striped padded"}
       [:tr
        [:th {:style "width:1em"}]
        [:th {:style "text-align:center"} "Verb"]
