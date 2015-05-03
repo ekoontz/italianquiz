@@ -155,7 +155,14 @@
 
                  (if (:refine (:params request))
                    [{:href nil
-                     :content (describe-spec (:refine (:params request)))}])))]
+                     :content 
+                     (describe-spec (read-string (:refine (:params request))))
+                    }]
+
+                   ) ;; (if (:refine
+                 ) ;; concat
+                ) ;; banner
+        ] ;; :h2
 
       content])
      request
@@ -329,7 +336,6 @@
            grouped-by-source-results (k/exec-raw [grouped-by-source-sql
                                                   [game-id] ]
                                                  :results)
-
            ]
 
        [:div {:style "float:left;width:100%;margin-top:1em"}
@@ -354,7 +360,7 @@
               [:input {:type "hidden" :name "source" :value "en"}]
               [:input {:type "hidden" :name "target" :value "it"}]
               [:input {:type "hidden" :name "spec" :value refine}]
-              [:button {:type "submit"} "Generate"]
+              [:button {:disabled "disabled" :type "submit"} "Generate"]
               [:input {:name "quantity" :size 2 :value 1}]
               " more expressions."
 
@@ -429,10 +435,19 @@
          (get-in refine [:head :italiano :italiano])
          (string? (get-in refine [:head :english :english]))
          (get-in refine [:head :english :english])
-         true "")
-        tense 
-        (unify (get-in refine [:synsem :sem :tense]))]
-    (string/join "," (list lexeme tense))))
+         true (type refine))
+        
+        aspect (get-in refine [:synsem :sem :aspect] :top)
+        tense (get-in refine [:synsem :sem :tense] :top)
+
+        tense-spec (unify (if (not (= aspect :top))
+                            {:synsem {:sem {:aspect aspect}}}
+                            :top)
+                          (if (not (= tense :top))
+                            {:synsem {:sem {:tense tense}}}
+                            :top))
+        human-readable-tense (get tenses-human-readable tense-spec)]
+    (string/join ", " (remove #(nil? %) (list lexeme human-readable-tense)))))
 
 (defn source-to-target-mappings [game-id spec]
   (let [sql
@@ -781,10 +796,16 @@ ms: " params))))
   'anyof-sets', each member of which is a possible specification in its
   respective language. See example usage in test/editor.clj."
   (log/debug (str "source-set: " source-set))
-  (log/debug (str "source-set with commas: " (str "ARRAY[" (string/join "," (map #(str "" (string/join "," %) "") source-set)) "]")))
-  (log/debug (str "target-set with commas: " (str "ARRAY[" (string/join "," (map #(str "" (string/join "," %) "") target-set)) "]")))
+  (log/debug (str "source-set with commas: " 
+                  (str "ARRAY[" 
+                       (string/join "," (map #(str "" (string/join "," %) "") source-set)) "]")))
+  (log/debug (str "target-set with commas: " 
+                  (str "ARRAY[" 
+                       (string/join "," (map #(str "" (string/join "," %) "") target-set)) "]")))
 
-  (let [source-grouping-str (str "ARRAY[" (string/join "," (map #(str "" (string/join "," %) "") source-set)) "]::integer[]")
+  (let [source-grouping-str 
+        (str "ARRAY[" 
+             (string/join "," (map #(str "" (string/join "," %) "") source-set)) "]::integer[]")
         target-grouping-str (str "ARRAY[" (string/join "," (map #(str "" (string/join "," %) "") target-set)) "]::integer[]")
         sql (str "INSERT INTO game (name,source_groupings,target_groupings,source,target)
                        SELECT ?, " source-grouping-str "," target-grouping-str ",?,? RETURNING id")]
