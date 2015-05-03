@@ -572,7 +572,7 @@
      [:table {:class "striped padded"}
       [:tr
        [:th {:style "width:1em"}]
-       [:th {:style "text-align:center"} "Verb"]
+       [:th {:style "text-align:left"} "Verb"]
        
        (map (fn [grammar-spec]
               [:th.count (string/capitalize 
