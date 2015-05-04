@@ -4,13 +4,30 @@
     [clojure.data.json :as json]
     [clojure.string :as string]
     [clojure.tools.logging :as log]
+
+    [compojure.core :as compojure :refer [GET PUT POST DELETE ANY]]
+
+    [italianverbs.auth :refer [is-admin]]
     [italianverbs.engine :as engine]
     [italianverbs.korma :as korma]
     [italianverbs.lexiconfn :refer [sem-impl]]
     [italianverbs.morphology :refer [fo]]
     [italianverbs.unify :refer [get-in strip-refs serialize unify]]
+
     [korma.core :as k]
     ))
+
+(declare populate-page)
+
+(def routes
+  (compojure/routes
+   (GET "/populate/:game" request
+        (is-admin (populate-page request)))))
+
+(defn populate-page [request]
+  {:status 200
+   :headers {"Content-type" "text/plain"}
+   :body request})
 
 (defn truncate []
   (k/exec-raw ["TRUNCATE expression"]))
