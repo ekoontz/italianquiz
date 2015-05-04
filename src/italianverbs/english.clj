@@ -2,9 +2,15 @@
   (:refer-clojure :exclude [get get-in]))
 
 (require '[clojure.tools.logging :as log])
+(require '[compojure.core :as compojure :refer [GET PUT POST DELETE ANY]])
+
+(require '[hiccup.core :refer (html)])
+
+(require '[italianverbs.auth :refer [is-admin]])
 (require '[italianverbs.cache :refer (build-lex-sch-cache create-index over spec-to-phrases)])
 (require '[italianverbs.forest :as forest])
 (require '[italianverbs.grammar.english :as gram])
+(require '[italianverbs.html :as html])
 (require '[italianverbs.lexicon.english :as lex])
 (require '[italianverbs.lexiconfn :refer (compile-lex map-function-on-map-vals unify)])
 (require '[italianverbs.morphology.english :as morph])
@@ -162,3 +168,31 @@
    ;; no constraints: generate anything.
    true
    :top))
+
+(declare body)
+(declare headers)
+
+(def headers {"Content-Type" "text/html;charset=utf-8"})
+(def language-name "English")
+
+(def routes
+  (compojure/routes
+   (GET "/" request
+        (is-admin {:body (body language-name
+                               language-name request)
+                   :status 200
+                   :headers headers}))))
+
+(defn body [title content request]
+  (html/page
+   title
+   (html
+    [:div.major
+     [:h2 title]
+
+     [:div.content
+      content
+      ]
+     ])
+   request
+))

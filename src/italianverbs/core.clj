@@ -21,11 +21,19 @@
    [italianverbs.studenttest :as studenttest]
    [italianverbs.tour :as tour]
    [italianverbs.verb :as verb]
+
+   ;; <languages>
+   [italianverbs.english :as en]
+   [italianverbs.espanol :as es]
+   [italianverbs.italiano :as it]
+   ;; </languages>
+
    [ring.adapter.jetty :as jetty]
    [ring.middleware.session.cookie :as cookie]
    [ring.middleware.stacktrace :as trace]
    [ring.util.codec :as codec]
    [ring.util.response :as resp]
+
 ))
 
 ;; not used at the moment, but might be handy someday:
@@ -49,6 +57,16 @@
 
   (context "/gen" []
            verb/routes)
+
+
+  (context "/en" []
+           en/routes)
+
+  (context "/es" []
+           es/routes)
+
+  (context "/it" []
+           it/routes)
 
   (context "/test" []
            studenttest/routes)
