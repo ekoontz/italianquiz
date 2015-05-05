@@ -3,7 +3,7 @@
   (:require
    [clojure.core :as core]
    [clojure.test :refer :all]
-   [italianverbs.borges.writer :refer :all]
+   [italianverbs.borges.writer :refer :all :exclude [routes]]
    [italianverbs.engine :refer :all :as engine]
    [italianverbs.english :as en :refer [en]]
    [italianverbs.espanol :as es :refer [es]]
@@ -11,7 +11,6 @@
    [italianverbs.morphology :refer :all]
    [italianverbs.morphology.espanol :as esm]
    [italianverbs.unify :refer [get get-in strip-refs]]
-   [italianverbs.borges.writer :refer :all]
    ))
 
 (def spec {:synsem {:essere true}})
