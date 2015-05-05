@@ -541,7 +541,10 @@
                    [:tr
                     [:th (first result)]
                     [:th
-                     (string/replace (:infinitive (second result)) "\"" "")]
+                     (string/replace 
+                      (let [infinitive (:infinitive (second result))]
+                        (if infinitive infinitive ""))
+                      "\"" "")]
                     [:td
                      (:source (second result))]
                     [:td
@@ -573,11 +576,14 @@
       [:tr
        [:th {:style "width:1em"}]
        [:th {:style "text-align:left"} "Verb"]
-       
+
        (map (fn [grammar-spec]
-              [:th.count (string/capitalize 
-                    (get tenses-human-readable
-                         grammar-spec))])
+              [:th.count (string/capitalize
+                          (let [tenses-human-readable
+                                (get tenses-human-readable
+                                     grammar-spec)]
+                            (if tenses-human-readable
+                               tenses-human-readable "")))])
             (map json-read-str (.getArray (:target_grammar game))))]
       (map (fn [lexeme-spec]
              
@@ -594,9 +600,12 @@
                 (map (fn [tense-spec]
                        (let [tense-specification-json tense-spec
                              tense-specification (json-read-str tense-specification-json)
-                             tense (string/replace 
-                                    (get-in tense-specification
-                                            [:synsem :sem :tense]) ":" "")
+                             tense (string/replace
+                                    (let [tense-spec
+                                          (get-in tense-specification
+                                                  [:synsem :sem :tense])]
+                                      (if tense-spec tense-spec ""))
+                                    ":" "")
                              refine-param ;; combine the tense and lexeme together.
                              (unify 
                               (json-read-str tense-spec)
