@@ -510,41 +510,41 @@
         grouped-by-source-results (k/exec-raw [grouped-by-source-sql
                                                [game-id] ]
                                               :results)]
+    (if (empty? grouped-by-source-results)
+      [:div {:style "float:left; border:0px dashed blue"}  [:i "No tenses chosen for this game yet."]]
 
-         ;; <grouped by source>
-         [:table {:class "striped padded"}
+      ;; <grouped by source>
+      [:table {:class "striped padded"}
 
-          [:tr
-           [:th {:style "width:1em;"}]
-           [:th "Infinitive"]
-           [:th "Source"]
+       [:tr
+        [:th {:style "width:1em;"}]
+        [:th "Infinitive"]
+        [:th "Source"]
            [:th "Targets"]
-           ]
-          
-          (if grouped-by-source-results
-            (map (fn [result]
-                   [:tr
-                    [:th (first result)]
-                    [:th
-                     (string/replace 
-                      (let [infinitive (:infinitive (second result))]
-                        (if infinitive infinitive ""))
-                      "\"" "")]
-                    [:td
-                     (:source (second result))]
-                    [:td
-                     (string/join "," (.getArray (:targets (second result))))]
-                    
-                    ]
-                   )
-                 (sort
-                  (zipmap
-                   (series 1 (.size grouped-by-source-results) 1)
-                   grouped-by-source-results))))]
+        ]
 
-         ;; </grouped by source>
+       (if grouped-by-source-results
+         (map (fn [result]
+                [:tr
+                 [:th (first result)]
+                 [:th
+                  (string/replace 
+                   (let [infinitive (:infinitive (second result))]
+                     (if infinitive infinitive ""))
+                   "\"" "")]
+                 [:td
+                  (:source (second result))]
+                 [:td
+                  (string/join "," (.getArray (:targets (second result))))]
+                 ]
+                )
+              (sort
+               (zipmap
+                (series 1 (.size grouped-by-source-results) 1)
+                grouped-by-source-results))))]
 
-))
+      ;; </grouped by source>
+)))
 
 (defn verb-tense-table [game & [ {refine :refine}]]
   (let [language-short-name (:target game)
@@ -552,77 +552,83 @@
         language-keyword-name
         (str "" (sqlname-from-match (short-language-name-to-long language-short-name)) "")
 
-        language-keyword (keyword language-keyword-name)]
+        language-keyword (keyword language-keyword-name)
+        
+        lexemes-for-this-game
+        (sort
+         (let [lexemes (remove #(= % "{}") (.getArray (:target_lex game)))]
+           (zipmap
+            (series 1 (.size lexemes) 1)
+            (map (fn [x] x) lexemes))))]
 
-    (html
+    (if (empty? lexemes-for-this-game)
+      (html [:i "No verbs chosen for this game yet."])
 
-     [:table {:class "striped padded"}
-      [:tr
-       [:th {:style "width:1em"}]
-       [:th {:style "text-align:left"} "Verb"]
+      (html
 
-       (map (fn [grammar-spec]
-              [:th.count (string/capitalize
-                          (let [tenses-human-readable
-                                (get tenses-human-readable
-                                     grammar-spec)]
-                            (if tenses-human-readable
-                               tenses-human-readable "")))])
-            (map json-read-str (.getArray (:target_grammar game))))]
+       [:table {:class "striped padded"}
+        [:tr
+         [:th {:style "width:1em"}]
+         [:th {:style "text-align:left"} "Verb"]
 
-      (map (fn [lexeme-spec]
-             (let [lexeme-specification-json (second lexeme-spec)
-                   number-index (first lexeme-spec)
-                   lexeme (str (get-in (json-read-str lexeme-specification-json)
-                                       (language-to-spec-path language-short-name)))
-                   lexeme-specification (json-read-str (second lexeme-spec)) 
-                   ]
+         (map (fn [grammar-spec]
+                [:th.count (string/capitalize
+                            (let [tenses-human-readable
+                                  (get tenses-human-readable
+                                       grammar-spec)]
+                              (if tenses-human-readable
+                                tenses-human-readable "")))])
+              (map json-read-str (.getArray (:target_grammar game))))]
 
-               [:tr
-                [:th number-index]
-                [:td lexeme]
+        (map (fn [lexeme-spec]
+               (let [lexeme-specification-json (second lexeme-spec)
+                     number-index (first lexeme-spec)
+                     lexeme (str (get-in (json-read-str lexeme-specification-json)
+                                         (language-to-spec-path language-short-name)))
+                     lexeme-specification (json-read-str (second lexeme-spec)) 
+                     ]
 
-                (map (fn [tense-spec]
-                       (let [tense-specification-json tense-spec
-                             tense-specification (json-read-str tense-specification-json)
-                             tense (string/replace
-                                    (let [tense-spec
-                                          (get-in tense-specification
-                                                  [:synsem :sem :tense])]
-                                      (if tense-spec tense-spec ""))
-                                    ":" "")
-                             refine-param ;; combine the tense and lexeme together.
-                             (unify 
-                              (json-read-str tense-spec)
-                              lexeme-specification)]
-                         [:td
-                          {:class (if (= refine-param refine)
-                                    "selected count" "count")}
+                 [:tr
+                  [:th number-index]
+                  [:td lexeme]
+
+                  (map (fn [tense-spec]
+                         (let [tense-specification-json tense-spec
+                               tense-specification (json-read-str tense-specification-json)
+                               tense (string/replace
+                                      (let [tense-spec
+                                            (get-in tense-specification
+                                                    [:synsem :sem :tense])]
+                                        (if tense-spec tense-spec ""))
+                                      ":" "")
+                               refine-param ;; combine the tense and lexeme together.
+                               (unify 
+                                (json-read-str tense-spec)
+                                lexeme-specification)]
+                           [:td
+                            {:class (if (= refine-param refine)
+                                      "selected count" "count")}
                                       
-                          [:a {:href (str "/editor/game/" (:id game) "?refine=" refine-param)}
-                           (str (:count (first (k/exec-raw ["SELECT count(*) 
+                            [:a {:href (str "/editor/game/" (:id game) "?refine=" refine-param)}
+                             (str (:count (first (k/exec-raw ["SELECT count(*) 
                                                                FROM expression 
                                                               WHERE structure @> ?::jsonb 
                                                                 AND structure @> ?::jsonb"
-                                                            [tense-spec
-                                                             lexeme-specification-json] ] :results))))]
+                                                              [tense-spec
+                                                               lexeme-specification-json] ] :results))))]
                           
-                          ])) ;; end of map fn over all the possible tenses.
+                            ])) ;; end of map fn over all the possible tenses.
 
-                     ;; coerce the database's value (of type jsonb[]) into a Clojure array.
-                     (map (fn [x] x) (.getArray (:target_grammar game))))
+                       ;; coerce the database's value (of type jsonb[]) into a Clojure array.
+                       (map (fn [x] x) (.getArray (:target_grammar game))))
 
-                ] ;; :tr
-               )
+                  ] ;; :tr
+                 )
 
-             ) ;; end of map fn over all the possible lexemes for this game.
- 
-           ;; all possible lexemes for this game.
-           (sort
-            (let [lexemes (remove #(= % "{}") (.getArray (:target_lex game)))]
-              (zipmap
-               (series 1 (.size lexemes) 1)
-               (map (fn [x] x) lexemes)))))])))
+               ) ;; end of map fn over all the possible lexemes for this game.
+             
+             ;; all possible lexemes for this game.
+             lexemes-for-this-game)]))))
 
 (defn language-to-spec-path [short-language-name]
   "Take a language name like 'it' and turn it into an array like: [:head :italiano :italiano]."
