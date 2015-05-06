@@ -417,8 +417,13 @@
         (cond
          (string? (get-in refine [:head :italiano :italiano]))
          (get-in refine [:head :italiano :italiano])
+
          (string? (get-in refine [:head :english :english]))
          (get-in refine [:head :english :english])
+
+         (string? (get-in refine [:head :espanol :espanol]))
+         (get-in refine [:head :espanol :espanol])
+
          true (type refine))
         
         aspect (get-in refine [:synsem :sem :aspect] :top)
@@ -490,24 +495,30 @@
                results)))]))))
 
 (defn expressions-for-game [game-id]
-  (let [grouped-by-source-sql
-           "SELECT (array_agg(target.structure->'head'->'italiano'->'italiano'))[1] AS infinitive,
-                   source.surface AS source,
-                   array_sort_unique(array_agg(target.surface)) AS targets
-              FROM game
-        RIGHT JOIN expression AS source
-                ON source.language = game.source
-        RIGHT JOIN expression AS target
-                ON target.language = game.target
-               AND ((source.structure->'synsem'->'sem') @> (target.structure->'synsem'->'sem'))
-               AND target.structure @> ANY(game.target_lex)
-               AND target.structure @> ANY(game.target_grammar)
+  (let [game (first (k/exec-raw ["SELECT * FROM game WHERE id=?" [(Integer. game-id)]] :results))
+        language-short-name (:target game)
+        language (sqlname-from-match (short-language-name-to-long language-short-name))
+        grouped-by-source-sql
+        (str 
+            "SELECT (array_agg(target.structure->'head'->'" language "'->'" language "'))[1] AS infinitive,
+                    source.surface AS source,
+                    array_sort_unique(array_agg(target.surface)) AS targets
+               FROM game
+         RIGHT JOIN expression AS source
+                 ON source.language = game.source
+         RIGHT JOIN expression AS target
+                 ON target.language = game.target
+                AND ((source.structure->'synsem'->'sem') 
+                      @> 
+                    (target.structure->'synsem'->'sem'))
+                AND target.structure @> ANY(game.target_lex)
+                AND target.structure @> ANY(game.target_grammar)
 
-             WHERE game.id=?
-               AND game.target_lex != ARRAY['{}'::jsonb]
-               AND game.target_grammar != ARRAY['{}'::jsonb]
-          GROUP BY source.surface
-          ORDER BY infinitive"
+              WHERE game.id=?
+                AND game.target_lex != ARRAY['{}'::jsonb]
+                AND game.target_grammar != ARRAY['{}'::jsonb]
+           GROUP BY source.surface
+           ORDER BY infinitive")
 
         grouped-by-source-results (k/exec-raw [grouped-by-source-sql
                                                [game-id] ]
@@ -523,7 +534,7 @@
         [:th {:style "width:1em;"}]
         [:th "Infinitive"]
         [:th "Source"]
-           [:th "Targets"]
+        [:th "Targets"]
         ]
 
        (if grouped-by-source-results
@@ -551,7 +562,6 @@
 
 (defn verb-tense-table [game & [ {refine :refine}]]
   (let [language-short-name (:target game)
-
         language-keyword-name
         (str "" (sqlname-from-match (short-language-name-to-long language-short-name)) "")
 
