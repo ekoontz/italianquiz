@@ -191,10 +191,15 @@
                             count(*) AS expressions_per_game
                        FROM (SELECT surface,structure
                                FROM expression) AS expression
-         INNER JOIN game
-                 ON structure @> ANY(target_lex)
-                AND structure @> ANY(target_grammar)
-           GROUP BY game.id) AS counts
+
+                 INNER JOIN game
+                         ON structure @> ANY(target_lex)
+                        AND structure @> ANY(target_grammar)
+                        AND target_lex != ARRAY['{}'::jsonb]
+                        AND target_grammar != ARRAY['{}'::jsonb]
+
+                   GROUP BY game.id) AS counts
+
                  ON (counts.game = game.id)
               WHERE ((game.target = ?) OR (? = ''))
            ORDER BY game.name"
