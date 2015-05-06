@@ -126,10 +126,12 @@
                                      (log/debug (str "guess was: " result))
                                      result)))]
             ;; Defaults: source language=English.
-            (insert-game (:name params) "en" language
-                         (:source_groupings params)
-                         (:target_groupings params))
-            {:status 302 :headers {"Location" (str "/editor/" language)}})))))
+            (let [game (insert-game (:name params) "en" language
+                                    (:source_groupings params)
+                                    (:target_groupings params))]
+              {:status 302 :headers {"Location" 
+                                     (str "/editor/game/" (:id game)
+                                          "?message=Created game:" (:name game))}}))))))
 
 (defn body [title content request]
   (let [language (:language (:route-params request))
@@ -511,7 +513,8 @@
                                                [game-id] ]
                                               :results)]
     (if (empty? grouped-by-source-results)
-      [:div {:style "float:left; border:0px dashed blue"}  [:i "No tenses chosen for this game yet."]]
+      [:div {:style "float:left; border:0px dashed blue"}
+       [:i "Choose some verbs and tenses."]]
 
       ;; <grouped by source>
       [:table {:class "striped padded"}
@@ -562,7 +565,7 @@
             (map (fn [x] x) lexemes))))]
 
     (if (empty? lexemes-for-this-game)
-      (html [:i "No verbs chosen for this game yet."])
+      (html [:i "Choose some verbs and tenses."])
 
       (html
 
@@ -813,7 +816,7 @@ ms: " params))))
                        SELECT ?, " source-grouping-str "," target-grouping-str ",?,? RETURNING id")]
     (log/debug (str "inserting new game with sql: " sql))
     ;; return the row ID of the game that has been inserted.
-    (:id (first (k/exec-raw [sql [name source target]] :results)))))
+    (first (k/exec-raw [sql [name source target]] :results))))
 
 ;; TODO: has fallen victim to parameteritis (too many unnamed parameters)
 (defn game-editor-form [game game-to-edit game-to-delete & [editpopup] ]
