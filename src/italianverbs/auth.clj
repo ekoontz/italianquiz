@@ -106,14 +106,14 @@
     
     (log/debug (str "verbcoach username: " username))
 
-    [:div {:class "login major"}
+    [:div {:class "login major" :style "display:block"}
      [:table {:style "border:0px"}
       [:tr
        [:td
         username]
-       [:th
+       [:th {:style "display:none"}
         (str "Roles:")]
-       [:td {:style "white-space:nowrap"}
+       [:td {:style "white-space:nowrap;display:none"}
         (str/join ","
                   (get-loggedin-user-roles identity))]
        [:td {:style "float:right;white-space:nowrap"} [:a {:href "/auth/logout"} "Log out"]]]]]))
