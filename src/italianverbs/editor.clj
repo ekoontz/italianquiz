@@ -203,6 +203,7 @@
                  ON (counts.game = game.id)
               WHERE ((game.target = ?) OR (? = ''))
            ORDER BY game.name"
+
         debug (log/debug (str "GAME-CHOOSING LANGUAGE: " language))
         debug (log/debug (str "GAME-CHOOSING SQL: " sql))
         results (k/exec-raw [sql
@@ -320,28 +321,6 @@
         game (first (k/exec-raw ["SELECT * FROM game WHERE id=?" [(Integer. game-id)]] :results))
         refine (if refine (read-string refine) nil)]
     (html
-     (let [
-           ;; TODO: fix: 'italiano' is hard-wired here.
-           grouped-by-source-sql
-           "SELECT (array_agg(target.structure->'head'->'italiano'->'italiano'))[1] AS infinitive,
-                   source.surface AS source,
-                   array_sort_unique(array_agg(target.surface)) AS targets
-              FROM game
-        RIGHT JOIN expression AS source
-                ON source.language = game.source
-        RIGHT JOIN expression AS target
-                ON target.language = game.target
-               AND ((source.structure->'synsem'->'sem') @> (target.structure->'synsem'->'sem'))
-               AND target.structure @> ANY(game.target_lex)
-               AND target.structure @> ANY(game.target_grammar)
-             WHERE game.id=?
-          GROUP BY source.surface
-          ORDER BY infinitive"
-
-           grouped-by-source-results (k/exec-raw [grouped-by-source-sql
-                                                  [game-id] ]
-                                                 :results)
-           ]
 
        [:div {:style "float:left;width:100%;margin-top:1em"}
 
@@ -372,8 +351,6 @@
               ]]
             
             ))
-
-
 
          [:h3 "Verb/Tense Table"]
 
@@ -429,7 +406,7 @@
              ])]
 
          ;; </form>
-        ]]))))
+        ]])))
 
 (def headers {"Content-Type" "text/html;charset=utf-8"})
 
@@ -523,6 +500,7 @@
                AND ((source.structure->'synsem'->'sem') @> (target.structure->'synsem'->'sem'))
                AND target.structure @> ANY(game.target_lex)
                AND target.structure @> ANY(game.target_grammar)
+
              WHERE game.id=?
           GROUP BY source.surface
           ORDER BY infinitive"
@@ -565,7 +543,6 @@
          ;; </grouped by source>
 
 ))
-
 
 (defn verb-tense-table [game & [ {refine :refine}]]
   (let [language-short-name (:target game)
