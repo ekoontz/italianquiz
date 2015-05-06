@@ -369,7 +369,7 @@
           (let [game (get-game-from-db game-id)]
 
             
-            [:table
+            [:table {:style "display:none"}
 
              [:tr
               [:td {:colspan "2"}
@@ -502,6 +502,8 @@
                AND target.structure @> ANY(game.target_grammar)
 
              WHERE game.id=?
+               AND game.target_lex != ARRAY['{}'::jsonb]
+               AND game.target_grammar != ARRAY['{}'::jsonb]
           GROUP BY source.surface
           ORDER BY infinitive"
 
@@ -567,16 +569,17 @@
                             (if tenses-human-readable
                                tenses-human-readable "")))])
             (map json-read-str (.getArray (:target_grammar game))))]
+
       (map (fn [lexeme-spec]
-             
              (let [lexeme-specification-json (second lexeme-spec)
+                   number-index (first lexeme-spec)
                    lexeme (str (get-in (json-read-str lexeme-specification-json)
                                        (language-to-spec-path language-short-name)))
                    lexeme-specification (json-read-str (second lexeme-spec)) 
                    ]
 
                [:tr
-                [:th (first lexeme-spec)]
+                [:th number-index]
                 [:td lexeme]
 
                 (map (fn [tense-spec]
@@ -598,11 +601,11 @@
                                       
                           [:a {:href (str "/editor/game/" (:id game) "?refine=" refine-param)}
                            (str (:count (first (k/exec-raw ["SELECT count(*) 
-                                                          FROM expression 
-                                                         WHERE structure @> ?::jsonb 
-                                                           AND structure @> ?::jsonb"
+                                                               FROM expression 
+                                                              WHERE structure @> ?::jsonb 
+                                                                AND structure @> ?::jsonb"
                                                             [tense-spec
-                                                             (second lexeme-spec)] ] :results))))]
+                                                             lexeme-specification-json] ] :results))))]
                           
                           ])) ;; end of map fn over all the possible tenses.
 
@@ -612,12 +615,14 @@
                 ] ;; :tr
                )
 
-             ) ;; end of map fn over all the possible lexemes.
-
+             ) ;; end of map fn over all the possible lexemes for this game.
+ 
+           ;; all possible lexemes for this game.
            (sort
-            (zipmap
-             (series 1 (.size (map (fn [x] x) (.getArray (:target_lex game)))) 1)
-             (map (fn [x] x) (.getArray (:target_lex game))))))])))
+            (let [lexemes (remove #(= % "{}") (.getArray (:target_lex game)))]
+              (zipmap
+               (series 1 (.size lexemes) 1)
+               (map (fn [x] x) lexemes)))))])))
 
 (defn language-to-spec-path [short-language-name]
   "Take a language name like 'it' and turn it into an array like: [:head :italiano :italiano]."
