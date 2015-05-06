@@ -885,15 +885,22 @@ ms: " params))))
                                         lexeme (string/replace lexeme "\"" "")]
                                     {:label lexeme
                                      :value lexeme}))
-                                ;; TODO: be more selective: show only infinitives, and avoid irregular forms.
 
-                                (k/exec-raw [(str "SELECT DISTINCT lexeme
-                                                              FROM (SELECT surface,structure->'head'->?->? AS lexeme,
-                                                                           structure->'head'->?->'exception'::text AS exception
-                                                                      FROM expression WHERE language=?) AS expression_heads
-                                                                     WHERE expression_heads.exception IS NULL
-                                                                       AND lexeme IS NOT NULL
-                                                                  ORDER BY lexeme ASC")
+                                ;; TODO: should not use expressions as a lexicon; 
+                                ;; should instead compile lexicon into a database table.
+                                ;; 
+                                ;; The 'expression_heads.exception IS NULL'
+                                ;; is used to prevent selecting exceptions.
+                                (k/exec-raw 
+                                 [(str "SELECT DISTINCT lexeme
+                                                   FROM (SELECT surface,
+                                                                structure->'head'->?->? AS lexeme,
+                                                                structure->'head'->?->'exception'::text AS exception
+                                                           FROM expression 
+                                                          WHERE language=?) AS expression_heads
+                                                  WHERE expression_heads.exception IS NULL
+                                                    AND lexeme IS NOT NULL
+                                                  ORDER BY lexeme ASC")
                                              [language-keyword-name
                                               language-keyword-name
                                               language-keyword-name
