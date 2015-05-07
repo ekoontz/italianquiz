@@ -282,7 +282,7 @@
                      [:div.edit_game {:onclick (str "edit_game_dialog(" game-id ")")} game-name-display]))]
 
                 [:td (string/join ", " (map #(html [:i %])
-                                           (map #(get-in % [:head language-keyword language-keyword])
+                                           (map #(get-in % [:root language-keyword language-keyword])
                                                 (map json-read-str (.getArray (:target_lex result))))))]
 
                 [:td (string/join ", " (map #(html [:b (str %)])
@@ -364,7 +364,7 @@
 
          ;; TOFINISH: working on making a form that lets us submit stuff like:
          ;; (populate 50 en/small it/small (unify (pick one <target_grammar>) (pick one <target lex>)))
-         ;; (populate 50 en/small it/small {:head {:italiano {:italiano "esprimere"}}})
+         ;; (populate 50 en/small it/small {:root {:italiano {:italiano "esprimere"}}})
 
          ;; <form>
          [:div {:style "border:0px dashed blue;float:left;display:block"}
@@ -415,14 +415,14 @@
 (defn describe-spec [refine]
   (let [lexeme
         (cond
-         (string? (get-in refine [:head :italiano :italiano]))
-         (get-in refine [:head :italiano :italiano])
+         (string? (get-in refine [:root :italiano :italiano]))
+         (get-in refine [:root :italiano :italiano])
 
-         (string? (get-in refine [:head :english :english]))
-         (get-in refine [:head :english :english])
+         (string? (get-in refine [:root :english :english]))
+         (get-in refine [:root :english :english])
 
-         (string? (get-in refine [:head :espanol :espanol]))
-         (get-in refine [:head :espanol :espanol])
+         (string? (get-in refine [:root :espanol :espanol]))
+         (get-in refine [:root :espanol :espanol])
 
          true (type refine))
         
@@ -500,7 +500,7 @@
         language (sqlname-from-match (short-language-name-to-long language-short-name))
         grouped-by-source-sql
         (str 
-            "SELECT (array_agg(target.structure->'head'->'" language "'->'" language "'))[1] AS infinitive,
+            "SELECT (array_agg(target.structure->'root'->'" language "'->'" language "'))[1] AS infinitive,
                     source.surface AS source,
                     array_sort_unique(array_agg(target.surface)) AS targets
                FROM game
@@ -644,10 +644,10 @@
              lexemes-for-this-game)]))))
 
 (defn language-to-spec-path [short-language-name]
-  "Take a language name like 'it' and turn it into an array like: [:head :italiano :italiano]."
+  "Take a language name like 'it' and turn it into an array like: [:root :italiano :italiano]."
   (let [language-keyword-name (sqlname-from-match (short-language-name-to-long short-language-name))
         language-keyword (keyword language-keyword-name)]
-    [:head language-keyword language-keyword]))
+    [:root language-keyword language-keyword]))
 
 ;; TODO: throw exception rather than "???" for unknown languages.
 (defn short-language-name-to-long [lang]
@@ -715,10 +715,10 @@ ms: " params))))
 
         language-name (short-language-name-to-edn (:target params))
 
-        ;; wrap every lexeme in a {:head {<language> <lexeme}}.
+        ;; wrap every lexeme in a {:root {<language> <lexeme}}.
         target-lexical-specs
         (map (fn [each-lexeme]
-               {:head {language-name {language-name each-lexeme}}})
+               {:root {language-name {language-name each-lexeme}}})
              (filter #(not (= (string/trim %) ""))
                      (:target_lex params)))
 
@@ -950,7 +950,7 @@ ms: " params))))
 
                 :target_lex (vec (remove #(or (nil? %)
                                               (= "" %))
-                                         (map #(let [path [:head language-keyword language-keyword]
+                                         (map #(let [path [:root language-keyword language-keyword]
                                                      debug (log/debug (str "CHECKBOX TICK (:target_lex) (path=" path ": ["
                                                                            (get-in % path nil) "]"))]
                                                  (get-in % path nil))
@@ -1061,7 +1061,7 @@ ms: " params))))
     :value (json/write-str {:synsem {:sem {:tense :conditional}}})}
 
    {:label "future"
-    :value (json/write-str {:synsem {:sem {:tense :future}}})}
+    :value (json/write-str {:synsem {:sem {:tense :futuro}}})}
 
    {:label "imperfect"
     :value (json/write-str {:synsem {:sem {:tense :past
@@ -1074,7 +1074,7 @@ ms: " params))))
 
 (def tenses-human-readable
   {{:synsem {:sem {:tense :conditional}}} "conditional"
-   {:synsem {:sem {:tense :future}}} "future"
+   {:synsem {:sem {:tense :futuro}}} "future"
    {:synsem {:sem {:tense :past :aspect :progressive}}} "imperfect"
    {:synsem {:sem {:tense :past :aspect :perfect}}} "past"
    {:synsem {:sem {:tense :present}}} "present"})
