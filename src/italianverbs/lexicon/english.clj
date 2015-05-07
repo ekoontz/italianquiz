@@ -79,20 +79,22 @@
                      :1plur "were"
                      :2plur "were"
                      :3plur "were"}}}
-
+   
    "be missed" {:synsem {:cat :verb
                          :sem {:pred :mancare}}
                 :english {:participle "be missed"
                           :future "be missed"
                           :conditional "be missed"
                           :past {:english "was missed"
-                                :2sing "were missed"
-                                :2plur "were missed"
-                                :3plur "were missed"}
-                         :present {:2sing "are missed"
-                                   :3sing "is missed"
-                                   :2plur "are missed"
-                                   :3plur "are missed"}}}
+                                 :2sing "were missed"
+                                 :2plur "were missed"
+                                 :3plur "were missed"}
+                          :present {:1sing "am missed"
+                                    :2sing "are missed"
+                                    :3sing "is missed"
+                                    :1plur "are missed"
+                                    :2plur "are missed"
+                                    :3plur "are missed"}}}
 
    "be missing"
    {:english {:present {:1sing "am missing"
