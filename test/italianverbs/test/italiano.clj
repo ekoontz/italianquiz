@@ -166,8 +166,10 @@
 
     ;; These test are perhaps not good tests of generate-by-:root functionality because they 
     ;; will only pass if the Italian lexicon's "parlare" entries' :pred happen to be set to :speak.
-    (is (= (get-in generated-present [:synsem :sem :pred]) :speak))
-    (is (= (get-in generated-past [:synsem :sem :pred]) :speak))))
+    (is (or (= (get-in generated-present [:synsem :sem :pred]) :speak)
+            (= (get-in generated-present [:synsem :sem :pred]) :talk)))
+    (is (or (= (get-in generated-past [:synsem :sem :pred]) :speak)
+            (= (get-in generated-past [:synsem :sem :pred]) :talk)))))
 
 
 
