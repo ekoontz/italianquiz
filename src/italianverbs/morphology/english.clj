@@ -355,6 +355,16 @@
       (str stem-minus-final-y "ies")
 
       (and (= person :3rd) (= number :sing)
+           (not penultimate-stem-char-is-vowel)
+           last-stem-char-is-e) ;; "write" + "s" => "writes"
+      (str stem "s")
+
+      (and (= person :3rd) (= number :sing)
+           (not penultimate-stem-char-is-vowel)
+           (= last-stem-char-is-vowel "y")) ;; "carry"+"s" => "carries" (but "play"+"s" => "plays")
+      (str stem-minus-final-y "ies")
+
+      (and (= person :3rd) (= number :sing)
            last-stem-char-is-vowel) ;; "go" => "goes"
       (str stem-minus-final-y "ies")
 
