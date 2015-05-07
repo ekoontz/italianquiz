@@ -79,8 +79,8 @@
                 {:synsem {:sem {:tense :past :aspect :progressive}}}
                 {:synsem {:sem {:tense :past :aspect :perfect}}}
                 {:synsem {:sem {:tense :present}}}]]
-    (map (fn [verb] (map (fn [tense] (populate 10 en/small it/small
-                                               (unify {:root {:italiano {:italiano verb}}}
-                                                      tense)))
+    (pmap (fn [verb] (pmap (fn [tense] (populate 10 en/small it/small
+                                                 (unify {:root {:italiano {:italiano verb}}}
+                                                        tense)))
                          tenses))
          italian-verbs)))
