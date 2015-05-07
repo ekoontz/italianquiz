@@ -58,6 +58,17 @@
   (prep 10)
   (is (= 1 1))) ;; stub TODO: fill out test
 
+(defn standard-fill-verb [verb]
+  (let [tenses [{:synsem {:sem {:tense :conditional}}}
+                {:synsem {:sem {:tense :futuro}}}
+                {:synsem {:sem {:tense :past :aspect :progressive}}}
+                {:synsem {:sem {:tense :past :aspect :perfect}}}
+                {:synsem {:sem {:tense :present}}}]]
+    (pmap (fn [tense] (populate 10 en/small it/small
+                                (unify {:root {:italiano {:italiano verb}}}
+                                       tense)))
+          tenses)))
+
 (defn standard-fill []
   (let [italian-verbs
         ["abbandonare" "abbassare" "abbracciare" "accettare" "accompagnare"
@@ -73,14 +84,11 @@
          "prendere" "ricevere" "ricordare" "rispondere" "ritornare" "scappare"
          "scaricare" "scrivere" "stampare" "studiare" "suonare" "sviluppare"
          "tagliare" "telefonare" "tenere" "tirare" "tornare" "usare" "vedere"
-         "vendere" "venire" "vincere"]
-        tenses [{:synsem {:sem {:tense :conditional}}}
-                {:synsem {:sem {:tense :futuro}}}
-                {:synsem {:sem {:tense :past :aspect :progressive}}}
-                {:synsem {:sem {:tense :past :aspect :perfect}}}
-                {:synsem {:sem {:tense :present}}}]]
-    (pmap (fn [verb] (pmap (fn [tense] (populate 10 en/small it/small
-                                                 (unify {:root {:italiano {:italiano verb}}}
-                                                        tense)))
-                         tenses))
-         italian-verbs)))
+         "vendere" "venire" "vincere"]]
+    (pmap (fn [verb]
+            (standard-fill-verb verb))
+          italian-verbs)))
+
+;; TOFIX: 
+;; writes: 3rd sing
+;; be missed 1st sing and 1st plur
