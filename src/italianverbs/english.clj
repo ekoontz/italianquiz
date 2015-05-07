@@ -13,6 +13,7 @@
 (require '[italianverbs.html :as html])
 (require '[italianverbs.lexicon.english :as lex])
 (require '[italianverbs.lexiconfn :refer (compile-lex map-function-on-map-vals unify)])
+(require '[italianverbs.morphology :refer (fo)])
 (require '[italianverbs.morphology.english :as morph])
 (require '[italianverbs.parse :as parse])
 (require '[italianverbs.pos.english :as epos :refer (intransitivize transitive transitivize verb-subjective)])

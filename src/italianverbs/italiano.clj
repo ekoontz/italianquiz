@@ -12,6 +12,7 @@
 (require '[italianverbs.html :as html])
 (require '[italianverbs.lexicon.italiano :as lex])
 (require '[italianverbs.lexiconfn :refer (compile-lex map-function-on-map-vals unify)])
+(require '[italianverbs.morphology :refer (fo)])
 (require '[italianverbs.morphology.italiano :as morph])
 (require '[italianverbs.parse :as parse])
 (require '[italianverbs.pos.italiano :refer :all])
