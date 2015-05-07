@@ -10,7 +10,7 @@
    [italianverbs.italiano :as it :refer [it]]
    [italianverbs.morphology :refer :all]
    [italianverbs.morphology.espanol :as esm]
-   [italianverbs.unify :refer [get get-in strip-refs]]
+   [italianverbs.unify :refer [get get-in strip-refs unify]]
    ))
 
 (def spec {:synsem {:essere true}})
@@ -57,3 +57,30 @@
 (deftest do-prep
   (prep 10)
   (is (= 1 1))) ;; stub TODO: fill out test
+
+(defn standard-fill []
+  (let [italian-verbs
+        ["abbandonare" "abbassare" "abbracciare" "accettare" "accompagnare"
+         "amare" "andare" "annunciare" "appoggiare" "apprendere" "approfittare"
+         "ascoltare" "aspettare" "assicurare" "aumentare" "avere" "cambiare"
+         "cancellare" "cantare" "capire" "caricare" "cercare" "chiedere"
+         "commentare" "comprare" "condividere" "conservare" "considerare"
+         "correre" "corrispondere" "creare" "decidere" "desiderare" "dipingere"
+         "dormire" "dovere" "entrare" "esistere" "esprimere" "essere"
+         "evitare" "finire" "formare" "frequentare" "giocare" "guadagnare"
+         "guidare" "imparare" "incontrare" "indossare" "insegnare" "lavorare"
+         "leggere" "mancare" "mandare" "mangiare" "mostrare" "parlare" "portare"
+         "prendere" "ricevere" "ricordare" "rispondere" "ritornare" "scappare"
+         "scaricare" "scrivere" "stampare" "studiare" "suonare" "sviluppare"
+         "tagliare" "telefonare" "tenere" "tirare" "tornare" "usare" "vedere"
+         "vendere" "venire" "vincere"]
+        tenses [{:synsem {:sem {:tense :conditional}}}
+                {:synsem {:sem {:tense :futuro}}}
+                {:synsem {:sem {:tense :past :aspect :progressive}}}
+                {:synsem {:sem {:tense :past :aspect :perfect}}}
+                {:synsem {:sem {:tense :present}}}]]
+    (map (fn [verb] (map (fn [tense] (populate 10 en/small it/small
+                                               (unify {:root {:italiano {:italiano verb}}}
+                                                      tense)))
+                         tenses))
+         italian-verbs)))
