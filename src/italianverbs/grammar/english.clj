@@ -182,6 +182,7 @@
                             :synsem {:cat :prep}})
 
                    (unifyc c10
+                           root-is-head-root
                            {:head {:phrasal true ;; only a vp-aux may be the head child, not simply a lexical auxiliary verb.
                                    :synsem {:aux true}}
                             :rule "s-aux"
@@ -189,8 +190,8 @@
                                      :cat :verb
                                      :sem {:aspect :perfect
                                            :tense :past}}})
-
                    (unifyc c10
+                           root-is-head
                            {:head {:phrasal false ;; non-auxiliary past: e.g. "he slept"
                                    :synsem {:aux false}}
                             :rule "s-past"
@@ -198,33 +199,30 @@
                                      :cat :verb
                                      :sem {:aspect :perfect
                                            :tense :past}}})
-
-
-
                    (unifyc c10
-                          {:rule "s-conditional"
-                           :synsem {:aux false
-                                    :infl :conditional
-                                    :cat :verb
-                                    :sem {:tense :conditional}}})
-
+                           root-is-head
+                           {:rule "s-conditional"
+                            :synsem {:aux false
+                                     :infl :conditional
+                                     :cat :verb
+                                     :sem {:tense :conditional}}})
                    (unifyc c10
-                          {:rule "s-future"
-                           :synsem {:aux false
-                                    :infl :futuro
-                                    :cat :verb
-                                    :sem {:tense :futuro}}})
-
-
+                           root-is-head
+                           {:rule "s-future"
+                            :synsem {:aux false
+                                     :infl :futuro
+                                     :cat :verb
+                                     :sem {:tense :futuro}}})
                    (unifyc c10
+                           root-is-head
                            {:rule "s-imperfetto"
                             :synsem {:aux false
                                      :infl :imperfetto
                                      :cat :verb
                                      :sem {:aspect :progressive
                                            :tense :past}}})
-
                    (unifyc c10
+                           root-is-head
                            {:rule "s-present"
                             :synsem {:aux false
                                      :infl :present
@@ -239,6 +237,7 @@
                                      :cat :verb}})
 
                    (unifyc h21
+                           root-is-comp
                            {:rule "vp-aux"
                             :head {:phrasal false}
                             :synsem {:aux true
@@ -251,6 +250,7 @@
                    ;; dependence on auxilary sense of "avere" which supplies the
                    ;; obj-agr agreement between the object and the main (non-auxilary) verb.
                    (unifyc h22
+                           root-is-comp
                            (let [obj-agr (ref :top)]
                              {:head {:phrasal false}
                               :rule "vp-aux-22"

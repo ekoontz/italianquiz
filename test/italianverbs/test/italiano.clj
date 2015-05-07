@@ -146,3 +146,28 @@
   (let [result (it "mancarò")]
     (is (or true (= (.size result) 0))))) 
 
+(deftest generate-via-root
+  "test whether we can generate an expression using a 'root' {:root r} rather 
+   than e.g. generating by a given pred p ({:synsem {:sem {:pred p}}})"
+  (let [generated-present (generate {:root {:italiano {:italiano "parlare"}} 
+                                     :synsem {:cat :verb
+                                              :sem {:tense :present}
+                                              :subcat '()}} small)
+        generated-past (generate {:root {:italiano {:italiano "parlare"}} 
+                                  :synsem {:cat :verb
+                                           :sem {:aspect :perfect
+                                                 :tense :past}
+                                           :subcat '()}} small)]
+    (is (map? generated-present))
+    (is (= (get-in generated-present [:root :italiano :italiano]) "parlare"))
+
+    (is (map? generated-past))
+    (is (= (get-in generated-past [:root :italiano :italiano]) "parlare"))
+
+    ;; These test are perhaps not good tests of generate-by-:root functionality because they 
+    ;; will only pass if the Italian lexicon's "parlare" entries' :pred happen to be set to :speak.
+    (is (= (get-in generated-present [:synsem :sem :pred]) :speak))
+    (is (= (get-in generated-past [:synsem :sem :pred]) :speak))))
+
+
+

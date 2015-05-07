@@ -90,7 +90,8 @@
 (deftest parse-test-1-en
   (is (= "a cat" (fo (first (parse "a cat"))))))
 
-(deftest imperfect-noi
+;; TODO: add more testing of generated output
+(deftest imperfect-we
   (let [generated (engine/generate
                    {:synsem {:sem {:aspect :progressive 
                                    :tense :past 
@@ -98,3 +99,25 @@
                    small :enrich true)]
     (is (not (nil? generated)))))
 
+(deftest generate-via-root
+  "test whether we can generate an expression using a 'root' {:root r} rather 
+   than e.g. generating by a given pred p ({:synsem {:sem {:pred p}}})"
+  (let [generated-present (engine/generate {:root {:english {:english "speak"}} 
+                                            :synsem {:cat :verb
+                                                     :sem {:tense :present}
+                                                     :subcat '()}} small)
+        generated-past (engine/generate {:root {:english {:english "speak"}} 
+                                         :synsem {:cat :verb
+                                                  :sem {:aspect :perfect
+                                                        :tense :past}
+                                                  :subcat '()}} small)]
+    (is (map? generated-present))
+    (is (= (get-in generated-present [:root :english :english]) "speak"))
+
+    (is (map? generated-past))
+    (is (= (get-in generated-past [:root :english :english]) "speak"))
+
+    ;; These test are perhaps not good tests of generate-by-:root functionality because they 
+    ;; will only pass if the Italian lexicon's "parlare" entries' :pred happen to be set to :speak.
+    (is (= (get-in generated-present [:synsem :sem :pred]) :speak))
+    (is (= (get-in generated-past [:synsem :sem :pred]) :speak))))
