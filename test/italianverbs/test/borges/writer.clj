@@ -58,14 +58,16 @@
   (prep 10)
   (is (= 1 1))) ;; stub TODO: fill out test
 
-(defn standard-fill-verb [verb]
-  (let [tenses [{:synsem {:sem {:tense :conditional}}}
+(defn standard-fill-verb [verb & [spec]] ;; spec is for additional constraints on generation.
+  (let [spec (if spec spec :top)
+        tenses [{:synsem {:sem {:tense :conditional}}}
                 {:synsem {:sem {:tense :futuro}}}
                 {:synsem {:sem {:tense :past :aspect :progressive}}}
                 {:synsem {:sem {:tense :past :aspect :perfect}}}
                 {:synsem {:sem {:tense :present}}}]]
     (pmap (fn [tense] (populate 10 en/small it/small
                                 (unify {:root {:italiano {:italiano verb}}}
+                                       spec
                                        tense)))
           tenses)))
 
