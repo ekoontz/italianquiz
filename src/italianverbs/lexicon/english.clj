@@ -206,7 +206,8 @@
                      :sem {:pred :bere
                            :discrete false
                            :subj {:animate true}
-                           :obj {:drinkable true}}}}
+                           :obj {:drinkable true}}}
+            :english {:past "drank"}}
 
    "drive" {:synsem {:cat :verb
                      :sem {:pred :guidare}}
