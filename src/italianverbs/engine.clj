@@ -8,10 +8,8 @@
    [compojure.core :as compojure :refer [GET PUT POST DELETE ANY]]
    [hiccup.page :refer (html5)]
 
-   [italianverbs.english :as en]
    [italianverbs.forest :as forest]
    [italianverbs.html :refer (tablize)]
-   [italianverbs.italiano :as it]
    [italianverbs.morphology :refer [fo fo-ps remove-parens]]
    [italianverbs.ug :refer (head-principle)]
    [italianverbs.unify :refer [fail? get-in merge strip-refs unify unifyc]]))
@@ -141,27 +139,31 @@
                ]])}))))
 
 (defn resolve-model [model lang]
-  (cond 
-        (= model "en-small")
-        en/small
-        (= model "it-small")
-        it/small
+  (cond
+   (= model "en-small")
+   (eval (symbol "italianverbs.english/small"))
 
-        ;; defaults if no model is given
-        (= lang "en")
-        en/small
+   (= model "it-small")
+   (eval (symbol "italianverbs.italiano/small"))
 
-        (= lang "it")
-        it/small
+   ;; defaults if no model is given
+   (= lang "en")
+   (eval (symbol "italianverbs.english/small"))
 
-        true ;; TODO: throw exception "no language model" if we got here.
-        en/small))
+   (= lang "it")
+   (eval (symbol "italianverbs.italiano/small"))
+
+   true ;; TODO: throw exception "no language model" if we got here.
+   (eval (symbol "italianverbs.english/small"))))
 
 (def possible-preds [:top])
 
-(def lang-to-lexicon
-  {"en" en/lexicon
-   "it" it/lexicon})
+(defn lang-to-lexicon [language]
+  (cond
+   (= language "en")
+   (eval (symbol "italianverbs.english/lexicon"))
+   true
+   (eval (symbol "italianverbs.italiano/lexicon"))))
 
 (defn lookup [request]
   (let [lang (get-in request [:params :lang] "en") ;; if no lang specified, use english.
