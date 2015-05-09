@@ -65,10 +65,10 @@
                 {:synsem {:sem {:tense :past :aspect :progressive}}}
                 {:synsem {:sem {:tense :past :aspect :perfect}}}
                 {:synsem {:sem {:tense :present}}}]]
-    (pmap (fn [tense] (populate 10 en/small it/small
-                                (unify {:root {:italiano {:italiano verb}}}
-                                       spec
-                                       tense)))
+    (pmap (fn [tense] (populate count en/small it/small
+                               (unify {:root {:italiano {:italiano verb}}}
+                                      spec
+                                      tense)))
           tenses)))
 
 (defn infinitives [m]
