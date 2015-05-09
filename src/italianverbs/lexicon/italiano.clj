@@ -44,7 +44,6 @@
                    :sem complement-semantics
                    :subcat {:1 {:cat :verb
                                 :sem complement-semantics
-                                :infl :infinitive
                                 :subcat {:1 :top
                                          :2 '()}}
                             :2 '()}}})]
@@ -343,9 +342,9 @@
                           :1plur "beviamo"
                           :2plur "bevete"
                           :3plur "bevono"}}
-     :synsem {:essere false
-              :sem {:cat :verb
-                    :pred :bere
+     :synsem {:cat :verb
+              :essere false
+              :sem {:pred :bere
                     :subj {:animate true}
                     :obj {:drinkable true}}}}
 
@@ -418,19 +417,20 @@
                            :consumable false
                            :clothing true}}})
 
-   "cambiare"  {:synsem {:cat :verb
-                         :sem {:pred :cambiare}}}
+   "cambiare" {:synsem {:cat :verb
+                        :sem {:pred :cambiare}}}
+   
+   "cancellare" {:synsem {:cat :verb
+                          :sem {:pred :cancellare}}}
 
-   "cancellare"  {:synsem {:cat :verb
-                           :sem {:pred :cancellare}}}
+   "cantare" {:synsem {:cat :verb
+                       :sem {:pred :cantare}}}
 
-   "cantare"  {:synsem {:cat :verb
-                        :sem {:pred :cantare}}}
+   "caricare" {:synsem {:cat :verb
+                        :sem {:pred :caricare}}}
 
-   "caricare"  {:synsem {:cat :verb
-                         :sem {:pred :caricare}}}
-
-   "cenare" {:synsem {:essere false
+   "cenare" {:synsem {:cat :verb
+                      :essere false
                       :sem {:subj {:human true}
                             :pred :cenare}}}
 
@@ -655,7 +655,8 @@
                           :sem {:pred :create}}}
 
       ;; TODO: account for "dare" being ditransitive.
-      "dare"  {:synsem {:sem {:pred :dare}}
+      "dare"  {:synsem {:cat :verb
+                        :sem {:pred :dare}}
                :italiano {:present {:2sing "dai"
                                     :3plur "danno"}
                           :futuro-stem "dar"}}
