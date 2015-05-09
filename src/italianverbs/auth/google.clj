@@ -9,7 +9,6 @@
             [friend-oauth2.workflow :as oauth2]
             [friend-oauth2.util :refer [format-config-uri]]
             [org.httpkit.client :as http]
-            [italianverbs.auth :as auth]
             [korma.core :as k]))
 
 (require '[environ.core :refer [env]])
