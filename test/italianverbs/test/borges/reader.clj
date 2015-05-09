@@ -1,5 +1,5 @@
 (ns italianverbs.test.borges.reader
-  (:refer-clojure :exclude [get get-in resolve merge])
+  (:refer-clojure :exclude [get-in resolve merge])
   (:require
    [clojure.core :as core]
    [clojure.data.json :as json]
@@ -9,7 +9,7 @@
    [italianverbs.english :as en]
    [italianverbs.italiano :as it]
    [italianverbs.morphology :refer (fo)]
-   [italianverbs.unify :refer [deserialize get get-in strip-refs]]
+   [italianverbs.unify :refer [deserialize get-in strip-refs]]
    [korma.core :as db]
    ))
 

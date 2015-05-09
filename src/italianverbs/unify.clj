@@ -1623,27 +1623,3 @@ The idea is to map the key :foo to the (recursive) result of pathify on :foo's v
         paths-in-fs2 (map #(first (first %)) (pathify-r fs2))]
     (find-fail-in fs1 fs2 (concat paths-in-fs1 paths-in-fs2))))
 
-(defn get [input key & [ default-val ]]
-  "strip :serialized key from map, since it's verbose, for computers only, and makes a map hard to read."
-  (cond (or (seq? input)
-            (vector? input))
-        (map #(get % key default-val)
-             input)
-        true
-        (let [got (if default-val
-                    (core/get input key default-val)
-                    (core/get input key))]
-          (cond (or (seq? got)
-                    (vector? got))
-                (map #(dissoc % :serialized)
-                     got)
-
-                (map? got)
-                (dissoc got :serialized)
-
-                true
-                got))))
-
-
-            
-

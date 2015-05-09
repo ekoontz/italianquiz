@@ -1,5 +1,5 @@
 (ns italianverbs.borges.reader
-  [:refer-clojure :exclude [get get-in resolve merge]]
+  [:refer-clojure :exclude [get-in resolve merge]]
   [:require
    [clojure.data.json :as json]
    [clojure.tools.logging :as log]

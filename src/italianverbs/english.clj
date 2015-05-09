@@ -1,5 +1,5 @@
 (ns italianverbs.english
-  (:refer-clojure :exclude [get get-in]))
+  (:refer-clojure :exclude [get-in]))
 
 (require '[clojure.tools.logging :as log])
 (require '[compojure.core :as compojure :refer [GET PUT POST DELETE ANY]])
@@ -18,7 +18,7 @@
 (require '[italianverbs.parse :as parse])
 (require '[italianverbs.pos.english :as epos :refer (intransitivize transitive transitivize verb-subjective)])
 (require '[italianverbs.ug :refer :all])
-(require '[italianverbs.unify :as unify :refer (dissoc-paths get get-in strip-refs)])
+(require '[italianverbs.unify :as unify :refer (dissoc-paths get-in strip-refs)])
 
 (def get-string morph/get-string)
 (def grammar gram/grammar)

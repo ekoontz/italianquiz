@@ -1,5 +1,5 @@
 (ns italianverbs.lexiconfn
-  (:refer-clojure :exclude [get get-in merge resolve find])
+  (:refer-clojure :exclude [get-in merge resolve find])
   (:use [clojure.set])
   (:require
    [clojure.set :as set]

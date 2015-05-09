@@ -1,5 +1,5 @@
 (ns italianverbs.test.borges.writer
-  (:refer-clojure :exclude [get get-in resolve merge])
+  (:refer-clojure :exclude [get-in resolve merge])
   (:require
    [clojure.core :as core]
    [clojure.test :refer :all]
@@ -10,7 +10,7 @@
    [italianverbs.italiano :as it :refer [it]]
    [italianverbs.morphology :refer :all]
    [italianverbs.morphology.espanol :as esm]
-   [italianverbs.unify :refer [get get-in strip-refs unify]]
+   [italianverbs.unify :refer [get-in strip-refs unify]]
    ))
 
 (def spec {:synsem {:essere true}})
