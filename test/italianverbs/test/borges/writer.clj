@@ -71,26 +71,19 @@
                                        tense)))
           tenses)))
 
-(defn standard-fill []
-  (let [italian-verbs
-        ["abbandonare" "abbassare" "abbracciare" "accettare" "accompagnare"
-         "amare" "andare" "annunciare" "appoggiare" "apprendere" "approfittare"
-         "ascoltare" "aspettare" "assicurare" "aumentare" "avere" "cambiare"
-         "cancellare" "cantare" "capire" "caricare" "cercare" "chiedere"
-         "commentare" "comprare" "condividere" "conservare" "considerare"
-         "correre" "corrispondere" "creare" "decidere" "desiderare" "dipingere"
-         "dormire" "dovere" "entrare" "esistere" "esprimere" "essere"
-         "evitare" "finire" "formare" "frequentare" "giocare" "guadagnare"
-         "guidare" "imparare" "incontrare" "indossare" "insegnare" "lavorare"
-         "leggere" "mancare" "mandare" "mangiare" "mostrare" "parlare" "portare"
-         "prendere" "ricevere" "ricordare" "rispondere" "ritornare" "scappare"
-         "scaricare" "scrivere" "stampare" "studiare" "suonare" "sviluppare"
-         "tagliare" "telefonare" "tenere" "tirare" "tornare" "usare" "vedere"
-         "vendere" "venire" "vincere"]]
-    (pmap (fn [verb]
-            (standard-fill-verb verb))
-          italian-verbs)))
+(defn infinitives [m]
+  "get all of the keys whose set of values contains a value which is an infinitive verb (infl:top)"
+ (select-keys m 
+              (for [[k v] m :when (some (fn [each-val]
+                                          (and (= :verb (get-in each-val [:synsem :cat]))
+                                               (= :top (get-in each-val [:synsem :infl] :top))))
+                                         v)]
+                k)))
 
-;; TOFIX: 
-;; writes: 3rd sing
-;; be missed 1st sing and 1st plur
+(defn standard-fill [ & [count-per-verb]]
+  (let [italian-verbs
+        (sort (keys (infinitives @italianverbs.italiano/lexicon)))
+        count-per-verb (if count-per-verb count-per-verb 10)]
+    (map (fn [verb]
+           (standard-fill-verb verb count-per-verb))
+         italian-verbs)))
