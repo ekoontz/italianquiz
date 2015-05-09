@@ -88,7 +88,7 @@
             error (if (or (nil? target-language-surface)
                           (= target-language-surface ""))
                     (let [message (str "Could not generate a sentence in target language '" target-language 
-                                       "' for this semantics: " semantics)]
+                                       "' for this spec: " spec)]
                       (if (= true mask-populate-errors)
                         (log/warn message)
                         ;; else
