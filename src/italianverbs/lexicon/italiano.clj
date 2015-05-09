@@ -1114,10 +1114,10 @@
                                 :number :sing}
                           :sem {:pred :lei} ;; note: we don't specify human=true (english "it").
                           :subcat '()}}]
-     (unify common
+     [(unify common
              {:synsem {:sem {:human false}}})
-     (unify common
-             {:synsem {:sem {:human true}}}))
+      (unify common
+             {:synsem {:sem {:human true}}})])
 
    "leggere"
    {:italiano {:passato "letto"}
@@ -1196,10 +1196,10 @@
                                       :number :sing}
                                 :sem {:pred :lui} ;; note: we don't specify human=true (english "it").
                                 :subcat '()}}]
-           (unify common
+           [(unify common
                    {:synsem {:sem {:human false}}})
-           (unify common
-                   {:synsem {:sem {:human true}}}))
+            (unify common
+                   {:synsem {:sem {:human true}}})])
 
    "madre"
    (unify agreement-noun
