@@ -848,3 +848,14 @@ storing a deserialized form of each lexical entry avoids the need to serialize e
                   true
                   val))
           vals))))
+
+(defn infinitives [lexicon]
+  "Get all infinitive verbs in the given lexicon: this is the set of the keys each of whose set of values contains a value which is an infinitive verb (infl=:top)"
+ (select-keys lexicon
+              (for [[k v] lexicon :when (some (fn [each-val]
+                                                (and (= :verb (get-in each-val [:synsem :cat]))
+                                                     (= :top (get-in each-val [:synsem :infl] :top))))
+                                              v)]
+                k)))
+
+

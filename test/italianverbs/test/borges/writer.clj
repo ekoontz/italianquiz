@@ -8,6 +8,7 @@
    [italianverbs.english :as en :refer [en]]
    [italianverbs.espanol :as es :refer [es]]
    [italianverbs.italiano :as it :refer [it]]
+   [italianverbs.lexiconfn :refer [infinitives]]
    [italianverbs.morphology :refer :all]
    [italianverbs.morphology.espanol :as esm]
    [italianverbs.unify :refer [get-in strip-refs unify]]
@@ -58,7 +59,7 @@
   (prep 10)
   (is (= 1 1))) ;; stub TODO: fill out test
 
-(defn standard-fill-verb [verb & [spec]] ;; spec is for additional constraints on generation.
+(defn standard-fill-verb [verb count & [spec]] ;; spec is for additional constraints on generation.
   (let [spec (if spec spec :top)
         tenses [{:synsem {:sem {:tense :conditional}}}
                 {:synsem {:sem {:tense :futuro}}}
@@ -70,15 +71,6 @@
                                       spec
                                       tense)))
           tenses)))
-
-(defn infinitives [m]
-  "get all of the keys whose set of values contains a value which is an infinitive verb (infl:top)"
- (select-keys m 
-              (for [[k v] m :when (some (fn [each-val]
-                                          (and (= :verb (get-in each-val [:synsem :cat]))
-                                               (= :top (get-in each-val [:synsem :infl] :top))))
-                                         v)]
-                k)))
 
 (defn standard-fill [ & [count-per-verb]]
   (let [italian-verbs
