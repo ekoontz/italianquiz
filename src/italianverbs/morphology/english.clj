@@ -313,8 +313,7 @@
          stem (replace root #"^to " "")
          last-stem-char-is-e (re-find #"e$" stem)
          penultimate-stem-char-is-vowel (re-find #"[aeiou].$" stem)
-         last-stem-char-is-vowel (re-find #"[aeiou]$" stem)
-         stem-minus-final-y (replace root #"y$" "")]
+         last-stem-char-is-vowel (re-find #"[aeiou]$" stem)]
      (log/debug "+else")
      (log/debug (str "(english):word: " word))
      (cond
@@ -346,30 +345,16 @@
       (str stem "")
 
       (and (= person :3rd) (= number :sing)
-           (= last-stem-char-is-vowel "o"))
-      (str stem "es")
-
-      (and (= person :3rd) (= number :sing)
-           (not penultimate-stem-char-is-vowel)
-           (= last-stem-char-is-vowel "y")) ;; "carry"+"s" => "carries" (but "play"+"s" => "plays")
-      (str stem-minus-final-y "ies")
-
-      (and (= person :3rd) (= number :sing)
-           (not penultimate-stem-char-is-vowel)
-           last-stem-char-is-e) ;; "write" + "s" => "writes"
-      (str stem "s")
-
-      (and (= person :3rd) (= number :sing)
-           (not penultimate-stem-char-is-vowel)
-           (= last-stem-char-is-vowel "y")) ;; "carry"+"s" => "carries" (but "play"+"s" => "plays")
-      (str stem-minus-final-y "ies")
-
-      (and (= person :3rd) (= number :sing)
-           last-stem-char-is-vowel) ;; "go" => "goes"
-      (str stem-minus-final-y "ies")
+           (re-find #"ry$" stem))
+      (let [stem-minus-final-y (replace root #"y$" "")]
+        (str stem-minus-final-y "ies"))
 
       (and (= person :3rd) (= number :sing)
            (re-find #"[cs][sh]$" stem))
+      (str stem "es")
+
+      (and (= person :3rd) (= number :sing)
+           (re-find #"o$" stem))
       (str stem "es")
 
       ;; default 3rd sing inflection: just add s.
