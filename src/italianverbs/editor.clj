@@ -184,25 +184,20 @@
         language (if language language "")
         debug (log/debug (str "THE LANGUAGE OF THE GAME IS: " language))
 
-        ;; TODO: doing SELECT DISTINCT surface,structure is too expensive below and gets worse as the number of games increase,
-        ;; but not doing DISTINCT is inaccurate.
+        ;; TODO: doing SELECT DISTINCT surface,structure is too expensive below and gets worse
+        ;; as the number of games increase, but not doing DISTINCT is inaccurate.
         sql "SELECT game.name AS name,game.id AS id,active,
-                    source,target,
-                    target_lex,target_grammar,counts.expressions_per_game
+                    source,target,target_lex,target_grammar,counts.expressions_per_game
                FROM game
-          LEFT JOIN (SELECT game.id AS game,
-                            count(*) AS expressions_per_game
-                       FROM (SELECT surface,structure
+          LEFT JOIN (SELECT game.id AS game,count(*) AS expressions_per_game
+                       FROM (SELECT structure
                                FROM expression) AS expression
-
                  INNER JOIN game
                          ON structure @> ANY(target_lex)
                         AND structure @> ANY(target_grammar)
                         AND target_lex != ARRAY['{}'::jsonb]
                         AND target_grammar != ARRAY['{}'::jsonb]
-
                    GROUP BY game.id) AS counts
-
                  ON (counts.game = game.id)
               WHERE ((game.target = ?) OR (? = ''))
            ORDER BY game.name"
@@ -511,12 +506,9 @@
                  ON source.language = game.source
          RIGHT JOIN expression AS target
                  ON target.language = game.target
-                AND ((source.structure->'synsem'->'sem') 
-                      @> 
-                    (target.structure->'synsem'->'sem'))
+                AND ((source.structure->'synsem'->'sem') @> (target.structure->'synsem'->'sem'))
                 AND target.structure @> ANY(game.target_lex)
                 AND target.structure @> ANY(game.target_grammar)
-
               WHERE game.id=?
                 AND game.target_lex != ARRAY['{}'::jsonb]
                 AND game.target_grammar != ARRAY['{}'::jsonb]
