@@ -6,12 +6,13 @@
 (require '[compojure.core :as compojure :refer [GET PUT POST DELETE ANY]])
 (require '[hiccup.core :refer (html)])
 (require '[italianverbs.auth :refer [is-admin]])
+(require '[italianverbs.borges.writer :refer [populate]])
 (require '[italianverbs.cache :refer (build-lex-sch-cache create-index over spec-to-phrases)])
 (require '[italianverbs.forest :as forest])
 (require '[italianverbs.grammar.italiano :as gram])
 (require '[italianverbs.html :as html])
 (require '[italianverbs.lexicon.italiano :as lex])
-(require '[italianverbs.lexiconfn :refer (compile-lex map-function-on-map-vals unify)])
+(require '[italianverbs.lexiconfn :refer (compile-lex infinitives map-function-on-map-vals unify)])
 (require '[italianverbs.morphology :refer (fo)])
 (require '[italianverbs.morphology.italiano :as morph])
 (require '[italianverbs.parse :as parse])
@@ -246,3 +247,23 @@
      ])
    request))
 
+(defn standard-fill-verb [verb count & [spec]] ;; spec is for additional constraints on generation.
+  (let [spec (if spec spec :top)
+        tenses [{:synsem {:sem {:tense :conditional}}}
+                {:synsem {:sem {:tense :futuro}}}
+                {:synsem {:sem {:tense :past :aspect :progressive}}}
+                {:synsem {:sem {:tense :past :aspect :perfect}}}
+                {:synsem {:sem {:tense :present}}}]]
+    (pmap (fn [tense] (populate count (eval (symbol (str "italianverbs." "english/" "small"))) small
+                               (unify {:root {:italiano {:italiano verb}}}
+                                      spec
+                                      tense)))
+          tenses)))
+
+(defn standard-fill [ & [count-per-verb]]
+  (let [italian-verbs
+        (sort (keys (infinitives @lexicon)))
+        count-per-verb (if count-per-verb count-per-verb 10)]
+    (map (fn [verb]
+           (standard-fill-verb verb count-per-verb))
+         italian-verbs)))

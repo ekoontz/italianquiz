@@ -58,24 +58,3 @@
 (deftest do-prep
   (prep 10)
   (is (= 1 1))) ;; stub TODO: fill out test
-
-(defn standard-fill-verb [verb count & [spec]] ;; spec is for additional constraints on generation.
-  (let [spec (if spec spec :top)
-        tenses [{:synsem {:sem {:tense :conditional}}}
-                {:synsem {:sem {:tense :futuro}}}
-                {:synsem {:sem {:tense :past :aspect :progressive}}}
-                {:synsem {:sem {:tense :past :aspect :perfect}}}
-                {:synsem {:sem {:tense :present}}}]]
-    (pmap (fn [tense] (populate count en/small it/small
-                               (unify {:root {:italiano {:italiano verb}}}
-                                      spec
-                                      tense)))
-          tenses)))
-
-(defn standard-fill [ & [count-per-verb]]
-  (let [italian-verbs
-        (sort (keys (infinitives @italianverbs.italiano/lexicon)))
-        count-per-verb (if count-per-verb count-per-verb 10)]
-    (map (fn [verb]
-           (standard-fill-verb verb count-per-verb))
-         italian-verbs)))
