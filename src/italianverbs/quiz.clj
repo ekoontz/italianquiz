@@ -719,7 +719,7 @@
         session (session/request-to-session request)
         stored (if (get params "id") ;; if id is nil, then there is no existing question: TODO: figure out under what circumstances id can be nil.
                  (db/fetch-one :guess
-                               {:id (new org.bson.types.ObjectId (get params "id"))
+                               {:id (Integer. (get params "id"))
                                 :session session})
                  (store-question question (session/request-to-session request) nil))]
     (str
