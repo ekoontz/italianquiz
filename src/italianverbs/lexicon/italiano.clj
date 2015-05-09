@@ -954,6 +954,7 @@
 
       "giocare"  {:synsem {:cat :verb
                            :sem {;:obj {:games true}
+                                 :subj {:human true}
                                  :pred :giocare}}
                   :italiano {:futuro-stem "giocher"}}
 
@@ -1337,7 +1338,8 @@
                       :sem {:pred :study}}}
 
    "suonare"  {:synsem {:cat :verb 
-                      :sem {:pred :suonare}}}
+                      :sem {:subj {:human true}
+                            :pred :suonare}}}
 ;                                            :obj {:music true}}}})
 
    "sviluppare"  {:synsem {:cat :verb 
