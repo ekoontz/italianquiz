@@ -14,7 +14,7 @@
    [italianverbs.unify :as unify]
    [italianverbs.unify :refer :all]))
 
-;; stub that is redefined by italianverbs/mongo or interfaces to other dbs.
+;; stub that is redefined by interfaces to specific databases.
 (defn clear! [])
 
 (def lookup-in

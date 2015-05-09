@@ -414,7 +414,6 @@ on a table."
           (where delete-where)))
 
 (defn object-id [ & args ]
-  "compare with mongo/object-id, which uses mongo ids."
   (Integer. (first args)))
 
 (defn primary-key [map]

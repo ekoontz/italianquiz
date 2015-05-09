@@ -4,7 +4,6 @@
         [clojure.set])
   (:require
    [italianverbs.unify :as fs]
-   [italianverbs.mongo :as mongo]
    [italianverbs.lexiconfn :as lexfn]))
 
 ;;The intersection of mutually-exclusive queries is the null set

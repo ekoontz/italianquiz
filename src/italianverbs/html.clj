@@ -517,9 +517,7 @@
          (= (type arg)
             java.lang.Integer)
          (= (type arg)
-            java.lang.Double)
-         (= (type arg)
-            org.bson.types.ObjectId))
+            java.lang.Double))
      (str "<span class='atom'>" arg "</span>")
 
      (and (= (type arg) clojure.lang.Ref)

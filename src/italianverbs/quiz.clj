@@ -298,15 +298,12 @@
     (if (> (and results (.size results) 0))
       (get (nth results 0) :id))))
 
-(def using-mongo false)
-
 ;; TODO: use function constraints to enforce session :where check.
 ;; TODO: s/qid/id/
 (defn update-question-by-id-with-guess [guess qid session]
   (log/debug (str "updating guess with id=" qid " and session=" session))
   (log/debug (str "(update-question-by-id-with-guess) qid: " qid))
-  (let [qid (if using-mongo (new org.bson.types.ObjectId qid)
-                (Integer. qid))]
+  (let [qid (Integer. qid)]
     (log/debug (str "qid (post-munge): " qid))
     (let [question (db/fetch-one :guess
                                  {:id qid})
@@ -537,7 +534,7 @@
         debug (log/trace (str "evaluation: " evaluation))
 
         ;; for now, until we store evaluation column as a postgres vector type:
-        evaluation (if using-mongo evaluation (read-string evaluation))
+        evaluation (read-string evaluation)
 
         eval (eval-segments evaluation)
 

@@ -393,7 +393,6 @@
            (= val2 :top) val1
            
            ;; TODO: verify that these keyword/string exceptions are necessary - otherwise remove them.
-           ;; these two rules are unfortunately necessary because of congomongo's storage of keywords as strings.
            (= val1 "top") val2
            (= val2 "top") val1
 
@@ -595,7 +594,7 @@
      (= val1 :top) val2
      (= val2 :top) val1
 
-     ;; these two rules are unfortunately necessary because of mongo/clojure storage of keywords as strings.
+     ;; TODO: remove if not needed.
      (= val1 "top") val2
      (= val2 "top") val1
 
@@ -721,7 +720,7 @@
      ;; (merge 42 :nil!) => :nil!
      (= val2 nil) val1
      (= val2 :nil!) val2
-     (= val2 "nil!") val2 ;; needed because of translation error from mongod to clojure.
+     (= val2 "nil!") val2 ;; TODO: remove this if not needed.
 
      (= val1 val2) val1
 
