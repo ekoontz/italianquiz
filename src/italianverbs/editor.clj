@@ -13,6 +13,7 @@
    [italianverbs.borges.reader :refer :all]
    [italianverbs.borges.writer :refer [populate populate-from]]
    [italianverbs.html :as html]
+   [italianverbs.lexiconfn :refer [infinitives]]
    [italianverbs.unify :refer [get-in strip-refs unify]]
 
    [hiccup.core :refer (html)]
@@ -890,35 +891,15 @@ ms: " params))))
                   :label "Verbs"
                   :type :checkboxes
                   :cols 10
-                  :options (map (fn [row]
-                                  (let [lexeme (if (:lexeme row)
-                                                 (:lexeme row)
-                                                 "")
-                                        lexeme (string/replace lexeme "\"" "")]
-                                    {:label lexeme
-                                     :value lexeme}))
+                  :options (map (fn [lexeme]
+                                  {:label lexeme
+                                   :value lexeme})
+                                (sort (keys (infinitives @(eval (symbol (str "italianverbs." 
 
-                                ;; TODO: should not use expressions as a lexicon; 
-                                ;; should instead compile lexicon into a database table.
-                                ;; 
-                                ;; The 'expression_heads.exception IS NULL'
-                                ;; is used to prevent selecting exceptions.
-                                (k/exec-raw 
-                                 [(str "SELECT DISTINCT lexeme
-                                                   FROM (SELECT surface,
-                                                                structure->'head'->?->? AS lexeme,
-                                                                structure->'head'->?->'exception'::text AS exception
-                                                           FROM expression 
-                                                          WHERE language=?) AS expression_heads
-                                                  WHERE expression_heads.exception IS NULL
-                                                    AND lexeme IS NOT NULL
-                                                  ORDER BY lexeme ASC")
-                                             [language-keyword-name
-                                              language-keyword-name
-                                              language-keyword-name
-                                              language-short-name]
-                                             ]
-                                            :results))}]
+                                                                             (sqlname-from-match 
+                                                                              (short-language-name-to-long language-short-name))
+                                                                             
+                                                                             ) "lexicon"))))))}]
 
                 [{:name :target_tenses
                   :label "Tenses"
