@@ -439,7 +439,8 @@
     (string/join ", " (remove #(nil? %) (list lexeme human-readable-tense)))))
 
 (defn source-to-target-mappings [game-id spec]
-  (let [sql
+  (let [show-edit-buttons false
+        sql
            "SELECT source.surface AS source,
                    array_sort_unique(array_agg(target.surface)) AS targets
               FROM game
@@ -464,29 +465,30 @@
 
         [:tr
          [:th {:style "width:1em;"}]
-         [:th "" ]
+         (if show-edit-buttons [:th "" ])
          [:th "Source"]
          [:th "Targets"]
-         [:th "" ]
+         (if show-edit-buttons [:th "" ])
          ]
           
         (map (fn [result]
                [:tr
-                [:th (first result)]
+                [:th {:style "text-align:right"} (first result)]
 
-                [:td
-                 [:button {:disabled "disabled"} "Delete"]
-                 ]
+                (if show-edit-buttons
+                  [:td
+                   [:button {:disabled "disabled"} "Delete"]
+                   ])
 
                 [:td
                  (:source (second result))]
                 [:td
                  (string/join "," (.getArray (:targets (second result))))]
 
-                [:td
-                 [:button {:disabled "disabled"} "Delete"]
-                 ]
-                
+                (if show-edit-buttons
+                  [:td
+                   [:button {:disabled "disabled"} "Delete"]
+                   ])
                 ]
                )
              (sort
@@ -540,7 +542,7 @@
        (if grouped-by-source-results
          (map (fn [result]
                 [:tr
-                 [:th (first result)]
+                 [:th {:style "text-align:right"} (first result)]
                  [:th
                   (string/replace 
                    (let [infinitive (:infinitive (second result))]
@@ -602,7 +604,7 @@
                      ]
 
                  [:tr
-                  [:th number-index]
+                  [:th {:style "text-align:right"} number-index]
                   [:td lexeme]
 
                   (map (fn [tense-spec]
