@@ -87,6 +87,25 @@
 
    (GET "/login" request
         (do
+          (log/debug (str "running /login with google-client-id: " (:client-id client-config)))
+
+          ;; need all three environment variables set correctly; otherwise thrown an exception.
+          (if (nil? (:client-id client-config))
+            (do
+              (log/error (str "No google client id was found in the environment."))
+              (throw (Exception. (str "You must define GOOGLE_CLIENT_ID in your environment.")))))
+
+          (if (nil? (:client-secret client-config))
+            (do
+              (log/error (str "No google client secret was found in the environment."))
+              (throw (Exception. (str "You must define GOOGLE_CLIENT_SECRET in your environment.")))))
+
+          (if (nil? (:callback client-config))
+            (do
+              (log/error (str "No google client callback was found in the environment."))
+              (throw (Exception. (str "You must define GOOGLE_CALLBACK_DOMAIN in your environment.")))))
+
+
           (friend/authorize #{::user} "Authorized page.")
           (is-authenticated
            (do
@@ -101,3 +120,5 @@
         
    (GET "/admin" request
         (friend/authorize #{::admin} "Only admins can see this page."))))
+
+
