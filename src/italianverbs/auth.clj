@@ -81,7 +81,6 @@
 
        (-> identity friend/current-authentication :roles)))
 
-;; TODO: add function to designate google users who are admins.
 (defn credential-fn [arg]
   (log/debug (str "calling credential-fn with arg: " arg))
   (creds/bcrypt-credential-fn @internal/users arg))
