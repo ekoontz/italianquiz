@@ -71,11 +71,11 @@
      ]
 
     (if (haz-admin)
-      [:div.flags
+      [:div {:class "rounded flags manage"}
 
        [:h3 "Manage Games"]
 
-       [:div.flag
+       [:div {:class "flag smallflag"}
         [:a {:href "/editor/it"}
           [:img {:src "/png/Flag_of_Italy.svg.png" }]]
         [:a {:href "/editor/it"}
@@ -83,7 +83,7 @@
          ]
         ]
 
-       [:div.flag
+       [:div {:class "flag smallflag"}
         [:a {:href "/editor/es"}
          [:img {:src "/png/Flag_of_Spain.svg.png" }]]
         [:a {:href "/editor/es"}
@@ -91,7 +91,7 @@
          ]
         ]
        
-       [:div.flag
+       [:div {:class "flag smallflag"}
         [:img {:src "/png/Flag_of_France.svg.png" }]
         [:div.language "Français"]
         [:i {:style "text-align:center;color:#ccc"} "Coming soon"]]]

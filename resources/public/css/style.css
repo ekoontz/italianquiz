@@ -16,6 +16,16 @@ div.major {
     padding-bottom:2px;
 }
 
+.rounded {
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border:4px solid #aeecb4;
+    border-radius: 5px;
+    margin-top:0.5em;
+    margin-bottom:0.5em;
+    padding-bottom:2px;
+}
+
 h3 {
     background:#d4d6fa;
 }
@@ -518,6 +528,20 @@ table.striped tr:nth-of-type(odd) {
 .flag img {
     width:100px;
     height:66px;
+}
+
+.smallflag img {
+    width:75px;
+    height:49.500px;
+}
+
+.manage {
+    border:4px solid #e9ecae;
+    background: #e9ecae;
+}
+
+.manage h3 {
+    background: #aeecb4;
 }
 
 .language {
