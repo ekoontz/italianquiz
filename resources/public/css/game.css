@@ -2,7 +2,7 @@
     width:100%;
     border:0px dashed green;
     margin-top:1em;
-    background: #lightgreen;
+    background: lightgreen;
     float:left;
 }
 
@@ -48,7 +48,7 @@
     position: absolute;
     width:100%;
     z-index:2;
-    height:1em%;
+    height:1em;
     left:0px;
     top:0px;
     float:left;

@@ -364,7 +364,7 @@ div.login {
     opacity:0.85;
     background:#F9F7E9;
     filter:alpha(opacity=85); /* For IE8 and earlier */
-    border: 1px solid #18AB29
+    border: 1px solid #18AB29;
     padding:2px;
 }
 
