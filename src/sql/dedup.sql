@@ -1,4 +1,3 @@
-
 -- TODO: add all of the following inside a dedup() postgresql function.
 DROP TABLE expression_distinct;
 CREATE TABLE expression_distinct (
