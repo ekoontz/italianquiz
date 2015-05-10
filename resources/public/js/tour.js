@@ -163,12 +163,7 @@ function get_position_from_profile(target_language) {
         dataType: "json",
         url: "/tour/" + target_language + "/step",
         success: function (content) {
-	    if (true) {
-		retval = content;
-	    } else {
-		retval = {"step":5,
-			  "direction":1};
-	    }
+	    retval = content;
 	}});
     return retval;
 }
