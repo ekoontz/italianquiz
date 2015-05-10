@@ -39,12 +39,25 @@
        :headers {"Location" "/game"}}))
 
 (defn haz-admin []
-  (log/debug (str "haz-admin: (friend/current-authentication): " (friend/current-authentication)))
-  (and (not (nil? (friend/current-authentication)))
-       ;; TODO: add support for google-authenticated administrators.
-       (not (nil?
-             (:italianverbs.auth.internal/admin
-              (:roles (friend/current-authentication)))))))
+  (let [authentication (friend/current-authentication)]
+    (log/debug (str "haz-admin: (friend/current-authentication): " authentication))
+    (if (= (:allow-internal-admins env) "true")
+      (log/warn (str "ALLOW_INTERNAL_ADMINS is enabled: allowing internally-authentication admins - should not be enabled in production")))
+
+    (and (not (nil? authentication))
+         (or
+
+          ;; Internally-authenticated admins (Should not be used in production until passwords are not stored in plain text)
+          (and (:allow-internal-admins env)
+               (not (nil?
+                     (:italianverbs.auth.internal/admin
+                      (:roles authentication)))))
+   
+          ;; Google-authenticated admins - note that we decide here (not within google/) about whether the user
+          ;; is an admin.
+          (let [google-username (google/token2username (get-in authentication [:identity :access-token]))]
+            (or (= google-username "ekoontz@gmail.com")
+                (= google-username "franksfo2003@gmail.com")))))))
 
 ;; TODO: should be a macro, so that 'if-admin' is not evaluated unless (haz-admin) is true.
 (defn is-admin [if-admin]

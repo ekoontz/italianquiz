@@ -6,7 +6,6 @@
 (require '[compojure.core :as compojure :refer [context GET PUT POST DELETE ANY]])
 (require '[digest])
 (require '[environ.core :refer [env]])
-(require '[italianverbs.auth.internal :as internal])
 (require '[italianverbs.korma :as db])
 (require '[cemerick.friend 
            [workflows :as workflows]
@@ -25,8 +24,7 @@
                   "michael" {:username "michael"
                              :password (creds/hash-bcrypt "marcheschi")
                              :roles #{::user ::admin}}
-
-
+                  
                   "gino" {:username "gino"
                           :password (creds/hash-bcrypt "gino")
                           :roles #{::user}}}))

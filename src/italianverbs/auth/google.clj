@@ -23,7 +23,13 @@
 
 (defn credential-fn [token]
   ;;lookup token in DB or whatever to fetch appropriate :roles
+  (log/error (str "CREDENTIAL FN TOKEN: " token))
   {:identity token :roles #{::user}})
+
+;; TODO: use database, not hard-wired in soure code.
+
+;(def users (atom {"ekoontz@gmail.com" 
+;                  {:roles #{::user ::admin}}}))
 
 (def uri-config
   {:authentication-uri {:url "https://accounts.google.com/o/oauth2/auth"
@@ -53,10 +59,10 @@
 (defn token2username [access-token]
   (let [user-in-db (first (k/exec-raw [(str "SELECT email FROM vc_user WHERE access_token=?") [access-token]] :results))]
     (if user-in-db
-      (do (log/info (str "found user and access-token in database; email: " (:email user-in-db)))
+      (do (log/info (str "found user by access-token in Postgres vc_user database: email: " (:email user-in-db)))
           (:email user-in-db))
       (do
-        (log/info (str "did not find user in database: querying: https://www.googleapis.com/oauth2/v1/userinfo?access_token=<input access token>"))
+        (log/info (str "user's token was not in database: querying: https://www.googleapis.com/oauth2/v1/userinfo?access_token=<input access token>"))
         (let [{:keys [status headers body error] :as resp} 
               @(http/get 
                 (str "https://www.googleapis.com/oauth2/v1/userinfo?access_token=" access-token))]
@@ -70,6 +76,7 @@
                                                 v))]
             (let [email (get body :email)]
               (log/info (str "Google says user's email is: " email))
+              ;; TODO: rather than insert, if vc_user for this email exists, update that record instead.
               (k/exec-raw [(str "INSERT INTO vc_user (access_token,email) VALUES (?,?)") [access-token email]])
               (log/debug (str "token2username: " access-token " => " email))
             email)))))))
@@ -104,7 +111,6 @@
             (do
               (log/error (str "No google client callback was found in the environment."))
               (throw (Exception. (str "You must define GOOGLE_CALLBACK_DOMAIN in your environment.")))))
-
 
           (friend/authorize #{::user} "Authorized page.")
           (is-authenticated
