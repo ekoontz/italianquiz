@@ -307,3 +307,7 @@ div.newlink {
     width:100%;
     padding:0.25em;
 }
+
+div.login img {
+    width:30px;
+}

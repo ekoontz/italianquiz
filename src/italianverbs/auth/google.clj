@@ -51,11 +51,13 @@
          {:status 302
           :headers {"Location" "/"}})))
 
+;; TODO: factor out update/insert into separate function with more representative names
 (defn token2username [access-token]
-  (let [user-in-db (first (k/exec-raw [(str "SELECT email FROM vc_user WHERE access_token=?") [access-token]] :results))]
-    (if user-in-db
-      (do (log/info (str "found user by access-token in Postgres vc_user database: email: " (:email user-in-db)))
-          (:email user-in-db))
+  (let [user-by-access-token (first (k/exec-raw [(str "SELECT email FROM vc_user WHERE access_token=?") [access-token]] :results))]
+    (if user-by-access-token
+      (do (log/info (str "found user by access-token in Postgres vc_user database: email: "
+                         (:email user-by-access-token)))
+          (:email user-by-access-token))
       (do
         (log/info (str "user's token was not in database: querying: https://www.googleapis.com/oauth2/v1/userinfo?access_token=<input access token> to obtain user info"))
         (let [{:keys [status headers body error] :as resp} 
@@ -69,11 +71,39 @@
                                     :key-fn keyword
                                     :value-fn (fn [k v]
                                                 v))]
-            (let [email (get body :email)]
+            (let [email (get body :email)
+                  given-name (get body :given_name)
+                  family-name (get body :family_name)
+                  picture (get body :picture)]
               (log/info (str "Google says user's email is: " email))
-              (k/exec-raw [(str "UPDATE vc_user SET (access_token) = (?) WHERE email=?") [access-token email]])
-              (log/debug (str "token2username: " access-token " => " email))
-            email)))))))
+              (log/info (str "Google says user's given_name is: " given-name))
+              (log/info (str "Google says user's family_name is: " family-name))
+              (log/info (str "Google says user's picture is: " picture))
+
+              (let [user-by-email (first (k/exec-raw [(str "SELECT email FROM vc_user WHERE access_token=?") [access-token]] :results))]
+                (if user-by-email
+                  (do 
+                    (log/info (str "updating existing user record."))
+                    (k/exec-raw [(str "UPDATE vc_user SET (access_token,given_name,family_name,picture,updated) = (?,?,?,?,now()) WHERE email=?")
+                                 [access-token given-name family-name picture email]]))
+
+                  (do
+                    (log/info (str "inserting new user record."))
+                    (k/exec-raw [(str "INSERT INTO vc_user (access_token,given_name,family_name,picture,updated,email) VALUES (?,?,?,?,now(),?)") 
+                                 [access-token given-name family-name picture email]])))
+
+                (log/debug (str "token2username: " access-token " => " email))
+                email))))))))
+
+(defn token2info [access-token]
+  (first (k/exec-raw [(str "SELECT * FROM vc_user WHERE access_token=?")
+                      [access-token]]
+                     :results)))
+
+(defn token2picture [access-token]
+  (let [token2info (token2info access-token)]
+    (if token2info
+      (:picture token2info))))
 
 (def routes
   (compojure/routes
@@ -111,8 +141,6 @@
            (do
              (let [username (token2username
                              (-> request :session :cemerick.friend/identity :current :access-token))]
-;               (log/info (str "INSERT INTO users words_per_game (game,word) " game-id "," word))
-
                (log/debug (str "Logging in user with access token: " 
                                (-> request :session :cemerick.friend/identity :current :access-token))))
              {:status 302

@@ -351,3 +351,18 @@ and (orientation : landscape) {
 	left:53%;
     }
 }
+
+
+div.login {
+    z-index:5;
+    position:absolute;
+    top:1%;
+    font-size:smaller;
+    left:15%;
+    padding:0;
+    margin:0;
+    opacity:0.85;
+    background:#F9F7E9;
+    filter:alpha(opacity=85); /* For IE8 and earlier */
+    border: 1px solid #18AB29
+}
