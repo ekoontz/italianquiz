@@ -273,3 +273,9 @@
 ;;   Generate expressions for english -> italian for the three variables shown and insert
 ;; into the table 'expression_import'.
 ;;(pmap #(standard-fill-verb % 10 :top "expression_import") ["cenare" "bere" "dare"])
+
+;; then in target DB (e.g. dev or production):
+;; TRUNCATE expression_import;
+;; INSERT INTO expression (language,model,surface,structure,serialized)
+;;   SELECT language,model,surface,structure,serialized
+;;     FROM expression_import;
