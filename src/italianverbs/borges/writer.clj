@@ -38,7 +38,8 @@
 ;; (which language,lexicon,grammar,etc..).
 (def mask-populate-errors false)
 
-(defn populate [num source-language-model target-language-model & [ spec ]]
+;; TODO: use named optional parameters.
+(defn populate [num source-language-model target-language-model & [ spec table ]]
   (let [spec (if spec spec :top)
         debug (log/debug (str "spec(1): " spec))
         spec (cond
@@ -55,6 +56,8 @@
         spec (unify spec {:synsem {:subcat '()}}) 
 
         debug (log/debug (str "spec(3): " spec))
+
+        table (if table table "expression")
 
         ]
     (dotimes [n num]
@@ -113,7 +116,7 @@
 
             ]
         
-        (k/exec-raw [(str "INSERT INTO expression (surface, structure, serialized, language, model) VALUES (?,"
+        (k/exec-raw [(str "INSERT INTO " table " (surface, structure, serialized, language, model) VALUES (?,"
                           "'" (json/write-str (strip-refs target-language-sentence)) "'"
                           ","
                           "'" (str (serialize target-language-sentence)) "'"
@@ -123,7 +126,8 @@
                       target-language
                       (:name target-language-model)]])
 
-        (k/exec-raw [(str "INSERT INTO expression (surface, structure, serialized, language, model) VALUES (?,"
+        (k/exec-raw [(str "INSERT INTO " table " (surface, structure, serialized, language, model) 
+                                VALUES (?,"
                           "'" (json/write-str (strip-refs source-language-sentence)) "'"
                           ","
                           "'" (str (serialize source-language-sentence)) "'"

@@ -247,7 +247,7 @@
      ])
    request))
 
-(defn standard-fill-verb [verb count & [spec]] ;; spec is for additional constraints on generation.
+(defn standard-fill-verb [verb count & [spec table]] ;; spec is for additional constraints on generation.
   (let [spec (if spec spec :top)
         tenses [{:synsem {:sem {:tense :conditional}}}
                 {:synsem {:sem {:tense :futuro}}}
@@ -257,7 +257,8 @@
     (pmap (fn [tense] (populate count (eval (symbol (str "italianverbs." "english/" "small"))) small
                                (unify {:root {:italiano {:italiano verb}}}
                                       spec
-                                      tense)))
+                                      tense)
+                               table))
           tenses)))
 
 (defn standard-fill [ & [count-per-verb]]
@@ -267,3 +268,8 @@
     (map (fn [verb]
            (standard-fill-verb verb count-per-verb))
          italian-verbs)))
+
+;; Usage: (TODO: turn into test in test/italiano)
+;;   Generate expressions for english -> italian for the three variables shown and insert
+;; into the table 'expression_import'.
+;;(pmap #(standard-fill-verb % 10 :top "expression_import") ["cenare" "bere" "dare"])
