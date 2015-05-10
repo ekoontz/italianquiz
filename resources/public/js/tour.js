@@ -1,12 +1,24 @@
 // Begin configurable section.
 
-var google_api_key = "AIzaSyCpU5D-Vwvxjd0AbnXtuoih_1WMwWK1_Lg";
+var google_api_key = "AIzaSyD0tmoXx3oJAPITndZR4f3I5GcnV-Jram4";
 var pitch = 0; // In streetview, angle with respect to the horizon.
 // How much to increment the score for a correct answer 
 // or decrement for a "I don't know".
 var score_increment = 10; 
 
 // End Configurable section.
+
+// TODO: move to map.js
+var greenIcon = L.icon({
+    iconUrl: 'https://lh4.googleusercontent.com/-xQUbYJAt5ws/AAAAAAAAAAI/AAAAAAAAJlU/ucawViWunt8/photo.jpg',
+//    shadowUrl: 'leaf-shadow.png',
+
+    iconSize:     [38, 95], // size of the icon
+    shadowSize:   [50, 64], // size of the shadow
+    iconAnchor:   [22, 94], // point of the icon which will correspond to marker's location
+    shadowAnchor: [4, 62],  // the same for the shadow
+    popupAnchor:  [-3, -76] // point from which the popup should open relative to the iconAnchor
+});
 
 function get_quadrant(path,step) {
     log(DEBUG,"GET QUADRANT: " + path);
