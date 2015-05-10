@@ -26,11 +26,6 @@
   (log/error (str "CREDENTIAL FN TOKEN: " token))
   {:identity token :roles #{::user}})
 
-;; TODO: use database, not hard-wired in soure code.
-
-;(def users (atom {"ekoontz@gmail.com" 
-;                  {:roles #{::user ::admin}}}))
-
 (def uri-config
   {:authentication-uri {:url "https://accounts.google.com/o/oauth2/auth"
                        :query {:client_id (:client-id client-config)
@@ -62,7 +57,7 @@
       (do (log/info (str "found user by access-token in Postgres vc_user database: email: " (:email user-in-db)))
           (:email user-in-db))
       (do
-        (log/info (str "user's token was not in database: querying: https://www.googleapis.com/oauth2/v1/userinfo?access_token=<input access token>"))
+        (log/info (str "user's token was not in database: querying: https://www.googleapis.com/oauth2/v1/userinfo?access_token=<input access token> to obtain user info"))
         (let [{:keys [status headers body error] :as resp} 
               @(http/get 
                 (str "https://www.googleapis.com/oauth2/v1/userinfo?access_token=" access-token))]
@@ -76,8 +71,7 @@
                                                 v))]
             (let [email (get body :email)]
               (log/info (str "Google says user's email is: " email))
-              ;; TODO: rather than insert, if vc_user for this email exists, update that record instead.
-              (k/exec-raw [(str "INSERT INTO vc_user (access_token,email) VALUES (?,?)") [access-token email]])
+              (k/exec-raw [(str "UPDATE vc_user SET (access_token) = (?) WHERE email=?") [access-token email]])
               (log/debug (str "token2username: " access-token " => " email))
             email)))))))
 
