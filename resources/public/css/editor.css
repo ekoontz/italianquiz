@@ -239,6 +239,10 @@ td.count {
     text-align:right;
 }
 
+td.zerowarning {
+    background:salmon;
+}
+
 div.spec {
     font-size:small;
     display:none;
@@ -247,3 +251,4 @@ div.spec {
 td.selected {
     background:#d4d6fa;
 }
+

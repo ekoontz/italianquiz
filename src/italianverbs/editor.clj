@@ -612,20 +612,25 @@
                                refine-param ;; combine the tense and lexeme together.
                                (unify 
                                 (json-read-str tense-spec)
-                                lexeme-specification)]
+                                lexeme-specification)
+                               count 
+                               (:count (first (k/exec-raw ["SELECT count(*) 
+                                                              FROM expression 
+                                                             WHERE structure @> ?::jsonb 
+                                                               AND structure @> ?::jsonb"
+                                                           [tense-spec
+                                                            lexeme-specification-json]] 
+                                                          :results)))]
                            [:td
                             {:class (if (= refine-param refine)
-                                      "selected count" "count")}
-                                      
-                            [:a {:href (str "/editor/game/" (:id game) "?refine=" refine-param)}
-                             (str (:count (first (k/exec-raw ["SELECT count(*) 
-                                                               FROM expression 
-                                                              WHERE structure @> ?::jsonb 
-                                                                AND structure @> ?::jsonb"
-                                                              [tense-spec
-                                                               lexeme-specification-json] ] :results))))]
-                          
-                            ])) ;; end of map fn over all the possible tenses.
+                                      "selected count" 
+                                      (if (= 0 count)
+                                        "zerowarning count"
+                                        "count"))}
+                            [:a 
+                             {:href (str "/editor/game/" (:id game) "?refine=" refine-param)}
+                             (str count)]]))
+                       ;; end of map fn over all the possible tenses.
 
                        ;; coerce the database's value (of type jsonb[]) into a Clojure array.
                        (map (fn [x] x) (.getArray (:target_grammar game))))
