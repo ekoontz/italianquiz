@@ -114,7 +114,10 @@
 
                        (map? (:current identity))
                        ;; if it's a map, google is only possibility for now.
-                       (google/token2username (-> identity :current :access-token)))]
+                       (google/token2username (-> identity :current :access-token)))
+        picture (if (map? (:current identity))
+                  (google/token2picture (-> identity :current :access-token)))
+        ]
     
     (log/debug (str "verbcoach username: " username))
 
@@ -123,6 +126,9 @@
       [:tr
        [:td
         username]
+       (if picture
+         [:td
+          [:img.profile {:src picture}]])
        [:th {:style "display:none"}
         (str "Roles:")]
        [:td {:style "white-space:nowrap;display:none"}
