@@ -18,6 +18,7 @@
 
 (declare direction-chooser)
 (declare generate-q-and-a)
+(declare get-step-for-user)
 (declare tour)
 
 (def routes
@@ -66,6 +67,9 @@
 
      (GET "/it/IT/generate-q-and-a" request
           (generate-q-and-a "it" "IT" request))
+
+     (GET "/it/step" request
+          (get-step-for-user "it" "IT" request))
 
     (GET "/es/ES/generate-q-and-a" request
          (generate-q-and-a "es" "ES" request))
@@ -137,6 +141,16 @@
                                AND target=?")
                [target-language]] :results))
 
+(defn get-step-for-user [target-language target-locale request]
+  (let [headers {"Content-Type" "application/json;charset=utf-8"
+                 "Cache-Control" "no-cache, no-store, must-revalidate"
+                 "Pragma" "no-cache"
+                 "Expires" "0"}]
+    {:status 200
+     :headers headers
+     :body (write-str {:position 0
+                       :direction 1})}))
+
 (defn generate-q-and-a [target-language target-locale request]
   "generate a question in English and a set of possible correct answers in the target language, given parameters in request"
   (let [headers {"Content-Type" "application/json;charset=utf-8"
@@ -144,6 +158,7 @@
                  "Pragma" "no-cache"
                  "Expires" "0"}]
     (try (let [game (get (:params request) :game :any)
+               step (get (:params request) :step)
                game (if (= game :any)
                       (let [active (active-games target-language)]
                         (if (empty? active)

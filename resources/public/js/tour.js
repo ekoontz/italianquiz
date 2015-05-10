@@ -75,8 +75,9 @@ var tour_question_decrement_interval = 5000;
 
 var logging_level = INFO;
 
-var step = 0;
-var direction = 1;
+var step;
+var direction;
+
 var map;
 var marker;
 var current_zoom = 17;
@@ -97,6 +98,10 @@ var tour_paths = {
 };
 
 function start_tour(target_language,target_locale) {
+    var position_info = get_position_from_profile(target_language);
+    step = position_info.position;
+    direction = position_info.direction;
+
     // TODO: tour_paths is a global variable, defined in it.js, es.js, and other places.
     path = tour_paths[target_language][target_locale];
 
@@ -149,6 +154,25 @@ function start_tour(target_language,target_locale) {
     tour_loop(target_language,target_locale);
 }
 
+function get_position_from_profile(target_language) {
+    /* determine where user is on map based on their profile. */
+    var retval;
+    $.ajax({
+	async: false,
+	cache: false,
+        dataType: "json",
+        url: "/tour/" + target_language + "/step",
+        success: function (content) {
+	    if (true) {
+		retval = content;
+	    } else {
+		retval = {"step":5,
+			  "direction":1};
+	    }
+	}});
+    return retval;
+}
+
 function tour_loop(target_language,target_locale) {
     create_tour_question(target_language,target_locale);
     $("#gameinput").focus();
@@ -193,6 +217,9 @@ function create_tour_question(target_language,target_locale) {
         url: "/tour/" + target_language + "/generate-q-and-a",
         success: update_tour_q_and_a
     });
+}
+
+function response_to_update() {
 }
 
 function decrement_remaining_tour_question_time() {
