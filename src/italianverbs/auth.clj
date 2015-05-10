@@ -39,7 +39,7 @@
        :headers {"Location" "/game"}}))
 
 (defn haz-admin []
-  (log/debug (str "haz-admin: current-authentication: " (friend/current-authentication)))
+  (log/debug (str "haz-admin: (friend/current-authentication): " (friend/current-authentication)))
   (and (not (nil? (friend/current-authentication)))
        ;; TODO: add support for google-authenticated administrators.
        (not (nil?
