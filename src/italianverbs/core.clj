@@ -35,6 +35,10 @@
 
 ))
 
+;; TODO: add service env to just redirect temporarily (302) to
+;;  /undergoing-maintenance"undergoing maintenance" and 
+;; for now we just use 'heroku maintenance:on -a verbcoach'
+
 ;; not used at the moment, but might be handy someday:
 (def server-hostname (.getHostName (java.net.InetAddress/getLocalHost)))
 
