@@ -1343,8 +1343,9 @@
              :mass false
              :number :sing}}
 
-
-   "restituire" {:synsem {:cat :verb
+   "restituire" {:italiano {:boot-stem1 "restituisc"
+                            :boot-stem2 "restitu"}
+                 :synsem {:cat :verb
                           :sem {:pred :giveback-return}}}
 
    "riconocere" {:system {:cat :verb
