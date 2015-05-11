@@ -276,6 +276,10 @@
 
 ;; then in target DB (e.g. dev or production):
 ;; TRUNCATE expression_import;
-;; INSERT INTO expression (language,model,surface,structure,serialized)
-;;   SELECT language,model,surface,structure,serialized
-;;     FROM expression_import;
+(def insert-into
+"
+INSERT INTO expression (language,model,surface,structure,serialized)
+   SELECT language,model,surface,structure,serialized
+     FROM expression_import
+")
+
