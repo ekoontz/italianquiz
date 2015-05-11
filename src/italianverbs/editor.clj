@@ -514,7 +514,7 @@
                 AND game.target_lex != ARRAY['{}'::jsonb]
                 AND game.target_grammar != ARRAY['{}'::jsonb]
            GROUP BY source.surface
-           ORDER BY infinitive")
+           ORDER BY infinitive LIMIT 10")
 
         grouped-by-source-results (k/exec-raw [grouped-by-source-sql
                                                [game-id] ]
