@@ -65,6 +65,46 @@
    "obtain" {:synsem {:cat :verb
                 :sem {:pred :obtain}}}
 
+
+   "sigh" {:synsem {:cat :verb
+                :sem {:pred :sigh}}}
+
+   "interrupt" {:synsem {:cat :verb
+                :sem {:pred :interrupt}}}
+
+   "walk" {:synsem {:cat :verb
+                :sem {:pred :walk}}}
+
+   "recount" {:synsem {:cat :verb
+                :sem {:pred :recount}}}
+
+   "improve" {:synsem {:cat :verb
+                :sem {:pred :improve}}}
+
+   "approve" {:synsem {:cat :verb
+                :sem {:pred :approve}}}
+
+   "organize" {:synsem {:cat :verb
+                :sem {:pred :organize}}}
+
+   "rest" {:synsem {:cat :verb
+                :sem {:pred :reset}}}
+
+   "chat" {:synsem {:cat :verb
+                    :sem {:pred :chat}}}
+
+   "observe" {:synsem {:cat :verb
+                :sem {:pred :observe}}}
+
+   "engage" {:synsem {:cat :verb
+                :sem {:pred :engage}}}
+
+   "recover" {:synsem {:cat :verb
+                :sem {:pred :recover}}}
+
+   "steal" {:synsem {:cat :verb
+                :sem {:pred :steal}}}
+
    "Antonia"
    {:synsem {:sem {:pred :antonia
                    :human true}

@@ -221,6 +221,9 @@
    "approfittare"  {:synsem {:cat :verb
                              :sem {:pred :take-advantage-of}}}
 
+   "approvare" {:synsem {:cat :verb
+                         :sem {:pred :approve}}}
+
    "ascoltare"  {:synsem {:cat :verb
                           :sem {:pred :listen-to}}}
 
@@ -447,6 +450,10 @@
                            :consumable false
                            :clothing true}}})
 
+    "camminare"
+    {:synsem {:sem {:pred :run}
+              :cat :verb}}
+
    "cane"
    (unify agreement-noun
           common-noun
@@ -496,22 +503,25 @@
                              :writable false
                              :place false
                              :speakable false}}})
-      
-      "chiedere" {:synsem {:cat :verb
-                           :sem {:subj {:human true}
-                                 :pred :chiedere}}
-                  :italiano {:passato "chiesto"}}
 
-      "chiunque"
-      {:synsem {:cat :fail ; :noun ;; disabling until more constraints are put on usage of it (TODO).
-                :pronoun true
-                :case :nom
-                :agr {:person :3rd
-                      :number :sing}
-                :sem {:human true
+     "chiacchierare" {:synsem {:cat :verb
+                               :sem {:pred :chat}}}
+      
+     "chiedere" {:synsem {:cat :verb
+                          :sem {:subj {:human true}
+                                :pred :chiedere}}
+                 :italiano {:passato "chiesto"}}
+
+     "chiunque"
+     {:synsem {:cat :fail ; :noun ;; disabling until more constraints are put on usage of it (TODO).
+               :pronoun true
+               :case :nom
+               :agr {:person :3rd
+                     :number :sing}
+               :sem {:human true
                       :pred :chiunque
-                      :elective-existential true}
-                :subcat '()}}
+                     :elective-existential true}
+               :subcat '()}}
 
       "ci"
       {:synsem {:cat :noun
@@ -659,6 +669,10 @@
                             :boot-stem2 "colp"}
                  :synsem {:sem {:pred :strike}
                           :cat :verb}}
+
+      "controllare" {:synsem {:sem {:pred :check}
+                              :cat :verb}}
+                                    
 
       ;; TODO: account for "dare" being ditransitive.
       "dare"  {:synsem {:cat :verb
@@ -998,6 +1012,10 @@
 
       "imparare"  {:synsem {:cat :verb
                             :sem {:pred :imparare}}}
+
+      "impegnare" {:synsem {:cat :verb
+                            :sem {:pred :engage}}}
+
       "incontrare"  {:synsem {:cat :verb
                               :sem {:pred :incontrare}}}
 
@@ -1006,6 +1024,10 @@
 
       "insegnare"  {:synsem {:cat :verb
                              :sem {:pred :teach}}}
+
+      "interrompere" {:italiano {:passato "interrotto"}
+                      :synsem {:cat :verb
+                               :sem {:pred :interrupt}}}
 
       "io"
       [{:synsem {:cat :noun
@@ -1232,7 +1254,7 @@
    "mancare"  {:italiano {:futuro-stem "mancher"}
                :synsem {:cat :verb
                         :sem {:pred :mancare}}}
-
+   
    "mandare"  {:synsem {:cat :verb
                         :sem {:pred :mandare}}}
 
@@ -1247,17 +1269,20 @@
     {:synsem {:cat :verb
               :sem {:pred :lie}}}
 
+    "migliorare" {:synsem {:cat :verb
+                           :sem {:pred :improve}}} ;; c.f. english: "ameliorate"
+    
     "misurare" {:synsem {:cat :verb
                          :sem {:pred :measure}}}
 
-   "mostrare" {:synsem {:cat :verb
-                        :sem {:pred :show}}}
-
-   "multiplicare" {:synsem {:cat :verb
-                            :sem {:pred :multiply}}}
-   
-   "muovere" {:synsem {:cat :verb
-                       :sem {:pred :move}}}
+    "mostrare" {:synsem {:cat :verb
+                         :sem {:pred :show}}}
+    
+    "multiplicare" {:synsem {:cat :verb
+                             :sem {:pred :multiply}}}
+    
+    "muovere" {:synsem {:cat :verb
+                        :sem {:pred :move}}}
 
    ;; non-comparative
    ;; TODO: add comparative
@@ -1288,6 +1313,12 @@
               :sem {:human true
                     :pred :noi}
               :subcat '()}}]
+
+   "sistemare" {:synsem {:cat :verb
+                         :sem {:pred :organize}}}
+
+   "osservare" {:synsem {:cat :verb
+                         :sem {:pred :observe}}}
 
    "ottenere" {:synsem {:cat :verb
                         :sem {:pred :obtain}}
@@ -1343,6 +1374,12 @@
              :mass false
              :number :sing}}
 
+   "racontare" {:synsem {:cat :verb
+                         :sem {:pred :recount}}}
+
+   "recouperare" {:synsem {:cat :verb
+                           :sem {:pred :recover}}}
+
    "restituire" {:italiano {:boot-stem1 "restituisc"
                             :boot-stem2 "restitu"}
                  :synsem {:cat :verb
@@ -1356,6 +1393,9 @@
    "ricordare"  {:synsem {:cat :verb
                           :sem {:pred :ricordare}}}
 
+   "riposare" {:synsem {:cat :verb
+                          :sem {:pred :rest}}}
+
    "riscaldare" {:synsem {:cat :veb
                           :sem {:pred :warm}}}
 
@@ -1367,6 +1407,13 @@
    "ritornare" {:synsem {:cat :verb
                          :sem {:pred :ritornare}
                          :essere true}}
+
+   "rompere" {:synsem {:cat :verb
+                       :sem {:pred :break}}
+              :italiano {:passato "rotto"}}
+
+   "rubare" {:synsem {:cat :verb
+                      :sem {:pred :steal}}}
       
    ;; non-comparative
    ;; TODO: add comparative
@@ -1393,6 +1440,9 @@
 
    "sopportare" {:synsem {:cat :verb
                           :sem {:pred :endure}}}
+
+   "sospirare" {:synsem {:cat :verb
+                         :sem {:pred :sigh}}}
 
    "spostare" {:synsem {:cat :verb
                         :sem {:pred :displace}}}
@@ -1484,25 +1534,25 @@
                       :sem {:pred :usare}}}
 
    "vedere" 
-             {:synsem {:cat :verb
-                       :sem {:pred :vedere}}
-              :italiano {:passato "visto"
-                         :futuro-stem "vedr"}}
-
-             "vendere"  {:synsem {:cat :verb 
-                     :sem {:pred :vendere
-                           :subj {:human true}
-                           :obj {:human false}}}}
-                            
-"venire" {:synsem {:cat :verb
-                   :essere true
-                   :sem {:pred :venire}}
-          :italiano {:passato "venuto"
-                     :present {:1sing "vengo"
-                               :2sing "vieni"
-                               :3sing "viene"
-                               :3plur "vengono"}
-                     :futuro-stem "verr"}}
+   {:synsem {:cat :verb
+             :sem {:pred :vedere}}
+    :italiano {:passato "visto"
+               :futuro-stem "vedr"}}
+   
+   "vendere"  {:synsem {:cat :verb 
+                        :sem {:pred :vendere
+                              :subj {:human true}
+                              :obj {:human false}}}}
+   
+   "venire" {:synsem {:cat :verb
+                      :essere true
+                      :sem {:pred :venire}}
+             :italiano {:passato "venuto"
+                        :present {:1sing "vengo"
+                                  :2sing "vieni"
+                                  :3sing "viene"
+                                  :3plur "vengono"}
+                        :futuro-stem "verr"}}
 
    "vincere"  {:synsem {:cat :verb
                         :sem {:pred :win
