@@ -29,9 +29,11 @@
    :headers {"Content-type" "text/plain"}
    :body request})
 
-(defn truncate []
-  (k/exec-raw ["TRUNCATE expression"]))
-
+(defn truncate [ & [table]]
+  (let [table (if table table "expression")]
+;; doesn't work:
+;;    (k/exec-raw ["TRUNCATE ?" [table]])))
+   (k/exec-raw [(str "TRUNCATE " table)])))
 ;; catch exceptions when trying to populate
 ;; TODO: more fine-grained approach to dealing with exceptions:
 ;; should be sensitive to what caused the failure:
