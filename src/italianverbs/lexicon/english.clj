@@ -105,6 +105,22 @@
    "steal" {:synsem {:cat :verb
                 :sem {:pred :steal}}}
 
+   "admire" {:synsem {:cat :verb
+                      :sem {:pred :admire}}}
+
+   "snap" {:synsem {:cat :verb
+                    :sem {:pred :snap-pictures}}
+           :english {:note "(pictures)"}}
+
+   "reciprocate" {:synsem {:cat :verb
+                           :sem {:pred :reciprocate}}}
+
+   "add" {:synsem {:cat :verb
+                   :sem {:pred :add}}}
+
+;;   "" {:synsem {:cat :verb
+;;  :sem {:pred }}
+
    "Antonia"
    {:synsem {:sem {:pred :antonia
                    :human true}
@@ -902,6 +918,5 @@
                    :number :plur}
              :sem {:human true
                    :pred :voi}
-             :subcat '()}}})
-
-
+             :subcat '()}}
+})

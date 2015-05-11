@@ -78,7 +78,6 @@
                           :pred :acqua}}})
 
    "affolato"
-
    [;; comparative
     (let [is-place (ref {:place true}) ;; only places can be crowded.
           than-this (ref {:pred :di
@@ -100,6 +99,9 @@
                             :place true}}})
 
     ] ;; only places can be crowded.
+
+   "aggiungere" {:synsem {:cat :verb
+                          :sem {:pred :add}}}
 
    "aiutare"
     {:synsem {:essere false
@@ -139,6 +141,7 @@
                                 :2 {:cat :prep
                                     :sem complement-sem}}}}))]
 
+
    "amare"
     {:synsem {:cat :verb
               :essere false
@@ -155,6 +158,10 @@
           {:synsem {:sem {:pred :amico
                           :human true
                           :child false}}})
+
+   "ammirare" {:synsem {:cat :verb
+                        :sem {:pred :admire}}}
+
    "andare"
     {:italiano {:italiano "andare"
                 :essere true
@@ -630,6 +637,9 @@
                           :sem {:pred :contento
                                 :comparative false
                                 :human true}}}))]
+
+      "contraccombiare" {:synsem {:sem {:pred :reciprocate}
+                                  :cat :verb}}
 
       "correre"  {:italiano {:passato "corso"}
                   :synsem {:cat :verb
@@ -1427,6 +1437,9 @@
 
    "scappare"  {:synsem {:cat :verb 
                          :sem {:pred :escape}}}
+
+   "scattare" {:synsem {:cat :verb
+                        :sem {:pred :snap-pictures}}}
 
    "scaricare" {:synsem {:cat :verb 
                       :sem {:pred :scaricare}}}
