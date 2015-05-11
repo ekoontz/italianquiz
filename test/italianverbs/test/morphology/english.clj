@@ -46,3 +46,10 @@
     (= result "tries")))
 
 
+  (let [result (get-string {:agr {:person :1st
+                                  :number :sing}
+                            :cat :verb
+                            :infl :imperfetto
+                            :english "lie"})]
+    (is (= result "was lying"))))
+(deftest inflect5

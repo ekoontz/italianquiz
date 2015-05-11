@@ -198,7 +198,21 @@
                          (> (.length stem) 2) ;; don't apply this to "be".
                          (not penultimate-stem-char-is-vowel))
                   stem-minus-one
-                  stem)]
+                  stem)
+
+
+           ;; unless overridden by :participle or :participle-suffix below,
+           ;; ing-form will be used.
+           ing-form 
+           (cond
+
+            (re-find #"ie$" stem)
+            (str (replace stem #"..$" "y") "ing")
+
+            true
+            (str stem "ing"))
+
+           ]
        (cond
 
         ;; TODO: add support for per-agreement (by number or person) irregular participle;
@@ -228,10 +242,10 @@
         (and (= :sing (get-in word '(:agr :number)))
              (or (= :1st (get-in word '(:agr :person)))
                  (= :3rd (get-in word '(:agr :person)))))
-        (str "was " stem "ing" (if to-final to-final ""))
+        (str "was " ing-form (if to-final to-final ""))
 
         true
-        (str "were " stem "ing" (if to-final to-final "")))))
+        (str "were " ing-form (if to-final to-final "")))))
 
    ;; irregular past (1): a single inflection for all persons/numbers.
    (and (= :past (get-in word '(:infl)))
