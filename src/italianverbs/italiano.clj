@@ -247,7 +247,7 @@
      ])
    request))
 
-(defn standard-fill-verb [verb count & [spec table]] ;; spec is for additional constraints on generation.
+(defn fill-verb [verb count & [spec table]] ;; spec is for additional constraints on generation.
   (let [spec (if spec spec :top)
         tenses [{:synsem {:sem {:tense :conditional}}}
                 {:synsem {:sem {:tense :futuro}}}
@@ -261,12 +261,12 @@
                                table))
           tenses)))
 
-(defn standard-fill [ & [count-per-verb]]
+(defn fill-per-verb [ & [count-per-verb]]
   (let [italian-verbs
         (sort (keys (infinitives @lexicon)))
         count-per-verb (if count-per-verb count-per-verb 10)]
     (map (fn [verb]
-           (standard-fill-verb verb count-per-verb))
+           (fill-verb verb count-per-verb))
          italian-verbs)))
 
 ;; Usage: (TODO: turn into test in test/italiano)
