@@ -311,3 +311,8 @@ div.newlink {
 div.login img {
     width:30px;
 }
+
+/* hide internal-auth login form: only Google auth is shown, for now. */
+div.login form {
+    display:none;
+}
