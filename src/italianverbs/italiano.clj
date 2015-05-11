@@ -269,10 +269,20 @@
            (fill-verb verb count-per-verb))
          italian-verbs)))
 
-;; Usage: (TODO: turn into test in test/italiano)
-;;   Generate expressions for english -> italian for the three variables shown and insert
-;; into the table 'expression_import'.
-;;(pmap #(standard-fill-verb % 10 :top "expression_import") ["cenare" "bere" "dare"])
+;; HOWTO: fix and add expressions : (TODO: turn into test in test/italiano)
+;; 1. (if necessary) truncate bad expressions in main table (use some kind of ILIKE statement)
+;; 2. truncate expression_import
+;; 3. generate English -> Italian expressions in expression_import temporary table
+;;    (fill-verbs-in-list ["mentire"] "expression_import" 5)
+(def do-insert "
+INSERT INTO expression (language,model,surface,structure,serialized)
+     SELECT language,model,surface,structure,serialized
+       FROM expression_import;
+")
+
+(defn fill-verbs-in-list [verbs table count-per-verb]
+  (pmap #(fill-verb % count-per-verb :top "expression_import")
+        verbs))
 
 ;; then in target DB (e.g. dev or production):
 ;; TRUNCATE expression_import;
