@@ -654,6 +654,12 @@
       "creare"  {:synsem {:cat :verb
                           :sem {:pred :create}}}
 
+
+      "colpire" {:italiano {:boot-stem1 "colpisc"
+                            :boot-stem2 "colp"}
+                 :synsem {:sem {:pred :strike}
+                          :cat :verb}}
+
       ;; TODO: account for "dare" being ditransitive.
       "dare"  {:synsem {:cat :verb
                         :sem {:pred :dare}}
@@ -953,11 +959,19 @@
                              :pred :gatto
                              :pet true}}})
 
+      "gestire" {:italiano {:boot-stem1 "gestisc"
+                            :boot-stem2 "gest"}
+                 :synsem {:sem {:pred :manage}
+                          :cat :verb}}
+
       "giocare"  {:synsem {:cat :verb
                            :sem {;:obj {:games true}
                                  :subj {:human true}
                                  :pred :giocare}}
                   :italiano {:futuro-stem "giocher"}}
+
+      "gridare" {:synsem {:cat :verb
+                          :sem {:pred :yell}}}
 
       "guadagnare"  {:synsem {:cat :verb
                               :sem {:pred :earn
@@ -1203,6 +1217,9 @@
             (unify common
                    {:synsem {:sem {:human true}}})])
 
+   "macchiare" {:synsem {:cat :verb
+                         :sem {:pred :stain}}}
+
    "madre"
    (unify agreement-noun
           common-noun
@@ -1226,8 +1243,21 @@
                     :subj {:animate true}
                     :obj {:edible true}}}}
 
+    "mentire"
+    {:synsem {:cat :verb
+              :sem {:pred :lie}}}
+
+    "misurare" {:synsem {:cat :verb
+                         :sem {:pred :measure}}}
+
    "mostrare" {:synsem {:cat :verb
                         :sem {:pred :show}}}
+
+   "multiplicare" {:synsem {:cat :verb
+                            :sem {:pred :multiply}}}
+   
+   "muovere" {:synsem {:cat :verb
+                       :sem {:pred :move}}}
 
    ;; non-comparative
    ;; TODO: add comparative
@@ -1258,6 +1288,16 @@
               :sem {:human true
                     :pred :noi}
               :subcat '()}}]
+
+   "ottenere" {:synsem {:cat :verb
+                        :sem {:pred :obtain}}
+              :italiano {:passato "ottenuto"
+                         :present {:1sing "ottengo"
+                                   :2sing "ottieni"
+                                   :3sing "ottiene"
+                                   :3plur "otttengono"}
+                         :futuro-stem "otterr"}}
+
    "pane"
    ;; inherently singular.
    (unify agreement-noun
@@ -1287,21 +1327,36 @@
 
       (unify common2 intransitive intransitive-unspecified-obj)))
 
+   "piegare" {:synsem {:cat :verb
+                      :sem {:pred :fold}}}
+
    "portare"  {:synsem {:cat :verb
                         :sem {:pred :portare}}}
    "prendere" {:synsem {:cat :verb :sem {:pred :prendere}}
                :italiano {:passato "preso"}}
 
+   "prenotare" {:synsem {:cat :verb
+                         :sem {:pred :reserve}}}
    "qualche"
    {:synsem {:cat :det
              :def :indef
              :mass false
              :number :sing}}
 
+
+   "restituire" {:synsem {:cat :verb
+                          :sem {:pred :giveback-return}}}
+
+   "riconocere" {:system {:cat :verb
+                          :sem {:pred :recognize}}}
+
    "ricevere"  {:synsem {:cat :verb
                          :sem {:pred :ricevere}}}
    "ricordare"  {:synsem {:cat :verb
                           :sem {:pred :ricordare}}}
+
+   "riscaldare" {:synsem {:cat :veb
+                          :sem {:pred :warm}}}
 
    "rispondere" {:synsem {:cat :verb
                           :essere false
@@ -1322,15 +1377,27 @@
                           :physical-object true
                           :human false}}})
 
-"scappare"  {:synsem {:cat :verb 
-                      :sem {:pred :escape}}}
+   "scappare"  {:synsem {:cat :verb 
+                         :sem {:pred :escape}}}
 
-"scaricare" {:synsem {:cat :verb 
+   "scaricare" {:synsem {:cat :verb 
                       :sem {:pred :scaricare}}}
-
+   
    "scrivere"  {:synsem {:cat :verb 
                          :sem {:pred :scrivere}}
                 :italiano {:passato "scritto"}}
+
+   "sgridare" {:synsem {:cat :verb
+                        :sem {:pred :scold}}}
+
+   "sopportare" {:synsem {:cat :verb
+                          :sem {:pred :endure}}}
+
+   "spostare" {:synsem {:cat :verb
+                        :sem {:pred :displace}}}
+
+   "sprecare" {:synsem {:cat :verb
+                        :sem {:pred :waste}}}
 
    "stampare"  {:synsem {:cat :verb 
                          :sem {:pred :stampare}}}
@@ -1368,9 +1435,16 @@
                       :sem {:pred :throw}}}
 
    "tornare" 
-                    {:synsem {:cat :verb 
-                      :sem {:pred :tornare}
-                              :essere true}}
+   {:synsem {:cat :verb 
+             :sem {:pred :tornare}
+             :essere true}}
+   
+   "trasferire"
+   {:synsem {:cat :verb
+             :sem {:pred :transfer}}
+    :italiano {:boot-stem1 "trasferisc"
+               :boot-stem2 "trasfer"}}
+
 
    "tu"
    [{:synsem {:cat :noun

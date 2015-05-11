@@ -4,7 +4,68 @@
    [italianverbs.pos.english :refer :all]))
 
 (def lexicon-source
-  {"Antonia"
+  {
+
+   "lie" {:synsem {:cat :verb
+                :sem {:pred :lie }}}
+
+   "warm" {:synsem {:cat :verb
+                :sem {:pred :warm}}}
+
+   "waste" {:synsem {:cat :verb
+                :sem {:pred :waste}}}
+
+   "supply" {:synsem {:cat :verb
+                :sem {:pred :supply}}}
+
+   "measure" {:synsem {:cat :verb
+                :sem {:pred :measure}}}
+
+   "recognize" {:synsem {:cat :verb
+                :sem {:pred :recognize}}}
+
+   "multiply" {:synsem {:cat :verb
+                :sem {:pred :multiply}}}
+
+   "reserve" {:synsem {:cat :verb
+                :sem {:pred :reserve}}}
+
+   "manage" {:synsem {:cat :verb
+                :sem {:pred :manage}}}
+
+   "yell" {:synsem {:cat :verb
+                :sem {:pred :yell}}}
+
+   "scold" {:synsem {:cat :verb
+                :sem {:pred :scold}}}
+
+;;(pmap #(standard-fill-verb % 10 :top "expression_import") ["colpire"])
+
+   "strike" {:english {:past "struck"}
+             :synsem {:cat :verb
+                      :sem {:pred :strike}}}
+
+   "stain" {:synsem {:cat :verb
+                :sem {:pred :stain}}}
+
+   "transfer" {:english {:past "transferred"}
+               :synsem {:cat :verb
+                :sem {:pred :transfer}}}
+
+   "move" {:synsem {:cat :verb
+                    :sem {:pred :move}}}
+
+   "displace" {:synsem {:cat :verb
+                :sem {:pred :displace}}}
+
+
+   "endure" {:synsem {:cat :verb
+                :sem {:pred :endure}}}
+
+   "obtain" {:synsem {:cat :verb
+                :sem {:pred :obtain}}}
+
+   "Antonia"
    {:synsem {:sem {:pred :antonia
                    :human true}
              :agr {:number :sing
@@ -525,7 +586,10 @@
    "return" [{:synsem {:cat :verb
                        :sem {:pred :ritornare}}}
              {:synsem {:cat :verb
-                       :sem {:pred :tornare}}}]
+                       :sem {:pred :tornare}}}
+             {:synsem {:cat :verb
+                       :sem {:pred :giveback-return}}
+              :english {:note-before "give back"}}]
 
    "run" {:english {:past "ran"
                     :participle "running"
