@@ -589,7 +589,7 @@
                        :sem {:pred :tornare}}}
              {:synsem {:cat :verb
                        :sem {:pred :giveback-return}}
-              :english {:note-before "give back"}}]
+              :english {:note "(give back)"}}]
 
    "run" {:english {:past "ran"
                     :participle "running"
