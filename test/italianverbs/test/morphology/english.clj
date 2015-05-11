@@ -10,46 +10,45 @@
 
 (deftest inflect1
   (let [result (get-string {:infl :present
-                            :english "to express"
+                            :english "express"
                             :agr {:number :sing
                                   :person :3rd}})]
-    (= result "expresses")))
+    (is (= result "expresses"))))
 
 (deftest inflect2
   (let [result (get-string {:infl :present
-                            :english "to go"
+                            :english "go"
                             :agr {:number :sing
                                   :person :3rd}})]
-    (= result "goes")))
+    (is (= result "goes"))))
 
 (deftest inflect3
   (let [result (get-string {:infl :present
-                            :english "to play"
+                            :english "play"
                             :agr {:number :sing
                                   :person :3rd}})]
-    (= result "plays")))
+    (is (= result "plays"))))
 
 
 (deftest inflect3
   (let [result (get-string {:infl :present
-                            :english "to play"
+                            :english "play"
                             :agr {:number :sing
                                   :person :3rd}})]
-    (= result "plays")))
+    (is (= result "plays"))))
 
 
 (deftest inflect4
   (let [result (get-string {:infl :present
-                            :english "to try"
+                            :english "try"
                             :agr {:number :sing
                                   :person :3rd}})]
-    (= result "tries")))
+    (is (= result "tries"))))
 
-
+(deftest inflect5
   (let [result (get-string {:agr {:person :1st
                                   :number :sing}
                             :cat :verb
                             :infl :imperfetto
                             :english "lie"})]
     (is (= result "was lying"))))
-(deftest inflect5
