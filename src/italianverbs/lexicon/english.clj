@@ -118,6 +118,10 @@
    "add" {:synsem {:cat :verb
                    :sem {:pred :add}}}
 
+   "break" {:synsem {:cat :verb
+                     :sem {:pred :break }}
+            :english {:past "break"}}
+
 ;;   "" {:synsem {:cat :verb
 ;;  :sem {:pred }}
 
