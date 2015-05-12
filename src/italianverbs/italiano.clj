@@ -271,7 +271,7 @@
 
 ;; HOWTO: fix and add expressions : (TODO: turn into test in test/italiano)
 ;; 1. (if necessary) truncate bad expressions in main table (use some kind of ILIKE statement)
-;; 2. truncate expression_import
+;; 2. truncate expression_import: (truncate "expression_import")
 ;; 3. generate English -> Italian expressions in expression_import temporary table
 ;;    (fill-verbs-in-list ["mentire"] "expression_import" 5)
 (def do-insert "
