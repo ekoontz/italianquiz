@@ -48,7 +48,8 @@
    "stain" {:synsem {:cat :verb
                 :sem {:pred :stain}}}
 
-   "transfer" {:english {:past "transferred"}
+   "transfer" {:english {:past "transferred"
+                         :participle "transferring"}
                :synsem {:cat :verb
                 :sem {:pred :transfer}}}
 
