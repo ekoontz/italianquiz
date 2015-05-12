@@ -5,20 +5,9 @@ var pitch = 0; // In streetview, angle with respect to the horizon.
 // How much to increment the score for a correct answer 
 // or decrement for a "I don't know".
 var score_increment = 10; 
+var useProfilePicAsMarker = false;
 
 // End Configurable section.
-
-// TODO: move to map.js
-var greenIcon = L.icon({
-    iconUrl: 'https://lh4.googleusercontent.com/-xQUbYJAt5ws/AAAAAAAAAAI/AAAAAAAAJlU/ucawViWunt8/photo.jpg',
-//    shadowUrl: 'leaf-shadow.png',
-
-    iconSize:     [38, 95], // size of the icon
-    shadowSize:   [50, 64], // size of the shadow
-    iconAnchor:   [22, 94], // point of the icon which will correspond to marker's location
-    shadowAnchor: [4, 62],  // the same for the shadow
-    popupAnchor:  [-3, -76] // point from which the popup should open relative to the iconAnchor
-});
 
 function get_quadrant(path,step) {
     log(DEBUG,"GET QUADRANT: " + path);
@@ -132,15 +121,35 @@ function start_tour(target_language,target_locale) {
 	id: 'examples.map-i875mjb7'
     }).addTo(map);
     
-    
-    if (target_language == "it") {
-	marker = L.marker([current_lat, current_long]).addTo(map)
-	    .bindPopup("<b>Benvenuti!</b>").openPopup();
+    if ((useProfilePicAsMarker == true) && ($("#profile").attr("src") != null)) {
+	// TODO: move to map.js
+	var profileIcon = L.icon({
+	    iconUrl: $("#profile").attr("src"),
+	    iconSize:     [30, 30], // size of the icon
+	    shadowSize:   [30, 30], // size of the shadow
+	    iconAnchor:   [30, 30], // point of the icon which will correspond to marker's location
+	shadowAnchor: [4, 62],  // the same for the shadow
+	    popupAnchor:  [-18, -25] // point from which the popup should open relative to the iconAnchor
+	});
+	if (target_language == "it") {
+	    marker = L.marker([current_lat, current_long], {icon: profileIcon}).addTo(map)
+		.bindPopup("<b>Benvenuti!</b>").openPopup();
+	}
+	if (target_language == "es") {
+	    marker = L.marker([current_lat, current_long]).addTo(map)
+		.bindPopup("<b>Bienvenidos!</b>").openPopup();
+	}
+    } else {
+	if (target_language == "it") {
+	    marker = L.marker([current_lat, current_long]).addTo(map)
+		.bindPopup("<b>Benvenuti!</b>").openPopup();
+	}
+	if (target_language == "es") {
+	    marker = L.marker([current_lat, current_long]).addTo(map)
+		.bindPopup("<b>Bienvenidos!</b>").openPopup();
+	}
     }
-    if (target_language == "es") {
-	marker = L.marker([current_lat, current_long]).addTo(map)
-	    .bindPopup("<b>Bienvenidos!</b>").openPopup();
-    }
+
     
     L.circle([current_lat, 
 	      current_long], 10, {
