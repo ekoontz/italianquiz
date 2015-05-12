@@ -128,7 +128,7 @@
         username]
        (if picture
          [:td
-          [:img.profile {:src picture}]])
+          [:img#profile {:src picture}]])
        [:th {:style "display:none"}
         (str "Roles:")]
        [:td {:style "white-space:nowrap;display:none"}
