@@ -89,7 +89,7 @@
                 :sem {:pred :organize}}}
 
    "rest" {:synsem {:cat :verb
-                :sem {:pred :reset}}}
+                :sem {:pred :rest}}}
 
    "chat" {:synsem {:cat :verb
                     :sem {:pred :chat}}}
