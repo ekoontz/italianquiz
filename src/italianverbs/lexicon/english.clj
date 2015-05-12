@@ -399,6 +399,9 @@
    "finish" {:synsem {:cat :verb
                       :sem {:pred :finish}}}
 
+   "fold" {:synsem {:cat :verb
+                    :sem {:pred :fold}}}
+
    "form" {:synsem {:cat :verb
                     :sem {:pred :form}}}
 
