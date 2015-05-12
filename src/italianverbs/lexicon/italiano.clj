@@ -1404,7 +1404,7 @@
                           :sem {:pred :ricordare}}}
 
    "riposare" {:synsem {:cat :verb
-                          :sem {:pred :rest}}}
+                        :sem {:pred :rest}}}
 
    "riscaldare" {:synsem {:cat :veb
                           :sem {:pred :warm}}}
