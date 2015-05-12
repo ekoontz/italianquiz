@@ -287,6 +287,9 @@
    "charge" {:synsem {:cat :verb
                       :sem {:pred :caricare}}}
 
+   "check" {:synsem {:cat :verb
+                     :sem {:pred :check}}}
+
    "come" {:synsem {:cat :verb
                     :sem {:pred :venire}}
            :english {:past "came"}}
