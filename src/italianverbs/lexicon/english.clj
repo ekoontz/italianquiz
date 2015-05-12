@@ -111,7 +111,8 @@
 
    "snap" {:synsem {:cat :verb
                     :sem {:pred :snap-pictures}}
-           :english {:note "(pictures)"}}
+           :english {:past "snapped"
+                     :note "(pictures)"}}
 
    "reciprocate" {:synsem {:cat :verb
                            :sem {:pred :reciprocate}}}
