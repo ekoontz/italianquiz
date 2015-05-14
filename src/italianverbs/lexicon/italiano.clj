@@ -552,13 +552,14 @@
                              :edible true
                              :animate false
                              :artifact false}}})
-
-"cercare" {:synsem {:cat :verb
-                 :essere false
-                 :sem {:activity true
-                       :discrete false
-                       :pred :cercare
-                       :subj {:animate true}}}}
+      
+      "cercare" {:italiano {:futuro-stem "cerch"}
+                 :synsem {:cat :verb
+                          :essere false
+                          :sem {:activity true
+                                :discrete false
+                                :pred :cercare
+                                :subj {:animate true}}}}
 
       "città"
       (unify agreement-noun
