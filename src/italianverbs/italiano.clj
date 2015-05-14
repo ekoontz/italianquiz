@@ -6,7 +6,7 @@
 (require '[compojure.core :as compojure :refer [GET PUT POST DELETE ANY]])
 (require '[hiccup.core :refer (html)])
 (require '[italianverbs.auth :refer [is-admin]])
-(require '[italianverbs.borges.writer :refer [populate]])
+(require '[italianverbs.borges.writer :refer [populate truncate]])
 (require '[italianverbs.cache :refer (build-lex-sch-cache create-index over spec-to-phrases)])
 (require '[italianverbs.forest :as forest])
 (require '[italianverbs.grammar.italiano :as gram])
