@@ -1030,7 +1030,7 @@
                               :sem {:pred :incontrare}}}
 
       "indossare"  {:synsem {:cat :verb
-                             :sem {:pred :portare}}}
+                             :sem {:pred :wear}}}
 
       "insegnare"  {:synsem {:cat :verb
                              :sem {:pred :teach}}}
@@ -1371,8 +1371,11 @@
    "piegare" {:synsem {:cat :verb
                       :sem {:pred :fold}}}
 
-   "portare"  {:synsem {:cat :verb
-                        :sem {:pred :portare}}}
+   "portare"  [{:synsem {:cat :verb
+                         :sem {:pred :carry}}}
+               {:synsem {:cat :verb
+                         :sem {:pred :wear}}}]
+
    "prendere" {:synsem {:cat :verb :sem {:pred :prendere}}
                :italiano {:passato "preso"}}
 

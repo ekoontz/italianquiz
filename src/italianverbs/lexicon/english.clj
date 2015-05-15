@@ -272,7 +272,7 @@
                          :place false}}}
 
    "carry" {:synsem {:cat :verb
-                     :sem {:pred :portare}}
+                     :sem {:pred :carry}}
             :english {:past "carried"}}
 
    "cat"
@@ -836,7 +836,7 @@
 
    "wear"  {:english {:past "wore"}
             :synsem {:cat :verb
-                     :sem {:pred :portare}}}
+                     :sem {:pred :wear}}}
    
    "win"  {:synsem {:cat :verb
                     :sem {:pred :win
