@@ -56,13 +56,19 @@
 (declare get-string)
 
 (defn stem-per-futuro [infinitive drop-e]
-  "_infinitive_ should be a string (italian verb infinitive form)"
+  "turn an infinitive form into a stem that can be conjugated in the future tense."
   (cond
    (re-find #"giare$" infinitive)
    (string/replace infinitive #"giare$" "ger")
 
    (re-find #"ciare$" infinitive)
    (string/replace infinitive #"ciare$" "cer")
+
+   (re-find #"gare$" infinitive)
+   (string/replace infinitive #"gare$" "gher")
+
+   (re-find #"care$" infinitive)
+   (string/replace infinitive #"care$" "cher")
 
    (and
     (= true drop-e)

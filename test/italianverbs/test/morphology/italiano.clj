@@ -28,3 +28,11 @@
                             :infl :present
                             :italiano "capire"})]
     (is (= result "capisco"))))
+
+(deftest futuro-care
+  "future tense with verbs that end in X-care should be future-conjucated with the stem being X-ch (not X-c"
+  (let [result (get-string {:agr {:person :1st
+                                  :number :sing}
+                            :infl :futuro
+                            :italiano "cercare"})]
+    (is (= result "cercherò"))))
