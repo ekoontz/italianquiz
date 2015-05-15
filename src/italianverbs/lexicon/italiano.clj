@@ -961,9 +961,11 @@
                  :synsem {:cat :verb
                           :sem {:pred :finish}}}
       
-      "formare"  {:italiano "formare"
-                  :synsem {:cat :verb
+      "formare"  {:synsem {:cat :verb
                            :sem {:pred :form}}}
+
+      "fornire"  {:synsem {:cat :verb
+                           :sem {:pred :furnish}}}
       
       "frequentare"  {:synsem {:cat :verb
                                :sem {:pred :frequentare}}}
