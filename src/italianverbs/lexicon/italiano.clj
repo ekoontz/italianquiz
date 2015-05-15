@@ -1390,7 +1390,7 @@
    "racontare" {:synsem {:cat :verb
                          :sem {:pred :recount}}}
 
-   "recouperare" {:synsem {:cat :verb
+   "recuperare" {:synsem {:cat :verb
                            :sem {:pred :recover}}}
 
    "restituire" {:italiano {:boot-stem1 "restituisc"
