@@ -406,6 +406,10 @@
    "form" {:synsem {:cat :verb
                     :sem {:pred :form}}}
 
+
+   "furnish"  {:synsem {:cat :verb
+                        :sem {:pred :furnish}}}
+
    "game" {:synsem {:cat :noun
                     :sem {:pred :game
                           :games true}}}
