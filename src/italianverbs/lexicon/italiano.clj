@@ -1290,7 +1290,7 @@
     "mostrare" {:synsem {:cat :verb
                          :sem {:pred :show}}}
     
-    "multiplicare" {:synsem {:cat :verb
+    "moltiplicare" {:synsem {:cat :verb
                              :sem {:pred :multiply}}}
     
     "muovere" {:synsem {:cat :verb
