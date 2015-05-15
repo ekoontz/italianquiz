@@ -1400,7 +1400,7 @@
                  :synsem {:cat :verb
                           :sem {:pred :giveback-return}}}
 
-   "riconocere" {:system {:cat :verb
+   "riconoscere" {:system {:cat :verb
                           :sem {:pred :recognize}}}
 
    "ricevere"  {:synsem {:cat :verb
