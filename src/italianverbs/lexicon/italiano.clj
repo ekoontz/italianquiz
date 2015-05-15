@@ -1409,7 +1409,7 @@
    "riposare" {:synsem {:cat :verb
                         :sem {:pred :rest}}}
 
-   "riscaldare" {:synsem {:cat :veb
+   "riscaldare" {:synsem {:cat :verb
                           :sem {:pred :warm}}}
 
    "rispondere" {:synsem {:cat :verb
