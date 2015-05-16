@@ -270,7 +270,7 @@ on a table."
 (def heroku-dev (postgres {:db "dbnk1agnvqbf6f"
                            :user "ui9jkm19t4a5u"
                            :password (env :postgres-secret)
-                           :host "ec2-50-16-187-40.compute-1.amazonaws.com"
+                           :host "ec2-54-163-225-217.compute-1.amazonaws.com"
                            :port "5702"
                            :delimiters ""}))
 
