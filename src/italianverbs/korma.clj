@@ -286,19 +286,23 @@ on a table."
 (defdb korma-db 
   (cond (= postgres_env "heroku")
         (do
-          (log/info (str "using heroku production postgres connection: " heroku))
+          (log/info (str "using heroku production postgres connection: "
+                         (merge (dissoc heroku :password)
+                                {:password "*****"})))
           heroku)
         (= postgres_env "heroku-dev")
         (do
-          (log/info (str "using heroku-dev postgres connection: " heroku-dev))
+          (log/info (str "using heroku-dev postgres connection: "
+                         (merge (dissoc heroku-dev :password)
+                                {:password "*****"})))
           heroku-dev)
         (= postgres_env "travis-ci")
         (do
-          (log/info (str "using travis-ci postgres connection"))
+          (log/info (str "using travis-ci postgres connection."))
           travis-ci)
         (= postgres_env "workstation")
         (do
-          (log/info (str "using workstation-environment postgres connection"))
+          (log/info (str "using workstation-environment postgres connection."))
           workstation)
         true
         (do
