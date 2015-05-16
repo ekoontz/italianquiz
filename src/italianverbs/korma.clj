@@ -280,7 +280,7 @@ on a table."
         heroku
         (= postgres_env "heroku-dev")
         (do
-          (log/info (str "using heroku-dev postgres connection."))
+          (log/info (str "using heroku-dev postgres connection: " heroku-dev))
           heroku-dev)
         (= postgres_env "travis-ci")
         (do
