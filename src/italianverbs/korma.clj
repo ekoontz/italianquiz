@@ -260,11 +260,11 @@ on a table."
                           :host "localhost"
                           :port "5432"}))
 
-(def heroku (postgres {:db "da462qp5944o6t"
-                       :user "pbsobjbfsvvwna"
-                       :password (env :postgres-secret)
-                       :host "ec2-54-243-187-196.compute-1.amazonaws.com"
-                       :port "5432"
+(def heroku (postgres {:db "d6vssddqsl11up"
+                       :user "u5mihksetbhvef"
+                       :password (string/trim (env :postgres-secret))
+                       :host "ec2-50-16-187-40.compute-1.amazonaws.com"
+                       :port "5832"
                        :delimiters ""}))
 
 (def heroku-dev (postgres {:db "dbnk1agnvqbf6f"
@@ -277,6 +277,9 @@ on a table."
 (def postgres_env (env :postgres-env))
 (defdb korma-db 
   (cond (= postgres_env "heroku")
+        (do
+          (log/info (str "using heroku production postgres connection: " heroku))
+          heroku)
         heroku
         (= postgres_env "heroku-dev")
         (do
