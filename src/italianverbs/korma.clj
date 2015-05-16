@@ -267,11 +267,11 @@ on a table."
                        :port "5432"
                        :delimiters ""}))
 
-(def heroku-dev (postgres {:db "d6vssddqsl11up"
-                           :user "u5mihksetbhvef"
+(def heroku-dev (postgres {:db "dbnk1agnvqbf6f"
+                           :user "ui9jkm19t4a5u"
                            :password (env :postgres-secret)
                            :host "ec2-50-16-187-40.compute-1.amazonaws.com"
-                           :port "5832"
+                           :port "5702"
                            :delimiters ""}))
 
 (def postgres_env (env :postgres-env))
