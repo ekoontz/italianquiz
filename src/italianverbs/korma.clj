@@ -249,30 +249,38 @@ on a table."
                      '(:_id :updated :created))))))))
     
 ;; http://sqlkorma.com/docs#db
-(def workstation (postgres {:db "verbcoach"
-                            :user "verbcoach"
-                            :password (env :postgres-secret)
-                            :host "localhost"
-                            :port "5432"}))
+(def workstation 
+  (postgres {:db "verbcoach"
+             :user "verbcoach"
+             :password (env :postgres-secret)
+             :host "localhost"
+             :port "5432"}))
 
-(def travis-ci (postgres {:db "verbcoach"
-                          :user "postgres"
-                          :host "localhost"
-                          :port "5432"}))
+(def travis-ci 
+  (postgres {:db "verbcoach"
+             :user "postgres"
+             :host "localhost"
+             :port "5432"}))
 
-(def heroku (postgres {:db "d6vssddqsl11up"
-                       :user "u5mihksetbhvef"
-                       :password (string/trim (env :postgres-secret))
-                       :host "ec2-50-16-187-40.compute-1.amazonaws.com"
-                       :port "5832"
-                       :delimiters ""}))
+(def heroku 
+  (postgres {:db "d6vssddqsl11up"
+             :user "u5mihksetbhvef"
+             :password
+             (if (env :postgres-secret)
+               (string/trim (env :postgres-secret)))
+             :host "ec2-50-16-187-40.compute-1.amazonaws.com"
+             :port "5832"
+             :delimiters ""}))
 
-(def heroku-dev (postgres {:db "dbnk1agnvqbf6f"
-                           :user "ui9jkm19t4a5u"
-                           :password (env :postgres-secret)
-                           :host "ec2-54-163-225-217.compute-1.amazonaws.com"
-                           :port "5702"
-                           :delimiters ""}))
+(def heroku-dev 
+  (postgres {:db "dbnk1agnvqbf6f"
+             :user "ui9jkm19t4a5u"
+             :password 
+             (if (env :postgres-secret)
+               (string/trim (env :postgres-secret)))
+             :host "ec2-54-163-225-217.compute-1.amazonaws.com"
+             :port "5702"
+             :delimiters ""}))
 
 (def postgres_env (env :postgres-env))
 (defdb korma-db 
@@ -280,7 +288,6 @@ on a table."
         (do
           (log/info (str "using heroku production postgres connection: " heroku))
           heroku)
-        heroku
         (= postgres_env "heroku-dev")
         (do
           (log/info (str "using heroku-dev postgres connection: " heroku-dev))
