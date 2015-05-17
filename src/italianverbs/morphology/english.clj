@@ -305,12 +305,18 @@
          stem-minus-one (nth (re-find #"(.*).$" stem) 1)
          penultimate-stem-char (nth (re-find #"(.).$" stem) 1)
          last-stem-char (re-find #".$" stem)
-         last-stem-char-is-e (re-find #"e$" stem)]
+         last-stem-char-is-e (re-find #"e$" stem)
+         last-stem-char-is-y (re-find #"y$" stem)]
      (cond last-stem-char-is-e
-;           (str stem-minus-one penultimate-stem-char "ed")
-           (str stem-minus-one "ed")
+           (str stem-minus-one "ed")   ;; "bake"->"baked"
+
+           (and last-stem-char-is-y
+                (or (= penultimate-stem-char "l")
+                    (= penultimate-stem-char "r")))
+           (str stem-minus-one "ied")  ;; "try"->"tried"
+
            true
-           (str stem "ed")))
+           (str stem "ed"))) ;; "play"->"played"
 
    (and
     (= :present (get-in word '(:infl)))
@@ -359,7 +365,7 @@
       (str stem "")
 
       (and (= person :3rd) (= number :sing)
-           (re-find #"ry$" stem))
+           (re-find #"[lr]y$" stem))
       (let [stem-minus-final-y (replace root #"y$" "")]
         (str stem-minus-final-y "ies"))
 
