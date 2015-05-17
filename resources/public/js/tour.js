@@ -5,7 +5,7 @@ var pitch = 0; // In streetview, angle with respect to the horizon.
 // How much to increment the score for a correct answer 
 // or decrement for a "I don't know".
 var score_increment = 10; 
-var useProfilePicAsMarker = false;
+var useProfilePicAsMarker = true;
 
 // End Configurable section.
 
@@ -125,15 +125,15 @@ function start_tour(target_language,target_locale) {
 	// TODO: move to map.js
 	var profileIcon = L.icon({
 	    iconUrl: $("#profile").attr("src"),
-	    iconSize:     [30, 30], // size of the icon
+	    iconSize:     [16, 16], // size of the icon
 	    shadowSize:   [30, 30], // size of the shadow
-	    iconAnchor:   [30, 30], // point of the icon which will correspond to marker's location
-	shadowAnchor: [4, 62],  // the same for the shadow
+	    iconAnchor:   [7.5, 35], // point of the icon which will correspond to marker's location
+	    shadowAnchor: [4, 62],  // the same for the shadow
 	    popupAnchor:  [-18, -25] // point from which the popup should open relative to the iconAnchor
 	});
 	if (target_language == "it") {
-	    marker = L.marker([current_lat, current_long], {icon: profileIcon}).addTo(map)
-		.bindPopup("<b>Benvenuti!</b>").openPopup();
+	    marker = L.marker([current_lat, current_long]).addTo(map).bindPopup("<b>Benvenuti!</b>").openPopup();
+            iconMarker = L.marker([current_lat, current_long], {icon: profileIcon}).addTo(map);
 	}
 	if (target_language == "es") {
 	    marker = L.marker([current_lat, current_long]).addTo(map)
@@ -430,6 +430,7 @@ function navigate_to(step,path,do_encouragement) {
 	marker.setPopupContent("<b>" + encouragements[encouragement] + 
 			       "</b> " + step + "/" + path.length);
     }
+    iconMarker.setLatLng(path[step]);
 
     // update Google streetview:
     $("#streetviewiframe").attr("src","https://www.google.com/maps/embed/v1/streetview?key="+google_api_key+"&location="+current_lat+","+current_long+"&heading="+heading+"&pitch="+pitch+"&fov=35");
