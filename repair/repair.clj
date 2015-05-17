@@ -52,10 +52,4 @@
 
 ]))
 
-
 ;; (process care fornire indossare moltiplicare recuperare riconoscere riscaldare)
-
-
-
-
-
