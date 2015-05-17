@@ -312,6 +312,7 @@
 
            (and last-stem-char-is-y
                 (or (= penultimate-stem-char "l")
+                    (= penultimate-stem-char "n")
                     (= penultimate-stem-char "r")))
            (str stem-minus-one "ied")  ;; "try"->"tried"
 
@@ -365,7 +366,7 @@
       (str stem "")
 
       (and (= person :3rd) (= number :sing)
-           (re-find #"[lr]y$" stem))
+           (re-find #"[lnr]y$" stem))
       (let [stem-minus-final-y (replace root #"y$" "")]
         (str stem-minus-final-y "ies"))
 
