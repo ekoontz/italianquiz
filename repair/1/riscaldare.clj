@@ -1,4 +1,5 @@
-[{:clj
-  [(truncate "expression_import")
-   (fill-verb "riscaldare" 10 :top "expression_import")]}]
+(ns italianverbs.repair.1)
+
+(def riscaldare
+  [{:fill-verb "riscaldare"}])
 
