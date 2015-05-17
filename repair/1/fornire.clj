@@ -1,4 +1,8 @@
-[{:clj
-  [(truncate "expression_import")
-   (fill-verb "fornire" 10 :top "expression_import")]}]
+(ns italianverbs.repair.1)
+
+(require '[italianverbs.repair :refer [process]])
+
+(def fornire
+  [{:fill-verb "fornire"}])
+
 
