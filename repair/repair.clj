@@ -44,6 +44,12 @@
 
   ;; 4. import from staging to production table.
   ;; <todo>
+  (if false
+    (exec-raw "INSERT INTO expression (language,model,surface,structure,serialized)
+                    SELECT language,model,surface,structure,serialized
+                      FROM expression_import"))
+
+
 ]))
 
 
