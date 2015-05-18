@@ -275,6 +275,11 @@ on a table."
 (def heroku-dev 
   (postgres {:db "ddqnrpd7g3tj1e"
              :user "bewlddfpbkinkk"
+
+             ;; pass along ssl-enabling options so that we can connect to
+             ;; remote DBs (e.g. Heroku’s) securely
+             :sslfactory "org.postgresql.ssl.NonValidatingFactory"
+
              :password 
              (if (env :postgres-secret)
                (string/trim (env :postgres-secret)))
