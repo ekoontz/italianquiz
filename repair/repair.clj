@@ -13,6 +13,8 @@
     (exec-raw "TRUNCATE expression_import")
     (.size (map (fn [list]
                   (do
+                    (if (:sql list)
+                      (exec-raw (:sql list)))
                     (if (:fill-verb list)
                       (let [verb (:fill-verb list)]
                         (.size (fill-verb verb 1 :top "expression_import"))))))
