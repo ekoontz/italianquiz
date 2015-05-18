@@ -1,4 +1,4 @@
-(ns italianverbs.repair.1)
+(ns italianverbs.repair)
 
 (def fornire
   [{:fill-verb "fornire"}])
