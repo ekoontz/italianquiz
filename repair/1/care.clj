@@ -1,4 +1,4 @@
-(ns italianverbs.repair.1)
+(ns italianverbs.repair)
 
 ;; "Future tense of verbs whose infinitive form ends in -care or -gare. 
 ;; Previously was incorrectly generating things like 'io cercarò' rather than correct 'io cercharò'."
