@@ -7,14 +7,15 @@
 (require '[korma.core :refer :all])
 (require '[korma.db :refer :all])
 
+;; actually works: (dostuff {:fill-verb "accompagnare"})
 (defn dostuff [& lists]
   (do
     (exec-raw "TRUNCATE expression_import")
     (.size (map (fn [list]
-                  (let [verb (:fill-verb list)]
-                    (do
-                      (.size (fill-verb verb 1 :top "expression_import"))
-                      42)))
+                  (do
+                    (if (:fill-verb list)
+                      (let [verb (:fill-verb list)]
+                        (.size (fill-verb verb 1 :top "expression_import"))))))
                 lists))
     (exec-raw ["SELECT count(*) FROM expression_import"] :results)
 
