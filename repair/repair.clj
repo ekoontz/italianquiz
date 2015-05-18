@@ -7,18 +7,30 @@
 (require '[korma.core :refer :all])
 (require '[korma.db :refer :all])
 
-;; actually works: (dostuff {:fill-verb "accompagnare"})
-(defn dostuff [& lists]
+(defn process [ & units]
   (do
     (exec-raw "TRUNCATE expression_import")
-    (.size (map (fn [list]
-                  (do
-                    (if (:sql list)
-                      (exec-raw (:sql list)))
-                    (if (:fill-verb list)
-                      (let [verb (:fill-verb list)]
-                        (.size (fill-verb verb 1 :top "expression_import"))))))
-                lists))
+    (.size (map (fn [unit]
+           (.size (map (fn [member-of-unit]
+                         (do
+                           (if (:sql member-of-unit)
+                             (do
+                               (println (str "doing sql: " (:sql member-of-unit)))
+                               (exec-raw (:sql member-of-unit))))
+                           (if (:fill member-of-unit)
+                             (do
+                               (println (str "doing fill-by-spec: " (->> member-of-unit :fill :spec)))
+                               (fill-by-spec 1 (->> member-of-unit :fill :spec) 
+                                                    "expression_import")))
+
+                           (if (:fill-verb member-of-unit)
+                             (do
+                               (println (str "doing fill-verb: " (:fill-verb member-of-unit)))
+                               (let [verb (:fill-verb member-of-unit)]
+                                 (.size (fill-verb verb 1 :top "expression_import")))))))
+
+                       unit)))
+         units))
     (exec-raw ["SELECT count(*) FROM expression_import"] :results)
 
     (exec-raw "DROP TABLE IF EXISTS expression_distinct")
@@ -38,46 +50,5 @@
                     SELECT language,model,surface,structure,serialized
                       FROM expression_distinct")
     ))
-
-
-(defn process [& lists]
-  (do
-    ;; 1. clear staging table
-    (exec-raw "TRUNCATE expression_import")
-
-    ;; 2. do the actions specified by each list.
-    (.size (map (fn [list]
-           (map (fn [elem]
-                  (do
-                    (if (:sql elem)
-                      (exec-raw (:sql elem)))
-                    (if (:fill elem)
-                      (.size (fill-by-spec 1 (->> elem :fill :spec) "expression_import")))
-                    (if (:fill-verb elem)
-                      (.size (fill-verb (:fill-verb elem) 1 :top "expression_import")))))
-                 list))
-          lists))
-
-  ;; 3. dedup staging table.
-  (exec-raw "DROP TABLE IF EXISTS expression_distinct")
-  (exec-raw "CREATE TABLE expression_distinct (
-    language text,
-    model text,
-    surface text,
-    structure jsonb,
-    serialized text)")
-  (exec-raw "INSERT INTO expression_distinct (language,model,surface,structure,serialized) 
-         SELECT DISTINCT language,model,surface,structure,serialized 
-                    FROM expression_import")
-  (exec-raw "TRUNCATE expression_import")
-  (exec-raw "INSERT INTO expression_import (language,model,surface,structure,serialized) 
-                  SELECT language,model,surface,structure,serialized 
-                    FROM expression_distinct")
-
-  ;; 4. import from staging to production table.
-  ;; <todo>
-  (exec-raw "INSERT INTO expression (language,model,surface,structure,serialized)
-                    SELECT language,model,surface,structure,serialized
-                      FROM expression_import")))
 
 ;; (process accompany care fornire indossare moltiplicare recuperare riconoscere riscaldare)
