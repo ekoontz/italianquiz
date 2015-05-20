@@ -274,12 +274,12 @@ on a table."
 
 (def heroku-dev 
   (postgres {:db "dbnk1agnvqbf6f"
-             :user "ui9jkm19t4a5u"
+             :user "ddqnrpd7g3tj1e"
              :password 
              (if (env :postgres-secret)
                (string/trim (env :postgres-secret)))
-             :host "ec2-54-163-225-217.compute-1.amazonaws.com"
-             :port "5702"
+             :host "ec2-23-23-126-39.compute-1.amazonaws.com"
+             :port "5432"
              :delimiters ""}))
 
 (def postgres_env (env :postgres-env))
