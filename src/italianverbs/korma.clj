@@ -273,8 +273,8 @@ on a table."
              :delimiters ""}))
 
 (def heroku-dev 
-  (postgres {:db "dbnk1agnvqbf6f"
-             :user "ddqnrpd7g3tj1e"
+  (postgres {:db "ddqnrpd7g3tj1e"
+             :user "bewlddfpbkinkk"
              :password 
              (if (env :postgres-secret)
                (string/trim (env :postgres-secret)))
