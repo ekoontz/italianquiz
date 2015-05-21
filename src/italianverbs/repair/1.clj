@@ -1,4 +1,5 @@
 ;; usage:
+;; export POSTGRES_URL=<target database>
 ;; lein run -m italianverbs.repair.1/repair
 (ns italianverbs.repair.1)
 (require '[italianverbs.repair :refer [process]])
