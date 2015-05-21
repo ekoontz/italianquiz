@@ -32,13 +32,16 @@
         (let [database-url 
               (str (env :database-url)
                    "?ssl=true&sslfactory=org.postgresql.ssl.NonValidatingFactory")]
-          (log/info (str "using DATABASE_URL + SSL postgres connection: "
-                         database-url))
           (postgres
            ;; thanks to Jeroen van Dijk via http://stackoverflow.com/a/14625874
            (let [[_ user password host port db] 
                  (re-matches #"postgres://(?:(.+):(.*)@)?([^:]+)(?::(\d+))?/(.+)" 
                              database-url)]
+             (log/info (str "using DATABASE_URL + SSL postgres connection: "
+                            "user: " user ";"
+                            "host: " host ";"
+                            "db: " db ""))
+
              {:user user
               :password password
               :host host
