@@ -62,12 +62,7 @@
           (log/warn (str "POSTGRES_ENV not set in your environment: defaulting to 'workstation'."))
           workstation)))
 
-;; example stuff that works:
-
-;; (insert verb (values {:value (str {:a 42 :b 43 :c 44})}))
-;;   yields:
-;; {:value "{:a 42, :c 44, :b 43}", :updated nil, :created #inst "2014-05-16T05:38:53.928635000-00:00", :id 6}
-
+;; TODO: remove (or move) everything below here: not being used anywhere.
 
 ;; http://sqlkorma.com/docs#entities
 ;; TODO: move to verb.clj or similar: model-type stuff.
@@ -422,4 +417,3 @@ on a table."
 
 (defn primary-key [map]
   (:_id map))
-
