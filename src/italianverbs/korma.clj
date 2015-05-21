@@ -1,3 +1,5 @@
+;; TODO: rename this file - misleading name 'korma.clj'.
+;; It uses korma, but it is not itself part of korma.
 (ns italianverbs.korma
   (:refer-clojure :exclude [test])
   (:require [clj-time.coerce :as c]
@@ -5,11 +7,57 @@
             [clojure.tools.logging :as log]
             [italianverbs.unify :refer (unify fail?)]
             [korma.core :refer :all]
-            [korma.db :refer :all]))
+            [korma.db :refer [default-connection defdb postgres]]))
 
 (require '[environ.core :refer [env]])
 
-(declare korma-db)
+;; http://sqlkorma.com/docs#db
+(def workstation 
+  (postgres {:db "verbcoach"
+             :user "verbcoach"
+             :password (env :postgres-secret)
+             :host "localhost"
+             :port "5432"}))
+
+(def travis-ci 
+  (postgres {:db "verbcoach"
+             :user "postgres"
+             :host "localhost"
+             :port "5432"}))
+
+(def postgres_env (env :postgres-env))
+
+(defdb korma-db 
+  (cond (env :database-url)        
+        (let [database-url 
+              (str (env :database-url)
+                   "?ssl=true&sslfactory=org.postgresql.ssl.NonValidatingFactory")]
+          (log/info (str "using DATABASE_URL + SSL postgres connection: "
+                         database-url))
+          (postgres
+           ;; thanks to Jeroen van Dijk via http://stackoverflow.com/a/14625874
+           (let [[_ user password host port db] 
+                 (re-matches #"postgres://(?:(.+):(.*)@)?([^:]+)(?::(\d+))?/(.+)" 
+                             database-url)]
+             {:user user
+              :password password
+              :host host
+              :port (or port 80)
+              :db db
+              })))
+
+        (= postgres_env "travis-ci")
+        (do
+          (log/info (str "using travis-ci postgres connection."))
+          travis-ci)
+        (= postgres_env "workstation")
+        (do
+          (log/info (str "using workstation-environment postgres connection."))
+          workstation)
+        true
+        (do
+          (log/warn (str "POSTGRES_ENV not set in your environment: defaulting to 'workstation'."))
+          workstation)))
 
 ;; example stuff that works:
 
@@ -248,72 +296,6 @@ on a table."
              (reduce #(dissoc %1 %2) row
                      '(:_id :updated :created))))))))
     
-;; http://sqlkorma.com/docs#db
-(def workstation 
-  (postgres {:db "verbcoach"
-             :user "verbcoach"
-             :password (env :postgres-secret)
-             :host "localhost"
-             :port "5432"}))
-
-(def travis-ci 
-  (postgres {:db "verbcoach"
-             :user "postgres"
-             :host "localhost"
-             :port "5432"}))
-
-(def heroku 
-  (postgres {:db "d6vssddqsl11up"
-             :user "u5mihksetbhvef"
-             :password
-             (if (env :postgres-secret)
-               (string/trim (env :postgres-secret)))
-             :host "ec2-50-16-187-40.compute-1.amazonaws.com"
-             :port "5832"
-             :delimiters ""}))
-
-(def heroku-dev 
-  (postgres {:db "ddqnrpd7g3tj1e"
-             :user "bewlddfpbkinkk"
-
-             ;; pass along ssl-enabling options so that we can connect to
-             ;; remote DBs (e.g. Heroku’s) securely
-             :sslfactory "org.postgresql.ssl.NonValidatingFactory"
-
-             :password 
-             (if (env :postgres-secret)
-               (string/trim (env :postgres-secret)))
-             :host "ec2-23-23-126-39.compute-1.amazonaws.com"
-             :port "5432"
-             :delimiters ""}))
-
-(def postgres_env (env :postgres-env))
-(defdb korma-db 
-  (cond (= postgres_env "heroku")
-        (do
-          (log/info (str "using heroku production postgres connection: "
-                         (merge (dissoc heroku :password)
-                                {:password "*****"})))
-          heroku)
-        (= postgres_env "heroku-dev")
-        (do
-          (log/info (str "using heroku-dev postgres connection: "
-                         (merge (dissoc heroku-dev :password)
-                                {:password "*****"})))
-          heroku-dev)
-        (= postgres_env "travis-ci")
-        (do
-          (log/info (str "using travis-ci postgres connection."))
-          travis-ci)
-        (= postgres_env "workstation")
-        (do
-          (log/info (str "using workstation-environment postgres connection."))
-          workstation)
-        true
-        (do
-          (log/warn (str "POSTGRES_ENV not set in your environment: defaulting to 'workstation'."))
-          workstation)))
-
 (def table-to-filter
   {:verb (fn [row the-where]
            (log/info (str "the row: " row))
