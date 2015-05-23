@@ -638,7 +638,7 @@
                                 :comparative false
                                 :human true}}}))]
 
-      "contraccombiare" {:synsem {:sem {:pred :reciprocate}
+      "contraccambiare" {:synsem {:sem {:pred :reciprocate}
                                   :cat :verb}}
 
       "correre"  {:italiano {:passato "corso"}
