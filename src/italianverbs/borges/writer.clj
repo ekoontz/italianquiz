@@ -43,7 +43,7 @@
 ;; TODO: use named optional parameters.
 (defn populate [num source-language-model target-language-model & [ spec table ]]
   (let [spec (if spec spec :top)
-        debug (log/debug (str "spec(1): " spec))
+        debug (log/debug (str "populate spec(1): " spec))
         spec (cond
               (not (= :notfound (get-in spec [:synsem :sem :subj] :notfound)))
               (unify spec
@@ -51,13 +51,13 @@
               true
               spec)
 
-        debug (log/debug (str "spec(2): " spec))
+        debug (log/debug (str "populate spec(2): " spec))
 
         ;; subcat is empty, so that this is a complete expression with no missing arguments.
         ;; e.g. "she sleeps" rather than "sleeps".
         spec (unify spec {:synsem {:subcat '()}}) 
 
-        debug (log/debug (str "spec(3): " spec))
+        debug (log/debug (str "populate spec(3): " spec))
 
         table (if table table "expression")
 
@@ -118,6 +118,10 @@
 
             ]
         
+        (log/debug (str "inserting into table: " table " the target expression: '"
+                        target-language-surface
+                        "'"))
+
         (k/exec-raw [(str "INSERT INTO " table " (surface, structure, serialized, language, model) VALUES (?,"
                           "'" (json/write-str (strip-refs target-language-sentence)) "'"
                           ","
@@ -127,6 +131,10 @@
                      [target-language-surface
                       target-language
                       (:name target-language-model)]])
+
+        (log/debug (str "inserting into table: " table " the source expression: '"
+                        source-language-surface
+                        "'"))
 
         (k/exec-raw [(str "INSERT INTO " table " (surface, structure, serialized, language, model) 
                                 VALUES (?,"
