@@ -104,7 +104,8 @@
                 :sem {:pred :recover}}}
 
    "steal" {:synsem {:cat :verb
-                :sem {:pred :steal}}}
+                     :sem {:pred :steal}}
+            :english {:past "stole"}}
 
    "admire" {:synsem {:cat :verb
                       :sem {:pred :admire}}}
