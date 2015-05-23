@@ -59,7 +59,7 @@
           workstation)
         true
         (do
-          (log/warn (str "POSTGRES_ENV not set in your environment: defaulting to 'workstation'."))
+          (log/warn (str "neither DATABASE_URL nor POSTGRES_ENV not set in your environment: defaulting to 'workstation'."))
           workstation)))
 
 ;; TODO: remove (or move) everything below here: not being used anywhere.
