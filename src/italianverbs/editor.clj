@@ -188,18 +188,8 @@
         ;; as the number of games increase, but not doing DISTINCT is inaccurate.
         ;; the expression-counting is too expensive for Heroku; disabling with 1=0.
         sql "SELECT game.name AS name,game.id AS id,active,
-                    source,target,target_lex,target_grammar,counts.expressions_per_game
+                    source,target,target_lex,target_grammar
                FROM game
-          LEFT JOIN (SELECT game.id AS game,count(*) AS expressions_per_game
-                       FROM (SELECT structure
-                               FROM expression WHERE 1=0) AS expression
-                 INNER JOIN game
-                         ON structure @> ANY(target_lex)
-                        AND structure @> ANY(target_grammar)
-                        AND target_lex != ARRAY['{}'::jsonb]
-                        AND target_grammar != ARRAY['{}'::jsonb]
-                   GROUP BY game.id) AS counts
-                 ON (counts.game = game.id)
               WHERE ((game.target = ?) OR (? = ''))
            ORDER BY game.name"
 
@@ -238,7 +228,6 @@
        [:th {:style "width:15em"} "Name"]
        [:th {:style "width:auto"} "Verbs"]
        [:th {:style "width:auto"} "Tenses"]
-       [:th {:style "width:auto;text-align:right"} "Count"]
        ]
 
       (map
@@ -291,12 +280,6 @@
                                             (remove nil?
                                                     (map #(get tenses-human-readable %)
                                                          (map json-read-str (.getArray (:target_grammar result)))))))]
-
-
-                [:td {:style "text-align:right"} [:a {:href (str "/editor/game/" game-id)   }
-                                                  (if (nil? (:expressions_per_game result))
-                                                    0
-                                                    (:expressions_per_game result))]]
 
                 ]
                ))
