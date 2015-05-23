@@ -204,7 +204,7 @@
            ORDER BY game.name"
 
         debug (log/debug (str "GAME-CHOOSING LANGUAGE: " language))
-        debug (log/debug (str "GAME-CHOOSING SQL: " sql))
+        debug (log/debug (str "GAME-CHOOSING SQL: " (string/replace sql "\n" " ")))
         results (k/exec-raw [sql
                              [language language] ]
                             :results)]
