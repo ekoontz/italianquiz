@@ -1146,6 +1146,15 @@
                 :sem {:number :plur
                       :person :2nd}}}]
 
+   "lavare" (let [subject-semantics (ref :top)]
+              {:synsem {:cat :verb
+                        :sem {:pred :wash}
+                        :subcat {:1 {:sem subject-semantics}
+                                 :2 {:pronoun true}
+;                                     :reflexive true
+;                                     :sem subject-semantics}
+                                 }}})
+
    "lavorare"  {:synsem {:cat :verb
                          :sem {:pred :work-human}}}
 
