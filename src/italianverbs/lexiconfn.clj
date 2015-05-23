@@ -538,8 +538,9 @@ storing a deserialized form of each lexical entry avoids the need to serialize e
 (defn intransitive-verb-rule [lexical-entry]
   (cond (and (= (get-in lexical-entry '(:synsem :cat))
                 :verb)
-             (and (= :none (get-in lexical-entry '(:synsem :sem :obj) :none))
-                  (= :none (get-in lexical-entry '(:synsem :sem :location) :none)))
+             (= :none (get-in lexical-entry '(:synsem :sem :obj) :none))
+             (= :none (get-in lexical-entry '(:synsem :sem :location) :none))
+             (= :none (get-in lexical-entry '(:synsem :subcat :2) :none))
              (not (= true (get-in lexical-entry '(:synsem :aux)))))
         (unifyc
          lexical-entry
