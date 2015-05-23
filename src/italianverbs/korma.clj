@@ -25,19 +25,26 @@
              :host "localhost"
              :port "5432"}))
 
+;; TODO remove: using database-url instead.
 (def postgres_env (env :postgres-env))
 
 (defdb korma-db 
   (cond (env :database-url)        
-        (let [database-url 
-              (str (env :database-url)
-                   "?ssl=true&sslfactory=org.postgresql.ssl.NonValidatingFactory")]
+        (let [ssl-usage-suffix
+              (cond (= (env :use-ssl) "false")
+                    (do
+                      (log/warn (str "SSL was disabled with USE_SSL=false in your environment."))
+                      "")
+                    true
+                    "?ssl=true&sslfactory=org.postgresql.ssl.NonValidatingFactory")
+              database-url
+              (str (env :database-url) ssl-usage-suffix)]
           (postgres
            ;; thanks to Jeroen van Dijk via http://stackoverflow.com/a/14625874
            (let [[_ user password host port db] 
                  (re-matches #"postgres://(?:(.+):(.*)@)?([^:]+)(?::(\d+))?/(.+)" 
                              database-url)]
-             (log/info (str "using DATABASE_URL + SSL postgres connection: "
+             (log/info (str "using DATABASE_URL:"
                             "user: " user ";"
                             "host: " host ";"
                             "db: " db ""))
@@ -59,7 +66,7 @@
           workstation)
         true
         (do
-          (log/warn (str "neither DATABASE_URL nor POSTGRES_ENV not set in your environment: defaulting to 'workstation'."))
+          (log/warn (str "DATABASE_URL not set in your environment: defaulting to 'workstation'."))
           workstation)))
 
 ;; TODO: remove (or move) everything below here: not being used anywhere.
