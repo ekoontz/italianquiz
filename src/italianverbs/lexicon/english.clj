@@ -51,7 +51,7 @@
    "transfer" {:english {:past "transferred"
                          :participle "transferring"}
                :synsem {:cat :verb
-                :sem {:pred :transfer}}}
+                        :sem {:pred :transfer}}}
 
    "move" {:synsem {:cat :verb
                     :sem {:pred :move}}}
