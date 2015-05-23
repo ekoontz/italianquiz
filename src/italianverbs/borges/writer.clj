@@ -80,7 +80,7 @@
             debug (log/debug (str "semantics: " semantics))
 
             target-language-surface (fo target-language-sentence)
-            debug (log/debug (str "lang-1 surface: " target-language-surface))
+            debug (log/debug (str "target surface: " target-language-surface))
 
             source-language (:language (if (future? source-language-model)
                                          @source-language-model
@@ -104,7 +104,7 @@
                                                       source-language-model
                                                       :enrich true)
             source-language-surface (fo source-language-sentence)
-            debug (log/debug (str "lang-2 surface: " source-language-surface))
+            debug (log/debug (str "source surface: " source-language-surface))
 
             error (if (or (nil? source-language-surface)
                           (= source-language-surface ""))
