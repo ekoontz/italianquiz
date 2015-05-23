@@ -260,11 +260,13 @@
                 {:synsem {:sem {:tense :past :aspect :progressive}}}
                 {:synsem {:sem {:tense :past :aspect :perfect}}}
                 {:synsem {:sem {:tense :present}}}]]
-    (pmap (fn [tense] (fill-by-spec count (unify {:root {:italiano {:italiano verb}}}
-                                                 spec
-                                                 tense)
-                                    table))
-          tenses)))
+    (let [spec (unify {:root {:italiano {:italiano verb}}}
+                       spec)]
+      (log/debug (str "fill-verb spec: " spec))
+      (pmap (fn [tense] (fill-by-spec count (unify spec
+                                                   tense)
+                                      table))
+            tenses))))
 
 (defn fill-per-verb [ & [count-per-verb]]
   (let [italian-verbs
