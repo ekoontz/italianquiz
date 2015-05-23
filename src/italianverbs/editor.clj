@@ -207,7 +207,11 @@
         debug (log/debug (str "GAME-CHOOSING SQL: " (string/replace sql "\n" " ")))
         results (k/exec-raw [sql
                              [language language] ]
-                            :results)]
+                            :results)
+
+        debug (log/debug (str "Number of results: " (.size results)))
+
+        ]
     (html
 
      [:div.dropdown {:style "margin-left:0.5em;float:left;width:auto"}
@@ -239,7 +243,8 @@
 
       (map
        (fn [result]
-             (let [game-name-display
+             (let [debug (log/debug (str "result info: " result))
+                   game-name-display
                    (let [game-name (string/trim (:name result))]
                      (if (= game-name "")
                        "(untitled)"
