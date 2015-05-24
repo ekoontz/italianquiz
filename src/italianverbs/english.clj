@@ -55,19 +55,18 @@
   (let [spec (if spec spec :top)]
     (forest/generate spec grammar index (flatten (vals lexicon)))))
 
-(defn generate [ & [spec {use-grammar :grammar
-                          use-index :index
-                          use-lexicon :lexicon}]]
-  (let [spec (if spec spec :top)
-        use-grammar (if use-grammar use-grammar grammar)
-        use-index (if use-index use-index index)
-        use-lexicon (if use-lexicon use-lexicon lexicon)]
-    (log/info (str "using grammar of size: " (.size use-grammar)))
-    (if (seq? spec)
-      (map generate spec)
-      (forest/generate spec use-grammar
-                         (flatten (vals @use-lexicon)) 
-                         use-index))))
+(declare small)
+
+(defn generate [ & [spec model]]
+  (if (seq? spec)
+    (map generate spec)
+    (let [spec (if spec spec :top)
+          model (if model model small)
+          model (if (future? model) @model model)]
+      (forest/generate spec
+                       (:grammar model)
+                       (:lexicon model)
+                       (:index model)))))
 
 ;; TODO: copied from italiano.clj: factor out to forest/.
 (defn generate-all [ & [spec {use-grammar :grammar
@@ -94,6 +93,54 @@
                        (= (:rule %) "s-imperfetto")
                        (= (:rule %) "s-past")
                        (= (:rule %) "s-aux"))
+                  grammar)
+
+          lexicon
+          (into {}
+                (for [[k v] @lexicon]
+                  (let [filtered-v
+                        (filter #(or (= (get-in % [:synsem :cat]) :verb)
+                                     (= (get-in % [:synsem :propernoun]) true)
+                                     (= (get-in % [:synsem :pronoun]) true))
+                                v)]
+                    (if (not (empty? filtered-v))
+                      [k filtered-v]))))
+          ]
+      {:name "small"
+       :language "en"
+       :grammar grammar
+       :lexicon lexicon
+       :for {:es ;; a lexicon specific to when we want to use Español as a target.
+             (into {}
+                   (for [[k v] lexicon]
+                     (let [filtered-v
+                           (filter #(or (= :unset (get-in % [:target]))
+                                        (= :es (get-in % [:target])))
+                                   v)]
+                       (if (not (empty? filtered-v))
+                         [k filtered-v]))))
+
+             :it  ;; a lexicon specific to when we want to use Italiano as a target.
+             (into {}
+                   (for [[k v] lexicon]
+                     (let [filtered-v
+                           (filter #(or (= :unset (get-in % [:target]))
+                                        (= :it (get-in % [:target])))
+                                   v)]
+                       (if (not (empty? filtered-v))
+                         [k filtered-v]))))}
+       :index (create-index grammar (flatten (vals lexicon)) head-principle)})))
+
+(def small-plus-vp-pronoun
+  (future
+    (let [grammar
+          (filter #(or (= (:rule %) "s-conditional")
+                       (= (:rule %) "s-present")
+                       (= (:rule %) "s-future")
+                       (= (:rule %) "s-imperfetto")
+                       (= (:rule %) "s-past")
+                       (= (:rule %) "s-aux")
+                       (= (:rule %) "vp-pronoun"))
                   grammar)
 
           lexicon
