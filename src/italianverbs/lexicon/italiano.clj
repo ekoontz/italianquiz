@@ -1040,7 +1040,6 @@
       "interrompere" {:italiano {:passato "interrotto"}
                       :synsem {:cat :verb
                                :sem {:pred :interrupt}}}
-
       "io"
       [{:synsem {:cat :noun
                  :pronoun true
@@ -1148,22 +1147,20 @@
 
    "lavare" (let [subject-semantics (ref :top)]
               {:synsem {:cat :verb
-                        :sem {:pred :wash}
+                        :sem {:pred :wash
+                              :subj subject-semantics
+                              :obj subject-semantics}
                         :subcat {:1 {:sem subject-semantics}
-                                 :2 {:pronoun true}
-;                                     :reflexive true
-;                                     :sem subject-semantics}
-                                 }}})
-
+                                 :2 {:pronoun true
+                                     :reflexive true
+                                     :sem subject-semantics}}}})
    "lavorare"  {:synsem {:cat :verb
                          :sem {:pred :work-human}}}
-
    "le"
    {:synsem {:cat :det
              :def :def
              :gender :fem
              :number :plur}}
-
    "lei"
    (let [common {:synsem {:cat :noun
                           :pronoun true
@@ -1177,7 +1174,6 @@
              {:synsem {:sem {:human false}}})
       (unify common
              {:synsem {:sem {:human true}}})])
-
    "leggere"
    {:italiano {:passato "letto"}
     :synsem {:cat :verb
@@ -1186,8 +1182,6 @@
                    :pred :leggere
                    :subj {:human true}
                    :obj {:legible true}}}}
-                          
-
    "libro"
    (unify agreement-noun
           common-noun
@@ -1289,6 +1283,27 @@
     "mentire"
     {:synsem {:cat :verb
               :sem {:pred :lie}}}
+
+    "mi"
+    [{:synsem {:cat :noun
+               :pronoun true
+               :case :acc
+               :agr {:gender :fem
+                     :person :1st
+                     :number :sing}
+               :sem {:human true
+                     :pred :io}
+               :subcat '()}}
+
+     {:synsem {:cat :noun
+               :pronoun true
+               :case :acc
+               :agr {:gender :masc
+                     :person :1st
+                     :number :sing}
+               :sem {:human true
+                     :pred :io}
+               :subcat '()}}]
 
     "migliorare" {:synsem {:cat :verb
                            :sem {:pred :improve}}} ;; c.f. english: "ameliorate"
