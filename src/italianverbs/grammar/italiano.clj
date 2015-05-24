@@ -238,7 +238,7 @@
                                      :sem {:tense :conditional}}})
                    (unifyc c10
                            root-is-head-root
-                           {:rule "s-imperfetto"
+                           {:rule "s-imperfetto-phrasal"
                             :head {:phrasal true}
                             :synsem {:aux false
                                      :infl :imperfetto
@@ -247,7 +247,7 @@
                                            :tense :past}}})
                    (unifyc c10
                            root-is-head
-                           {:rule "s-imperfetto"
+                           {:rule "s-imperfetto-nonphrasal"
                             :head {:phrasal false}
                             :synsem {:aux false
                                      :infl :imperfetto
