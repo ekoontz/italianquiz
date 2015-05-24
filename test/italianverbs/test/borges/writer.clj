@@ -58,3 +58,22 @@
 (deftest do-prep
   (prep 10)
   (is (= 1 1))) ;; stub TODO: fill out test
+
+(deftest reflexive-vp
+  (let [expression
+        (en/generate {:synsem {:subcat {:1 :top} :sem {:obj {:pred :io} :tense :present :pred :wash}}} 
+                     en/small-plus-vp-pronoun)
+        ]
+    (is (= (fo expression)
+           "wash myself"))))
+
+;; test does not work yet due to problem with English generation
+;(deftest populate-reflexives
+;  (let [do-populate 
+;        (populate 1 en/small-plus-vp-pronoun it/small-plus-vp-pronoun 
+;                  {:synsem {:subcat '()
+;                            :sem {:tense :present
+;                                  :pred :wash
+;                                  :obj {:pred :io}}}})
+;        ]
+;    (is (= 1 1)))) ;; stub TODO: fill out test

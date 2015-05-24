@@ -252,7 +252,7 @@
 
                    ;; s-present: head is phrase => root is head itself.
                    (unifyc c10
-                           root-is-head
+                           root-is-head-root
                            {:rule "s-present"
                             :head {:phrasal true}
                             :synsem {:aux false
@@ -260,9 +260,9 @@
                                      :cat :verb
                                      :sem {:aspect :progressive
                                            :tense :present}}})
-                   ;; s-present: head is phrase => root is head's root.
+
                    (unifyc c10
-                           root-is-head-root
+                           root-is-head
                            {:rule "s-present"
                             :head {:phrasal false}
                             :synsem {:aux false
