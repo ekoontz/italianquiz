@@ -324,19 +324,6 @@
 
             (source-to-target-mappings game-id refine)
 
-            [:div {:style "margin-top:0.5em; border:0px dashed blue;float:left"}
-             [:form
-              {:method "post"
-               :action "/generate"}
-              [:input {:type "hidden" :name "source" :value "en"}]
-              [:input {:type "hidden" :name "target" :value "it"}]
-              [:input {:type "hidden" :name "spec" :value refine}]
-              [:button {:disabled "disabled" :type "submit"} "Generate"]
-              [:input {:name "quantity" :size 2 :value 1}]
-              " more expressions."
-
-              ]]
-            
             ))
 
          [:h3 "Verb/Tense Table"]
