@@ -7,7 +7,7 @@
    [italianverbs.forest :as forest]
 
    ;; TODO: change to: :refer :all rather than :refer-ing particular things.
-   [italianverbs.italiano :as it :refer (generate it lexicon small)]
+   [italianverbs.italiano :as it :refer :all]
 
    [italianverbs.lexiconfn :as lexiconfn]
    [italianverbs.morphology :refer (fo)]
@@ -170,6 +170,16 @@
             (= (get-in generated-present [:synsem :sem :pred]) :talk)))
     (is (or (= (get-in generated-past [:synsem :sem :pred]) :speak)
             (= (get-in generated-past [:synsem :sem :pred]) :talk)))))
+
+
+(deftest reflexive
+  "generate a reflexive sentence"
+  (is (= "io mi lavo"
+         (fo (generate {:synsem {:subcat '() 
+                                 :sem {:tense :present 
+                                       :obj {:pred :io} 
+                                       :pred :wash}}}
+                       small-medium)))))
 
 
 
