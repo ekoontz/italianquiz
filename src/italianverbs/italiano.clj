@@ -148,9 +148,12 @@
 (def small-plus-vp-pronoun
   (future
     (let [grammar
-          (filter #(or (= (:rule %) "s-conditional")
-                       (= (:rule %) "s-present")
-                       (= (:rule %) "s-future")
+          (filter #(or (= (:rule %) "s-conditional-phrasal")
+                       (= (:rule %) "s-conditional-nonphrasal")
+                       (= (:rule %) "s-present-phrasal")
+                       (= (:rule %) "s-present-nonphrasal")
+                       (= (:rule %) "s-future-phrasal")
+                       (= (:rule %) "s-future-nonphrasal")
                        (= (:rule %) "s-imperfetto-phrasal")
                        (= (:rule %) "s-imperfetto-nonphrasal")
                        (= (:rule %) "s-aux")

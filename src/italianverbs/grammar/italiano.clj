@@ -205,7 +205,7 @@
                                            :tense :past}}})
                    (unifyc c10
                            root-is-head-root
-                           {:rule "s-future"
+                           {:rule "s-future-phrasal"
                             :head {:phrasal true}
                             :synsem {:aux false
                                      :infl :futuro
@@ -213,7 +213,7 @@
                                      :sem {:tense :futuro}}})
                    (unifyc c10
                            root-is-head
-                           {:rule "s-future"
+                           {:rule "s-future-nonphrasal"
                             :head {:phrasal false}
                             :synsem {:aux false
                                      :infl :futuro
@@ -222,7 +222,7 @@
 
                    (unifyc c10
                            root-is-head-root
-                           {:rule "s-conditional"
+                           {:rule "s-conditional-phrasal"
                             :head {:phrasal true}
                             :synsem {:aux false
                                      :infl :conditional
@@ -230,7 +230,7 @@
                                      :sem {:tense :conditional}}})
                    (unifyc c10
                            root-is-head
-                           {:rule "s-conditional"
+                           {:rule "s-conditional-nonphrasal"
                             :head {:phrasal false}
                             :synsem {:aux false
                                      :infl :conditional
@@ -255,10 +255,9 @@
                                      :sem {:aspect :progressive
                                            :tense :past}}})
 
-                   ;; s-present: head is not a phrase => root is head itself.
                    (unifyc c10
                            root-is-head
-                           {:rule "s-present"
+                           {:rule "s-present-nonphrasal"
                             :head {:phrasal false}
                             :synsem {:aux false
                                      :infl :present
@@ -266,10 +265,9 @@
                                      :sem {:aspect :progressive
                                            :tense :present}}})
 
-                   ;; s-present: head is a phrase => root is head's root.
                    (unifyc c10
                            root-is-head-root
-                           {:rule "s-present"
+                           {:rule "s-present-phrasal"
                             :head {:phrasal true}
                             :synsem {:aux false
                                      :infl :present
