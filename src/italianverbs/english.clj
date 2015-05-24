@@ -87,10 +87,10 @@
 (def small
   (future
     (let [grammar
-          (filter #(or (= (:rule %) "s-conditional")
-                       (= (:rule %) "s-present")
-                       (= (:rule %) "s-future")
-                       (= (:rule %) "s-imperfetto")
+          (filter #(or (= (:rule %) "s-conditional-nonphrasal-head")
+                       (= (:rule %) "s-present-nonphrasal-head")
+                       (= (:rule %) "s-future-nonphrasal-head")
+                       (= (:rule %) "s-imperfetto-nonphrasal-head")
                        (= (:rule %) "s-past")
                        (= (:rule %) "s-aux"))
                   grammar)
@@ -134,10 +134,14 @@
 (def small-plus-vp-pronoun
   (future
     (let [grammar
-          (filter #(or (= (:rule %) "s-conditional")
-                       (= (:rule %) "s-present")
-                       (= (:rule %) "s-future")
-                       (= (:rule %) "s-imperfetto")
+          (filter #(or (= (:rule %) "s-conditional-nonphrasal-head")
+                       (= (:rule %) "s-conditional-phrasal-head")
+                       (= (:rule %) "s-present-nonphrasal-head")
+                       (= (:rule %) "s-present-phrasal-head")
+                       (= (:rule %) "s-future-nonphrasal-head")
+                       (= (:rule %) "s-future-phrasal-head")
+                       (= (:rule %) "s-imperfetto-nonphrasal-head")
+                       (= (:rule %) "s-imperfetto-phrasal-head")
                        (= (:rule %) "s-past")
                        (= (:rule %) "s-aux")
                        (= (:rule %) "vp-pronoun"))

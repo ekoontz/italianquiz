@@ -201,7 +201,7 @@
                                            :tense :past}}})
                    (unifyc c10
                            root-is-head-root
-                           {:rule "s-conditional"
+                           {:rule "s-conditional-phrasal-head"
                             :head {:phrasal true}
                             :synsem {:aux false
                                      :infl :conditional
@@ -209,7 +209,7 @@
                                      :sem {:tense :conditional}}})
                    (unifyc c10
                            root-is-head
-                           {:rule "s-conditional"
+                           {:rule "s-conditional-nonphrasal-head"
                             :head {:phrasal false}
                             :synsem {:aux false
                                      :infl :conditional
@@ -217,7 +217,7 @@
                                      :sem {:tense :conditional}}})
                    (unifyc c10
                            root-is-head-root
-                           {:rule "s-future"
+                           {:rule "s-future-phrasal-head"
                             :head {:phrasal true}
                             :synsem {:aux false
                                      :infl :futuro
@@ -225,7 +225,7 @@
                                      :sem {:tense :futuro}}})
                    (unifyc c10
                            root-is-head
-                           {:rule "s-future"
+                           {:rule "s-future-nonphrasal-head"
                             :head {:phrasal false}
                             :synsem {:aux false
                                      :infl :futuro
@@ -233,7 +233,7 @@
                                      :sem {:tense :futuro}}})
                    (unifyc c10
                            root-is-head-root
-                           {:rule "s-imperfetto"
+                           {:rule "s-imperfetto-phrasal-head"
                             :head {:phrasal true}
                             :synsem {:aux false
                                      :infl :imperfetto
@@ -242,7 +242,7 @@
                                            :tense :past}}})
                    (unifyc c10
                            root-is-head-root
-                           {:rule "s-imperfetto"
+                           {:rule "s-imperfetto-nonphrasal-head"
                             :head {:phrasal false}
                             :synsem {:aux false
                                      :infl :imperfetto
@@ -252,7 +252,7 @@
 
                    (unifyc c10
                            root-is-head-root
-                           {:rule "s-present"
+                           {:rule "s-present-phrasal-head"
                             :head {:phrasal true}
                             :synsem {:aux false
                                      :infl :present
@@ -261,7 +261,7 @@
                                            :tense :present}}})
                    (unifyc c10
                            root-is-head
-                           {:rule "s-present"
+                           {:rule "s-present-nonphrasal-head"
                             :head {:phrasal false}
                             :synsem {:aux false
                                      :infl :present
