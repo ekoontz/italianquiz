@@ -1389,7 +1389,7 @@
 
      (list
       (unify common1 transitive
-              {:synsem {:obj {:speakable true}}})
+             {:synsem {:sem {:obj {:speakable true}}}})
       (unify common1 intransitive intransitive-unspecified-obj)
 
       (unify common2 intransitive intransitive-unspecified-obj)))
