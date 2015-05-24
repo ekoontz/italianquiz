@@ -7,7 +7,11 @@
 }
 
 div.cb-col {
-    padding-right:1em;
+    background: #caecae;
+    border-bottom:1px solid #90d6fa;
+    padding-bottom:0.5em;
+    margin-bottom:1em;
+    padding-left:1em;
     float:left;
     with:auto;
 }
