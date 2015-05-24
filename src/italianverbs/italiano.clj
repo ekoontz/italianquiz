@@ -144,6 +144,34 @@
        :lexicon lexicon
        :index (create-index grammar (flatten (vals lexicon)) head-principle)})))
 
+(def small-medium
+  (future
+    (let [grammar
+          (filter #(or (= (:rule %) "s-conditional")
+                       (= (:rule %) "s-present")
+                       (= (:rule %) "s-future")
+                       (= (:rule %) "s-imperfetto")
+                       (= (:rule %) "s-aux")
+                       (= (:rule %) "vp-aux")
+                       (= (:rule %) "vp-pronoun"))
+                  grammar)
+          lexicon
+          (into {}
+                (for [[k v] @lexicon]
+                  (let [filtered-v
+                        (filter #(or (= (get-in % [:synsem :cat]) :verb)
+                                     (= (get-in % [:synsem :propernoun]) true)
+                                     (= (get-in % [:synsem :pronoun]) true))
+                                v)]
+                    (if (not (empty? filtered-v))
+                      [k filtered-v]))))]
+      {:name "small-medium"
+       :language "it"
+       :enrich enrich
+       :grammar grammar
+       :lexicon lexicon
+       :index (create-index grammar (flatten (vals lexicon)) head-principle)})))
+
 (def medium
   (future
     (let [lexicon
