@@ -8,6 +8,7 @@
 (require '[italianverbs.auth :refer [is-admin]])
 (require '[italianverbs.borges.writer :refer [populate truncate]])
 (require '[italianverbs.cache :refer (build-lex-sch-cache create-index over spec-to-phrases)])
+(require '[italianverbs.english :as en])
 (require '[italianverbs.forest :as forest])
 (require '[italianverbs.grammar.italiano :as gram])
 (require '[italianverbs.html :as html])
