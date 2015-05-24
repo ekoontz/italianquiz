@@ -5,123 +5,6 @@
 
 (def lexicon-source
   {
-
-   "waste" {:synsem {:cat :verb
-                :sem {:pred :waste}}}
-
-   "supply" {:synsem {:cat :verb
-                :sem {:pred :supply}}}
-
-   "measure" {:synsem {:cat :verb
-                :sem {:pred :measure}}}
-
-   "recognize" {:synsem {:cat :verb
-                :sem {:pred :recognize}}}
-
-   "multiply" {:synsem {:cat :verb
-                :sem {:pred :multiply}}}
-
-   "reserve" {:synsem {:cat :verb
-                :sem {:pred :reserve}}}
-
-   "manage" {:synsem {:cat :verb
-                :sem {:pred :manage}}}
-
-   "yell" {:synsem {:cat :verb
-                :sem {:pred :yell}}}
-
-   "scold" {:synsem {:cat :verb
-                :sem {:pred :scold}}}
-
-;;(pmap #(standard-fill-verb % 10 :top "expression_import") ["colpire"])
-
-   "strike" {:english {:past "struck"}
-             :synsem {:cat :verb
-                      :sem {:pred :strike}}}
-
-   "stain" {:synsem {:cat :verb
-                :sem {:pred :stain}}}
-
-   "transfer" {:english {:past "transferred"
-                         :participle "transferring"}
-               :synsem {:cat :verb
-                        :sem {:pred :transfer}}}
-
-   "move" {:synsem {:cat :verb
-                    :sem {:pred :move}}}
-
-   "displace" {:synsem {:cat :verb
-                :sem {:pred :displace}}}
-
-
-   "endure" {:synsem {:cat :verb
-                :sem {:pred :endure}}}
-
-   "obtain" {:synsem {:cat :verb
-                :sem {:pred :obtain}}}
-
-
-   "sigh" {:synsem {:cat :verb
-                :sem {:pred :sigh}}}
-
-   "interrupt" {:synsem {:cat :verb
-                :sem {:pred :interrupt}}}
-
-   "walk" {:synsem {:cat :verb
-                :sem {:pred :walk}}}
-
-   "recount" {:synsem {:cat :verb
-                :sem {:pred :recount}}}
-
-   "improve" {:synsem {:cat :verb
-                :sem {:pred :improve}}}
-
-   "approve" {:synsem {:cat :verb
-                :sem {:pred :approve}}}
-
-   "organize" {:synsem {:cat :verb
-                :sem {:pred :organize}}}
-
-   "rest" {:synsem {:cat :verb
-                :sem {:pred :rest}}}
-
-   "chat" {:synsem {:cat :verb
-                    :sem {:pred :chat}}}
-
-   "observe" {:synsem {:cat :verb
-                :sem {:pred :observe}}}
-
-   "engage" {:synsem {:cat :verb
-                :sem {:pred :engage}}}
-
-   "recover" {:synsem {:cat :verb
-                :sem {:pred :recover}}}
-
-   "steal" {:synsem {:cat :verb
-                     :sem {:pred :steal}}
-            :english {:past "stole"}}
-
-   "admire" {:synsem {:cat :verb
-                      :sem {:pred :admire}}}
-
-   "snap" {:synsem {:cat :verb
-                    :sem {:pred :snap-pictures}}
-           :english {:past "snapped"
-                     :note "(pictures)"}}
-
-   "reciprocate" {:synsem {:cat :verb
-                           :sem {:pred :reciprocate}}}
-
-   "add" {:synsem {:cat :verb
-                   :sem {:pred :add}}}
-
-   "break" {:synsem {:cat :verb
-                     :sem {:pred :break }}
-            :english {:past "break"}}
-
-;;   "" {:synsem {:cat :verb
-;;  :sem {:pred }}
-
    "Antonia"
    {:synsem {:sem {:pred :antonia
                    :human true}
@@ -153,7 +36,12 @@
    "accompany" {:synsem {:cat :verb
                          :sem {:pred :accompany}}
                 :english {:past "accompanied"}}
+   
+   "add" {:synsem {:cat :verb
+                   :sem {:pred :add}}}
 
+   "admire" {:synsem {:cat :verb
+                      :sem {:pred :admire}}}
 
    "announce" {:synsem {:cat :verb
                         :sem {:pred :announce}}}
@@ -161,6 +49,9 @@
    "answer" {:synsem {:cat :verb
                       :sem {:pred :answer
                             :subj {:human true}}}}
+
+   "approve" {:synsem {:cat :verb
+                :sem {:pred :approve}}}
 
    "ask" {:synsem {:cat :verb
                    :sem {:pred :chiedere
@@ -255,6 +146,10 @@
                           :consumable false
                           :artifact true}}})
 
+   "break" {:synsem {:cat :verb
+                     :sem {:pred :break }}
+            :english {:past "break"}}
+
    "buy" {:synsem {:cat :verb
                    :sem {:pred :comprare
                          :subj {:human true}
@@ -279,6 +174,9 @@
 
    "change" {:synsem {:cat :verb
                       :sem {:pred :cambiare}}} ;; TODO: add reflexive sense
+
+   "chat" {:synsem {:cat :verb
+                    :sem {:pred :chat}}}
 
    "charge" {:synsem {:cat :verb
                       :sem {:pred :caricare}}}
@@ -322,6 +220,9 @@
    "dine" {:synsem {:cat :verb
                     :sem {:pred :cenare
                           :subj {:human true}}}}
+
+   "displace" {:synsem {:cat :verb
+                :sem {:pred :displace}}}
 
    "drink" {:synsem {:cat :verb
                      :sem {:pred :bere
@@ -372,6 +273,11 @@
              :subj {:human true}
              :obj {:human true}}}
 
+   "endure" {:synsem {:cat :verb
+                :sem {:pred :endure}}}
+
+   "engage" {:synsem {:cat :verb
+                :sem {:pred :engage}}}
 
    "enjoy" {:english {:present {:3sing "enjoys"}}
             :synsem {:cat :verb
@@ -489,29 +395,31 @@
                    :obj {:animate true}}}
     :english {:past "hugged"
               :participle "hugging"}}
-
-   "I (♂)"
-   {:synsem {:cat :noun
-             :pronoun true
-             :case :nom
-             :agr {:gender :masc
-                   :person :1st
-                   :number :sing}
-             :sem {:human true
-                   :pred :io}
+   "I" 
+   [{:english {:note "♂"}
+     :synsem {:cat :noun
+              :pronoun true
+              :case :nom
+              :agr {:gender :masc
+                    :person :1st
+                    :number :sing}
+              :sem {:human true
+                    :pred :io}
              :subcat '()}}
 
+    {:english {:note "♀"}
+     :synsem {:cat :noun
+              :pronoun true
+              :case :nom
+              :agr {:gender :fem
+                    :person :1st
+                    :number :sing}
+              :sem {:human true
+                    :pred :io}
+              :subcat '()}}]
 
-   "I (♀)"
-   {:synsem {:cat :noun
-             :pronoun true
-             :case :nom
-             :agr {:gender :fem
-                   :person :1st
-                   :number :sing}
-             :sem {:human true
-                   :pred :io}
-             :subcat '()}}
+   "improve" {:synsem {:cat :verb
+                :sem {:pred :improve}}}
 
    "increase" {:synsem {:cat :verb
                         :sem {:pred :increase}}}
@@ -519,6 +427,8 @@
    "insure" {:synsem {:cat :verb
                       :sem {:pred :insure}}}
 
+   "interrupt" {:synsem {:cat :verb
+                :sem {:pred :interrupt}}}
    "it (♂)"
    {:synsem {:cat :noun
               :pronoun true
@@ -590,6 +500,22 @@
    "lower" {:synsem {:cat :verb
                      :sem {:pred :lower}}}
 
+   "manage" {:synsem {:cat :verb
+                :sem {:pred :manage}}}
+   "me" 
+   {:synsem {:cat :noun
+             :pronoun true
+             :case :acc
+             :reflexive false
+             :agr {:person :1st
+                   :number :sing}
+             :sem {:human true
+                   :pred :io}
+             :subcat '()}}
+
+   "measure" {:synsem {:cat :verb
+                :sem {:pred :measure}}}
+
    "meet"  {:synsem {:cat :verb
                      :sem {:pred :incontrare}}
             :english {:past "met"}}
@@ -602,8 +528,35 @@
                           :pred :madre
                           :child false}}})
 
-   "music" {:synsem {:cat :noun
-                    :sem {:pred :music}}}
+   "move" {:synsem {:cat :verb
+                    :sem {:pred :move}}}
+
+   "multiply" {:synsem {:cat :verb
+                :sem {:pred :multiply}}}
+
+   "music" 
+   {:synsem {:cat :noun
+             :sem {:pred :music}}}
+   
+   "myself" 
+   {:synsem {:cat :noun
+             :pronoun true
+             :case :acc
+             :reflexive true
+             :agr {:person :1st
+                   :number :sing}
+             :sem {:human true
+                   :pred :io}
+             :subcat '()}}
+
+   "observe" {:synsem {:cat :verb
+                :sem {:pred :observe}}}
+
+   "obtain" {:synsem {:cat :verb
+                :sem {:pred :obtain}}}
+
+   "organize" {:synsem {:cat :verb
+                :sem {:pred :organize}}}
 
    "paint"  {:synsem {:cat :verb
                       :sem {:pred :dipingere}}}
@@ -639,6 +592,18 @@
    
    "receive"  {:synsem {:cat :verb
                         :sem {:pred :ricevere}}}
+
+   "reciprocate" {:synsem {:cat :verb
+                           :sem {:pred :reciprocate}}}
+
+   "recognize" {:synsem {:cat :verb
+                :sem {:pred :recognize}}}
+
+   "recount" {:synsem {:cat :verb
+                :sem {:pred :recount}}}
+
+   "recover" {:synsem {:cat :verb
+                :sem {:pred :recover}}}
    "red"
    (unify adjective
           {:synsem {:cat :adjective
@@ -650,8 +615,14 @@
    "remember"  {:synsem {:cat :verb
                          :sem {:pred :ricordare}}}
 
+   "reserve" {:synsem {:cat :verb
+                :sem {:pred :reserve}}}
+
    "respond"  {:synsem {:cat :verb
                         :sem {:pred :answer}}}
+
+   "rest" {:synsem {:cat :verb
+                :sem {:pred :rest}}}
 
    "return" [{:synsem {:cat :verb
                        :sem {:pred :ritornare}}}
@@ -666,6 +637,9 @@
                     :past-participle "run"}
           :synsem {:cat :verb
                    :sem {:pred :run}}}
+
+   "scold" {:synsem {:cat :verb
+                :sem {:pred :scold}}}
 
    ;; TODO: search _within_ or _on_: depends on the object.
    ;;   "search"  {:synsem {:sem {:pred :cercare}}})
@@ -687,7 +661,6 @@
 
    "share" {:synsem {:cat :verb
                      :sem {:pred :share}}}
-
    "she"
    {:synsem {:cat :noun
              :pronoun true
@@ -702,6 +675,9 @@
    "show" {:synsem {:cat :verb
                     :sem {:pred :show}}}
 
+   "sigh" {:synsem {:cat :verb
+                :sem {:pred :sigh}}}
+
    "sing" {:synsem {:cat :verb
                     :sem {:pred :cantare}}
            :english {:past "sang"}}
@@ -711,6 +687,11 @@
                            :discrete false
                            :pred :dormire}}
             :english {:past "slept"}}
+
+   "snap" {:synsem {:cat :verb
+                    :sem {:pred :snap-pictures}}
+           :english {:past "snapped"
+                     :note "(pictures)"}}
 
    "some"
    [{:synsem {:cat :det
@@ -728,13 +709,30 @@
                    :subj {:human true}
                    :obj {:speakable true}}}}
 
+   "stain" {:synsem {:cat :verb
+                :sem {:pred :stain}}}
+
+   "steal" {:synsem {:cat :verb
+                     :sem {:pred :steal}}
+            :english {:past "stole"}}
+
+   "strike" {:english {:past "struck"}
+             :synsem {:cat :verb
+                      :sem {:pred :strike}}}
+
    "study"  {:synsem {:cat :verb
                       :sem {:pred :study}}
              :english {:past "studied"}}
 
+   "supply" {:synsem {:cat :verb
+                :sem {:pred :supply}}}
+
    "support" {:synsem {:cat :verb
                        :sem {:pred :support}}}
 
+   "take"  {:synsem {:cat :verb
+                     :sem {:pred :prendere}}
+            :english {:past "took"}}
 
    "take advantage of" {:english {:past "took advantage of"
                                   :participle "taking advantage of"
@@ -795,9 +793,11 @@
               :present {:3sing "throws out"}
               :participle "throwing out"}}
 
-   "take"  {:synsem {:cat :verb
-                     :sem {:pred :prendere}}
-            :english {:past "took"}}
+
+   "transfer" {:english {:past "transferred"
+                         :participle "transferring"}
+               :synsem {:cat :verb
+                        :sem {:pred :transfer}}}
 
    "understand" {:english {:past "understood"}
                  :synsem {:cat :verb
@@ -811,10 +811,23 @@
 
    "wait"  {:synsem {:cat :verb
                      :sem {:pred :wait-for}}}
+   "walk" {:synsem {:cat :verb
+                :sem {:pred :walk}}}
 
    "warm" {:synsem {:cat :verb
                 :sem {:pred :warm}}}
 
+   "wash" (let [subject-semantics (ref :top)]
+            {:synsem {:cat :verb
+                      :sem {:pred :wash
+                            :subj subject-semantics
+                            :obj subject-semantics}
+                      :subcat {:1 {:sem subject-semantics}
+                               :2 {:pronoun true
+                                   :reflexive true
+                                   :sem subject-semantics}}}})
+   "waste" {:synsem {:cat :verb
+                :sem {:pred :waste}}}
    "we (♀)"
    {:synsem {:cat :noun
              :pronoun true
@@ -876,6 +889,9 @@
                        :past-participle "written"}
              :synsem {:cat :verb
                       :sem {:pred :scrivere}}}
+
+   "yell" {:synsem {:cat :verb
+                :sem {:pred :yell}}}
    
    "you (♂)"
    {:note "♂"
