@@ -3,7 +3,8 @@
   (:require
    [clojure.core :as core]
    [clojure.test :refer :all]
-   [italianverbs.english :refer :all]
+   [clojure.tools.logging :as log]
+   [italianverbs.english :refer :all :as en]
    [italianverbs.engine :as engine]
    [italianverbs.lexicon.english :as lex]
    [italianverbs.lexiconfn :as lexiconfn :refer (compile-lex)]
@@ -121,3 +122,16 @@
     ;; will only pass if the Italian lexicon's "parlare" entries' :pred happen to be set to :speak.
     (is (= (get-in generated-present [:synsem :sem :pred]) :speak))
     (is (= (get-in generated-past [:synsem :sem :pred]) :speak))))
+
+(deftest reflexive
+  "generate a reflexive sentence"
+  (let [i-wash-myself
+        (en/generate {:synsem {:subcat '() 
+                               :sem {:tense :present 
+                                     :obj {:pred :io} 
+                                     :pred :wash}}}
+                     en/small-plus-vp-pronoun)
+        formatted (fo i-wash-myself)]
+    (is (or (= formatted "I (♂) wash myself")
+            (= formatted  "I (♀) wash myself")))))
+
