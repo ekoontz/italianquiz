@@ -460,6 +460,7 @@
                      (= (first %) :first)
                      (= (first %) :head-filled)
                      (= (first %) :phrasal)
+                     (= (first %) :root)
                      (= (first %) :schema-symbol)
                      (= (first %) :serialized)
                      (and (not show-true)
