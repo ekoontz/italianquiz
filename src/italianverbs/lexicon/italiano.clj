@@ -1040,6 +1040,16 @@
       "interrompere" {:italiano {:passato "interrotto"}
                       :synsem {:cat :verb
                                :sem {:pred :interrupt}}}
+
+      "" ;; empty pronominal subject e.g. "mangio" = "io mangio".
+      [{:synsem {:agr {:person :1st
+                       :number :sing}
+                 :cat :noun
+                 :case :nom
+                 :pronoun true
+                 :sem {:human true}
+                 :subcat '()}}]
+
       "io"
       [{:synsem {:cat :noun
                  :pronoun true
