@@ -65,7 +65,8 @@
    head-principle
    head-last
    {:comp {:synsem {:subcat '()
-                    :pronoun true}}
+                    :pronoun true}} ;; should not set :pronoun here: should be done
+    ;; by usages of c21, such as vp-pronoun (below).
     :schema-symbol 'c21 ;; used by over-each-parent to know where to put children.
     :first :comp
     :comment "c21"}))
@@ -203,22 +204,42 @@
                                      :sem {:aspect :perfect
                                            :tense :past}}})
                    (unifyc c10
-                           root-is-head
+                           root-is-head-root
                            {:rule "s-future"
+                            :head {:phrasal true}
                             :synsem {:aux false
                                      :infl :futuro
                                      :cat :verb
                                      :sem {:tense :futuro}}})
                    (unifyc c10
                            root-is-head
+                           {:rule "s-future"
+                            :head {:phrasal false}
+                            :synsem {:aux false
+                                     :infl :futuro
+                                     :cat :verb
+                                     :sem {:tense :futuro}}})
+
+                   (unifyc c10
+                           root-is-head-root
                            {:rule "s-conditional"
+                            :head {:phrasal true}
                             :synsem {:aux false
                                      :infl :conditional
                                      :cat :verb
                                      :sem {:tense :conditional}}})
                    (unifyc c10
                            root-is-head
+                           {:rule "s-conditional"
+                            :head {:phrasal false}
+                            :synsem {:aux false
+                                     :infl :conditional
+                                     :cat :verb
+                                     :sem {:tense :conditional}}})
+                   (unifyc c10
+                           root-is-head-root
                            {:rule "s-imperfetto"
+                            :head {:phrasal true}
                             :synsem {:aux false
                                      :infl :imperfetto
                                      :cat :verb
@@ -226,12 +247,36 @@
                                            :tense :past}}})
                    (unifyc c10
                            root-is-head
+                           {:rule "s-imperfetto"
+                            :head {:phrasal false}
+                            :synsem {:aux false
+                                     :infl :imperfetto
+                                     :cat :verb
+                                     :sem {:aspect :progressive
+                                           :tense :past}}})
+
+                   ;; s-present: head is not a phrase => root is head itself.
+                   (unifyc c10
+                           root-is-head
                            {:rule "s-present"
+                            :head {:phrasal false}
                             :synsem {:aux false
                                      :infl :present
                                      :cat :verb
                                      :sem {:aspect :progressive
                                            :tense :present}}})
+
+                   ;; s-present: head is a phrase => root is head's root.
+                   (unifyc c10
+                           root-is-head-root
+                           {:rule "s-present"
+                            :head {:phrasal true}
+                            :synsem {:aux false
+                                     :infl :present
+                                     :cat :verb
+                                     :sem {:aspect :progressive
+                                           :tense :present}}})
+
                    (unifyc h21
                            root-is-head
                            {:rule "vp-infinitive"
@@ -275,7 +320,6 @@
                             :synsem {:aux false
                                      :infl :imperfetto
                                      :cat :verb}})
-
                    (unifyc h21
                            root-is-head
                            {:rule "vp-past"

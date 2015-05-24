@@ -200,22 +200,41 @@
                                      :sem {:aspect :perfect
                                            :tense :past}}})
                    (unifyc c10
-                           root-is-head
+                           root-is-head-root
                            {:rule "s-conditional"
+                            :head {:phrasal true}
                             :synsem {:aux false
                                      :infl :conditional
                                      :cat :verb
                                      :sem {:tense :conditional}}})
                    (unifyc c10
                            root-is-head
+                           {:rule "s-conditional"
+                            :head {:phrasal false}
+                            :synsem {:aux false
+                                     :infl :conditional
+                                     :cat :verb
+                                     :sem {:tense :conditional}}})
+                   (unifyc c10
+                           root-is-head-root
                            {:rule "s-future"
+                            :head {:phrasal true}
                             :synsem {:aux false
                                      :infl :futuro
                                      :cat :verb
                                      :sem {:tense :futuro}}})
                    (unifyc c10
                            root-is-head
+                           {:rule "s-future"
+                            :head {:phrasal false}
+                            :synsem {:aux false
+                                     :infl :futuro
+                                     :cat :verb
+                                     :sem {:tense :futuro}}})
+                   (unifyc c10
+                           root-is-head-root
                            {:rule "s-imperfetto"
+                            :head {:phrasal true}
                             :synsem {:aux false
                                      :infl :imperfetto
                                      :cat :verb
@@ -223,7 +242,29 @@
                                            :tense :past}}})
                    (unifyc c10
                            root-is-head
+                           {:rule "s-imperfetto"
+                            :head {:phrasal false}
+                            :synsem {:aux false
+                                     :infl :imperfetto
+                                     :cat :verb
+                                     :sem {:aspect :progressive
+                                           :tense :past}}})
+
+                   ;; s-present: head is phrase => root is head itself.
+                   (unifyc c10
+                           root-is-head
                            {:rule "s-present"
+                            :head {:phrasal true}
+                            :synsem {:aux false
+                                     :infl :present
+                                     :cat :verb
+                                     :sem {:aspect :progressive
+                                           :tense :present}}})
+                   ;; s-present: head is phrase => root is head's root.
+                   (unifyc c10
+                           root-is-head-root
+                           {:rule "s-present"
+                            :head {:phrasal false}
                             :synsem {:aux false
                                      :infl :present
                                      :cat :verb
@@ -286,6 +327,7 @@
                                      :cat :verb}})
 
                    (unifyc h21
+                           root-is-head
                            {:comp {:phrasal false
                                    :synsem {:cat :noun
                                             :pronoun true}}
