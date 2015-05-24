@@ -194,8 +194,15 @@
 ;(def get-stuff-initialized1 (translate "il gatto"))
 ;(def get-stuff-initialized2 (translate "io leggo il libro"))
 
-;(log/info (str "done initializing workbook(1): " (fo get-stuff-initialized1)))
+(def init-stuff (fo (it/generate {:synsem {:subcat '()
+                                           :sem {:tense :present
+                                                 :obj {:pred :io}
+                                                 :pred :wash}}}
+                                 it/small-plus-vp-pronoun)))
+
+(log/info (str "done initializing workbook(1): " init-stuff))
 ;(log/info (str "done initializing workbook(2): " get-stuff-initialized2))
+
 
 (def routes
   (compojure/routes
