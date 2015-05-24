@@ -6,12 +6,6 @@
 (def lexicon-source
   {
 
-   "lie" {:synsem {:cat :verb
-                :sem {:pred :lie }}}
-
-   "warm" {:synsem {:cat :verb
-                :sem {:pred :warm}}}
-
    "waste" {:synsem {:cat :verb
                 :sem {:pred :waste}}}
 
@@ -568,6 +562,9 @@
                      :sem {:pred :leave-behind
                            :obj {:place false}}}}
 
+   "lie" {:synsem {:cat :verb
+                :sem {:pred :lie }}}
+
    "listen to" {:synsem {:cat :verb
                          :sem {:pred :listen-to}}
                 :english {:participle "listening to"
@@ -814,6 +811,9 @@
 
    "wait"  {:synsem {:cat :verb
                      :sem {:pred :wait-for}}}
+
+   "warm" {:synsem {:cat :verb
+                :sem {:pred :warm}}}
 
    "we (♀)"
    {:synsem {:cat :noun
