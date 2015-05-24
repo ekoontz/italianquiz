@@ -144,7 +144,7 @@
        :lexicon lexicon
        :index (create-index grammar (flatten (vals lexicon)) head-principle)})))
 
-(def small-medium
+(def small-plus-vp-pronoun
   (future
     (let [grammar
           (filter #(or (= (:rule %) "s-conditional")
@@ -165,7 +165,7 @@
                                 v)]
                     (if (not (empty? filtered-v))
                       [k filtered-v]))))]
-      {:name "small-medium"
+      {:name "small-plus-vp-pronoun"
        :language "it"
        :enrich enrich
        :grammar grammar

@@ -171,15 +171,18 @@
     (is (or (= (get-in generated-past [:synsem :sem :pred]) :speak)
             (= (get-in generated-past [:synsem :sem :pred]) :talk)))))
 
-
 (deftest reflexive
   "generate a reflexive sentence"
-  (is (= "io mi lavo"
-         (fo (generate {:synsem {:subcat '() 
-                                 :sem {:tense :present 
-                                       :obj {:pred :io} 
-                                       :pred :wash}}}
-                       small-medium)))))
+  (let [i-wash-myself
+        (it/generate {:synsem {:subcat '() 
+                            :sem {:tense :present 
+                                  :obj {:pred :io} 
+                                  :pred :wash}}}
+                     it/small-plus-vp-pronoun)
+        formatted (fo i-wash-myself)]
+    (is (or (= formatted "io mi lavo")
+            (= formatted "mi lavo")))))
+  
 
 
 
