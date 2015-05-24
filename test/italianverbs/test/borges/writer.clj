@@ -68,12 +68,12 @@
            "wash myself"))))
 
 ;; test does not work yet due to problem with English generation
-;(deftest populate-reflexives
-;  (let [do-populate 
-;        (populate 1 en/small-plus-vp-pronoun it/small-plus-vp-pronoun 
-;                  {:synsem {:subcat '()
-;                            :sem {:tense :present
-;                                  :pred :wash
-;                                  :obj {:pred :io}}}})
-;        ]
-;    (is (= 1 1)))) ;; stub TODO: fill out test
+(deftest populate-reflexives
+  (let [do-populate 
+        (populate 1 en/small-plus-vp-pronoun it/small-plus-vp-pronoun 
+                  {:synsem {:subcat '()
+                            :sem {:tense :present
+                                  :pred :wash
+                                  :obj {:pred :io}}}})
+        ]
+    (is (= 1 1)))) ;; stub TODO: fill out test
