@@ -98,6 +98,8 @@ var tour_paths = {
     }
 };
 
+var iconMarker;
+
 function start_tour(target_language,target_locale) {
     var position_info = get_position_from_profile(target_language);
     step = position_info.position;
@@ -430,7 +432,9 @@ function navigate_to(step,path,do_encouragement) {
 	marker.setPopupContent("<b>" + encouragements[encouragement] + 
 			       "</b> " + step + "/" + path.length);
     }
-    iconMarker.setLatLng(path[step]);
+    if (iconMarker != undefined) {
+	iconMarker.setLatLng(path[step]);
+    }
 
     // update Google streetview:
     $("#streetviewiframe").attr("src","https://www.google.com/maps/embed/v1/streetview?key="+google_api_key+"&location="+current_lat+","+current_long+"&heading="+heading+"&pitch="+pitch+"&fov=35");
