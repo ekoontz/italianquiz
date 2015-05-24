@@ -241,7 +241,7 @@
                                      :sem {:aspect :progressive
                                            :tense :past}}})
                    (unifyc c10
-                           root-is-head
+                           root-is-head-root
                            {:rule "s-imperfetto"
                             :head {:phrasal false}
                             :synsem {:aux false
@@ -250,7 +250,6 @@
                                      :sem {:aspect :progressive
                                            :tense :past}}})
 
-                   ;; s-present: head is phrase => root is head itself.
                    (unifyc c10
                            root-is-head-root
                            {:rule "s-present"
@@ -260,7 +259,6 @@
                                      :cat :verb
                                      :sem {:aspect :progressive
                                            :tense :present}}})
-
                    (unifyc c10
                            root-is-head
                            {:rule "s-present"
@@ -270,7 +268,6 @@
                                      :cat :verb
                                      :sem {:aspect :progressive
                                            :tense :present}}})
-
                    (unifyc h21
                            {:rule "vp-infinitive"
                             :synsem {:aux false
