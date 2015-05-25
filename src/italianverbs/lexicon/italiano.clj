@@ -1155,6 +1155,7 @@
                 :sem {:number :plur
                       :person :2nd}}}]
 
+   ;; TODO: should be "lavarsi"
    "lavare" (let [subject-semantics (ref :top)]
               {:synsem {:cat :verb
                         :sem {:pred :wash
