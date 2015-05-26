@@ -1552,7 +1552,19 @@
                                    :3sing "tiene"
                                    :3plur "tengono"}
                          :futuro-stem "terr"}}
-   
+
+   "ti"
+   {:synsem {:cat :noun
+             :pronoun true
+             :case pronoun-acc
+             :agr {:person :2nd
+                   :number :sing}
+             :sem {:human true
+                   :pred :tu}
+             :subcat '()}
+    :italiano {:initial true
+               :cat :noun
+               :case pronoun-acc}}
    "tirare" 
              {:synsem {:cat :verb 
                       :sem {:pred :throw}}}
