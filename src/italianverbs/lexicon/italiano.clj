@@ -1172,8 +1172,8 @@
               :def :possessive
               :gender :fem
               :number :sing
-                :sem {:number :plur
-                      :person :2nd}}}]
+              :sem {:number :plur
+                    :person :2nd}}}]
 
    ;; TODO: should be "lavarsi"
    "lavare" (let [subject-semantics (ref :top)
