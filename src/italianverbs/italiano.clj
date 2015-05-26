@@ -17,7 +17,7 @@
 (require '[italianverbs.morphology :refer (fo)])
 (require '[italianverbs.morphology.italiano :as morph])
 (require '[italianverbs.parse :as parse])
-(require '[italianverbs.pos.italiano :refer :all])
+(require '[italianverbs.pos.italiano :refer [intransitivize transitivize]])
 (require '[italianverbs.ug :refer :all])
 (require '[italianverbs.unify :refer (fail? get-in strip-refs)])
 (require '[italianverbs.unify :as unify])
