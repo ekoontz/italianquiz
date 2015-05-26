@@ -1626,6 +1626,19 @@
                                   :3plur "vengono"}
                         :futuro-stem "verr"}}
 
+   "vi"
+   {:synsem {:cat :noun
+             :pronoun true
+             :case pronoun-acc
+             :agr {:person :2nd
+                   :number :plur}
+             :sem {:human true
+                   :pred :voi}
+             :subcat '()}
+    :italiano {:initial true
+               :cat :noun
+               :case pronoun-acc}}
+   
    "vincere"  {:synsem {:cat :verb
                         :sem {:pred :win
                               :subj {:human true}
