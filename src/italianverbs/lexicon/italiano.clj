@@ -1,7 +1,25 @@
 (ns italianverbs.lexicon.italiano
   (:require
    [italianverbs.lexiconfn :refer (unify)]
-   [italianverbs.pos.italiano :refer :all]))
+   [italianverbs.pos.italiano :refer (adjective 
+                                      agreement-noun
+                                      cat-of-pronoun
+                                      common-noun
+                                      comparative
+                                      countable-noun
+                                      determiner
+                                      drinkable-noun
+                                      feminine-noun
+                                      intransitive
+                                      intransitive-unspecified-obj
+                                      masculine-noun
+                                      non-comparative-adjective
+                                      noun
+                                      pronoun-acc
+                                      sentential-adverb
+                                      transitive verb-subjective
+                                      verb-aux)]
+   ))
 
 (def lexicon-source
   {"Antonia"
