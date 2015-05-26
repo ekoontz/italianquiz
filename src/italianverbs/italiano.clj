@@ -158,6 +158,7 @@
                        (= (:rule %) "s-imperfetto-nonphrasal")
                        (= (:rule %) "s-aux")
                        (= (:rule %) "vp-aux")
+                       (= (:rule %) "vp-aux-22")
                        (= (:rule %) "vp-pronoun"))
                   grammar)
           lexicon

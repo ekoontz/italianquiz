@@ -1,5 +1,5 @@
 (ns italianverbs.test.italiano
-  (:refer-clojure :exclude [get get-in lookup merge resolve])
+  (:refer-clojure :exclude [get-in lookup merge resolve])
   (:require
    [clojure.test :refer :all]
    [italianverbs.cache :refer (build-lex-sch-cache create-index over spec-to-phrases)]
@@ -172,18 +172,34 @@
     (is (or (= (get-in generated-past [:synsem :sem :pred]) :speak)
             (= (get-in generated-past [:synsem :sem :pred]) :talk)))))
 
-(deftest reflexive
+(deftest reflexive-present
   "generate a reflexive sentence"
   (let [i-wash-myself
         (it/generate {:synsem {:subcat '() 
-                            :sem {:tense :present 
-                                  :obj {:pred :io} 
-                                  :pred :wash}}}
+                               :sem {:tense :present 
+                                     :obj {:pred :io} 
+                                     :pred :wash}}}
                      it/small-plus-vp-pronoun)
         formatted (fo i-wash-myself)]
     (is (or (= formatted "io mi lavo")
             (= formatted "mi lavo")))))
-  
+
+(deftest reflexive-passato
+  "generate a reflexive passato sentence"
+  (let [i-washed-myself
+        (it/generate
+         {:synsem {:subcat '()
+                   :sem {:tense :past
+                         :aspect :perfect
+                         :obj {:pred :io}
+                         :pred :wash}}} it/small-plus-vp-pronoun)
+        formatted (fo i-washed-myself)]
+    (is (or (= formatted "io mi sono lavato")
+            (= formatted "io mi sono lavata")
+            (= formatted "mi sono lavato")
+            (= formatted "mi sono lavata")))))
+
+
 
 
 
