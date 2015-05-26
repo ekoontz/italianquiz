@@ -1176,6 +1176,7 @@
    ;; TODO: should be "lavarsi"
    "lavare" (let [subject-semantics (ref :top)]
               {:synsem {:cat :verb
+                        :essere true
                         :sem {:pred :wash
                               :subj subject-semantics
                               :obj subject-semantics}
