@@ -1187,8 +1187,8 @@
                                      :sem subject-semantics}
                                  :2 {:pronoun true
                                      :reflexive true
-                                     :sem subject-semantics}}}})
-                                     :agr agr
+                                     :sem subject-semantics
+                                     :agr agr}}}})
    "lavorare"  {:synsem {:cat :verb
                          :sem {:pred :work-human}}}
    "le"
