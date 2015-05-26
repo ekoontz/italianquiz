@@ -1093,6 +1093,7 @@
       ;; 1. pronoun: human
       [{:synsem {:cat :noun
                  :pronoun true
+                 :reflexive false
                  :case pronoun-acc
                  :agr {:gender :fem
                        :person :3rd
@@ -1108,6 +1109,7 @@
        {:synsem {:cat :noun
                  :pronoun true
                  :case pronoun-acc
+                 :reflexive false
                  :agr {:gender :fem
                        :person :3rd
                        :number :sing}
@@ -1232,6 +1234,7 @@
    [{:synsem {:cat :noun
               :pronoun true
               :case pronoun-acc
+              :reflexive false
               :agr {:gender :masc
                     :person :3rd
                     :number :sing}
@@ -1242,6 +1245,7 @@
     {:synsem {:cat :noun
               :pronoun true
               :case pronoun-acc
+              :reflexive false
               :agr {:gender :masc
                     :person :3rd
                     :number :sing}
