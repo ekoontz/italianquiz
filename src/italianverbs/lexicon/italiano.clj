@@ -1385,6 +1385,50 @@
 
    "sistemare" {:synsem {:cat :verb
                          :sem {:pred :organize}}}
+   ;; reflexive pronoun
+   "si"
+   [;; feminine singular
+    (let [cat (ref :noun)]
+      {:synsem {:cat cat
+                :pronoun true
+                :reflexive true
+                :case pronoun-acc
+                :agr {:person :3rd
+                      :gender :fem
+                      :number :sing}
+                :sem {:pred :lei}
+                :subcat '()}
+       :italiano {:cat cat
+                  :case pronoun-acc}})
+
+    ;; masculine singular
+    (let [cat (ref :noun)]
+      {:synsem {:cat cat
+                :pronoun true
+                :reflexive true
+                :case pronoun-acc
+                :agr {:person :3rd
+                      :gender :masc
+                      :number :sing}
+                :sem {:pred :lui}
+                :subcat '()}
+       :italiano {:cat cat
+                  :case pronoun-acc}})
+
+    ;; plural: unspecified gender
+    (let [cat (ref :noun)]
+      {:synsem {:cat cat
+                :pronoun true
+                :reflexive true
+                :case pronoun-acc
+                :agr {:person :3rd
+                      :number :plur}
+                :sem {:pred :loro}
+                :subcat '()}
+       :italiano {:cat cat
+                  :case pronoun-acc}})
+   ]
+   
 
    "osservare" {:synsem {:cat :verb
                          :sem {:pred :observe}}}
@@ -1557,6 +1601,18 @@
                          :futuro-stem "terr"}}
    
    "tirare" 
+   "ti"
+   {:synsem {:cat :noun
+             :pronoun true
+             :case pronoun-acc
+             :agr {:person :2nd
+                   :number :sing}
+             :sem {:human true 
+                   :pred :tu}
+             :subcat '()}
+    :italiano {:initial true
+               :cat :noun
+               :case pronoun-acc}}
              {:synsem {:cat :verb 
                       :sem {:pred :throw}}}
 
@@ -1630,6 +1686,18 @@
                         :futuro-stem "verr"}}
 
    "vincere"  {:synsem {:cat :verb
+   "vi"
+   {:synsem {:cat :noun
+             :pronoun true
+             :case pronoun-acc
+             :agr {:person :2nd
+                   :number :plur}
+             :sem {:human true 
+                   :pred :voi}
+             :subcat '()}
+    :italiano {:initial true
+               :cat :noun
+               :case pronoun-acc}}
                         :sem {:pred :win
                               :subj {:human true}
                               :obj {:human false}}}}
