@@ -1380,9 +1380,6 @@
                     :pred :noi}
               :subcat '()}}]
 
-   "sistemare" {:synsem {:cat :verb
-                         :sem {:pred :organize}}}
-
    "osservare" {:synsem {:cat :verb
                          :sem {:pred :observe}}}
 
@@ -1509,8 +1506,6 @@
 
    "sgridare" {:synsem {:cat :verb
                         :sem {:pred :scold}}}
-
-
    "si"
    [;; feminine singular
     (let [cat (ref :noun)]
@@ -1552,6 +1547,9 @@
                 :subcat '()}
        :italiano {:cat cat
                   :case pronoun-acc}})]
+
+   "sistemare" {:synsem {:cat :verb
+                         :sem {:pred :organize}}}
 
    "sopportare" {:synsem {:cat :verb
                           :sem {:pred :endure}}}
