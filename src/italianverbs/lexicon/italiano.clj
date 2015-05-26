@@ -1510,6 +1510,49 @@
    "sgridare" {:synsem {:cat :verb
                         :sem {:pred :scold}}}
 
+
+   "si"
+   [;; feminine singular
+    (let [cat (ref :noun)]
+      {:synsem {:cat cat
+                :pronoun true
+                :reflexive true
+                :case pronoun-acc
+                :agr {:person :3rd
+                      :gender :fem
+                      :number :sing}
+                :sem {:pred :lei}
+                :subcat '()}
+       :italiano {:cat cat
+                  :case pronoun-acc}})
+
+    ;; masculine singular
+    (let [cat (ref :noun)]
+      {:synsem {:cat cat
+                :pronoun true
+                :reflexive true
+                :case pronoun-acc
+                :agr {:person :3rd
+                      :gender :masc
+                      :number :sing}
+                :sem {:pred :lui}
+                :subcat '()}
+       :italiano {:cat cat
+                  :case pronoun-acc}})
+
+    ;; plural: unspecified gender
+    (let [cat (ref :noun)]
+      {:synsem {:cat cat
+                :pronoun true
+                :reflexive true
+                :case pronoun-acc
+                :agr {:person :3rd
+                      :number :plur}
+                :sem {:pred :loro}
+                :subcat '()}
+       :italiano {:cat cat
+                  :case pronoun-acc}})]
+
    "sopportare" {:synsem {:cat :verb
                           :sem {:pred :endure}}}
 
