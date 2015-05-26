@@ -1093,7 +1093,6 @@
       ;; 1. pronoun: human
       [{:synsem {:cat :noun
                  :pronoun true
-                 :reflexive false
                  :case pronoun-acc
                  :agr {:gender :fem
                        :person :3rd
@@ -1109,7 +1108,6 @@
        {:synsem {:cat :noun
                  :pronoun true
                  :case pronoun-acc
-                 :reflexive false
                  :agr {:gender :fem
                        :person :3rd
                        :number :sing}
@@ -1172,23 +1170,20 @@
               :def :possessive
               :gender :fem
               :number :sing
-              :sem {:number :plur
-                    :person :2nd}}}]
+                :sem {:number :plur
+                      :person :2nd}}}]
 
    ;; TODO: should be "lavarsi"
-   "lavare" (let [subject-semantics (ref :top)
-                  agr (ref :top)]
+   "lavare" (let [subject-semantics (ref :top)]
               {:synsem {:cat :verb
                         :essere true
                         :sem {:pred :wash
                               :subj subject-semantics
                               :obj subject-semantics}
-                        :subcat {:1 {:agr agr
-                                     :sem subject-semantics}
+                        :subcat {:1 {:sem subject-semantics}
                                  :2 {:pronoun true
                                      :reflexive true
-                                     :sem subject-semantics
-                                     :agr agr}}}})
+                                     :sem subject-semantics}}}})
    "lavorare"  {:synsem {:cat :verb
                          :sem {:pred :work-human}}}
    "le"
@@ -1234,7 +1229,6 @@
    [{:synsem {:cat :noun
               :pronoun true
               :case pronoun-acc
-              :reflexive false
               :agr {:gender :masc
                     :person :3rd
                     :number :sing}
@@ -1245,7 +1239,6 @@
     {:synsem {:cat :noun
               :pronoun true
               :case pronoun-acc
-              :reflexive false
               :agr {:gender :masc
                     :person :3rd
                     :number :sing}
@@ -1389,50 +1382,6 @@
 
    "sistemare" {:synsem {:cat :verb
                          :sem {:pred :organize}}}
-   ;; reflexive pronoun
-   "si"
-   [;; feminine singular
-    (let [cat (ref :noun)]
-      {:synsem {:cat cat
-                :pronoun true
-                :reflexive true
-                :case pronoun-acc
-                :agr {:person :3rd
-                      :gender :fem
-                      :number :sing}
-                :sem {:pred :lei}
-                :subcat '()}
-       :italiano {:cat cat
-                  :case pronoun-acc}})
-
-    ;; masculine singular
-    (let [cat (ref :noun)]
-      {:synsem {:cat cat
-                :pronoun true
-                :reflexive true
-                :case pronoun-acc
-                :agr {:person :3rd
-                      :gender :masc
-                      :number :sing}
-                :sem {:pred :lui}
-                :subcat '()}
-       :italiano {:cat cat
-                  :case pronoun-acc}})
-
-    ;; plural: unspecified gender
-    (let [cat (ref :noun)]
-      {:synsem {:cat cat
-                :pronoun true
-                :reflexive true
-                :case pronoun-acc
-                :agr {:person :3rd
-                      :number :plur}
-                :sem {:pred :loro}
-                :subcat '()}
-       :italiano {:cat cat
-                  :case pronoun-acc}})
-   ]
-   
 
    "osservare" {:synsem {:cat :verb
                          :sem {:pred :observe}}}
@@ -1605,18 +1554,6 @@
                          :futuro-stem "terr"}}
    
    "tirare" 
-   "ti"
-   {:synsem {:cat :noun
-             :pronoun true
-             :case pronoun-acc
-             :agr {:person :2nd
-                   :number :sing}
-             :sem {:human true 
-                   :pred :tu}
-             :subcat '()}
-    :italiano {:initial true
-               :cat :noun
-               :case pronoun-acc}}
              {:synsem {:cat :verb 
                       :sem {:pred :throw}}}
 
@@ -1690,18 +1627,6 @@
                         :futuro-stem "verr"}}
 
    "vincere"  {:synsem {:cat :verb
-   "vi"
-   {:synsem {:cat :noun
-             :pronoun true
-             :case pronoun-acc
-             :agr {:person :2nd
-                   :number :plur}
-             :sem {:human true 
-                   :pred :voi}
-             :subcat '()}
-    :italiano {:initial true
-               :cat :noun
-               :case pronoun-acc}}
                         :sem {:pred :win
                               :subj {:human true}
                               :obj {:human false}}}}
