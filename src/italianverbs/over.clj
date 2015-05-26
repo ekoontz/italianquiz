@@ -165,13 +165,13 @@
 
 (defn overh [parent head]
   "add given head as the head child of the phrase: parent."
-  (log/debug (str "overh parent type: " (type parent)))
-  (log/debug (str "overh head  type: " (type head)))
+  (log/trace (str "overh parent type: " (type parent)))
+  (log/trace (str "overh head  type: " (type head)))
 
-  (log/debug (str "set? parent:" (set? parent)))
-  (log/debug (str "seq? parent:" (seq? parent)))
-  (log/debug (str "seq? head:" (seq? head)))
-  (log/debug (str "vector? head:" (vector? head)))
+  (log/trace (str "set? parent:" (set? parent)))
+  (log/trace (str "seq? parent:" (seq? parent)))
+  (log/trace (str "seq? head:" (seq? head)))
+  (log/trace (str "vector? head:" (vector? head)))
 
   (if (map? parent)
     (if (get-in parent '(:aliases))
@@ -201,12 +201,12 @@
 
    (or (set? head)
        (vector? head))
-   (do (log/debug "head is a set: converting to a seq.")
+   (do (log/trace "head is a set: converting to a seq.")
        (overh parent (lazy-seq head)))
 
    (seq? head)
    (let [head-children head]
-     (log/debug (str "head is a seq - actual type is " (type head)))
+     (log/trace (str "head is a seq - actual type is " (type head)))
      (filter (fn [result]
                (not (fail? result)))
              (over-each-head-child parent head-children)))
@@ -217,10 +217,10 @@
    (let [result (moreover-head parent head sem-impl)
          is-fail? (fail? result)
          label (if (:rule parent) (:rule parent) (:comment parent))]
-     (log/debug (str "overh result keys: " (if (map? result) (keys result) "(not a map)")))
-     (log/debug (str "overh italian value: " (if (map? result) (get-in result '(:italiano)) "(not a map)")))
-     (log/debug (str "overh italian :a value: " (if (map? result) (get-in result '(:italiano :a)) "(not a map)")))
-     (log/debug (str "overh italian :b value: " (if (map? result) (get-in result '(:italiano :b)) "(not a map)")))
+     (log/trace (str "overh result keys: " (if (map? result) (keys result) "(not a map)")))
+     (log/trace (str "overh italian value: " (if (map? result) (get-in result '(:italiano)) "(not a map)")))
+     (log/trace (str "overh italian :a value: " (if (map? result) (get-in result '(:italiano :a)) "(not a map)")))
+     (log/trace (str "overh italian :b value: " (if (map? result) (get-in result '(:italiano :b)) "(not a map)")))
      (if is-fail?
        (log/debug (str "overh: parent=" label "; head=[" (fo head) "]=> :fail")))
 
