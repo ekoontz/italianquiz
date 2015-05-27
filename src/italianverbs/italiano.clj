@@ -291,9 +291,9 @@
               source-model
               spec table)))
 
-(defn fill-verb [verb count & [spec table model]] ;; spec is for additional constraints on generation.
+(defn fill-verb [verb count & [spec table target-model source-model-as-string]] ;; spec is for additional constraints on generation.
   (let [spec (if spec spec :top)
-        model (if model model small)
+        target-model (if target-model target-model small)
         tenses [{:synsem {:sem {:tense :conditional}}}
                 {:synsem {:sem {:tense :futuro}}}
                 {:synsem {:sem {:tense :past :aspect :progressive}}}
@@ -306,7 +306,8 @@
                                              tense)
                                       count
                                       table
-                                      model))
+                                      target-model
+                                      source-model-as-string))
             tenses))))
 
 (defn fill-per-verb [ & [count-per-verb]]
@@ -342,3 +343,5 @@ INSERT INTO expression (language,model,surface,structure,serialized)
 ")
 
 ;; (fill-by-spec {:root {:italiano {:italiano "lavare"}}} 1 "expression" small-plus-vp-pronoun "small-plus-vp-pronoun")
+
+;; 

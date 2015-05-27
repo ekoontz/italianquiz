@@ -23,13 +23,17 @@
                                (log/debug (str "doing fill-by-spec: " (->> member-of-unit :fill :spec)))
                                (fill-by-spec (->> member-of-unit :fill :spec)
                                              10
-                                             "expression_import")))
+                                             "expression_import"
+                                             (:source-model member-of-unit)
+                                             (:target-model member-of-unit))))
 
                            (if (:fill-verb member-of-unit)
                              (do
                                (log/debug (str "doing fill-verb: " (:fill-verb member-of-unit)))
                                (let [verb (:fill-verb member-of-unit)]
-                                 (.size (fill-verb verb 10 :top "expression_import")))))))
+                                 (.size (fill-verb verb 10 :top "expression_import"
+                                                   (:source-model member-of-unit)
+                                                   (:target-model member-of-unit))))))))
 
                        unit)))
          units))
