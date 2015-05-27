@@ -832,7 +832,6 @@
   (if (not (empty? lexicon))
     (let [lexeme-kv (first lexicon)
           lexemes (second lexeme-kv)]
-      (log/error (str "key: " (first lexeme-kv)))
       (let [result (mapcat (fn [path-and-merge-fn]
                              (let [path (:path path-and-merge-fn)
                                    merge-fn (:merge-fn path-and-merge-fn)]
