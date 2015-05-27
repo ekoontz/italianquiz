@@ -641,7 +641,7 @@
       (string? (get-in word '(:italiano))))
      (let [infinitive (get-in word '(:italiano))
            ;; e.g.: lavarsi => lavare
-           infinitive (if (re-find infinitive #"[aei]rsi$")
+           infinitive (if (re-find #"[aei]rsi$" infinitive)
                         (string/replace infinitive #"si$" "e")
                         infinitive)
            are-type (try (re-find #"are$" infinitive)
