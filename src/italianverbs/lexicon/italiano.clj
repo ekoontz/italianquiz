@@ -307,6 +307,7 @@
         {:note "avere(aux): takes trans"
          :synsem {:infl :present
                   :subcat {:2 {:agr agr-of-obj-of-main-verb
+                               :reflexive false
                                :subcat {:2 {:agr agr-of-obj-of-main-verb
                                             :pronoun true}}
                                :essere false}}}}))
