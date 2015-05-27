@@ -1,10 +1,9 @@
 (ns italianverbs.repair)
 
 (require '[clojure.tools.logging :as log])
-(require '[italianverbs.unify :refer [unify]])
-(require '[italianverbs.italiano :refer [fill-by-spec fill-verb]])
-(require '[italianverbs.english :refer :all])
+(require '[italianverbs.borges.writer :refer [fill-by-spec fill-verb]])
 (require '[italianverbs.korma :refer :all])
+(require '[italianverbs.unify :refer [unify]])
 (require '[korma.core :refer :all])
 (require '[korma.db :refer :all])
 
@@ -23,17 +22,19 @@
                                (log/debug (str "doing fill-by-spec: " (->> member-of-unit :fill :spec)))
                                (fill-by-spec (->> member-of-unit :fill :spec)
                                              10
-                                             "expression_import"
                                              (:source-model member-of-unit)
-                                             (:target-model member-of-unit))))
+                                             (:target-model member-of-unit)
+                                             "expression_import")))
 
                            (if (:fill-verb member-of-unit)
                              (do
                                (log/debug (str "doing fill-verb: " (:fill-verb member-of-unit)))
                                (let [verb (:fill-verb member-of-unit)]
-                                 (.size (fill-verb verb 10 :top "expression_import"
+                                 (.size (fill-verb verb 10
                                                    (:source-model member-of-unit)
-                                                   (:target-model member-of-unit))))))))
+                                                   (:target-model member-of-unit)
+                                                   :top "expression_import"
+                                                   )))))))
 
                        unit)))
          units))

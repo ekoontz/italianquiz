@@ -6,7 +6,7 @@
 (require '[compojure.core :as compojure :refer [GET PUT POST DELETE ANY]])
 (require '[hiccup.core :refer (html)])
 (require '[italianverbs.auth :refer [is-admin]])
-(require '[italianverbs.borges.writer :refer [populate truncate]])
+(require '[italianverbs.borges.writer :refer [populate truncate fill-by-spec fill-verb]])
 (require '[italianverbs.cache :refer (build-lex-sch-cache create-index over spec-to-phrases)])
 (require '[italianverbs.english :as en])
 (require '[italianverbs.forest :as forest])
@@ -139,6 +139,7 @@
                     (if (not (empty? filtered-v))
                       [k filtered-v]))))]
       {:name "small"
+       :language-keyword :italiano
        :language "it"
        :enrich enrich
        :grammar grammar
@@ -174,6 +175,7 @@
                       [k filtered-v]))))]
       {:name "small-plus-vp-pronoun"
        :language "it"
+       :language-keyword :italiano
        :enrich enrich
        :grammar grammar
        :lexicon lexicon
@@ -188,6 +190,8 @@
                     (if (not (empty? filtered-v))
                       [k filtered-v]))))]
       {:name "medium"
+       :language "it"
+       :language-keyword :italiano
        :enrich enrich
        :grammar grammar
        :lexicon lexicon
@@ -281,32 +285,6 @@
       ]
      ])
    request))
-
-;; TODO: move this function elsewhere; it has a dependency on english/small.
-(defn fill-by-spec [spec count table source-model target-model]
-  (populate count
-            target-model
-            source-model
-            spec table))
-
-(defn fill-verb [verb count & [spec table target-model source-model]] ;; spec is for additional constraints on generation.
-  (let [spec (if spec spec :top)
-        target-model (if target-model target-model small)
-        tenses [{:synsem {:sem {:tense :conditional}}}
-                {:synsem {:sem {:tense :futuro}}}
-                {:synsem {:sem {:tense :past :aspect :progressive}}}
-                {:synsem {:sem {:tense :past :aspect :perfect}}}
-                {:synsem {:sem {:tense :present}}}]]
-    (let [spec (unify {:root {:italiano {:italiano verb}}}
-                       spec)]
-      (log/debug (str "fill-verb spec: " spec))
-      (pmap (fn [tense] (fill-by-spec (unify spec
-                                             tense)
-                                      count
-                                      table
-                                      target-model
-                                      source-model))
-            tenses))))
 
 (defn fill-per-verb [ & [count-per-verb]]
   (let [italian-verbs

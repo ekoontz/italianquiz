@@ -13,8 +13,8 @@
 (defn repair []
   (process 
    [{:fill-verb "lavarsi"
-     :source-model it/small-plus-vp-pronoun
-     :target-model en/small-plus-vp-pronoun}
+     :target-model it/small-plus-vp-pronoun
+     :source-model en/small-plus-vp-pronoun}
     ]))
 
 

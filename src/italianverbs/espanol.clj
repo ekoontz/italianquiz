@@ -143,6 +143,7 @@
                       [k filtered-v]))))]
       {:name "small"
        :language "es"
+       :language-keyword :espanol
        :enrich enrich
        :grammar grammar
        :lexicon lexicon

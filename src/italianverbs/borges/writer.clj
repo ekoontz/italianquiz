@@ -159,7 +159,33 @@
         grammar-spec (nth target-grammar-set (rand-int (.size target-grammar-set)))]
     (populate 1 source-language-model target-language-model (unify lex-spec grammar-spec))))
 
+(defn fill-by-spec [spec count table source-model target-model]
+  (populate count
+            target-model
+            source-model
+            spec table))
+
+(defn fill-verb [verb count source-model target-model & [spec table]] ;; spec is for additional constraints on generation.
+  (let [spec (if spec spec :top)
+        target-language-keyword (:language-keyword @target-model)
+        tenses [{:synsem {:sem {:tense :conditional}}}
+                {:synsem {:sem {:tense :futuro}}}
+                {:synsem {:sem {:tense :past :aspect :progressive}}}
+                {:synsem {:sem {:tense :past :aspect :perfect}}}
+                {:synsem {:sem {:tense :present}}}]]
+    (let [spec (unify {:root {target-language-keyword {target-language-keyword verb}}}
+                       spec)]
+      (log/debug (str "fill-verb spec: " spec))
+      (pmap (fn [tense] (fill-by-spec (unify spec
+                                             tense)
+                                      count
+                                      table
+                                      target-model
+                                      source-model))
+            tenses))))
+
 (defn -main [& args]
   (if (not (nil? (first args)))
     (populate (Integer. (first args)))
     (populate 100)))
+
