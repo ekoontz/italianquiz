@@ -194,11 +194,22 @@
                            root-is-head
                            {:head {:phrasal false ;; non-auxiliary past: e.g. "he slept"
                                    :synsem {:aux false}}
-                            :rule "s-past"
+                            :rule "s-past-nonphrasal-head"
                             :synsem {:infl :past
                                      :cat :verb
                                      :sem {:aspect :perfect
                                            :tense :past}}})
+
+                   (unifyc c10
+                           root-is-head
+                           {:head {:phrasal true ;; reflexive past: e.g. "he washed himself"
+                                   :synsem {:aux false}}
+                            :rule "s-past-phrasal-head"
+                            :synsem {:infl :past
+                                     :cat :verb
+                                     :sem {:aspect :perfect
+                                           :tense :past}}})
+                   
                    (unifyc c10
                            root-is-head-root
                            {:rule "s-conditional-phrasal-head"
@@ -311,12 +322,6 @@
                                     :cat :verb}})
 
                    (unifyc h21
-                           {:rule "vp-past"
-                            :synsem {:aux false
-                                     :infl :past
-                                     :cat :verb}})
-
-                   (unifyc h21
                            {:rule "vp-present"
                             :synsem {:aux false
                                      :infl :present
@@ -329,8 +334,7 @@
                                    :synsem {:cat :noun
                                             :pronoun true}}
                             :rule "vp-pronoun"
-                            :synsem {:cat :verb
-                                     :infl {:not :past}}})
+                            :synsem {:cat :verb}})
 
                    (unifyc h10
                            {:head {:phrasal false

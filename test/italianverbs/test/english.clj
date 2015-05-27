@@ -123,7 +123,7 @@
     (is (= (get-in generated-present [:synsem :sem :pred]) :speak))
     (is (= (get-in generated-past [:synsem :sem :pred]) :speak))))
 
-(deftest reflexive
+(deftest reflexive-present
   "generate a reflexive sentence"
   (let [i-wash-myself
         (en/generate {:synsem {:subcat '() 
@@ -134,4 +134,17 @@
         formatted (fo i-wash-myself)]
     (is (or (= formatted "I (♂) wash myself")
             (= formatted  "I (♀) wash myself")))))
+
+(deftest reflexive-past
+  "generate a reflexive sentence"
+  (let [i-wash-myself
+        (en/generate {:synsem {:subcat '() 
+                               :sem {:tense :past
+                                     :aspect :perfect
+                                     :obj {:pred :io} 
+                                     :pred :wash}}}
+                     en/small-plus-vp-pronoun)
+        formatted (fo i-wash-myself)]
+    (is (or (= formatted "I (♂) washed myself")
+            (= formatted  "I (♀) washed myself")))))
 

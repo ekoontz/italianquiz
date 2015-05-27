@@ -91,7 +91,7 @@
                        (= (:rule %) "s-present-nonphrasal-head")
                        (= (:rule %) "s-future-nonphrasal-head")
                        (= (:rule %) "s-imperfetto-nonphrasal-head")
-                       (= (:rule %) "s-past")
+                       (= (:rule %) "s-past-nonphrasal-head")
                        (= (:rule %) "s-aux"))
                   grammar)
 
@@ -142,8 +142,10 @@
                        (= (:rule %) "s-future-phrasal-head")
                        (= (:rule %) "s-imperfetto-nonphrasal-head")
                        (= (:rule %) "s-imperfetto-phrasal-head")
-                       (= (:rule %) "s-past")
+                       (= (:rule %) "s-past-nonphrasal-head")
+                       (= (:rule %) "s-past-phrasal-head")
                        (= (:rule %) "s-aux")
+                       (= (:rule %) "vp-past")
                        (= (:rule %) "vp-pronoun"))
                   grammar)
 
@@ -158,7 +160,7 @@
                     (if (not (empty? filtered-v))
                       [k filtered-v]))))
           ]
-      {:name "small"
+      {:name "small-plus-vp-pronoun"
        :language "en"
        :grammar grammar
        :lexicon lexicon
@@ -248,3 +250,7 @@
      ])
    request
 ))
+
+(def vp-pronoun (first (filter #(= "vp-pronoun" (get % :rule)) (:grammar @small-plus-vp-pronoun))))
+(def s-past-nonphrasal-head (first (filter #(= "s-past-nonphrasal-head" (get % :rule)) (:grammar @small-plus-vp-pronoun))))
+(def s-past-phrasal-head (first (filter #(= "s-past-phrasal-head" (get % :rule)) (:grammar @small-plus-vp-pronoun))))
