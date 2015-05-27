@@ -1180,7 +1180,7 @@
               {:synsem {:cat :verb
                         :essere true
                         :sem {:pred :wash
-                        :reflexive true
+                              :reflexive true
                               :subj subject-semantics
                               :obj subject-semantics}
                         :subcat {:1 {:agr subject-agr

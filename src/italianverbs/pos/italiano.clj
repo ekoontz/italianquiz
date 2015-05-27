@@ -57,7 +57,7 @@
 
 (def intransitive-unspecified-obj
   (unifyc
-   {:synsem {:reflexive false}}
+   {:synsem {:sem {:reflexive false}}}
    (unifyc verb-subjective
            pos/intransitive-unspecified-obj)))
 
