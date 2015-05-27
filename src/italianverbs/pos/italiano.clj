@@ -56,12 +56,16 @@
           pos/transitive))
 
 (def intransitive-unspecified-obj
-  (unifyc verb-subjective
-          pos/intransitive-unspecified-obj))
+  (unifyc
+   {:synsem {:reflexive false}}
+   (unifyc verb-subjective
+           pos/intransitive-unspecified-obj)))
 
 (def intransitive
-  (unifyc verb-subjective
-          pos/intransitive))
+  (unifyc
+   {:synsem {:reflexive false}}
+   (unifyc verb-subjective
+           pos/intransitive)))
 
 (defn intransitivize [lexicon]
   (lexiconfn/intransitivize lexicon intransitive transitive intransitive-unspecified-obj))
