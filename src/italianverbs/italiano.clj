@@ -339,7 +339,3 @@ INSERT INTO expression (language,model,surface,structure,serialized)
    SELECT language,model,surface,structure,serialized
      FROM expression_import
 ")
-
-;; (fill-by-spec {:root {:italiano {:italiano "lavare"}}} 1 "expression" small-plus-vp-pronoun "small-plus-vp-pronoun")
-
-;; 
