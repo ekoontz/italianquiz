@@ -282,13 +282,14 @@
    request))
 
 ;; TODO: move this function elsewhere; it has a dependency on english/small.
-(defn fill-by-spec [count spec table]
+(defn fill-by-spec [spec count table model]
   (populate count (eval (symbol (str "italianverbs." "english/" "small"))) 
-            small
+            model
             spec table))
 
-(defn fill-verb [verb count & [spec table]] ;; spec is for additional constraints on generation.
+(defn fill-verb [verb count & [spec table model]] ;; spec is for additional constraints on generation.
   (let [spec (if spec spec :top)
+        model (if model model small)
         tenses [{:synsem {:sem {:tense :conditional}}}
                 {:synsem {:sem {:tense :futuro}}}
                 {:synsem {:sem {:tense :past :aspect :progressive}}}
@@ -297,9 +298,11 @@
     (let [spec (unify {:root {:italiano {:italiano verb}}}
                        spec)]
       (log/debug (str "fill-verb spec: " spec))
-      (pmap (fn [tense] (fill-by-spec count (unify spec
-                                                   tense)
-                                      table))
+      (pmap (fn [tense] (fill-by-spec (unify spec
+                                             tense)
+                                      count
+                                      table
+                                      model))
             tenses))))
 
 (defn fill-per-verb [ & [count-per-verb]]
