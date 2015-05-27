@@ -1174,14 +1174,17 @@
                       :person :2nd}}}]
 
    ;; TODO: should be "lavarsi"
-   "lavare" (let [subject-semantics (ref :top)]
+   "lavare" (let [subject-semantics (ref :top)
+                  subject-agr (ref :top)]
               {:synsem {:cat :verb
                         :essere true
                         :sem {:pred :wash
                               :subj subject-semantics
                               :obj subject-semantics}
-                        :subcat {:1 {:sem subject-semantics}
-                                 :2 {:pronoun true
+                        :subcat {:1 {:agr subject-agr
+                                     :sem subject-semantics}
+                                 :2 {:agr subject-agr
+                                     :pronoun true
                                      :reflexive true
                                      :sem subject-semantics}}}})
    "lavorare"  {:synsem {:cat :verb
@@ -1724,6 +1727,3 @@
              :sem {:human true
                    :pred :voi}
               :subcat '()}}]})
-
-
-
