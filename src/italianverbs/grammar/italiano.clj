@@ -332,11 +332,19 @@
                                      :sem {:tense :present}
                                      :cat :verb}})
                    (unifyc c21
-                           root-is-head
-                           {:comp {:phrasal false
-                                   :synsem {:cat :noun
+                           root-is-head-root
+                           {:head {:phrasal true}
+                            :comp {:synsem {:cat :noun
                                             :pronoun true}}
-                            :rule "vp-pronoun"
+                            :rule "vp-pronoun-phrasal"
+                            :synsem {:cat :verb
+                                     :infl {:not :past}}})
+                   (unifyc c21
+                           root-is-head
+                           {:head {:phrasal false}
+                            :comp {:synsem {:cat :noun
+                                            :pronoun true}}
+                            :rule "vp-pronoun-nonphrasal"
                             :synsem {:cat :verb
                                      :infl {:not :past}}})
                    (unifyc h10
