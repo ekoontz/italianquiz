@@ -379,6 +379,31 @@
                    :activity true
                    :obj {:human true}}}}
 
+   "herself"
+   {:synsem {:cat :noun
+             :pronoun true
+             :case :acc
+             :reflexive true
+             :agr {:person :3rd
+                   :gender :fem
+                   :number :sing}
+             :sem {:human true
+                   :pred :lei}
+             :subcat '()}}
+
+   "himself"
+   {:synsem {:cat :noun
+             :pronoun true
+             :case :acc
+             :reflexive true
+             :agr {:person :3rd
+                   :gender :masc
+                   :number :sing}
+             :sem {:human true
+                   :pred :lui}
+             :subcat '()}}
+
+   
    "hold"
    {:synsem {:cat :verb
              :sem {:pred :tenere}}
@@ -450,6 +475,30 @@
                     :gender :fem
                     :human false}
               :subcat '()}}
+
+   "itself"
+   [{:note "♂"
+     :synsem {:cat :noun
+              :pronoun true
+              :case :acc
+              :reflexive true
+              :agr {:person :3rd
+                    :gender :masc
+                    :number :sing}
+              :sem {:human false
+                    :pred :lui}
+              :subcat '()}}
+    {:note "♀"
+     :synsem {:cat :noun
+              :pronoun true
+              :case :acc
+              :reflexive true
+              :agr {:person :3rd
+                    :gender :fem
+                    :number :sing}
+              :sem {:human false
+                    :pred :lei}
+              :subcat '()}}]
 
    "keep"
    [{:synsem {:cat :verb

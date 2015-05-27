@@ -1059,15 +1059,16 @@
       "interrompere" {:italiano {:passato "interrotto"}
                       :synsem {:cat :verb
                                :sem {:pred :interrupt}}}
-
-      "" ;; empty pronominal subject e.g. "mangio" = "io mangio".
-      [{:synsem {:agr {:person :1st
-                       :number :sing}
-                 :cat :noun
-                 :case :nom
-                 :pronoun true
-                 :sem {:human true}
-                 :subcat '()}}]
+      
+;; commenting out until discussed with Franco
+;;      "" ;; empty pronominal subject e.g. "mangio" = "io mangio".
+;;      [{:synsem {:agr {:person :1st
+;;                       :number :sing}
+;;                 :cat :noun
+;;                 :case :nom
+;;                 :pronoun true
+;;                 :sem {:human true}
+;;                 :subcat '()}}]
 
       "io"
       [{:synsem {:cat :noun
@@ -1095,6 +1096,7 @@
       [{:synsem {:cat :noun
                  :pronoun true
                  :case pronoun-acc
+                 :reflexive false
                  :agr {:gender :fem
                        :person :3rd
                        :number :sing}
@@ -1109,6 +1111,7 @@
        {:synsem {:cat :noun
                  :pronoun true
                  :case pronoun-acc
+                 :reflexive false
                  :agr {:gender :fem
                        :person :3rd
                        :number :sing}
@@ -1189,6 +1192,7 @@
                                      :pronoun true
                                      :reflexive true
                                      :sem subject-semantics}}}})
+
    "lavorare"  {:synsem {:cat :verb
                          :sem {:pred :work-human}}}
    "le"
