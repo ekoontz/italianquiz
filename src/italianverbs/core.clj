@@ -20,7 +20,6 @@
    [italianverbs.studenttest :as studenttest]
    [italianverbs.tour :as tour]
    [italianverbs.verb :as verb]
-   [italianverbs.workbook :as workbook]
 
    ;; <languages>
    [italianverbs.english :as en]
@@ -77,9 +76,6 @@
 
   (context "/tour" []
            tour/routes)
-
-  (context "/workbook" []
-           workbook/routes)
 
   (GET "/about" request
        about/routes)
