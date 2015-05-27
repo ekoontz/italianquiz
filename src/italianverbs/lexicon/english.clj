@@ -607,6 +607,31 @@
    "organize" {:synsem {:cat :verb
                 :sem {:pred :organize}}}
 
+   "ourselves"
+   [{:note "♀" 
+     :synsem {:cat :noun
+              :pronoun true
+              :case :acc
+              :reflexive true
+              :agr {:person :1st
+                    :number :plur
+                    :gender :fem}
+              :sem {:human true
+                    :pred :noi}
+              :subcat '()}}
+    
+    {:note "♂" 
+     :synsem {:cat :noun
+              :pronoun true
+              :case :acc
+              :reflexive true
+              :agr {:person :1st
+                    :number :plur
+                    :gender :masc}
+              :sem {:human true
+                    :pred :noi}
+              :subcat '()}}]
+   
    "paint"  {:synsem {:cat :verb
                       :sem {:pred :dipingere}}}
 
@@ -807,6 +832,31 @@
              :def :def
              :mass false}}
 
+   "themselves"
+   [{:note "♀" 
+     :synsem {:cat :noun
+              :pronoun true
+              :case :acc
+              :reflexive true
+              :agr {:person :1st
+                    :number :plur
+                    :gender :fem}
+              :sem {:human true
+                    :pred :loro}
+              :subcat '()}}
+    
+    {:note "♂" 
+     :synsem {:cat :noun
+              :pronoun true
+              :case :acc
+              :reflexive true
+              :agr {:person :1st
+                    :number :plur
+                    :gender :masc}
+              :sem {:human true
+                    :pred :loro}
+              :subcat '()}}]
+   
    "they (♂)"
    {:synsem {:cat :noun
              :pronoun true
