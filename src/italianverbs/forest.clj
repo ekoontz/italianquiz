@@ -139,12 +139,15 @@ of this function with complements."
                          result))
                      (do (log/warn (str "no cache: will go through entire lexicon."))
                          nil))
-            complement-candidate-lexemes (if cached cached lexicon)]
+            complement-candidate-lexemes (if cached cached (flatten (vals lexicon)))]
         (let [semantics (get-in spec [:synsem :sem])]
           (if (not (nil? semantics))
             (if (not (nil? semantics)) (log/debug (str "  with semantics:" semantics)))))
         (log/trace (str " immediate parent:" (get-in immediate-parent [:rule])))
         (log/trace (str "add-complement to: " (fo-ps bolt) " with spec " (show-spec spec) " at path: " path))
+        (if (map? complement-candidate-lexemes)
+          (log/error (str "complement-candidate-lexemes is unexpectedly a map with keys:" 
+                          ( keys complement-candidate-lexemes))))
         (let [shuffled-candidate-lexical-complements (lazy-shuffle complement-candidate-lexemes)
               return-val
               (filter (fn [result]
