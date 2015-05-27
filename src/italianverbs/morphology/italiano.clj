@@ -57,48 +57,57 @@
 
 (defn stem-per-futuro [infinitive drop-e]
   "turn an infinitive form into a stem that can be conjugated in the future tense."
-  (cond
-   (re-find #"giare$" infinitive)
-   (string/replace infinitive #"giare$" "ger")
 
-   (re-find #"ciare$" infinitive)
-   (string/replace infinitive #"ciare$" "cer")
+  ;; e.g.: lavarsi => lavare
+  (let [infinitive (if (re-find #"[aei]rsi$" infinitive)
+                     (string/replace infinitive #"si$" "e")
+                     infinitive)]
+    (cond
+     (re-find #"giare$" infinitive)
+     (string/replace infinitive #"giare$" "ger")
 
-   (re-find #"gare$" infinitive)
-   (string/replace infinitive #"gare$" "gher")
+     (re-find #"ciare$" infinitive)
+     (string/replace infinitive #"ciare$" "cer")
 
-   (re-find #"care$" infinitive)
-   (string/replace infinitive #"care$" "cher")
+     (re-find #"gare$" infinitive)
+     (string/replace infinitive #"gare$" "gher")
 
-   (and
-    (= true drop-e)
-    (re-find #"are$" infinitive))
-   (string/replace infinitive #"are$" "r")
+     (re-find #"care$" infinitive)
+     (string/replace infinitive #"care$" "cher")
 
-   (re-find #"are$" infinitive)
-   (string/replace infinitive #"are$" "er")
+     (and
+      (= true drop-e)
+      (re-find #"are$" infinitive))
+     (string/replace infinitive #"are$" "r")
 
-   (and
-    (= true drop-e)
-    (re-find #"ere$" infinitive))
-   (string/replace infinitive #"ere$" "r")
+     (re-find #"are$" infinitive)
+     (string/replace infinitive #"are$" "er")
 
-   (re-find #"ere$" infinitive)
-   (string/replace infinitive #"ere$" "er")
+     (and
+      (= true drop-e)
+      (re-find #"ere$" infinitive))
+     (string/replace infinitive #"ere$" "r")
 
-   (re-find #"ire$" infinitive)
-   (string/replace infinitive #"ire$" "ir")
+     (re-find #"ere$" infinitive)
+     (string/replace infinitive #"ere$" "er")
 
-   true
-   infinitive))
+     (re-find #"ire$" infinitive)
+     (string/replace infinitive #"ire$" "ir")
+
+     true
+     infinitive)))
 
 (defn stem-per-imperfetto [infinitive]
   "_infinitive_ should be a string (italian verb infinitive form)"
-  (cond
-   (re-find #"re$" infinitive)
-   (string/replace infinitive #"re$" "")
-   true
-   infinitive))
+  ;; e.g.: lavarsi => lavare
+  (let [infinitive (if (re-find #"[aei]rsi$" infinitive)
+                     (string/replace infinitive #"si$" "e")
+                     infinitive)]
+    (cond
+     (re-find #"re$" infinitive)
+     (string/replace infinitive #"re$" "")
+     true
+     infinitive)))
 
 ;; TODO: this is an overly huge method that needs to be rewritten to be easier to understand and maintain.
 (defn get-string-1 [word]
@@ -281,6 +290,10 @@
       (= (get-in word '(:infl)) :futuro)
       (map? (get-in word '(:futuro))))
      (let [infinitive (get-in word '(:italiano))
+           ;; e.g.: lavarsi => lavare
+           infinitive (if (re-find #"[aei]rsi$" infinitive)
+                        (string/replace infinitive #"si$" "e")
+                        infinitive)
            person (get-in word '(:agr :person))
            number (get-in word '(:agr :number))]
        (cond
@@ -334,6 +347,10 @@
           (get-in word '(:italiano)))
 
      (let [infinitive (get-in word '(:italiano))
+           ;; e.g.: lavarsi => lavare
+           infinitive (if (re-find #"[aei]rsi$" infinitive)
+                        (string/replace infinitive #"si$" "e")
+                        infinitive)
            person (get-in word '(:agr :person))
            number (get-in word '(:agr :number))
            drop-e (get-in word '(:italiano :drop-e) false)
@@ -391,6 +408,10 @@
           (get-in word '(:italiano)))
 
      (let [infinitive (get-in word '(:italiano))
+           ;; e.g.: lavarsi => lavare
+           infinitive (if (re-find #"[aei]rsi$" infinitive)
+                        (string/replace infinitive #"si$" "e")
+                        infinitive)
            person (get-in word '(:agr :person))
            number (get-in word '(:agr :number))
            drop-e (get-in word '(:italiano :drop-e) false)
@@ -464,6 +485,10 @@
      (and (= (get-in word '(:infl)) :imperfetto)
           (get-in word '(:italiano)))
      (let [infinitive (get-in word '(:italiano))
+           ;; e.g.: lavarsi => lavare
+           infinitive (if (re-find #"[aei]rsi$" infinitive)
+                        (string/replace infinitive #"si$" "e")
+                        infinitive)
            person (get-in word '(:agr :person))
            number (get-in word '(:agr :number))
            stem (stem-per-imperfetto infinitive)]
@@ -549,6 +574,11 @@
      (and (= :past (get-in word '(:infl)))
           (string? (get-in word '(:italiano))))
      (let [infinitive (get-in word '(:italiano))
+           ;; e.g.: lavarsi => lavare
+           infinitive (if (re-find #"[aei]rsi$" infinitive)
+                        (string/replace infinitive #"si$" "e")
+                        infinitive)
+
            are-type (try (re-find #"are$" infinitive)
                          (catch Exception e
                            (throw (Exception. (str "Can't regex-find on non-string: " infinitive)))))
@@ -610,6 +640,10 @@
       (= (get-in word '(:infl)) :present)
       (string? (get-in word '(:italiano))))
      (let [infinitive (get-in word '(:italiano))
+           ;; e.g.: lavarsi => lavare
+           infinitive (if (re-find infinitive #"[aei]rsi$")
+                        (string/replace infinitive #"si$" "e")
+                        infinitive)
            are-type (try (re-find #"are$" infinitive)
                          (catch Exception e
                            (throw (Exception. (str "Can't regex-find on non-string: " infinitive " from word: " word)))))

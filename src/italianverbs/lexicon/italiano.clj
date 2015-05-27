@@ -1177,9 +1177,8 @@
                 :sem {:number :plur
                       :person :2nd}}}]
 
-   ;; TODO: should be "lavarsi"
-   "lavare" (let [subject-semantics (ref :top)
-                  subject-agr (ref :top)]
+   "lavarsi" (let [subject-semantics (ref :top)
+                   subject-agr (ref :top)]
               {:synsem {:cat :verb
                         :essere true
                         :sem {:pred :wash
