@@ -21,8 +21,9 @@
                            (if (:fill member-of-unit)
                              (do
                                (log/debug (str "doing fill-by-spec: " (->> member-of-unit :fill :spec)))
-                               (fill-by-spec 10 (->> member-of-unit :fill :spec) 
-                                                    "expression_import")))
+                               (fill-by-spec (->> member-of-unit :fill :spec)
+                                             10
+                                             "expression_import")))
 
                            (if (:fill-verb member-of-unit)
                              (do
