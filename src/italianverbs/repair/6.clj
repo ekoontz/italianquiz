@@ -12,7 +12,7 @@
 
 (defn repair []
   (process 
-   [{:fill-verb "lavarsi"
+   [{:fill-verb "vestirsi"
      :source-model it/small-plus-vp-pronoun
      :target-model en/small-plus-vp-pronoun}
     ]))
