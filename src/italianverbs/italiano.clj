@@ -159,7 +159,8 @@
                        (= (:rule %) "s-aux")
                        (= (:rule %) "vp-aux")
                        (= (:rule %) "vp-aux-22")
-                       (= (:rule %) "vp-pronoun"))
+                       (= (:rule %) "vp-pronoun-nonphrasal")
+                       (= (:rule %) "vp-pronoun-phrasal"))
                   grammar)
           lexicon
           (into {}
@@ -340,3 +341,4 @@ INSERT INTO expression (language,model,surface,structure,serialized)
      FROM expression_import
 ")
 
+;; (fill-by-spec {:root {:italiano {:italiano "lavare"}}} 1 "expression" small-plus-vp-pronoun "small-plus-vp-pronoun")
