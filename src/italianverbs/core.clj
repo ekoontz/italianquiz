@@ -84,6 +84,11 @@
   (GET "/about" request
        about/routes)
 
+  (GET "/verb" request
+       {:status 200
+        :headers {"Content-Type" "text/plain"}
+        :body "verb"})
+
   (route/resources "/webjars" {:root "META-INF/resources/webjars/foundation/4.0.4/"})
   (route/resources "/")
 
