@@ -952,4 +952,58 @@
              :sem {:human true
                    :pred :voi}
              :subcat '()}}
-})
+
+   "yourself"
+   [{:note "♀"
+     :synsem {:cat :noun
+              :pronoun true
+              :case :acc
+              :reflexive true
+              :agr {:person :2nd
+                    :number :sing
+                    :gender :fem}
+              :sem {:human true
+                   :pred :tu}
+              :subcat '()}}
+    
+    {:note "♂"
+     :synsem {:cat :noun
+              :pronoun true
+              :case :acc
+              :reflexive true
+              :agr {:person :2nd
+                    :number :sing
+                    :gender :masc}
+              :sem {:human true
+                    :pred :tu}
+              :subcat '()}}]
+
+   "yourselves"
+   [{:note "♀" 
+     :synsem {:cat :noun
+              :pronoun true
+              :case :acc
+              :reflexive true
+              :agr {:person :2nd
+                    :number :plur
+                    :gender :fem}
+              :sem {:human true
+                    :pred :voi}
+              :subcat '()}}
+    
+    {:note "♂" 
+     :synsem {:cat :noun
+              :pronoun true
+              :case :acc
+              :reflexive true
+              :agr {:person :2nd
+                    :number :plur
+                    :gender :masc}
+              :sem {:human true
+                    :pred :voi}
+              :subcat '()}}]
+   })
+
+
+    
+
