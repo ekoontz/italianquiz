@@ -576,12 +576,9 @@ storing a deserialized form of each lexical entry avoids the need to serialize e
 (defn transitive-verb-rule [lexical-entry]
   (cond (and (= (get-in lexical-entry [:synsem :cat]) :verb)
              (not (nil? (get-in lexical-entry [:synsem :sem :obj])))
-
-             (not (= :fail lexical-entry))
+             (not (= (get-in lexical-entry [:synsem :sem :obj]) :unspec))
              ;; do not apply rule if (:subcat :2) is explicitly empty.
-             (not (empty? (get-in lexical-entry [:synsem :subcat :2] :none)))
-
-             (not (= (get-in lexical-entry [:synsem :sem :obj]) :unspec)))
+             (not (= '() (get-in lexical-entry [:synsem :subcat :2]))))
         (unifyc
          lexical-entry
          transitive-but-object-cat-not-set)
@@ -797,12 +794,8 @@ storing a deserialized form of each lexical entry avoids the need to serialize e
                           (not (nil? (get-in val
                                              [:synsem :sem :obj]
                                              nil)))
-
-                          (not (empty? (get-in val
-                                               [:synsem :subcat :2]
-                                               :none)))
-
-                          (not (= :intensifier (get-in val [:synsem :subcat :2 :cat]))))
+                          (not (= :intensifier (get-in val [:synsem :subcat :2 :cat])))
+                          (not (= '() (get-in val [:synsem :subcat :2]))))
 
                      (do
                        (log/debug (str "val: type 1:" (fo val)))
@@ -849,6 +842,7 @@ storing a deserialized form of each lexical entry avoids the need to serialize e
             (cond (and (= (get-in val [:synsem :cat])
                           :verb)
                        (not (= :unspec (get-in val [:synsem :sem :obj])))
+                       (not (= '() (get-in val [:synsem :subcat :2])))
                        (not (nil? (get-in val [:synsem :sem :obj] nil))))
                   (unifyc val
                           transitive)
