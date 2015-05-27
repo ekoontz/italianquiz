@@ -6,15 +6,24 @@
 (require '[italianverbs.italiano :as it])
 (require '[italianverbs.repair :refer [process]])
 
-;; (fill-by-spec {:root {:italiano {:italiano "lavare"}}} 1 "expression" small-plus-vp-pronoun "small-plus-vp-pronoun")
-
+;; (fill-by-spec {:root {:italiano {:italiano "lavarsi"}}}
+;;   1 "expression" small-plus-vp-pronoun "small-plus-vp-pronoun")
 ;; 
 
 (defn repair []
   (process 
-   [{:fill-verb "lavarsi"
+   [
+
+    {:fill-verb "vestirsi"
      :source-model it/small-plus-vp-pronoun
-     :target-model en/small-plus-vp-pronoun}]))
+     :target-model en/small-plus-vp-pronoun}
+    
+    {:fill-verb "lavarsi"
+     :source-model it/small-plus-vp-pronoun
+     :target-model en/small-plus-vp-pronoun}
+    ]))
+
+
 
 
 

@@ -315,6 +315,18 @@
                     :sem {:pred :game
                           :games true}}}
 
+   "get dressed"
+   (let [subject-semantics (ref {:human true})]
+     {:synsem {:cat :verb
+               :sem {:pred :get-dressed
+                     :subj subject-semantics
+                     :obj subject-semantics}
+               :subcat {:1 {:sem subject-semantics}
+                        :2 '()}}
+      :english {:participle "getting dressed"
+                :present {:3sing "gets dressed"}
+                :past "got dressed"}})
+
    ;; TODO: account for "give" being ditransitive.
    "give" {:synsem {:cat :verb
                     :sem {:pred :dare}}
