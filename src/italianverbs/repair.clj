@@ -13,22 +13,27 @@
     (.size (map (fn [unit]
            (.size (map (fn [member-of-unit]
                          (do
+
                            (if (:sql member-of-unit)
                              (do
                                (log/debug (str "doing sql: " (:sql member-of-unit)))
                                (exec-raw (:sql member-of-unit))))
+
                            (if (:fill member-of-unit)
                              (do
-                               (log/debug (str "doing fill-by-spec: " (->> member-of-unit :fill :spec)))
+                               (log/debug (str "doing fill-by-spec: "
+                                               (->> member-of-unit :fill :spec)))
                                (fill-by-spec (->> member-of-unit :fill :spec)
                                              10
-                                             (:source-model member-of-unit)
-                                             (:target-model member-of-unit)
-                                             "expression_import")))
+                                             "expression_import"
+                                             (->> member-of-unit :fill :source-model)
+                                             (->> member-of-unit :fill :target-model))))
+
 
                            (if (:fill-verb member-of-unit)
                              (do
-                               (log/debug (str "doing fill-verb: " (:fill-verb member-of-unit)))
+                               (log/debug (str "doing fill-verb: "
+                                               (:fill-verb member-of-unit)))
                                (let [verb (:fill-verb member-of-unit)]
                                  (.size (fill-verb verb 10
                                                    (:source-model member-of-unit)

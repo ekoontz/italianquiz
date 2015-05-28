@@ -89,7 +89,7 @@
             target-language (:language (if (future? target-language-model)
                                          @target-language-model
                                          target-language-model))
-            
+
             error (if (or (nil? target-language-surface)
                           (= target-language-surface ""))
                     (let [message (str "Could not generate a sentence in target language '" target-language 
@@ -161,8 +161,8 @@
 
 (defn fill-by-spec [spec count table source-model target-model]
   (populate count
-            target-model
             source-model
+            target-model
             spec table))
 
 (defn fill-verb [verb count source-model target-model & [spec table]] ;; spec is for additional constraints on generation.
