@@ -180,8 +180,8 @@
                                              tense)
                                       count
                                       table
-                                      target-model
-                                      source-model))
+                                      source-model
+                                      target-model))
             tenses))))
 
 (defn -main [& args]
