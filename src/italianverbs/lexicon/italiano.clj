@@ -455,7 +455,8 @@
    "cantare" {:synsem {:cat :verb
                        :sem {:pred :cantare}}}
 
-   "caricare" {:synsem {:cat :verb
+   "caricare" {:italiano {:futuro-stem "carich"}
+               :synsem {:cat :verb
                         :sem {:pred :caricare}}}
 
    "cenare" {:synsem {:cat :verb
