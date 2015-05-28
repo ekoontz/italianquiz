@@ -326,6 +326,28 @@
       :english {:participle "getting dressed"
                 :present {:3sing "gets dressed"}
                 :past "got dressed"}})
+   "get ready"
+   (let [subject-semantics (ref {:human true})]
+     {:synsem {:cat :verb
+               :sem {:pred :get-ready
+                     :subj subject-semantics
+                     :obj subject-semantics}
+               :subcat {:1 {:sem subject-semantics}
+                        :2 '()}}
+      :english {:participle "getting ready"
+                :present {:3sing "gets ready"}
+                :past "got ready"}})
+   "get up"
+   (let [subject-semantics (ref {:animate true})]
+     {:synsem {:cat :verb
+               :sem {:pred :get-up
+                     :subj subject-semantics
+                     :obj subject-semantics}
+               :subcat {:1 {:sem subject-semantics}
+                        :2 '()}}
+      :english {:participle "getting up"
+                :present {:3sing "gets up"}
+                :past "got up"}})
 
    ;; TODO: account for "give" being ditransitive.
    "give" {:synsem {:cat :verb
@@ -354,7 +376,6 @@
            :english {:present {:3sing "has"}
                              :past "had"}}
 
-
    "have dinner" {:synsem {:cat :verb
                             :sem {:pred :cenare}}
                    :english {:present {:3sing "has dinner"}
@@ -371,7 +392,6 @@
       :english {:participle "having fun"
                 :present {:3sing "has fun"}
                 :past "had fun"}})
-
    
    "have to" {:synsem {:cat :verb
                        :sem {:pred :have-to}}
@@ -673,9 +693,17 @@
                            :subj {:human true}
                            :obj {:music true}}}}]
 
+   "prepare" (let [subject-semantics (ref {:human true})]
+               {:synsem {:cat :verb
+                         :sem {:pred :get-ready
+                               :subj subject-semantics
+                               :obj subject-semantics}
+                         :subcat {:1 {:sem subject-semantics}
+                                  :2 {:pronoun true
+                                      :reflexive true
+                                      :sem subject-semantics}}}})
    "preserve" {:synsem {:cat :verb
                         :sem {:pred :preserve}}}
-
 
    "print"  {:synsem {:cat :verb
                       :sem {:pred :stampare}}}
@@ -934,6 +962,18 @@
 
    "wait"  {:synsem {:cat :verb
                      :sem {:pred :wait-for}}}
+   "wake up"
+   (let [subject-semantics (ref {:animate true})]
+     {:synsem {:cat :verb
+               :sem {:pred :wake-up
+                     :subj subject-semantics
+                     :obj subject-semantics}
+               :subcat {:1 {:sem subject-semantics}
+                        :2 '()}}
+      :english {:participle "waking up"
+                :present {:3sing "wakes up"}
+                :past "woke up"}})
+
    "walk" {:synsem {:cat :verb
                 :sem {:pred :walk}}}
 
@@ -962,7 +1002,6 @@
                    :gender :fem
                    :pred :noi}
              :subcat '()}}
-
    "we (♂)"
    {:synsem {:cat :noun
              :pronoun true

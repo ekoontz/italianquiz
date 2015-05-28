@@ -128,7 +128,6 @@
                     :obj {:human true}}}}
 
    "alto"
-
    [;; non-comparative:
     (let [subject-sem (ref {:human true}) ;; only humans can be tall.
           subject-agr (ref :top)] 
@@ -143,7 +142,6 @@
                                     :agr subject-agr
                                     :sem subject-sem}
                                 :2 '()}}}))
-
     ;; comparative:
     (let [complement-complement-sem (ref {:human true}) ;; only humans can be tall.
           complement-sem (ref {:pred :di
@@ -159,7 +157,20 @@
                                 :2 {:cat :prep
                                     :sem complement-sem}}}}))]
 
-
+   "alzarsi" (let [subject-semantics (ref {:animate true})
+                   subject-agr (ref :top)]
+               {:synsem {:cat :verb
+                         :essere true
+                         :sem {:pred :get-up
+                               :reflexive true
+                               :subj subject-semantics
+                               :obj subject-semantics}
+                         :subcat {:1 {:agr subject-agr
+                                      :sem subject-semantics}
+                                  :2 {:agr subject-agr
+                                      :pronoun true
+                                      :reflexive true
+                                      :sem subject-semantics}}}})
    "amare"
     {:synsem {:cat :verb
               :essere false
@@ -806,7 +817,7 @@
                             :sem {:pred :dipingere}}
                    :italiano {:passato "dipinto"}}
 
-      "divertirsi" (let [subject-semantics (ref :top)
+      "divertirsi" (let [subject-semantics (ref {:human true})
                          subject-agr (ref :top)]
                      {:synsem {:cat :verb
                                :essere true
@@ -1456,6 +1467,20 @@
    "prendere" {:synsem {:cat :verb :sem {:pred :prendere}}
                :italiano {:passato "preso"}}
 
+   "preparsi" (let [subject-semantics (ref {:human true})
+                    subject-agr (ref :top)]
+                {:synsem {:cat :verb
+                          :essere true
+                          :sem {:pred :get-ready
+                                :reflexive true
+                                :subj subject-semantics
+                                :obj subject-semantics}
+                          :subcat {:1 {:agr subject-agr
+                                       :sem subject-semantics}
+                                   :2 {:agr subject-agr
+                                       :pronoun true
+                                       :reflexive true
+                                       :sem subject-semantics}}}})
    "prenotare" {:synsem {:cat :verb
                          :sem {:pred :reserve}}}
    "qualche"
@@ -1598,16 +1623,29 @@
                             :pred :suonare}}}
 ;                                            :obj {:music true}}}})
 
+   "svegliarsi" (let [subject-semantics (ref {:animate true})
+                      subject-agr (ref :top)]
+                  {:synsem {:cat :verb
+                            :essere true
+                            :sem {:pred :wake-up
+                                  :reflexive true
+                                  :subj subject-semantics
+                                  :obj subject-semantics}
+                            :subcat {:1 {:agr subject-agr
+                                         :sem subject-semantics}
+                                     :2 {:agr subject-agr
+                                         :pronoun true
+                                         :reflexive true
+                                         :sem subject-semantics}}}})
    "sviluppare"  {:synsem {:cat :verb 
                       :sem {:pred :develop}}}
 
-
    "tagliare"  {:synsem {:cat :verb
-                                       :sem {:pred :cut}}}
+                         :sem {:pred :cut}}}
 
    "telefonare"  {:synsem {:cat :verb 
                       :essere false
-                                         :sem {:pred :telefonare}}}
+                           :sem {:pred :telefonare}}}
 
    "tenere"  {:synsem {:cat :verb 
                       :sem {:pred :tenere}}
@@ -1617,7 +1655,6 @@
                                    :3sing "tiene"
                                    :3plur "tengono"}
                          :futuro-stem "terr"}}
-
    "ti"
    {:synsem {:cat :noun
              :pronoun true
