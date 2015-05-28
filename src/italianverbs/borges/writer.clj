@@ -132,7 +132,7 @@
                       target-language
                       (:name target-language-model)]])
 
-        (log/debug (str "inserting into table: " table " the source expression: '"
+        (log/debug (str "inserting into table '" table "' the source expression: '"
                         source-language-surface
                         "'"))
 
