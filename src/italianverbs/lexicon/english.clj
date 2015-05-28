@@ -360,7 +360,19 @@
                    :english {:present {:3sing "has dinner"}
                              :past "had dinner"
                              :participle "having dinner"}}
+   "have fun"
+   (let [subject-semantics (ref {:human true})]
+     {:synsem {:cat :verb
+               :sem {:pred :have-fun
+                     :subj subject-semantics
+                     :obj subject-semantics}
+               :subcat {:1 {:sem subject-semantics}
+                        :2 '()}}
+      :english {:participle "having fun"
+                :present {:3sing "has fun"}
+                :past "had fun"}})
 
+   
    "have to" {:synsem {:cat :verb
                        :sem {:pred :have-to}}
               :english {:present {:1sing "have to"
