@@ -313,17 +313,13 @@
 (defn game-chooser []
   [:dev#chooser
    [:select {:style "display:block"}
-    [:option {:onclick "location='?game=1';"}
-     "en -> it"
-     ]
-    
-    [:option {:onclick "location='?game=2';"}
-     "it -> en"
-     ]
-    
-    [:option {:onclick "location='?game=3';"}
-     "en -> es"
-     ]
+
+    (map (fn [row]
+           [:option {:onclick (str "location='?game="  (:id row) "';")} (:name row)])
+         (k/exec-raw [(str "SELECT name,id
+                              FROM game
+                             WHERE active = true") []] :results))
+
     ]])
 
 (defn evaluate [user-response]
