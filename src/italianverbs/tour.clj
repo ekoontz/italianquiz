@@ -162,14 +162,13 @@
 (defn generate-q-and-a [target-language target-locale request]
   "generate a question in English and a set of possible correct answers in the target language, given parameters in request"
   (log/info (str "generate-q-and-a: target=" target-language "; target-locale=" target-locale ""))
-
-  (log/info (str "generate-q-and-a: request=" request))
-  
+  (log/debug (str "generate-q-and-a: request=" request))
   (let [headers {"Content-Type" "application/json;charset=utf-8"
                  "Cache-Control" "no-cache, no-store, must-revalidate"
                  "Pragma" "no-cache"
                  "Expires" "0"}]
     (try (let [game (get (:params request) :game :any)
+               debug (log/info (str "generate-q-and-a: chosen game=" game))
                game (cond (= "" game)
                           :any
                           (nil? game)
