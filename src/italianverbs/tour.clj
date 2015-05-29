@@ -340,7 +340,7 @@
      :onchange
      "document.location='?game='+this.options[this.selectedIndex].value;"}
 
-    [:option {:value ""} "Choose a game:"]
+    [:option {:value ""} "All active games"]
     
     (map (fn [row]
            (let [if-selected (if (= (:id row) current-game)
