@@ -23,21 +23,28 @@
 
 (def routes
   (let [headers {"Content-Type" "text/html;charset=utf-8"}]
-
     (compojure/routes
 
      (GET "/it" request
           {:headers headers
            :status 200
-           :body (page "Map Tour" (tour "it" "IT"
-                                        (get (:query-params request) "game")
-                                        ) request {:onload "start_tour('it','IT');"
-                                                            :css ["/css/tour.css"]
-                                                            :jss ["/js/cities.js"
-                                                                  "/js/gen.js"
-                                                                  "/js/leaflet.js"
-                                                                  "/js/it.js"
-                                                                  "/js/tour.js"]})})
+           :body
+           (let [chosen-game (get (:query-params request) "game")
+                 chosen-game (cond (= "" chosen-game)
+                                   nil
+                                   (nil? chosen-game)
+                                   nil
+                                   true
+                                   (Integer. chosen-game))]
+             (page "Map Tour" (tour "it" "IT"
+                                    chosen-game
+                                    ) request {:onload (str "start_tour('it','IT','" chosen-game "');")
+                                               :css ["/css/tour.css"]
+                                               :jss ["/js/cities.js"
+                                                     "/js/gen.js"
+                                                     "/js/leaflet.js"
+                                                     "/js/it.js"
+                                                     "/js/tour.js"]}))})
      (GET "/es" request
           {:status 302
            :headers {"Location" "/tour/es/ES"}})
@@ -64,8 +71,7 @@
                                                                   "/js/tour.js"]})})
 
      (GET "/it/generate-q-and-a" request
-          {:status 302
-           :headers {"Location" "/tour/it/IT/generate-q-and-a"}})
+          (generate-q-and-a "it" "IT" request))
 
      (GET "/it/IT/generate-q-and-a" request
           (generate-q-and-a "it" "IT" request))
@@ -155,11 +161,22 @@
 
 (defn generate-q-and-a [target-language target-locale request]
   "generate a question in English and a set of possible correct answers in the target language, given parameters in request"
+  (log/info (str "generate-q-and-a: target=" target-language "; target-locale=" target-locale ""))
+
+  (log/info (str "generate-q-and-a: request=" request))
+  
   (let [headers {"Content-Type" "application/json;charset=utf-8"
                  "Cache-Control" "no-cache, no-store, must-revalidate"
                  "Pragma" "no-cache"
                  "Expires" "0"}]
     (try (let [game (get (:params request) :game :any)
+               game (cond (= "" game)
+                          :any
+                          (nil? game)
+                          :any
+                          (string? game)
+                          (Integer. game)
+                          true game)
                step (get (:params request) :step)
                game (if (= game :any)
                       (let [active (active-games target-language)]
@@ -236,13 +253,17 @@
 ;; TODO: Move this to javascript (tour.js) - tour.clj should only be involved in
 ;; routing requests to responses.
 (defn tour [language locale chosen-game]
+  (log/info (str "(tour : chosen-game=" chosen-game) ")")
   [:div#game
 
    [:div#correctanswer 
     " "
     ]
-
-    (game-chooser (if chosen-game (Integer. chosen-game) nil))
+   
+   (game-chooser (if chosen-game (Integer. chosen-game) nil)
+                 language
+                 locale
+                 )
 
     [:div#map ]
 
@@ -312,14 +333,14 @@
                             FROM inflections_per_game
                            WHERE game = ?") [game-id]] :results)))
 
-(defn game-chooser [current-game]
+(defn game-chooser [current-game target-language locale]
   [:dev#chooser
-   [:select
+   [:select#chooserselect
     {:style "display:block;"
      :onchange
      "document.location='?game='+this.options[this.selectedIndex].value;"}
 
-    [:option "Choose a game:"]
+    [:option {:value ""} "Choose a game:"]
     
     (map (fn [row]
            (let [if-selected (if (= (:id row) current-game)
@@ -328,7 +349,8 @@
              [:option (merge if-selected {:value (:id row)}) (:name row)]))
          (k/exec-raw [(str "SELECT name,id
                               FROM game
-                             WHERE active = true") []] :results))
+                             WHERE target=?
+                               AND active = true") [target-language]] :results))
     ]])
 
 (defn evaluate [user-response]
