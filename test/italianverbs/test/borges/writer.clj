@@ -1,3 +1,5 @@
+;; WARN: modifies (and optionally removes) data in database. Should only run on a test database instance.
+;; TODO: add safeguards to prevent running these tests on non-test database instances.
 (ns italianverbs.test.borges.writer
   (:refer-clojure :exclude [get-in resolve merge])
   (:require
