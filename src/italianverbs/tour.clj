@@ -1,5 +1,5 @@
 (ns italianverbs.tour
-  (:refer-clojure :exclude [get-in merge])
+  (:refer-clojure :exclude [get-in])
   (:require
    [clojure.data.json :refer [write-str]]
    [clojure.string :as string]
@@ -29,7 +29,9 @@
      (GET "/it" request
           {:headers headers
            :status 200
-           :body (page "Map Tour" (tour "it" "IT") request {:onload "start_tour('it','IT');"
+           :body (page "Map Tour" (tour "it" "IT"
+                                        (get (:query-params request) "game")
+                                        ) request {:onload "start_tour('it','IT');"
                                                             :css ["/css/tour.css"]
                                                             :jss ["/js/cities.js"
                                                                   "/js/gen.js"
@@ -233,14 +235,14 @@
 
 ;; TODO: Move this to javascript (tour.js) - tour.clj should only be involved in
 ;; routing requests to responses.
-(defn tour [language locale]
+(defn tour [language locale chosen-game]
   [:div#game
 
    [:div#correctanswer 
     " "
     ]
 
-    (game-chooser)
+    (game-chooser (if chosen-game (Integer. chosen-game) nil))
 
     [:div#map ]
 
@@ -310,16 +312,23 @@
                             FROM inflections_per_game
                            WHERE game = ?") [game-id]] :results)))
 
-(defn game-chooser []
+(defn game-chooser [current-game]
   [:dev#chooser
-   [:select {:style "display:block"}
+   [:select
+    {:style "display:block;"
+     :onchange
+     "document.location='?game='+this.options[this.selectedIndex].value;"}
 
+    [:option "Choose a game:"]
+    
     (map (fn [row]
-           [:option {:onclick (str "location='?game="  (:id row) "';")} (:name row)])
+           (let [if-selected (if (= (:id row) current-game)
+                               {:selected true}
+                               {})]
+             [:option (merge if-selected {:value (:id row)}) (:name row)]))
          (k/exec-raw [(str "SELECT name,id
                               FROM game
                              WHERE active = true") []] :results))
-
     ]])
 
 (defn evaluate [user-response]
