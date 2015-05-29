@@ -333,7 +333,7 @@
                            WHERE game = ?") [game-id]] :results)))
 
 (defn game-chooser [current-game target-language locale]
-  [:dev#chooser
+  [:div#chooser
    [:select#chooserselect
     {:style "display:block;"
      :onchange
