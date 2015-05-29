@@ -16,7 +16,7 @@
 (def source-language "en")
 (def source-locale "US")
 
-(declare direction-chooser)
+(declare game-chooser)
 (declare generate-q-and-a)
 (declare get-step-for-user)
 (declare tour)
@@ -240,7 +240,7 @@
     " "
     ]
 
-    (direction-chooser)
+    (game-chooser)
 
     [:div#map ]
 
@@ -310,23 +310,19 @@
                             FROM inflections_per_game
                            WHERE game = ?") [game-id]] :results)))
 
-(defn direction-chooser []
+(defn game-chooser []
   [:dev#chooser
-   [:select {:style "display:none" :disabled "true" };; TODO: not working yet, so disabled.
-    [:option {:onclick "location='/cloud?src=en&dest=it';"}
+   [:select {:style "display:block"}
+    [:option {:onclick "location='?game=1';"}
      "en -> it"
      ]
     
-    [:option {:onclick "location='/cloud?src=it&dest=en';"}
+    [:option {:onclick "location='?game=2';"}
      "it -> en"
      ]
     
-    [:option {:onclick "location='/cloud?src=en&dest=es';"}
+    [:option {:onclick "location='?game=3';"}
      "en -> es"
-     ]
-
-    [:option {:onclick "location='/cloud?src=es&dest=en';"}
-     "es -> en"
      ]
     ]])
 
