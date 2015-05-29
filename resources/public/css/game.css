@@ -72,8 +72,8 @@
 #chooser {
     float:left;
     position:absolute;
-    top:2px;
-    right:40%;
+    bottom:2px;
+    left:2px;
     color:green;
     z-index:2;
 }
