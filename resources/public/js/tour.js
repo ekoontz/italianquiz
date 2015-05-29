@@ -100,7 +100,7 @@ var tour_paths = {
 
 var iconMarker;
 
-function start_tour(target_language,target_locale) {
+function start_tour(target_language,target_locale,game_id) {
     var position_info = get_position_from_profile(target_language);
     step = position_info.position;
     direction = position_info.direction;
@@ -174,7 +174,7 @@ function start_tour(target_language,target_locale) {
     $("#streetviewiframe").attr("src","https://www.google.com/maps/embed/v1/streetview?key="+google_api_key+"&location="+current_lat+","+current_long+"&heading="+heading+"&pitch="+pitch+"&fov=35");
     
     user_keypress(target_language,target_locale);
-    tour_loop(target_language,target_locale);
+    tour_loop(target_language,target_locale,game_id);
 }
 
 function get_position_from_profile(target_language) {
@@ -192,7 +192,8 @@ function get_position_from_profile(target_language) {
 }
 
 function tour_loop(target_language,target_locale) {
-    create_tour_question(target_language,target_locale);
+    var game_id = $("#chooserselect").val();
+    create_tour_question(target_language,target_locale,game_id);
     $("#gameinput").focus();
     $("#gameinput").val("");
 }
@@ -200,7 +201,7 @@ function tour_loop(target_language,target_locale) {
 var answer_info = {};
 var correct_answers = [];
 
-function create_tour_question(target_language,target_locale) {
+function create_tour_question(target_language,target_locale,game_id) {
     $("#gameinput").css("background","white");
     $("#gameinput").css("color","black");
 
@@ -232,7 +233,7 @@ function create_tour_question(target_language,target_locale) {
     $.ajax({
 	cache: false,
         dataType: "html",
-        url: "/tour/" + target_language + "/generate-q-and-a",
+        url: "/tour/" + target_language + "/generate-q-and-a?game=" + game_id,
         success: update_tour_q_and_a
     });
 }
@@ -244,7 +245,7 @@ function decrement_remaining_tour_question_time() {
     log(DEBUG,"decrement remaining time..");
 }
 
-function submit_user_guess(guess,correct_answer,target_language,target_locale) {
+function submit_user_guess(guess,correct_answer,target_language,target_locale,game_id) {
     log(INFO,"submit_user_guess() guess: " + guess);
     if (guess == correct_answer) {
 	log(INFO,"You got one right!");
