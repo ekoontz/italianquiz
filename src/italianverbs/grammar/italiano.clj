@@ -254,7 +254,6 @@
                                      :cat :verb
                                      :sem {:aspect :progressive
                                            :tense :past}}})
-
                    (unifyc c10
                            root-is-head
                            {:rule "s-present-nonphrasal"
@@ -264,7 +263,6 @@
                                      :cat :verb
                                      :sem {:aspect :progressive
                                            :tense :present}}})
-
                    (unifyc c10
                            root-is-head-root
                            {:rule "s-present-phrasal"
@@ -274,14 +272,12 @@
                                      :cat :verb
                                      :sem {:aspect :progressive
                                            :tense :present}}})
-
                    (unifyc h21
                            root-is-head
                            {:rule "vp-infinitive"
                             :synsem {:aux false
                                      :infl :infinitive
                                      :cat :verb}})
-
                    (unifyc h21a
                            root-is-comp
                            {:rule "vp-aux"
@@ -305,7 +301,6 @@
                                        :sem {:tense :past}
                                        :subcat {:2 {:agr obj-agr}}}
                               :italiano {:b {:obj-agr obj-agr}}}))
-
                    (unifyc h21
                            root-is-head
                            {:rule "vp-future"
@@ -352,9 +347,7 @@
                            {:head {:phrasal false
                                    :synsem {:cat :sent-modifier}}
                             :rule "s-modifier"})
-
 ))
-
 
 (defn aux-is-head-feature [phrase]
   (cond (= :verb (get-in phrase '(:synsem :cat)))
