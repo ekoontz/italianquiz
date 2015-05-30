@@ -69,9 +69,9 @@
       [:i {:style "text-align:center;color:#ccc"} "Coming soon" ]]
      ]
 
-    [:div {:style "float:right;width:20%;padding-right:1em;margin-top:1em"}
-     [:p "Use the dropdown within the tour to choose a game to play."]
-    [:img {:width "200px" :src "/png/select_game.png"} ]]
+    [:div {:style "float:left;left-margin:33%;width:100%;margin-top:1em"}
+     [:p "Use the dropdown within the tour to choose a class/game."]
+     [:img {:width "350px" :src "/png/select_game.png"} ]]
 
     
     (if (haz-admin)

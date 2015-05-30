@@ -335,7 +335,7 @@
 (defn game-chooser [current-game target-language locale]
   [:div#chooser {:class "tourelement"}
 
-   "Choose your game:"
+   "Choose your class/game:"
 
    [:select#chooserselect
     {:style "display:block;"
