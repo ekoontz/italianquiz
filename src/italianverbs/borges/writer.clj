@@ -40,6 +40,73 @@
 ;; (which language,lexicon,grammar,etc..).
 (def mask-populate-errors false)
 
+(defn expression-pair [source-language-model target-language-model spec]
+  "Generate a pair: {:source <source_expression :target <target_expression>}.
+
+   First, the target expression is generated according to the given target-language-model and spec.
+
+   Then, the source expression is generated according to the semantics of this target expression.
+
+   Thus the source expression's spec is not specified directly - rather it is derived from the 
+   semantics of the target expression."
+
+  (let [target-language-sentence (engine/generate spec target-language-model :enrich true)
+
+        target-language-sentence (let [subj (get-in target-language-sentence
+                                                    [:synsem :sem :subj] :notfound)]
+                                   (cond (not (= :notfound subj))
+                                         (do
+                                           (log/debug (str "subject constraints: " subj))
+                                           (unify target-language-sentence
+                                                  {:synsem {:sem {:subj subj}}}))
+                                         true
+                                         target-language-sentence))
+
+        ;; TODO: add warning if semantics of target-expression is merely :top - it's
+        ;; probably not what the caller expected. Rather it should be something more
+        ;; specific, like {:pred :eat :subj {:pred :antonio}} ..etc.
+        source-language-sentence (engine/generate (get-in target-language-sentence [:synsem :sem] :top)
+                                                  source-language-model :enrich true)
+
+        semantics (strip-refs (get-in target-language-sentence [:synsem :sem] :top))
+        debug (log/debug (str "semantics: " semantics))
+
+        target-language-surface (fo target-language-sentence)
+        debug (log/debug (str "target surface: " target-language-surface))
+
+        source-language (:language (if (future? source-language-model)
+                                     @source-language-model
+                                     source-language-model))
+        target-language (:language (if (future? target-language-model)
+                                     @target-language-model
+                                     target-language-model))
+        error (if (or (nil? target-language-surface)
+                      (= target-language-surface ""))
+                (let [message (str "Could not generate a sentence in target language '" target-language 
+                                   "' for this spec: " spec)]
+                  (if (= true mask-populate-errors)
+                    (log/warn message)
+                    ;; else
+                    (throw (Exception. message)))))
+        source-language-sentence (engine/generate {:synsem {:sem semantics
+                                                            :subcat '()}}
+                                                  source-language-model
+                                                  :enrich true)
+        source-language-surface (fo source-language-sentence)
+        debug (log/debug (str "source surface: " source-language-surface))
+
+        error (if (or (nil? source-language-surface)
+                      (= source-language-surface ""))
+                (let [message (str "Could not generate a sentence in source language '" source-language 
+                                   "' for this semantics: " semantics "; target language was: " target-language 
+                                   "; target expression was: '" (fo target-language-sentence) "'")]
+                  (if (= true mask-populate-errors)
+                    (log/warn message)
+                    ;; else
+                    (throw (Exception. message)))))]
+    {:source source-language-sentence
+     :target target-language-sentence}))
+  
 ;; TODO: use named optional parameters.
 (defn populate [num source-language-model target-language-model & [ spec table ]]
   (let [spec (if spec spec :top)
@@ -63,87 +130,47 @@
 
         ]
     (dotimes [n num]
-      (let [target-language-sentence (engine/generate spec
-                                                      target-language-model :enrich true)
+      (let [sentence-pair (expression-pair source-language-model target-language-model spec)
+            target-sentence (:target sentence-pair)
+            source-sentence (:source sentence-pair)
 
-            target-language-sentence (let [subj (get-in target-language-sentence
-                                                        [:synsem :sem :subj] :notfound)]
-                                       (cond (not (= :notfound subj))
-                                             (do
-                                               (log/debug (str "subject constraints: " subj))
-                                               (unify target-language-sentence
-                                                      {:synsem {:sem {:subj subj}}}))
-                                             true
-                                             target-language-sentence))
-            
-            semantics (strip-refs (get-in target-language-sentence [:synsem :sem] :top))
-            debug (log/debug (str "semantics: " semantics))
-
-            target-language-surface (fo target-language-sentence)
-            debug (log/debug (str "target surface: " target-language-surface))
+            source-sentence-surface (fo source-sentence)
+            target-sentence-surface (fo target-sentence)
 
             source-language (:language (if (future? source-language-model)
                                          @source-language-model
                                          source-language-model))
-            
             target-language (:language (if (future? target-language-model)
                                          @target-language-model
                                          target-language-model))
-
-            error (if (or (nil? target-language-surface)
-                          (= target-language-surface ""))
-                    (let [message (str "Could not generate a sentence in target language '" target-language 
-                                       "' for this spec: " spec)]
-                      (if (= true mask-populate-errors)
-                        (log/warn message)
-                        ;; else
-                        (throw (Exception. message)))))
-
-            source-language-sentence (engine/generate {:synsem {:sem semantics
-                                                                :subcat '()}}
-                                                      source-language-model
-                                                      :enrich true)
-            source-language-surface (fo source-language-sentence)
-            debug (log/debug (str "source surface: " source-language-surface))
-
-            error (if (or (nil? source-language-surface)
-                          (= source-language-surface ""))
-                    (let [message (str "Could not generate a sentence in source language '" source-language 
-                                       "' for this semantics: " semantics "; target language was: " target-language 
-                                       "; target expression was: '" (fo target-language-sentence) "'")]
-                      (if (= true mask-populate-errors)
-                        (log/warn message)
-                        ;; else
-                        (throw (Exception. message)))))
-
             ]
         
         (log/debug (str "inserting into table: " table " the target expression: '"
-                        target-language-surface
+                        target-sentence-surface
                         "'"))
 
         (k/exec-raw [(str "INSERT INTO " table " (surface, structure, serialized, language, model) VALUES (?,"
-                          "'" (json/write-str (strip-refs target-language-sentence)) "'"
+                          "'" (json/write-str (strip-refs target-sentence-surface)) "'"
                           ","
-                          "'" (str (serialize target-language-sentence)) "'"
+                          "'" (str (serialize target-sentence)) "'"
                           ","
                           "?,?)")
-                     [target-language-surface
+                     [target-sentence-surface
                       target-language
                       (:name target-language-model)]])
 
         (log/debug (str "inserting into table '" table "' the source expression: '"
-                        source-language-surface
+                        source-sentence-surface
                         "'"))
 
         (k/exec-raw [(str "INSERT INTO " table " (surface, structure, serialized, language, model) 
                                 VALUES (?,"
-                          "'" (json/write-str (strip-refs source-language-sentence)) "'"
+                          "'" (json/write-str (strip-refs source-sentence)) "'"
                           ","
-                          "'" (str (serialize source-language-sentence)) "'"
+                          "'" (str (serialize source-sentence)) "'"
                           ","
                           "?,?)")
-                     [source-language-surface
+                     [source-sentence-surface
                       source-language
                       (:name source-language-model)]])))))
 
