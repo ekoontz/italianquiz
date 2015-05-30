@@ -333,7 +333,10 @@
                            WHERE game = ?") [game-id]] :results)))
 
 (defn game-chooser [current-game target-language locale]
-  [:div#chooser
+  [:div#chooser {:class "tourelement"}
+
+   "Choose your game:"
+
    [:select#chooserselect
     {:style "display:block;"
      :onchange
