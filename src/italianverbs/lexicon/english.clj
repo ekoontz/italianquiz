@@ -178,7 +178,7 @@
    "chat" {:synsem {:cat :verb
                     :english {:participle "chatting"
                               :past "chatted"}
-                    :sem {:pred :chat}
+                    :sem {:pred :chat}}}
 
    "charge" {:synsem {:cat :verb
                       :sem {:pred :caricare}}}
