@@ -1043,7 +1043,8 @@
                   :italiano {:futuro-stem "giocher"}}
 
       "gridare" {:synsem {:cat :verb
-                          :sem {:pred :yell}}}
+                          :sem {:subj {:human true}
+                                :pred :yell}}}
 
       "guadagnare"  {:synsem {:cat :verb
                               :sem {:pred :earn
@@ -1554,7 +1555,8 @@
                 :italiano {:passato "scritto"}}
 
    "sgridare" {:synsem {:cat :verb
-                        :sem {:pred :scold}}}
+                        :sem {:subj {:human true}
+                              :pred :scold}}}
    "si"
    [;; feminine singular
     (let [cat (ref :noun)]
