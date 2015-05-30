@@ -106,7 +106,31 @@
                     (throw (Exception. message)))))]
     {:source source-language-sentence
      :target target-language-sentence}))
-  
+
+(defn insert-expression [expression table language model-name]
+  "Insert an expression into the given table. The information to be added will be:
+   1. the surface form of the expression
+   2. The JSON representation of the expression (the structure)
+   3. the short name of the language (e.g. 'en','es', or 'it')
+   4. the serialized form of the structure
+
+   The structure column allows JSON queries using the containment operator (@>) to 
+   find expressions matching a desired specification. See reader.clj for how these
+   queries are done.
+
+   The serialized column allows loading a desired expression as a Clojure map into the runtime system, including
+   the expression' internal structure-sharing."
+
+  (k/exec-raw [(str "INSERT INTO " table " (surface, structure, serialized, language, model) VALUES (?,"
+                    "'" (json/write-str (strip-refs expression)) "'"
+                    ","
+                    "'" (str (serialize expression)) "'"
+                    ","
+                    "?,?)")
+               [(fo expression)
+                language
+                model-name]]))
+
 ;; TODO: use named optional parameters.
 (defn populate [num source-language-model target-language-model & [ spec table ]]
   (let [spec (if spec spec :top)
@@ -126,9 +150,7 @@
 
         debug (log/debug (str "populate spec(3): " spec))
 
-        table (if table table "expression")
-
-        ]
+        table (if table table "expression")]
     (dotimes [n num]
       (let [sentence-pair (expression-pair source-language-model target-language-model spec)
             target-sentence (:target sentence-pair)
@@ -144,35 +166,16 @@
                                          @target-language-model
                                          target-language-model))
             ]
-        
+
         (log/debug (str "inserting into table: " table " the target expression: '"
                         target-sentence-surface
                         "'"))
-
-        (k/exec-raw [(str "INSERT INTO " table " (surface, structure, serialized, language, model) VALUES (?,"
-                          "'" (json/write-str (strip-refs target-sentence-surface)) "'"
-                          ","
-                          "'" (str (serialize target-sentence)) "'"
-                          ","
-                          "?,?)")
-                     [target-sentence-surface
-                      target-language
-                      (:name target-language-model)]])
-
+        (insert-expression target-sentence "expression" target-language (:name target-language-model))
+        
         (log/debug (str "inserting into table '" table "' the source expression: '"
                         source-sentence-surface
                         "'"))
-
-        (k/exec-raw [(str "INSERT INTO " table " (surface, structure, serialized, language, model) 
-                                VALUES (?,"
-                          "'" (json/write-str (strip-refs source-sentence)) "'"
-                          ","
-                          "'" (str (serialize source-sentence)) "'"
-                          ","
-                          "?,?)")
-                     [source-sentence-surface
-                      source-language
-                      (:name source-language-model)]])))))
+        (insert-expression source-sentence "expression" source-language (:name source-language-model))))))
 
 (defn fill [num source-lm target-lm & [spec]]
   "wipe out current table and replace with (populate num spec)"
