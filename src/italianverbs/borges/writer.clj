@@ -131,6 +131,15 @@
                 language
                 model-name]]))
 
+(defn insert-lexeme [canonical lexeme language]
+  (k/exec-raw [(str "INSERT INTO lexicon 
+                                 (canonical, structure, serialized, language) 
+                          VALUES (?,'?',?,?)")
+               [canonical
+                (json/write-str (strip-refs lexeme))
+                (str (serialize lexeme))
+                language]]))
+
 ;; TODO: use named optional parameters.
 (defn populate [num source-language-model target-language-model & [ spec table ]]
   (let [spec (if spec spec :top)
