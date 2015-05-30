@@ -40,7 +40,6 @@
        ]
       ]
 
-
      [:div.flag
 
       [:a {:href "/tour/es/MX"}
@@ -70,6 +69,11 @@
       [:i {:style "text-align:center;color:#ccc"} "Coming soon" ]]
      ]
 
+    [:div {:style "float:right;width:20%;padding-right:1em;margin-top:1em"}
+     [:p "Use the dropdown within the tour to choose a game to play."]
+    [:img {:width "200px" :src "/png/select_game.png"} ]]
+
+    
     (if (haz-admin)
       [:div {:class "rounded flags manage"}
 
