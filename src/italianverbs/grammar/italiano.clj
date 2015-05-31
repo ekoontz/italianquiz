@@ -373,10 +373,4 @@
        (filter #(not (fail? %))
                grammar)))
 
-;; TODO: calling (.size) because (map) is lazy, and I want to realize
-;; the sequence - must be a better way to loop over the grammar and realize the result.
-(.size (map (fn [rule]
-       (intern *ns* (symbol (:rule rule)) rule))
-     grammar))
-
 (log/info "Italian grammar defined.")
