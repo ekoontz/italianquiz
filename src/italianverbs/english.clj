@@ -24,7 +24,6 @@
 (def grammar gram/grammar)
 (def lexicon-source lex/lexicon-source)
 
-(log/info "compiling: source lexicon size: " (.size (keys lex/lexicon-source)))
 (def lexicon (future (-> (compile-lex lex/lexicon-source 
                                       morph/exception-generator 
                                       morph/phonize morph/english-specific-rules)
