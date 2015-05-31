@@ -45,8 +45,13 @@ table.user td {
 .p100 { background: #DFF7DF }
 
 .p075 { background: #8BE18B }
-.p025 { background: #1FB51F }
-.p000 { background: #028502 }
+.p025 { background: #1FB51F;
+	color: ivory;
+      }
+.p000 { background: #028502;
+	color: ivory;
+			
+      }
 
 .word { background: white;}
 
