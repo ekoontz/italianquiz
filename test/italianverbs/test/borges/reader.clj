@@ -1,7 +1,8 @@
 (ns italianverbs.test.borges.reader
-  (:refer-clojure :exclude [get-in resolve merge])
+  (:refer-clojure :exclude [get-in resolve])
   (:require
    [clojure.core :as core]
+   [clojure.test :refer :all]
    [clojure.data.json :as json]
    [italianverbs.borges.reader :refer :all]
    [italianverbs.borges.writer :refer :all]
@@ -61,3 +62,10 @@
 
 ;; another view of showing all en <-> it translation pairs
 ;; SELECT DISTINCT en.surface AS en, it.surface AS it, it.structure->'synsem'->'sem'->'pred' AS pred FROM expression AS en INNER JOIN expression AS it ON (en.structure->'synsem'->'sem') @> (it.structure->'synsem'->'sem') AND en.language='en' AND en.language='en' WHERE it.language='it' ORDER BY pred LIMIT 3000;
+
+(deftest read-lexicon-for-the-foobar-language
+  (let [biglex (read-lexicon "it")]
+    (is (not (empty? biglex)))
+    (is (not (empty? (get biglex "io"))))
+    (is (> (.size (get biglex "io")) 1))))
+
