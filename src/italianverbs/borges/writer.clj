@@ -223,6 +223,25 @@
                                       target-model))
             tenses))))
 
+(defn truncate-lexicon [language]
+  (k/exec-raw [(str "DELETE FROM lexeme WHERE language=?")
+               [language]]))
+
+(defn write-lexicon [language lexicon]
+  (truncate-lexicon language)
+  (loop [canonical (sort (keys lexicon)) result nil]
+    (if (not (empty? canonical))
+      (let [canonical-form (first canonical)]
+        (println (str language ":" canonical-form))
+        (loop [lexemes (get lexicon canonical-form) inner-result nil]
+          (if (not (empty? lexemes))
+            (do
+              (insert-lexeme canonical-form (first lexemes) language)
+              (recur (rest lexemes) inner-result))
+            inner-result))
+        (recur (rest canonical) result))
+      result)))
+
 (defn -main [& args]
   (if (not (nil? (first args)))
     (populate (Integer. (first args)))
