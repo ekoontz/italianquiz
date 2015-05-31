@@ -22,12 +22,6 @@
    [italianverbs.verb :as verb]
 ;   [italianverbs.workbook :as workbook]
 
-   ;; <languages>
-   [italianverbs.english :as en]
-   [italianverbs.espanol :as es]
-   [italianverbs.italiano :as it]
-   ;; </languages>
-
    [ring.adapter.jetty :as jetty]
    [ring.middleware.session.cookie :as cookie]
    [ring.middleware.stacktrace :as trace]
@@ -61,16 +55,6 @@
 
   (context "/gen" []
            verb/routes)
-
-
-  (context "/en" []
-           en/routes)
-
-  (context "/es" []
-           es/routes)
-
-  (context "/it" []
-           it/routes)
 
   (context "/test" []
            studenttest/routes)
