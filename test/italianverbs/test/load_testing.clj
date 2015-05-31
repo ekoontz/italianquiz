@@ -1,4 +1,4 @@
-(ns italianverbs.load-testing
+(ns italianverbs.test.load-testing
   (:require
    [clojure.math.numeric-tower :as math]
    [italianverbs.cache :refer (create-index)]
