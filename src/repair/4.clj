@@ -1,7 +1,7 @@
 ;; usage:
-;; export POSTGRES_URL=<target database>
-;; lein run -m italianverbs.repair.4/repair
-(ns italianverbs.repair.4)
+;; export DATABASE_URL=<target database>
+;; lein run -m repair.4/repair
+(ns repair.4)
 (require '[italianverbs.repair :refer [process]])
 
 (defn repair []
@@ -12,6 +12,4 @@
                AND (structure->'root'->'italiano'->>'italiano' = 'contraccombiare')"}
 
     {:fill-verb "contraccambiare"}]))
-
-
 

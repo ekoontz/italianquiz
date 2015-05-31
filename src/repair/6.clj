@@ -1,7 +1,7 @@
 ;; usage:
 ;; export POSTGRES_URL=<target database>
-;; lein run -m italianverbs.repair.6/repair
-(ns italianverbs.repair.6)
+;; lein run -m repair.6/repair
+(ns repair.6)
 (require '[italianverbs.english :as en])
 (require '[italianverbs.italiano :as it])
 (require '[italianverbs.repair :refer [process]])
@@ -12,7 +12,6 @@
      :source-model en/small-plus-vp-pronoun
      :target-model it/small-plus-vp-pronoun}
     ]))
-
 
 
 
