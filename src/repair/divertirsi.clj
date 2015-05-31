@@ -1,7 +1,7 @@
 ;; usage:
 ;; export DATABASE_URL=<target database>
-;; lein run -m italianverbs.repair.divertirsi/fix
-(ns italianverbs.repair.divertirsi)
+;; lein run -m repair.divertirsi/fix
+(ns repair.divertirsi)
 (require '[italianverbs.repair :refer :all])
 (require '[italianverbs.english :as en])
 (require '[italianverbs.italiano :as it])

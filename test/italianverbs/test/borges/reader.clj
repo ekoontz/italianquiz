@@ -3,6 +3,7 @@
   (:require
    [clojure.core :as core]
    [clojure.test :refer :all]
+   [clojure.tools.logging :as log]
    [clojure.data.json :as json]
    [italianverbs.borges.reader :refer :all]
    [italianverbs.borges.writer :refer :all]
@@ -64,8 +65,12 @@
 ;; SELECT DISTINCT en.surface AS en, it.surface AS it, it.structure->'synsem'->'sem'->'pred' AS pred FROM expression AS en INNER JOIN expression AS it ON (en.structure->'synsem'->'sem') @> (it.structure->'synsem'->'sem') AND en.language='en' AND en.language='en' WHERE it.language='it' ORDER BY pred LIMIT 3000;
 
 (deftest read-lexicon-for-the-foobar-language
-  (let [biglex (read-lexicon "it")]
-    (is (not (empty? biglex)))
-    (is (not (empty? (get biglex "io"))))
-    (is (> (.size (get biglex "io")) 1))))
+  (let [lexeme {:foo {:bar 42}}]
+    ;; insert a single word with canonical form 'foobar' in the lexicon for the Foobar language,
+    ;; whose code name name is "fo".
+    ;; (Note: 'fo' is not a current language code per: http://www.loc.gov/standards/iso639-2/php/code_list.php)
+    (log/debug (str "inserting into lexicon: " lexeme))
+    (insert-lexeme "foobar" lexeme "fo")
+    (is (not (empty? (get-lexeme "foobar" "fo"))))))
+
 

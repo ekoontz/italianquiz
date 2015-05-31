@@ -1,7 +1,7 @@
 ;; Usage:
 ;; export DATABASE_URL=<target database>
-;; lein run -m italianverbs.repair.1/repair
-(ns italianverbs.repair.1)
+;; lein run -m repair.1/repair
+(ns repair.1)
 (require '[italianverbs.repair :refer [process]])
 
 (defn repair []

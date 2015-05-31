@@ -1,7 +1,7 @@
 ;; usage:
 ;; export POSTGRES_URL=<target database>
-;; lein run -m italianverbs.repair.5/repair
-(ns italianverbs.repair.5)
+;; lein run -m repair.5/repair
+(ns repair.5)
 (require '[italianverbs.english :as en])
 (require '[italianverbs.italiano :as it])
 (require '[italianverbs.repair :refer [process]])
