@@ -132,12 +132,12 @@
                 model-name]]))
 
 (defn insert-lexeme [canonical lexeme language]
-  (k/exec-raw [(str "INSERT INTO lexicon 
+  (k/exec-raw [(str "INSERT INTO lexeme 
                                  (canonical, structure, serialized, language) 
-                          VALUES (?,'?',?,?)")
-               [canonical
-                (json/write-str (strip-refs lexeme))
-                (str (serialize lexeme))
+                          VALUES (?,"
+                    "'" (json/write-str (strip-refs lexeme)) "'"
+                    ",?,?)")
+               [canonical (str (serialize lexeme))
                 language]]))
 
 ;; TODO: use named optional parameters.

@@ -5,6 +5,8 @@
   (:require
    [clojure.core :as core]
    [clojure.test :refer :all]
+   [clojure.tools.logging :as log]
+   [italianverbs.borges.reader :refer :all :exclude [generate get-meaning]]
    [italianverbs.borges.writer :refer :all :exclude [routes]]
    [italianverbs.engine :refer :all :as engine]
    [italianverbs.english :as en :refer [en]]
@@ -13,7 +15,7 @@
    [italianverbs.lexiconfn :refer [infinitives]]
    [italianverbs.morphology :refer :all]
    [italianverbs.morphology.espanol :as esm]
-   [italianverbs.unify :refer [get-in strip-refs unify]]
+   [italianverbs.unify :refer [get-in serialize strip-refs unify]]
    ))
 
 (def spec {:synsem {:essere true}})
@@ -79,3 +81,15 @@
                                   :obj {:pred :io}}}})
         ]
     (is (= 1 1)))) ;; stub TODO: fill out test
+
+(deftest insert-into-lexicon
+  (let [lexeme {:foo {:bar 42}}]
+    ;; insert a single word with canonical form 'foobar' in the lexicon for the Foobar language,
+    ;; whose code name name is "fo".
+    ;; (Note: 'fo' is not a current language code per: http://www.loc.gov/standards/iso639-2/php/code_list.php)
+    (log/debug (str "inserting into lexicon: " lexeme))
+    (insert-lexeme "foobar" lexeme "fo")
+    (let [lexemes (get-lexeme "foobar" "fo")]
+      (log/debug (str "Got this many lexemes for 'foobar' from lexicon: " (.size lexemes)))
+      (is (not (empty? lexemes))))))
+

@@ -103,6 +103,19 @@
             {:source (first (map :source results))
              :targets (map :target results)}))))))))
 
+(defn get-lexeme [canonical language & [ spec ]]
+  "get a lexeme from the database given the canonical form, given a language and optionally additional filter specification"
+  ;; TODO: does not support filter yet.
+  (let [results (db/exec-raw [(str "SELECT serialized 
+                                      FROM lexeme
+                                     WHERE canonical=?
+                                       AND language=?")
+                              [canonical language]]
+                             :results)]
+    (map (fn [result]
+           (deserialize (read-string (:serialized result))))
+         results)))
+
 (defn generate-all [spec language]
   "find all sentences in the expression table matching 'spec' in a given language."
   (let [spec (unify spec
