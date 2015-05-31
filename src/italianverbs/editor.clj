@@ -11,7 +11,6 @@
 
    [italianverbs.auth :refer [is-admin]]
    [italianverbs.borges.reader :refer :all]
-   [italianverbs.borges.writer :refer [populate populate-from]]
    [italianverbs.html :as html]
    [italianverbs.lexiconfn :refer [infinitives]]
    [italianverbs.unify :refer [get-in strip-refs unify]]
@@ -836,13 +835,6 @@ ms: " params))))
         language-keyword
         (keyword language-keyword-name)
 
-        debug (log/debug
-               (str "SELECT DISTINCT structure->'head'->" language-keyword-name "->" language-keyword-name "
-                                            AS lexeme
-                                          FROM expression
-                                         WHERE language=" language-short-name "
-                                      ORDER BY lexeme"))
-
         debug (log/debug (str "language-keyword-name: " language-keyword-name))
         debug (log/debug (str "language-short-name: " language-short-name))
 
@@ -850,7 +842,6 @@ ms: " params))))
     [:div
      {:class (str "editgame " (if editpopup "editpopup"))
       :id (str "editgame" game-id)}
-;;     [:h2 (str "Editing game: " (:name game))]
 
      (f/render-form
       {:action (str "/editor/game/edit/" game-id)
@@ -867,12 +858,15 @@ ms: " params))))
                   :options (map (fn [lexeme]
                                   {:label lexeme
                                    :value lexeme})
-                                (sort (keys (infinitives @(eval (symbol (str "italianverbs." 
-
-                                                                             (sqlname-from-match 
-                                                                              (short-language-name-to-long language-short-name))
-                                                                             
-                                                                             ) "lexicon"))))))}]
+                                (map #(:surface %)
+                                     (k/exec-raw [(str "SELECT DISTINCT canonical AS surface
+                                                          FROM lexeme 
+                                                         WHERE language=?
+                                                           AND structure->'synsem'->>'cat' = 'verb'
+                                                           AND structure->'synsem'->>'infl' = 'top'
+                                                      ORDER BY surface ASC")
+                                                  [language-short-name]]
+                                                  :results)))}]
 
                 [{:name :target_tenses
                   :label "Tenses"
