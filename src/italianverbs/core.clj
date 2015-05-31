@@ -19,6 +19,7 @@
    [italianverbs.session :as session]
    [italianverbs.studenttest :as studenttest]
    [italianverbs.tour :as tour]
+   [italianverbs.user :as user]
    [italianverbs.verb :as verb]
 ;   [italianverbs.workbook :as workbook]
 
@@ -62,6 +63,9 @@
   (context "/tour" []
            tour/routes)
 
+  (context "/user" []
+           user/routes)
+  
 ;  (context "/workbook" []
 ;           workbook/routes)
 
