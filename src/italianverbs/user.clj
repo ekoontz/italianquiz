@@ -26,6 +26,25 @@
                  {:onload ""
                   :css ["/css/user.css"]})}))))
 
+(defn get-new-question [game-id & [user-id :user-id]]
+  "Ask the expression database for a question for a given game 
+   and user-id (if supplied). The question will be a map
+   with the following fields:
+    - a question id
+    - the source expression
+    - a list of the the possible correct expressions
+  As a side-effect,
+   the database will create a new row for the user (again, if supplied)
+   for this question."
+  )
+
+(defn set-question-issued-at [timestamp]
+  "")
+
+(defn show-question-to-user [])
+
+(defn handle-user-response [])
+
 (defn user-model [request]
   [:table.user
    
