@@ -159,6 +159,15 @@
      :body (write-str {:position 0
                        :direction 1})}))
 
+(defn sync-question-info [ & [{game-id :game-id
+                               question-info :question-info}]]
+  (log/info (str "sync-question-info: question-info " question-info))
+  (log/info (str "sync-question-info: question-info as JSON:" (write-str question-info)))
+  (log/info (str "sync-question-info: game-id:" game-id))
+  (k/exec-raw [(str "INSERT INTO question (game,structure)
+                          VALUES (?,'" (write-str (:source-structure question-info)) "')")
+               [game-id]]))
+
 (defn generate-q-and-a [target-language target-locale request]
   "generate a question in English and a set of possible correct answers in the target language, given parameters in request"
   (log/info (str "generate-q-and-a: target=" target-language "; target-locale=" target-locale ""))
@@ -193,7 +202,15 @@
                pair 
                (generate-question-and-correct-set (:target_spec game-spec)
                                                   source-language source-locale
-                                                  target-language target-locale)]
+                                                  target-language target-locale)
+
+               debug (log/info (str "GOT PAIR: " pair))
+               
+               ;; TODO: might do this asynchronously with generate-question-and-correct-set (immediately above)
+               question-info (sync-question-info {:question-info pair
+                                                  :game-id game})
+
+               ]
            {:status 200
             :headers headers
             :body (write-str

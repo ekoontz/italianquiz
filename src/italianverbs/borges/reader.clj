@@ -80,8 +80,10 @@
 
             (let [results
                   (db/exec-raw [(str "SELECT source.surface AS source,
-                                             target.surface AS target 
-                                        FROM (SELECT surface, source.structure->'synsem'->'sem' AS sem
+                                             target.surface AS target,
+                                             source.structure AS structure
+                                        FROM (SELECT surface, source.structure->'synsem'->'sem' AS sem,
+                                                 source.structure AS structure
                                                 FROM expression AS source
                                                WHERE source.language=?
                                                  AND source.structure->'synsem'->'sem' @> '" json-semantics "' LIMIT 1) AS source
@@ -100,8 +102,11 @@
               (throw (Exception. (str "no source expression found for target expression: '" (:surface target-expression) "' and semantics: " 
                                       (get-in (strip-refs (deserialize (read-string (:target target-expression))))
                                               [:synsem :sem])))))
-            {:source (first (map :source results))
-             :targets (map :target results)}))))))))
+            (let [debug (log/info (str "source-structure:"
+                                        (first (map :structure results))))]
+              {:source (first (map :source results))
+;               :source-structure (deserialize (read-string (first (map :structure results))))
+               :targets (map :target results)})))))))))
 
 (defn get-lexeme [canonical language & [ spec ]]
   "get a lexeme from the database given the canonical form, given a language and optionally additional filter specification"
