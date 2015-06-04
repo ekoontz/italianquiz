@@ -83,7 +83,7 @@
                                              target.surface AS target,
                                              source.structure AS structure
                                         FROM (SELECT surface, source.structure->'synsem'->'sem' AS sem,
-                                                 source.structure AS structure
+                                                     source.structure AS structure
                                                 FROM expression AS source
                                                WHERE source.language=?
                                                  AND source.structure->'synsem'->'sem' @> '" json-semantics "' LIMIT 1) AS source
