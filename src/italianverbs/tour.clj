@@ -69,7 +69,6 @@
                                                                   "/js/leaflet.js"
                                                                   "/js/es.js"
                                                                   "/js/tour.js"]})})
-
      (GET "/it/generate-q-and-a" request
           (generate-q-and-a "it" "IT" request))
 
@@ -205,7 +204,7 @@
                                                   target-language target-locale)
 
                debug (log/info (str "GOT PAIR: " pair))
-               
+
                ;; TODO: might do this asynchronously with generate-question-and-correct-set (immediately above)
                question-info (sync-question-info {:question-info pair
                                                   :game-id game})
