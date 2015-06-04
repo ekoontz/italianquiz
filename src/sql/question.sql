@@ -1,3 +1,5 @@
+ALTER TABLE expression ADD PRIMARY KEY (id);
+
 DROP TABLE question CASCADE;
 DROP SEQUENCE question_id_seq;
 
@@ -13,10 +15,8 @@ CREATE TABLE question (
     game integer REFERENCES game (id),
     id integer DEFAULT nextval('question_id_seq'::regclass) NOT NULL,
     issued timestamp without time zone DEFAULT now(),
-    source text,
-    targets text[],
-    source_structure jsonb,
-    target_structures jsonb[],
+    source integer REFERENCES expression,
+    targets integer[],
     time_to_correct_response integer
 );
 
