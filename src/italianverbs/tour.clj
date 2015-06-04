@@ -160,12 +160,17 @@
 
 (defn sync-question-info [ & [{game-id :game-id
                                question-info :question-info}]]
+  ;; TODO: for now question-info is a map with :source,:targets,source_structure, and target_structure.
+  ;; this should be further or better destructured in the arguments above.
   (log/info (str "sync-question-info: question-info " question-info))
   (log/info (str "sync-question-info: question-info as JSON:" (write-str question-info)))
   (log/info (str "sync-question-info: game-id:" game-id))
-  (k/exec-raw [(str "INSERT INTO question (game,structure)
-                          VALUES (?,'" (write-str (:source-structure question-info)) "')")
-               [game-id]]))
+  (log/info (str "sync-question-info: structure: " question-info))
+  (log/info (str "sync-question-info: source: " (:source question-info)))
+  (log/info (str "sync-question-info: target: " (string/join "," (:targets question-info))))
+  (k/exec-raw [(str "INSERT INTO question (game,structure,source)
+                          VALUES (?,'" (write-str (:source-structure question-info)) "',?)")
+               [game-id (:source question-info)]]))
 
 (defn generate-q-and-a [target-language target-locale request]
   "generate a question in English and a set of possible correct answers in the target language, given parameters in request"

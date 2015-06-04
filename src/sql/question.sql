@@ -8,11 +8,15 @@ CREATE SEQUENCE question_id_seq
     NO MAXVALUE
     CACHE 1;
 
+-- this is a lot like expression..
 CREATE TABLE question (
+    game integer REFERENCES game (id),
     id integer DEFAULT nextval('question_id_seq'::regclass) NOT NULL,
     issued timestamp without time zone DEFAULT now(),
-    game integer REFERENCES game (id),
-    structure jsonb,
+    source text,
+    targets text[],
+    source_structure jsonb,
+    target_structures jsonb[],
     time_to_correct_response integer
 );
 
