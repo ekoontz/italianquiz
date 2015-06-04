@@ -102,7 +102,7 @@
               (throw (Exception. (str "no source expression found for target expression: '" (:surface target-expression) "' and semantics: " 
                                       (get-in (strip-refs (deserialize (read-string (:target target-expression))))
                                               [:synsem :sem])))))
-            (let [debug (log/info (str "source-structure:"
+            (let [debug (log/debug (str "source-structure:"
                                         (first (map :structure results))))]
               {:source (first (map :source results))
 ;               :source-structure (deserialize (read-string (first (map :structure results))))
