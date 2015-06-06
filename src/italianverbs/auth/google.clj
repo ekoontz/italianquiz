@@ -91,9 +91,13 @@
                     (log/info (str "inserting new user record."))
                     (k/exec-raw [(str "INSERT INTO vc_user (access_token,given_name,family_name,picture,updated,email) VALUES (?,?,?,?,now(),?)") 
                                  [access-token given-name family-name picture email]])))
-
                 (log/debug (str "token2username: " access-token " => " email))
                 email))))))))
+
+(defn insert-session [email session-cookie]
+  (log/info (str "inserting new session record."))
+  (k/exec-raw [(str "INSERT INTO session (cookie,user_id) SELECT ?,id FROM vc_user WHERE email=?")
+               [session-cookie email]]))
 
 (defn token2info [access-token]
   (first (k/exec-raw [(str "SELECT * FROM vc_user WHERE access_token=?")
