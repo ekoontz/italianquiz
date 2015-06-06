@@ -80,7 +80,7 @@
               (log/info (str "Google says user's family_name is: " family-name))
               (log/info (str "Google says user's picture is: " picture))
 
-              (let [user-by-email (first (k/exec-raw [(str "SELECT email FROM vc_user WHERE access_token=?") [access-token]] :results))]
+              (let [user-by-email (first (k/exec-raw [(str "SELECT email FROM vc_user WHERE email=?") [email]] :results))]
                 (if user-by-email
                   (do 
                     (log/info (str "updating existing user record."))
