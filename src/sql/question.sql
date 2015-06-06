@@ -10,14 +10,11 @@ CREATE SEQUENCE question_id_seq
     NO MAXVALUE
     CACHE 1;
 
--- this is a lot like expression..
 CREATE TABLE question (
     game integer REFERENCES game (id),
+    user_id text, -- a email address if it exists; otherwise a cookie or something similar.
     id integer DEFAULT nextval('question_id_seq'::regclass) NOT NULL,
     issued timestamp without time zone DEFAULT now(),
     source integer REFERENCES expression,
-    targets integer[],
     time_to_correct_response integer
 );
-
-CREATE INDEX ON question USING gin ((((structure -> 'synsem') -> 'sem')));

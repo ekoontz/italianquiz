@@ -79,11 +79,11 @@
             (log/debug (str "json-semantics:" json-semantics))
 
             (let [results
-                  (db/exec-raw [(str "SELECT source.surface AS source,
+                  (db/exec-raw [(str "SELECT source.surface AS source, source.id AS source_id,
                                              target.surface AS target,
                                              source.structure AS structure
                                         FROM (SELECT surface, source.structure->'synsem'->'sem' AS sem,
-                                                     source.structure AS structure
+                                                     source.structure AS structure, source.id
                                                 FROM expression AS source
                                                WHERE source.language=?
                                                  AND source.structure->'synsem'->'sem' @> '" json-semantics "' LIMIT 1) AS source
@@ -105,7 +105,7 @@
             (let [debug (log/debug (str "source-structure:"
                                         (first (map :structure results))))]
               {:source (first (map :source results))
-;               :source-structure (deserialize (read-string (first (map :structure results))))
+               :source-id (first (map :source_id results))
                :targets (map :target results)})))))))))
 
 (defn get-lexeme [canonical language & [ spec ]]
