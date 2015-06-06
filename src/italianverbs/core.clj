@@ -16,7 +16,6 @@
    [italianverbs.class :as class]
    [italianverbs.editor :as editor]
    [italianverbs.html :as html]
-   [italianverbs.session :as session]
    [italianverbs.studenttest :as studenttest]
    [italianverbs.tour :as tour]
    [italianverbs.user :as user]
@@ -26,7 +25,6 @@
    [ring.adapter.jetty :as jetty]
    [ring.middleware.session.cookie :as cookie]
    [ring.middleware.stacktrace :as trace]
-   [ring.util.codec :as codec]
    [ring.util.response :as resp]
 
 ))
