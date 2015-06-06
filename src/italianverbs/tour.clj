@@ -159,27 +159,30 @@
                        :direction 1})}))
 
 (defn sync-question-info [ & [{game-id :game-id
-                               question-info :question-info}]]
-  ;; TODO: for now question-info is a map with :source,:targets,source_structure, and target_structure.
-  ;; this should be further or better destructured in the arguments above.
-  (log/info (str "sync-question-info: question-info " question-info))
-  (log/info (str "sync-question-info: question-info as JSON:" (write-str question-info)))
+                               source-id :source-id
+                               user-id :user-id}]]
   (log/info (str "sync-question-info: game-id:" game-id))
-  (log/info (str "sync-question-info: structure: " question-info))
-  (log/info (str "sync-question-info: source: " (:source question-info)))
-  (log/info (str "sync-question-info: target: " (string/join "," (:targets question-info))))
-  (k/exec-raw [(str "INSERT INTO question (game,structure,source)
-                          VALUES (?,'" (write-str (:source-structure question-info)) "',?)")
-               [game-id (:source question-info)]]))
+  (log/info (str "sync-question-info: source-id: " source-id))
+  (k/exec-raw [(str "INSERT INTO question (game,source,user_id)
+                          VALUES (?,?,?)")
+               [game-id source-id user-id]]))
 
 (defn generate-q-and-a [target-language target-locale request]
   "generate a question in English and a set of possible correct answers in the target language, given parameters in request"
   (log/info (str "generate-q-and-a: target=" target-language "; target-locale=" target-locale ""))
   (log/debug (str "generate-q-and-a: request=" request))
-  (let [headers {"Content-Type" "application/json;charset=utf-8"
+  (log/debug (str "generate-q-and-a: user-id(1): " (:cookies request)))
+  (log/debug (str "generate-q-and-a: user-id(2): " (get (:cookies request) "ring-session")))
+  (log/debug (str "generate-q-and-a: user-id(3): " (:value (get (:cookies request) "ring-session"))))
+  (let [user-id (if (and request
+                         (:cookies request)
+                         (get (:cookies request) "ring-session"))
+                  (:value (get (:cookies request) "ring-session")))
+        headers {"Content-Type" "application/json;charset=utf-8"
                  "Cache-Control" "no-cache, no-store, must-revalidate"
                  "Pragma" "no-cache"
                  "Expires" "0"}]
+    (log/debug (str "generate-q-and-a: user-id: " user-id))
     (try (let [game (get (:params request) :game :any)
                debug (log/info (str "generate-q-and-a: chosen game=" game))
                game (cond (= "" game)
@@ -211,7 +214,8 @@
                debug (log/info (str "GOT PAIR: " pair))
 
                ;; TODO: might do this asynchronously with generate-question-and-correct-set (immediately above)
-               question-info (sync-question-info {:question-info pair
+               question-info (sync-question-info {:source-id (:source-id pair)
+                                                  :user-id user-id
                                                   :game-id game})
 
                ]
