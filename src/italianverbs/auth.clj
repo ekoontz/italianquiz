@@ -39,23 +39,24 @@
        :headers {"Location" "/game"}}))
 
 (defn haz-admin []
-  (let [authentication (friend/current-authentication)]
-    (log/debug (str "haz-admin: (friend/current-authentication): " authentication))
+  (let [request (friend/current-authentication)]
+    (log/debug (str "haz-admin: (friend/current-authentication): " request))
     (if (= (:allow-internal-admins env) "true")
       (log/warn (str "ALLOW_INTERNAL_ADMINS is enabled: allowing internally-authentication admins - should not be enabled in production")))
 
-    (and (not (nil? authentication))
+    (and (not (nil? request))
          (or
 
           ;; Internally-authenticated admins (Should not be used in production until passwords are not stored in plain text)
           (and (:allow-internal-admins env)
                (not (nil?
                      (:italianverbs.auth.internal/admin
-                      (:roles authentication)))))
+                      (:roles request)))))
    
           ;; Google-authenticated admins - note that we decide here (not within google/) about whether the user
           ;; is an admin.
-          (let [google-username (google/token2username (get-in authentication [:identity :access-token]))]
+          (let [google-username (google/token2username (get-in request [:identity :access-token])
+                                                       request)]
             (or (= google-username "ekoontz@gmail.com")
                 (= google-username "franksfo2003@gmail.com")))))))
 
@@ -114,7 +115,7 @@
 
                        (map? (:current identity))
                        ;; if it's a map, google is only possibility for now.
-                       (google/token2username (-> identity :current :access-token)))
+                       (google/token2username (-> identity :current :access-token) req))
         picture (if (map? (:current identity))
                   (google/token2picture (-> identity :current :access-token)))
         ]

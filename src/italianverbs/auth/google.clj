@@ -52,12 +52,27 @@
           :headers {"Location" "/"}})))
 
 ;; TODO: factor out update/insert into separate function with more representative names
-(defn token2username [access-token]
-  (let [user-by-access-token (first (k/exec-raw [(str "SELECT email FROM vc_user WHERE access_token=?") [access-token]] :results))]
+(defn token2username [access-token request]
+  (log/info (str "token2username: " access-token ";" request))
+  (let [user-by-access-token (first (k/exec-raw [(str "SELECT email,session FROM vc_user WHERE access_token=?") [access-token]] :results))
+        session (if (and request
+                         (:cookies request)
+                         (get (:cookies request) "ring-session"))
+                  (:value (get (:cookies request) "ring-session")))]
     (if user-by-access-token
-      (do (log/info (str "found user by access-token in Postgres vc_user database: email: "
-                         (:email user-by-access-token)))
-          (:email user-by-access-token))
+      (let [email (:email user-by-access-token)]
+        (log/info (str "found user by access-token in Postgres vc_user database: email: "
+                       email))
+        (if (not (= session (:session user-by-access-token)))
+          (do
+            (log/info (str "updating existing vc_user with session: " session))
+            (k/exec-raw [(str "UPDATE vc_user
+                                  SET (session) = (?::uuid)
+                                WHERE email=? AND access_token=?")
+                         [session email access-token]])
+            email)))
+
+      ;; else, access token was not found.
       (do
         (log/info (str "user's token was not in database: querying: https://www.googleapis.com/oauth2/v1/userinfo?access_token=<input access token> to obtain user info"))
         (let [{:keys [status headers body error] :as resp} 
@@ -70,33 +85,25 @@
           (let [body (json/read-str body
                                     :key-fn keyword
                                     :value-fn (fn [k v]
-                                                v))]
-            (let [email (get body :email)
-                  given-name (get body :given_name)
-                  family-name (get body :family_name)
-                  picture (get body :picture)]
-              (log/info (str "Google says user's email is: " email))
-              (log/info (str "Google says user's given_name is: " given-name))
-              (log/info (str "Google says user's family_name is: " family-name))
-              (log/info (str "Google says user's picture is: " picture))
-
-              (let [user-by-email (first (k/exec-raw [(str "SELECT email FROM vc_user WHERE email=?") [email]] :results))]
-                (if user-by-email
-                  (do 
-                    (log/info (str "updating existing user record."))
-                    (k/exec-raw [(str "UPDATE vc_user SET (access_token,given_name,family_name,picture,updated) = (?,?,?,?,now()) WHERE email=?")
-                                 [access-token given-name family-name picture email]]))
-
-                  (do
-                    (log/info (str "inserting new user record."))
-                    (k/exec-raw [(str "INSERT INTO vc_user (access_token,given_name,family_name,picture,updated,email) VALUES (?,?,?,?,now(),?)") 
-                                 [access-token given-name family-name picture email]])))
-                (log/debug (str "token2username: " access-token " => " email))
-                email))))))))
+                                                v))
+                email (get body :email)
+                given-name (get body :given_name)
+                family-name (get body :family_name)
+                picture (get body :picture)]
+            (log/info (str "Google says user's email is: " email))
+            (log/info (str "Google says user's given_name is: " given-name))
+            (log/info (str "Google says user's family_name is: " family-name))
+            (log/info (str "Google says user's picture is: " picture))
+            
+            (log/info (str "inserting new user record."))
+            (k/exec-raw [(str "INSERT INTO vc_user (access_token,given_name,family_name,picture,updated,email,session)
+                                            VALUES (?,?,?,?,now(),?,?::uuid)") 
+                         [access-token given-name family-name picture email session]])
+            email))))))
 
 (defn insert-session [email session-cookie]
   (log/info (str "inserting new session record."))
-  (k/exec-raw [(str "INSERT INTO session (cookie,user_id) SELECT ?,id FROM vc_user WHERE email=?")
+  (k/exec-raw [(str "INSERT INTO session (id,user_id) SELECT ?,id FROM vc_user WHERE email=?")
                [session-cookie email]]))
 
 (defn token2info [access-token]
@@ -144,7 +151,8 @@
           (is-authenticated
            (do
              (let [username (token2username
-                             (-> request :session :cemerick.friend/identity :current :access-token))]
+                             (-> request :session :cemerick.friend/identity :current :access-token)
+                             request)]
                (log/debug (str "Logging in user with access token: " 
                                (-> request :session :cemerick.friend/identity :current :access-token))))
              {:status 302
