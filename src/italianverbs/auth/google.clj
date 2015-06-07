@@ -51,28 +51,41 @@
          {:status 302
           :headers {"Location" "/"}})))
 
+(defn request2cookie [request]
+  "get the cookie (if any) embedded at a certain path within the request params."
+  (if (and request
+           (:cookies request)
+           (get (:cookies request) "ring-session"))
+    (:value (get (:cookies request) "ring-session"))))
+  
+
 ;; TODO: factor out update/insert into separate function with more representative names
 (defn token2username [access-token request]
+  "Get user's email address from the vc_user table, given their access token. If access-token is not registered in database,
+   ask Google for the user's email address and add as new row to the vc_user table."
   (log/info (str "token2username: " access-token ";" request))
-  (let [user-by-access-token (first (k/exec-raw [(str "SELECT email,session FROM vc_user WHERE access_token=?") [access-token]] :results))
-        session (if (and request
-                         (:cookies request)
-                         (get (:cookies request) "ring-session"))
-                  (:value (get (:cookies request) "ring-session")))]
+  (let [user-by-access-token
+        (first (k/exec-raw [(str "SELECT email 
+                                    FROM vc_user 
+                              INNER JOIN session 
+                                      ON (vc_user.id = session.user_id) 
+                                     AND access_token=?")
+                            [access-token]] :results))
+        session (request2cookie request)]
     (if user-by-access-token
       (let [email (:email user-by-access-token)]
         (log/info (str "found user by access-token in Postgres vc_user database: email: "
                        email))
         (if (not (= session (:session user-by-access-token)))
           (do
-            (log/info (str "updating existing vc_user with session: " session))
-            (k/exec-raw [(str "UPDATE vc_user
-                                  SET (session) = (?::uuid)
-                                WHERE email=? AND access_token=?")
-                         [session email access-token]])
+            (log/info (str "updating existing session row with session: " session))
+            (k/exec-raw [(str "UPDATE session
+                                  SET (id) = (?::uuid)
+                                WHERE access_token=?")
+                         [session access-token]])
             email)))
 
-      ;; else, access token was not found.
+      ;; else, access token was not found, so get one from Google.
       (do
         (log/info (str "user's token was not in database: querying: https://www.googleapis.com/oauth2/v1/userinfo?access_token=<input access token> to obtain user info"))
         (let [{:keys [status headers body error] :as resp} 
@@ -94,12 +107,34 @@
             (log/info (str "Google says user's given_name is: " given-name))
             (log/info (str "Google says user's family_name is: " family-name))
             (log/info (str "Google says user's picture is: " picture))
-            
-            (log/info (str "inserting new user record."))
-            (k/exec-raw [(str "INSERT INTO vc_user (access_token,given_name,family_name,picture,updated,email,session)
-                                            VALUES (?,?,?,?,now(),?,?::uuid)") 
-                         [access-token given-name family-name picture email session]])
-            email))))))
+
+            ;; insert a new user record if necessary.
+            (let [user-id (:id (first (k/exec-raw [(str "SELECT id 
+                                                           FROM vc_user 
+                                                          WHERE email=?")
+                                                   [email]] :results)))
+                  user-id (if user-id
+                            user-id
+                            (do
+                              (log/info (str "inserting new user record."))
+                              (:id
+                               (first
+                                (k/exec-raw [(str "INSERT INTO vc_user (given_name,family_name,picture,updated,email)
+                                                              VALUES (?,?,?,now(),?) RETURNING id")
+                                             [given-name family-name picture email]] :results)))))]
+
+              
+              ;; insert or update session based on this user_id.
+              (let [session (:id (first (k/exec-raw ["SELECT id FROM session WHERE id=?::uuid" [session]] :results)))]
+                (if session
+                  ;; a session row exists, but if we got here, it does not have the access_token, so set its access_token.
+                  (k/exec-raw [(str "UPDATE session SET (access_token) = (?) WHERE id=?::uuid")
+                               [access-token session]])
+                  ;; else, no session row, so insert one.
+                  (k/exec-raw [(str "INSERT INTO session (id,user_id,access_token)
+                                    VALUES (?::uuid,?,?)")
+                           [session user-id access-token]])))
+              email)))))))
 
 (defn insert-session [email session-cookie]
   (log/info (str "inserting new session record."))
@@ -107,7 +142,11 @@
                [session-cookie email]]))
 
 (defn token2info [access-token]
-  (first (k/exec-raw [(str "SELECT * FROM vc_user WHERE access_token=?")
+  (first (k/exec-raw [(str "SELECT vc_user.* 
+                              FROM vc_user
+                        INNER JOIN session
+                                ON (vc_user.id = session.user_id)
+                             WHERE access_token=?")
                       [access-token]]
                      :results)))
 
