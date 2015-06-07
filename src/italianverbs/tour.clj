@@ -96,7 +96,24 @@
 
      (GET "/generate-q-and-a" request
           {:status 302
-           :headers {"Location" "/tour/it/generate-q-and-a"}}))))
+           :headers {"Location" "/tour/it/generate-q-and-a"}})
+
+     (POST "/update-question" request
+           (let [session (:value (get (:cookies request) "ring-session"))
+                 question (Integer. (get (:form-params request) "question"))
+                 ttcr (Integer. (get (:form-params request) "time"))]
+             (log/debug (str "UPDATE QUESTION: POST: " request))
+             (log/debug (str "UPDATE QUESTION: form-params: " (:form-params request)))
+             (log/debug (str "UPDATE QUESTION: session: " session))
+             (log/debug (str "UPDATE QUESTION: ttcr: " ttcr))
+             (log/debug (str "UPDATE question SET (time_to_correct_response) = " ttcr " WHERE (id = " question " AND session_id = " session))
+             
+             (k/exec-raw [(str "UPDATE question SET (time_to_correct_response) = (?) WHERE (id = ? AND session_id = ?::uuid)")
+                          [ttcr question session]])
+             {:status 200
+              :headers {"Content-Type" "application/json;charset=utf-8"}
+              :body (write-str (:status (str "updated question: " (:question (:form-params request)))))}))
+     )))
 
 (defn get-game-spec [source-language target-language game]
   (log/debug (str "get-game-spec: game=" game))
@@ -164,9 +181,9 @@
   (log/info (str "sync-question-info: game-id:" game-id))
   (log/info (str "sync-question-info: source-id: " source-id))
   (log/info (str "sync-question-info: session-id: " session-id))
-  (k/exec-raw [(str "INSERT INTO question (game,source,session_id)
-                          VALUES (?,?,?::uuid)")
-               [game-id source-id session-id]]))
+  (:id (first (k/exec-raw [(str "INSERT INTO question (game,source,session_id)
+                                      VALUES (?,?,?::uuid) RETURNING id")
+                           [game-id source-id session-id]] :results))))
 
 (defn generate-q-and-a [target-language target-locale request]
   "generate a question in English and a set of possible correct answers in the target language, given parameters in request"
@@ -208,23 +225,22 @@
                debug (log/debug (str "game-spec: " game-spec))
                debug (log/debug (str "target-spec: " (get game-spec :target_spec)))
                spec :top
-               pair 
+               tuple 
                (generate-question-and-correct-set (:target_spec game-spec)
                                                   source-language source-locale
                                                   target-language target-locale)
 
-               debug (log/info (str "Question-and-answer tuple: " pair))
-
-               ;; TODO: might do this asynchronously with generate-question-and-correct-set (immediately above)
-               question-info (sync-question-info {:source-id (:source-id pair)
-                                                  :session-id session-id
-                                                  :game-id game})
+               debug (log/info (str "Question-and-answer tuple: " tuple))
+               
+               question-id (sync-question-info {:source-id (:source-id tuple)
+                                                :session-id session-id
+                                                :game-id game})
 
                ]
            {:status 200
             :headers headers
             :body (write-str
-                   pair)})
+                   (merge tuple {:question_id question-id}))})
          (catch Exception e
            (do
              (log/error (str "attempt to (generate-question-and-correct-set) threw an error: " e))

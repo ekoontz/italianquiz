@@ -200,6 +200,7 @@ function tour_loop(target_language,target_locale) {
 
 var answer_info = {};
 var correct_answers = [];
+var question_id;
 
 function create_tour_question(target_language,target_locale,game_id) {
     $("#gameinput").css("background","white");
@@ -215,18 +216,19 @@ function create_tour_question(target_language,target_locale,game_id) {
 	$("#tourquestion").html(question);
 
 	// update answers with all targets.
-	var i=0;
 	$("#correctanswer").html("");
 
 	log(DEBUG,"TARGETS ARE: " + q_and_a.targets);
 	correct_answers = q_and_a.targets;
 
+	var i=0;
 	$.each(q_and_a.targets, function(index,value) {
 	    log(DEBUG,"TARGET INDEX IS: " + index);
 	    log(DEBUG,"TARGET VALUE IS: " + value);
 	    $("#correctanswer").append("<div id='answer_"+i+"'>" + value + "</div>");
 	    i++;
 	});
+	question_id = q_and_a.question_id;
     }
 
     // generate a question by calling /tour/<language>/generate-q-and-a on the server.
@@ -254,6 +256,16 @@ function submit_user_guess(guess,correct_answer,target_language,target_locale,ga
 	$("#gameinput").html("");
 	$("#gameinput").css("background","transparent");
 	$("#gameinput").css("color","lightblue");
+
+	$.ajax({
+	    cache: false,
+	    type: "POST",
+	    data: {question: question_id,
+		   time: 42},
+            dataType: "html",
+            url: "/tour/update-question"}).done(function(content) {
+		log(DEBUG,"response to /update-question: " + content);
+	    });
 	
 	increment_map_score(); // here the 'score' is in kilometri (distance traveled)
 	// TODO: score should vary depending on the next 'leg' of the trip.
