@@ -9,6 +9,45 @@ var useProfilePicAsMarker = true;
 
 // End Configurable section.
 
+// Begin global variables.
+// TODO: some global variables might not be included in this section as they should be.
+var question_at;
+
+// every X milliseconds, decrement remaining time to answer this question on a tour.
+var tour_question_decrement_interval = 5000;
+
+var logging_level = INFO;
+
+var step;
+var direction;
+
+var map;
+var marker;
+var current_zoom = 17;
+
+var current_lat;
+var current_long;
+
+// Firenze is defined in cities.js.
+// TODO: add tour_paths as an array of cities, rather than just one.
+var tour_paths = {
+    "it": {
+	"IT": Firenze
+    },
+    "es": {
+	"ES": Barcelona,
+	"MX": Mexico_DF
+    }
+};
+
+var iconMarker;
+
+var answer_info = {};
+var correct_answers = [];
+var question_id;
+
+// End global variables.
+
 function get_quadrant(path,step) {
     log(DEBUG,"GET QUADRANT: " + path);
     var lat0 = path[step][0];
@@ -70,35 +109,6 @@ function get_heading(path,position_index) {
 
     return heading;
 }
-
-// every X milliseconds, decrement remaining time to answer this question on a tour.
-var tour_question_decrement_interval = 5000;
-
-var logging_level = INFO;
-
-var step;
-var direction;
-
-var map;
-var marker;
-var current_zoom = 17;
-
-var current_lat;
-var current_long;
-
-// Firenze is defined in cities.js.
-// TODO: add tour_paths as an array of cities, rather than just one.
-var tour_paths = {
-    "it": {
-	"IT": Firenze
-    },
-    "es": {
-	"ES": Barcelona,
-	"MX": Mexico_DF
-    }
-};
-
-var iconMarker;
 
 function start_tour(target_language,target_locale,game_id) {
     var position_info = get_position_from_profile(target_language);
@@ -198,10 +208,6 @@ function tour_loop(target_language,target_locale) {
     $("#gameinput").val("");
 }
 
-var answer_info = {};
-var correct_answers = [];
-var question_id;
-
 function create_tour_question(target_language,target_locale,game_id) {
     $("#gameinput").css("background","white");
     $("#gameinput").css("color","black");
@@ -209,6 +215,10 @@ function create_tour_question(target_language,target_locale,game_id) {
     // We use this function as the callback after we 
     // generate a question-and-answers pair.
     update_tour_q_and_a = function (content) {
+
+	// Set the current time so that we can calculate time-to-correct-response in submit_user_guest().
+	question_at = (new Date).getTime();
+
 	// question is .source; answers are in .targets.
 	var q_and_a = jQuery.parseJSON(content);
 	var question = q_and_a.source;
@@ -256,12 +266,14 @@ function submit_user_guess(guess,correct_answer,target_language,target_locale,ga
 	$("#gameinput").html("");
 	$("#gameinput").css("background","transparent");
 	$("#gameinput").css("color","lightblue");
-
+	
+	var time_to_correct_response = (new Date).getTime() - question_at;
+	
 	$.ajax({
 	    cache: false,
 	    type: "POST",
 	    data: {question: question_id,
-		   time: 42},
+		   time: time_to_correct_response},
             dataType: "html",
             url: "/tour/update-question"}).done(function(content) {
 		log(DEBUG,"response to /update-question: " + content);
