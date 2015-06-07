@@ -57,7 +57,6 @@
            (:cookies request)
            (get (:cookies request) "ring-session"))
     (:value (get (:cookies request) "ring-session"))))
-  
 
 ;; TODO: factor out update/insert into separate function with more representative names
 (defn token2username [access-token request]
@@ -76,14 +75,7 @@
       (let [email (:email user-by-access-token)]
         (log/info (str "found user by access-token in Postgres vc_user database: email: "
                        email))
-        (if (not (= session (:session user-by-access-token)))
-          (do
-            (log/info (str "updating existing session row with session: " session))
-            (k/exec-raw [(str "UPDATE session
-                                  SET (id) = (?::uuid)
-                                WHERE access_token=?")
-                         [session access-token]])
-            email)))
+        email)
 
       ;; else, access token was not found, so get one from Google.
       (do
@@ -120,7 +112,7 @@
                               (:id
                                (first
                                 (k/exec-raw [(str "INSERT INTO vc_user (given_name,family_name,picture,updated,email)
-                                                              VALUES (?,?,?,now(),?) RETURNING id")
+                                                        VALUES (?,?,?,now(),?) RETURNING id")
                                              [given-name family-name picture email]] :results)))))]
 
               
@@ -128,11 +120,13 @@
               (let [session (:id (first (k/exec-raw ["SELECT id FROM session WHERE id=?::uuid" [session]] :results)))]
                 (if session
                   ;; a session row exists, but if we got here, it does not have the access_token, so set its access_token.
-                  (k/exec-raw [(str "UPDATE session SET (access_token) = (?) WHERE id=?::uuid")
-                               [access-token session]])
+                  (do
+                    (log/debug (str "updating session: " session " with new access-token."))
+                    (k/exec-raw [(str "UPDATE session SET (access_token) = (?) WHERE id=?::uuid")
+                                 [access-token session]]))
                   ;; else, no session row, so insert one.
                   (k/exec-raw [(str "INSERT INTO session (id,user_id,access_token)
-                                    VALUES (?::uuid,?,?)")
+                                          VALUES (?::uuid,?,?)")
                            [session user-id access-token]])))
               email)))))))
 
