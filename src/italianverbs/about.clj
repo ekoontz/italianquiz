@@ -11,15 +11,15 @@
        {:status 200
         :headers {"Content-Type" "text/html;charset=utf-8"}
         :body (html/page "Welcome to Verbcoach"
-                         (about)
+                         (about request)
                          request)}))
 
 
-(defn about []
+(defn about [request]
    [:div {:style "width:100%; height: 500px;"   :class "major"} [:h2 "Welcome to Verbcoach."]
 
 ;   [:p 
-;    "You can use this website just by clicking on the language you want to ;practice, or you can login using your existing Google account (enter your g;oogle username and password)."
+;    "You can use this website just by clicking on the language you want to ;practice, or you can login using your existing Google account (enter your google username and password)."
 ;    ]
 
     [:div.intro 

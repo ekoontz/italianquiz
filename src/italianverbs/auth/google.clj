@@ -59,18 +59,16 @@
     (:value (get (:cookies request) "ring-session"))))
 
 ;; TODO: factor out update/insert into separate function with more representative names
-(defn token2username [access-token request]
+(defn token2username [access-token]
   "Get user's email address from the vc_user table, given their access token. If access-token is not registered in database,
    ask Google for the user's email address and add as new row to the vc_user table."
-  (log/info (str "token2username: " access-token ";" request))
   (let [user-by-access-token
         (first (k/exec-raw [(str "SELECT email 
                                     FROM vc_user 
                               INNER JOIN session 
                                       ON (vc_user.id = session.user_id) 
                                      AND access_token=?")
-                            [access-token]] :results))
-        session (request2cookie request)]
+                            [access-token]] :results))]
     (if user-by-access-token
       (let [email (:email user-by-access-token)]
         (log/info (str "found user by access-token in Postgres vc_user database: email: "
@@ -117,18 +115,22 @@
 
               
               ;; insert or update session based on this user_id.
-              (let [session (:id (first (k/exec-raw ["SELECT id FROM session WHERE id=?::uuid" [session]] :results)))]
-                (if session
+              (let [session-row (first (k/exec-raw ["SELECT id FROM vc_user
+                                                         INNER JOIN session 
+                                                                 ON (session.user_id = vc_user.id)
+                                                              WHERE vc_user.id=?" [user-id]] :results))]
+                (if session-row
                   ;; a session row exists, but if we got here, it does not have the access_token, so set its access_token.
                   (do
-                    (log/debug (str "updating session: " session " with new access-token."))
-                    (k/exec-raw [(str "UPDATE session SET (access_token) = (?) WHERE id=?::uuid")
-                                 [access-token session]]))
+                    (log/debug (str "updating session: " session-row " with new access-token."))
+                    (k/exec-raw [(str "UPDATE session SET (access_token) = (?) WHERE id=?")
+                                 [access-token user-id]]))
                   ;; else, no session row, so insert one.
-                  (k/exec-raw [(str "INSERT INTO session (id,user_id,access_token)
-                                          VALUES (?::uuid,?,?)")
-                           [session user-id access-token]])))
-              email)))))))
+                  ;; TODO: throw error here: should never get here.
+                  (k/exec-raw [(str "INSERT INTO session (user_id,access_token)
+                                          VALUES (?,?)")
+                               [user-id access-token]]))))
+            email))))))
 
 (defn insert-session [email session-cookie]
   (log/info (str "inserting new session record."))
@@ -184,8 +186,7 @@
           (is-authenticated
            (do
              (let [username (token2username
-                             (-> request :session :cemerick.friend/identity :current :access-token)
-                             request)]
+                             (-> request :session :cemerick.friend/identity :current :access-token))]
                (log/debug (str "Logging in user with access token: " 
                                (-> request :session :cemerick.friend/identity :current :access-token))))
              {:status 302

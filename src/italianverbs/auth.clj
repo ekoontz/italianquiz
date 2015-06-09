@@ -39,24 +39,24 @@
        :headers {"Location" "/game"}}))
 
 (defn haz-admin []
-  (let [request (friend/current-authentication)]
-    (log/debug (str "haz-admin: (friend/current-authentication): " request))
+  (let [authentication (friend/current-authentication)]
+    (log/debug (str "haz-admin: current authentication:" (if (nil? authentication) " (none - authentication is null). " authentication)))
     (if (= (:allow-internal-admins env) "true")
       (log/warn (str "ALLOW_INTERNAL_ADMINS is enabled: allowing internally-authentication admins - should not be enabled in production")))
 
-    (and (not (nil? request))
+    (and (not (nil? authentication))
          (or
 
           ;; Internally-authenticated admins (Should not be used in production until passwords are not stored in plain text)
+          ;; i.e. in production: (= false (:allow-internal-admins env))
           (and (:allow-internal-admins env)
                (not (nil?
                      (:italianverbs.auth.internal/admin
-                      (:roles request)))))
+                      (:roles authentication)))))
    
           ;; Google-authenticated admins - note that we decide here (not within google/) about whether the user
           ;; is an admin.
-          (let [google-username (google/token2username (get-in request [:identity :access-token])
-                                                       request)]
+          (let [google-username (google/token2username (get-in authentication [:identity :access-token]))]
             (or (= google-username "ekoontz@gmail.com")
                 (= google-username "franksfo2003@gmail.com")))))))
 
@@ -101,12 +101,15 @@
    [:div {:class "login major"}
 
     [:a {:href "/auth/google/login"} "Login with Google"]
-    [:form {:method "POST" :action "/auth/internal/login"}
-     [:table
-      [:tr
-       [:th "User"][:td [:input {:type "text" :name "username" :size "10"}]]
-       [:th "Password"][:td [:input {:type "password" :name "password" :size "10"}]]
-       [:td [:input {:type "submit" :class "button" :value "Login"}]]]]]]])
+
+    (if (:allow-internal-admins env)
+      [:form {:method "POST" :action "/auth/internal/login"}
+       [:table
+        [:tr
+         [:th "User"][:td [:input {:type "text" :name "username" :size "10"}]]
+         [:th "Password"][:td [:input {:type "password" :name "password" :size "10"}]]
+         [:td [:input {:type "submit" :class "button" :value "Login"}]]]]])
+    ]])
 
 (defn logged-in-content [req identity]
   (log/trace (str "logged-in-content with identity: " identity))
@@ -115,7 +118,7 @@
 
                        (map? (:current identity))
                        ;; if it's a map, google is only possibility for now.
-                       (google/token2username (-> identity :current :access-token) req))
+                       (google/token2username (-> identity :current :access-token)))
         picture (if (map? (:current identity))
                   (google/token2picture (-> identity :current :access-token)))
         ]
