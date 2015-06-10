@@ -16,15 +16,16 @@
    [italianverbs.class :as class]
    [italianverbs.editor :as editor]
    [italianverbs.html :as html]
+   [italianverbs.session :as session]
    [italianverbs.studenttest :as studenttest]
    [italianverbs.tour :as tour]
-   [italianverbs.user :as user]
    [italianverbs.verb :as verb]
 ;   [italianverbs.workbook :as workbook]
 
    [ring.adapter.jetty :as jetty]
    [ring.middleware.session.cookie :as cookie]
    [ring.middleware.stacktrace :as trace]
+   [ring.util.codec :as codec]
    [ring.util.response :as resp]
 
 ))
@@ -61,9 +62,7 @@
   (context "/tour" []
            tour/routes)
 
-  (context "/user" []
-           user/routes)
-  
+  ;; TODO: uncomment and make dependent on a environment (i.e. non-production).
 ;  (context "/workbook" []
 ;           workbook/routes)
 
@@ -111,17 +110,6 @@
            {:status 500
             :headers {"Content-Type" "text/html"}
             :body (slurp (io/resource "500.html"))}))))
-
-(defn -main [& [port]]
-  (let [port (Integer. (or port (env :port) 5000))
-        ;; TODO: heroku config:add SESSION_SECRET=$RANDOM_16_CHARS
-        store (cookie/cookie-store {:key (env :session-secret)})]
-    (jetty/run-jetty (-> #'app
-                         ((if (env :production)
-                            wrap-error-page
-                            trace/wrap-stacktrace))
-                         (handler/site {:session {:store store}}))
-                     {:port port :join? false})))
 
 ;; For interactive development:
 ;; (.stop server)
