@@ -115,15 +115,16 @@
 
               
               ;; insert or update session based on this user_id.
-              (let [session-row (first (k/exec-raw ["SELECT id FROM vc_user
-                                                         INNER JOIN session 
-                                                                 ON (session.user_id = vc_user.id)
-                                                              WHERE vc_user.id=?" [user-id]] :results))]
+              (let [session-row (first (k/exec-raw ["SELECT session.*
+                                                       FROM vc_user
+                                                 INNER JOIN session 
+                                                         ON (session.user_id = vc_user.id)
+                                                      WHERE vc_user.id=?" [user-id]] :results))]
                 (if session-row
                   ;; a session row exists, but if we got here, it does not have the access_token, so set its access_token.
                   (do
                     (log/debug (str "updating session: " session-row " with new access-token."))
-                    (k/exec-raw [(str "UPDATE session SET (access_token) = (?) WHERE id=?")
+                    (k/exec-raw [(str "UPDATE session SET (access_token) = (?) WHERE user_id=?")
                                  [access-token user-id]]))
                   ;; else, no session row, so insert one.
                   ;; TODO: throw error here: should never get here.
