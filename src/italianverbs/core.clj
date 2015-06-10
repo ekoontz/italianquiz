@@ -111,6 +111,17 @@
             :headers {"Content-Type" "text/html"}
             :body (slurp (io/resource "500.html"))}))))
 
+(defn -main [& [port]]
+  (let [port (Integer. (or port (env :port) 5000))
+        ;; TODO: heroku config:add SESSION_SECRET=$RANDOM_16_CHARS
+        store (cookie/cookie-store {:key (env :session-secret)})]
+    (jetty/run-jetty (-> #'app
+                         ((if (env :production)
+                            wrap-error-page
+                            trace/wrap-stacktrace))
+                         (handler/site {:session {:store store}}))
+                     {:port port :join? false})))
+
 ;; For interactive development:
 ;; (.stop server)
 ;; (def server (-main))
