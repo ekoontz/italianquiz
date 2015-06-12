@@ -101,7 +101,12 @@
                              (resp/status 401))
      :credential-fn #(auth/credential-fn %)
      :workflows [(workflows/interactive-form)
-                 (oauth2/workflow google/auth-config)]})))
+                 (oauth2/workflow google/auth-config)
+
+                 ;; add additional authentication methods below
+
+                 ]})))
+
 
 (defn wrap-error-page [handler]
   (fn [req]
