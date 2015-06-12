@@ -16,13 +16,13 @@
    [italianverbs.class :as class]
    [italianverbs.editor :as editor]
    [italianverbs.html :as html]
-   [italianverbs.session :as session]
    [italianverbs.studenttest :as studenttest]
    [italianverbs.tour :as tour]
    [italianverbs.verb :as verb]
 ;   [italianverbs.workbook :as workbook]
 
    [ring.adapter.jetty :as jetty]
+   [ring.middleware.session :as session]
    [ring.middleware.session.cookie :as cookie]
    [ring.middleware.stacktrace :as trace]
    [ring.util.codec :as codec]
@@ -85,28 +85,28 @@
 
 ;; TODO: clear out cache of sentences-per-user session when starting up.
 (def app
-  (handler/site 
-   (friend/authenticate
-    main-routes
-    {:allow-anon? true
-     :login-uri "/auth/internal/login"
-     :default-landing-uri "/"
-     :unauthorized-handler #(-> 
-                             (html/page "Unauthorized" (h/html5 
-
-                                                        [:div {:class "major tag"}
-                                                         [:h2 "Unauthorized"]
-                                                         [:p "You do not have sufficient privileges to access " (:uri %) "."]]) %)
-                             resp/response
-                             (resp/status 401))
-     :credential-fn #(auth/credential-fn %)
-     :workflows [(workflows/interactive-form)
-                 (oauth2/workflow google/auth-config)
-
-                 ;; add additional authentication methods below
-
-                 ]})))
-
+  (do
+    (log/error "GOT HERE")
+    (handler/site 
+     (friend/authenticate
+      (session/wrap-session main-routes)
+      {:allow-anon? true
+       :login-uri "/auth/internal/login"
+       :default-landing-uri "/"
+       :unauthorized-handler #(-> 
+                               (html/page "Unauthorized" (h/html5 
+                                                          [:div {:class "major tag"}
+                                                          [:h2 "Unauthorized"]
+                                                           [:p "You do not have sufficient privileges to access " (:uri %) "."]]) %)
+                               resp/response
+                               (resp/status 401))
+       :credential-fn #(auth/credential-fn %)
+       :workflows [(workflows/interactive-form)
+                   (oauth2/workflow google/auth-config)
+                   
+                   ;; add additional authentication methods below
+                   
+                   ]}))))
 
 (defn wrap-error-page [handler]
   (fn [req]
