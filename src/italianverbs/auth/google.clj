@@ -182,7 +182,7 @@
             (do
               (log/error (str "No google client callback was found in the environment."))
               (throw (Exception. (str "Administrator must define GOOGLE_CALLBACK_DOMAIN in my runtime environment.")))))
-          ))
+
           (friend/authorize #{::user} "Authorized page.")
           (is-authenticated
            (do
