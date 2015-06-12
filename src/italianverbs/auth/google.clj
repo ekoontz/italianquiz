@@ -171,18 +171,18 @@
           (if (nil? (:client-id client-config))
             (do
               (log/error (str "No google client id was found in the environment."))
-              (throw (Exception. (str "You must define GOOGLE_CLIENT_ID in your environment.")))))
+              (throw (Exception. (str "Administrator must define GOOGLE_CLIENT_ID in my runtime environment.")))))
 
           (if (nil? (:client-secret client-config))
             (do
               (log/error (str "No google client secret was found in the environment."))
-              (throw (Exception. (str "You must define GOOGLE_CLIENT_SECRET in your environment.")))))
+              (throw (Exception. (str "Administrator must define GOOGLE_CLIENT_SECRET in my runtime environment.")))))
 
           (if (nil? (:callback client-config))
             (do
               (log/error (str "No google client callback was found in the environment."))
-              (throw (Exception. (str "You must define GOOGLE_CALLBACK_DOMAIN in your environment.")))))
-
+              (throw (Exception. (str "Administrator must define GOOGLE_CALLBACK_DOMAIN in my runtime environment.")))))
+          ))
           (friend/authorize #{::user} "Authorized page.")
           (is-authenticated
            (do
