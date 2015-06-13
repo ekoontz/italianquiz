@@ -86,7 +86,6 @@
 ;; TODO: clear out cache of sentences-per-user session when starting up.
 (def app
   (do
-    (log/error "GOT HERE")
     (handler/site 
      (friend/authenticate
       (session/wrap-session main-routes)
