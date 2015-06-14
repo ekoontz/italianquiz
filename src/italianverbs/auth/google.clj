@@ -199,15 +199,6 @@
 
 (def routes
   (compojure/routes
-   (GET "/" request "open.")
-   (GET "/status" request
-        (let [count (:count (:session request) 0)
-              session (assoc (:session request) :count (inc count))]
-          (-> (ring.util.response/response
-               (str "<p>We've hit the session page " (:count session)
-                    " times.</p><p>The current session: " session "</p>"))
-              (assoc :session session))))
-
    (GET "/login" request
         (do
           (log/debug (str "running /login with google-client-id: " (:client-id client-config)))
