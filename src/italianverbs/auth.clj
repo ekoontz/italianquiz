@@ -38,7 +38,13 @@
       {:status 302
        :headers {"Location" "/game"}}))
 
-(defn haz-admin []
+(defn current [ & [request]]
+  (let [current-authentication (friend/current-authentication)]
+    (if current-authentication
+      (google/token2username (get-in current-authentication [:identity :access-token])
+                             request))))
+
+(defn haz-admin [ & [request]]
   (let [authentication (friend/current-authentication)]
     (log/debug (str "haz-admin: current authentication:" (if (nil? authentication) " (none - authentication is null). " authentication)))
     (if (= (:allow-internal-admins env) "true")
@@ -56,7 +62,7 @@
    
           ;; Google-authenticated admins - note that we decide here (not within google/) about whether the user
           ;; is an admin.
-          (let [google-username (google/token2username (get-in authentication [:identity :access-token]))]
+          (let [google-username (google/token2username (get-in authentication [:identity :access-token]) request)]
             (or (= google-username "ekoontz@gmail.com")
                 (= google-username "franksfo2003@gmail.com")))))))
 
@@ -111,19 +117,24 @@
          [:td [:input {:type "submit" :class "button" :value "Login"}]]]]])
     ]])
 
-(defn logged-in-content [req identity]
-  (log/trace (str "logged-in-content with identity: " identity))
-  (let [username (cond (string? (:current identity))
-                       (:current identity)
+(defn logged-in-content [request id email]
+  (log/debug (str "logged-in-content with request: " request))
+  (log/debug (str "logged-in-content with id: " id))
+  (log/debug (str "logged-in-content with email: " email))
+  (let [username (cond (string? (:current id))
+                       (:current id)
 
-                       (map? (:current identity))
+                       (map? (:current id))
                        ;; if it's a map, google is only possibility for now.
-                       (google/token2username (-> identity :current :access-token)))
-        picture (if (map? (:current identity))
-                  (google/token2picture (-> identity :current :access-token)))
+                       (google/token2username (-> id :current :access-token) request))
+        picture (if (map? (:current id))
+                  (google/token2picture (-> id :current :access-token)))
+
+        username email
         ]
     
     (log/debug (str "verbcoach username: " username))
+    (log/debug (str "verbcoach email: " email))
 
     [:div {:class "login major" :style "display:block"}
      [:table {:style "border:0px"}
@@ -137,6 +148,6 @@
         (str "Roles:")]
        [:td {:style "white-space:nowrap;display:none"}
         (str/join ","
-                  (get-loggedin-user-roles identity))]
+                  (get-loggedin-user-roles id))]
        [:td {:style "float:right;white-space:nowrap"} [:a {:href "/auth/logout"} "Log out"]]]]]))
 

@@ -74,7 +74,7 @@
      [:img {:width "350px" :src "/png/select_game.png"} ]]
 
     
-    (if (haz-admin)
+    (if (haz-admin request)
       [:div {:class "rounded flags manage"}
 
        [:h3 "Manage Games"]

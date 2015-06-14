@@ -799,12 +799,15 @@
      (pretty-body
       options
       (if login-enabled
-        (if-let [identity (friend/identity req)]
-          (auth/logged-in-content req identity)
-          auth/login-form))
+        (let [debug (log/debug (str "user's current identity is: " (if (auth/current)
+                                                                    (auth/current)
+                                                                    "(none)")))
+              debug (log/debug (str "user's current friend/identity is: " (friend/identity req)))]
+          (if-let [haz-admin (auth/current req)]
+            (auth/logged-in-content req (friend/identity req) (auth/current))
+            auth/login-form)))
+      content))))
 
-       content))))
-      
 ;      [:div {:style "float:left;width:95%;border:1px dashed blue;"}
 ;       [:ul 
 ;        [:li (e/link-to (str "/" "role-user") "Requires the `user` role")]
