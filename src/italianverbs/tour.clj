@@ -139,7 +139,7 @@
                                    each-tense)
                                  (map json-read-str (.getArray (:target_grammar game-result))))]
 
-          (log/debug (str "game's target lexicon: " (string/join "," target-lexemes)))
+          (log/trace (str "game's target lexicon: " (string/join "," target-lexemes)))
           (log/debug (str "game's target tenses: " (string/join "," target-tenses)))
       
           (let [target-lexeme 

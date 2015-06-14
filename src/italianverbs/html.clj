@@ -799,12 +799,14 @@
      (pretty-body
       options
       (if login-enabled
-        (let [debug (log/debug (str "user's current identity is: " (if (auth/current)
-                                                                    (auth/current)
-                                                                    "(none)")))
-              debug (log/debug (str "user's current session is: " (-> req :session)))
-          
-              debug (log/debug (str "user's current friend/identity is: " (friend/identity req)))]
+        (let [debug (log/debug (str "user's current authentication is: "
+                                    (if (auth/current)
+                                      (auth/current)
+                                      "(none)")))
+              debug (log/debug (str "user's current friend/identity is: "
+                                    (if (friend/identity req)
+                                      (friend/identity req)
+                                      "(none)")))]
           (if-let [haz-admin (auth/current req)]
             (auth/logged-in-content req (friend/identity req))
             auth/login-form)))

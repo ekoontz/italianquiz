@@ -69,10 +69,10 @@
 
         ring-session (get-in request [:cookies "ring-session" :value])
 
-        debug (log/debug (str "update-or-insert-session: access-token:" access-token))
+        debug (log/trace (str "update-or-insert-session: access-token:" access-token))
         debug (log/debug (str "update-or-insert-session: user-id:" user-id))
-        debug (log/debug (str "update-or-insert-session: ring-session:" ring-session))
-        debug (log/debug (str "update-or-insert-session: request:" request))
+        debug (log/trace (str "update-or-insert-session: ring-session:" ring-session))
+        debug (log/trace (str "update-or-insert-session: request:" request))
         debug (log/debug (str "update-or-insert-session: cookies:" (get-in request [:cookies])))
 
         ]
@@ -86,7 +86,8 @@
       ;; else, no session row, so insert one.
       (if request
         (let []
-          (log/info (str "(token2username) inserting new row in session table; user-id=" user-id " and access-token=" access-token))
+          (log/debug (str "(token2username) inserting new row in session table; user-id=" user-id))
+          (log/trace (str "(token2username) inserting new row in session table; user-id=" user-id " and access-token=" access-token))
           (insert-session user-id access-token ring-session)
           )
         (do (log/warn (str "(token2username): could not insert new session since no request object was given."))
@@ -94,7 +95,8 @@
 
 ;; TODO: factor out update/insert into separate function with more representative names
 (defn token2username [access-token & [request]]
-  "Get user's email address from the vc_user table, given their access token. If access-token is not registered in database,
+  "Get user's email address from the vc_user table, given their access token. 
+   If access-token is not registered in database,
    ask Google for the user's email address and add as new row to the vc_user table."
   (let [user-by-access-token
         (first (k/exec-raw [(str "SELECT email,session.user_id AS userid
@@ -111,8 +113,8 @@
         (log/info (str "found user by access-token in Postgres vc_user database: email: "
                        email))
         (if request (do
-                      (log/info (str "found user by access-token, and currently the request is: " request))
-                      (log/info (str "found user by access-token, and currently the ring-session (from request) is: " ring-session))
+                      (log/trace (str "found user by access-token, and currently the request is: " request))
+                      (log/debug (str "found user by access-token, and currently the ring-session (from request) is: " ring-session))
                       (update-or-insert-session access-token user-id request)))
         email)
 
