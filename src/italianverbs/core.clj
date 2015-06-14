@@ -83,6 +83,14 @@
 ;  (route/not-found (html/page "Non posso trovare questa pagina (page not found)." (str "Non posso trovare questa pagina. Sorry, page not found. ")))
 )
 
+(defn no-auth [& {:keys [login-uri credential-fn login-failure-handler redirect-on-auth?] :as form-config
+                  :or {redirect-on-auth? true}}]
+  (fn [{:keys [request-method params form-params] :as request}]
+    (log/debug (str "HELLO ANONYMOUS USER!"))
+    nil))
+
+
+
 ;; TODO: clear out cache of sentences-per-user session when starting up.
 (def app
   (handler/site 
@@ -100,9 +108,10 @@
                              resp/response
                              (resp/status 401))
      :credential-fn #(auth/credential-fn %)
-     :workflows [(workflows/interactive-form)
+     :workflows [
+                 (workflows/interactive-form)
                  (oauth2/workflow google/auth-config)
-
+                 (no-auth)
                  ;; add additional authentication methods below
 
                  ]}))))
