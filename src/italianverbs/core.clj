@@ -40,9 +40,7 @@
 (defroutes main-routes
   ;; top-level page: currently redirects to the "Cloud" game.
   (GET "/" request
-       ;; response map
-       {:status 302
-        :headers {"Location" "/about"}})
+       (resp/redirect "/about"))
 
   (context "/auth" []
            auth/routes)
@@ -83,39 +81,58 @@
 ;  (route/not-found (html/page "Non posso trovare questa pagina (page not found)." (str "Non posso trovare questa pagina. Sorry, page not found. ")))
 )
 
-(defn no-auth [& {:keys [login-uri credential-fn login-failure-handler redirect-on-auth?] :as form-config
+(defn no-auth [& {:keys [login-uri credential-fn login-failure-handler redirect-on-auth?]
+                  :as form-config
                   :or {redirect-on-auth? true}}]
-  (fn [{:keys [request-method params form-params] :as request}]
-    (log/debug (str "HELLO ANONYMOUS USER!"))
-    nil))
+  (fn [{:keys [request-method params form-params]
+        :as request}]
+    (let [ring-session (get-in request [:cookies "ring-session" :value])
+          attempted-to-set-session? (get-in request [:query-params "setsession"])]
+      (log/trace "Checking session config for this unauthenticated, sessionless user: request: " request)
+      (cond
+       (and (not ring-session)
+            attempted-to-set-session?)
+       (do
+         (log/debug "User is blocking session cookies: not attempting to set.")
+         nil)
+       
+       (not ring-session)
+            (do
+              (log/debug "Creating a session for this unauthenticated, sessionless user: request: " request)
+              (let [response
+                    {:status 302
+                     :headers {"Location" "?setsession=true"}
+                     :session {}}]
+                response))
+            true
+            (do (log/debug "Unauthenticated user has an existing session: " ring-session)
+                nil)))))
 
-
+(defn handler [{session :session}]
+  (resp/response (str "HEllo " (:username session))))
 
 ;; TODO: clear out cache of sentences-per-user session when starting up.
 (def app
-  (handler/site 
+  (handler/site
    (-> main-routes
-   (friend/authenticate
-    {:allow-anon? true
-     :login-uri "/auth/internal/login"
-     :default-landing-uri "/"
-     :unauthorized-handler #(-> 
-                             (html/page "Unauthorized" (h/html5 
-
-                                                        [:div {:class "major tag"}
-                                                         [:h2 "Unauthorized"]
-                                                         [:p "You do not have sufficient privileges to access " (:uri %) "."]]) %)
-                             resp/response
-                             (resp/status 401))
-     :credential-fn #(auth/credential-fn %)
-     :workflows [
-                 (workflows/interactive-form)
-                 (oauth2/workflow google/auth-config)
-                 (no-auth)
-                 ;; add additional authentication methods below
-
-                 ]}))))
-
+       (friend/authenticate
+        {:allow-anon? true
+         :login-uri "/auth/internal/login"
+         :default-landing-uri "/"
+         :unauthorized-handler #(-> 
+                                 (html/page "Unauthorized" (h/html5 
+                                                             [:div {:class "major tag"}
+                                                              [:h2 "Unauthorized"]
+                                                              [:p "You do not have sufficient privileges to access " (:uri %) "."]]) %)
+                                 resp/response
+                                 (resp/status 401))
+         :credential-fn #(auth/credential-fn %)
+         :workflows [
+                     (workflows/interactive-form)
+                     (oauth2/workflow google/auth-config)
+                     (no-auth)
+                     ;; add additional authentication methods below, e.g. Facebook, Twitter, &c.
+                     ]}))))
 
 (defn wrap-error-page [handler]
   (fn [req]
@@ -133,7 +150,7 @@
                          ((if (env :production)
                             wrap-error-page
                             trace/wrap-stacktrace))
-                         (handler/site {:session {:store store}}))
+                         (handler/site))
                      {:port port :join? false})))
 
 ;; For interactive development:
