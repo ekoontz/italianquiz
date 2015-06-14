@@ -110,11 +110,10 @@
 
         (log/info (str "found user by access-token in Postgres vc_user database: email: "
                        email))
-        (log/info (str "found user by access-token, and currently the request is: " request))
-        (log/info (str "found user by access-token, and currently the ring-session (from request) is: " ring-session))
-        
-        (if request (update-or-insert-session access-token user-id request))
-
+        (if request (do
+                      (log/info (str "found user by access-token, and currently the request is: " request))
+                      (log/info (str "found user by access-token, and currently the ring-session (from request) is: " ring-session))
+                      (update-or-insert-session access-token user-id request)))
         email)
 
       ;; else, user could not be found locally by searching the 'session' table access token, so get user's info from google by using the access-token.
