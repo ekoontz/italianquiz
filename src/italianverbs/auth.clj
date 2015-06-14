@@ -117,10 +117,9 @@
          [:td [:input {:type "submit" :class "button" :value "Login"}]]]]])
     ]])
 
-(defn logged-in-content [request id email]
+(defn logged-in-content [request id]
   (log/debug (str "logged-in-content with request: " request))
   (log/debug (str "logged-in-content with id: " id))
-  (log/debug (str "logged-in-content with email: " email))
   (let [username (cond (string? (:current id))
                        (:current id)
 
@@ -129,13 +128,8 @@
                        (google/token2username (-> id :current :access-token) request))
         picture (if (map? (:current id))
                   (google/token2picture (-> id :current :access-token)))
-
-        username email
         ]
     
-    (log/debug (str "verbcoach username: " username))
-    (log/debug (str "verbcoach email: " email))
-
     [:div {:class "login major" :style "display:block"}
      [:table {:style "border:0px"}
       [:tr

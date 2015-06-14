@@ -802,9 +802,11 @@
         (let [debug (log/debug (str "user's current identity is: " (if (auth/current)
                                                                     (auth/current)
                                                                     "(none)")))
+              debug (log/debug (str "user's current session is: " (-> req :session)))
+          
               debug (log/debug (str "user's current friend/identity is: " (friend/identity req)))]
           (if-let [haz-admin (auth/current req)]
-            (auth/logged-in-content req (friend/identity req) (auth/current))
+            (auth/logged-in-content req (friend/identity req))
             auth/login-form)))
       content))))
 

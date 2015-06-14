@@ -85,27 +85,28 @@
 
 ;; TODO: clear out cache of sentences-per-user session when starting up.
 (def app
-  (do
-    (handler/site 
-     (friend/authenticate
-      (session/wrap-session main-routes)
-      {:allow-anon? true
-       :login-uri "/auth/internal/login"
-       :default-landing-uri "/"
-       :unauthorized-handler #(-> 
-                               (html/page "Unauthorized" (h/html5 
-                                                          [:div {:class "major tag"}
-                                                          [:h2 "Unauthorized"]
-                                                           [:p "You do not have sufficient privileges to access " (:uri %) "."]]) %)
-                               resp/response
-                               (resp/status 401))
-       :credential-fn #(auth/credential-fn %)
-       :workflows [(workflows/interactive-form)
-                   (oauth2/workflow google/auth-config)
-                   
-                   ;; add additional authentication methods below
-                   
-                   ]}))))
+  (handler/site 
+   (friend/authenticate
+    main-routes
+    {:allow-anon? true
+     :login-uri "/auth/internal/login"
+     :default-landing-uri "/"
+     :unauthorized-handler #(-> 
+                             (html/page "Unauthorized" (h/html5 
+
+                                                        [:div {:class "major tag"}
+                                                         [:h2 "Unauthorized"]
+                                                         [:p "You do not have sufficient privileges to access " (:uri %) "."]]) %)
+                             resp/response
+                             (resp/status 401))
+     :credential-fn #(auth/credential-fn %)
+     :workflows [(workflows/interactive-form)
+                 (oauth2/workflow google/auth-config)
+
+                 ;; add additional authentication methods below
+
+                 ]})))
+
 
 (defn wrap-error-page [handler]
   (fn [req]
