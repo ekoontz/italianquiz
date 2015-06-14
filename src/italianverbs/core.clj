@@ -86,8 +86,8 @@
 ;; TODO: clear out cache of sentences-per-user session when starting up.
 (def app
   (handler/site 
+   (-> main-routes
    (friend/authenticate
-    main-routes
     {:allow-anon? true
      :login-uri "/auth/internal/login"
      :default-landing-uri "/"
@@ -105,7 +105,7 @@
 
                  ;; add additional authentication methods below
 
-                 ]})))
+                 ]}))))
 
 
 (defn wrap-error-page [handler]
