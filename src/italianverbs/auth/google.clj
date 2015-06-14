@@ -63,7 +63,7 @@
 (defn update-or-insert-session [access-token user-id request]
   (let [session-row (first (k/exec-raw ["SELECT session.*
                                              FROM vc_user
-                                       INNER JOIN session 
+                                       INNER JOIN authenticated_session AS session
                                                ON (session.user_id = vc_user.id)
                                             WHERE vc_user.id=?" [user-id]] :results))
 
@@ -81,7 +81,7 @@
       ;; TODO: is updating when it does not have to..
       (do
         (log/debug (str "updating session: " session-row " with new access-token."))
-        (k/exec-raw [(str "UPDATE session SET (access_token,ring_session) = (?,?::uuid) WHERE user_id=? AND access_token != ?")
+        (k/exec-raw [(str "UPDATE authenticated_session SET (access_token,ring_session) = (?,?::uuid) WHERE user_id=? AND access_token != ?")
                      [access-token ring-session user-id access-token]]))
       ;; else, no session row, so insert one.
       (if request
@@ -99,7 +99,7 @@
   (let [user-by-access-token
         (first (k/exec-raw [(str "SELECT email,session.user_id AS userid
                                     FROM vc_user 
-                              INNER JOIN session 
+                              INNER JOIN authenticated_session AS session
                                       ON (vc_user.id = session.user_id) 
                                      AND access_token=?")
                             [access-token]] :results))]
@@ -149,8 +149,8 @@
 
                     ;; insert a new user record if necessary.
                     (let [user-id (:id (first (k/exec-raw [(str "SELECT id 
-                                                           FROM vc_user 
-                                                          WHERE email=?")
+                                                                   FROM vc_user 
+                                                                  WHERE email=?")
                                                            [email]] :results)))
                           user-id (if user-id
                                     (do
@@ -168,7 +168,7 @@
                       ;; insert or update session based on this user_id.
                       (let [session-row (first (k/exec-raw ["SELECT session.*
                                                                FROM vc_user
-                                                         INNER JOIN session 
+                                                         INNER JOIN authenticated_session AS session
                                                                  ON (session.user_id = vc_user.id)
                                                               WHERE vc_user.id=?" [user-id]] :results))
 
@@ -179,14 +179,14 @@
 
 (defn insert-session [user-id access-token ring-session]
   (log/info (str "inserting new session record."))
-  (k/exec-raw [(str "INSERT INTO session (access_token,user_id,ring_session)
+  (k/exec-raw [(str "INSERT INTO authenticated_session (access_token,user_id,ring_session)
                           VALUES (?,?,?::uuid)")
                [access-token user-id ring-session]]))
 
 (defn token2info [access-token]
   (first (k/exec-raw [(str "SELECT vc_user.* 
                               FROM vc_user
-                        INNER JOIN session
+                        INNER JOIN authenticated_session AS session
                                 ON (vc_user.id = session.user_id)
                              WHERE access_token=?")
                       [access-token]]
