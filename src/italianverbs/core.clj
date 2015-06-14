@@ -84,6 +84,7 @@
 (defn no-auth [& {:keys [login-uri credential-fn login-failure-handler redirect-on-auth?]
                   :as form-config
                   :or {redirect-on-auth? true}}]
+  "This workflow simply sends a session cookie to the client if the client doesn't already have one. Using '?setsession=true' is used to prevent endless re-generation if the client refuses to supply a cookie to us."
   (fn [{:keys [request-method params form-params]
         :as request}]
     (let [ring-session (get-in request [:cookies "ring-session" :value])
@@ -125,8 +126,13 @@
                                  (resp/status 401))
          :credential-fn #(auth/credential-fn %)
          :workflows [
+
+                     ;; form-based auth (insecure unless using HTTPS to POST form data)
                      (workflows/interactive-form)
+
+                     ;; Google OpenAuth (auth info protected by HTTPS)
                      (oauth2/workflow google/auth-config)
+
                      (no-auth)
                      ;; add additional authentication methods below, e.g. Facebook, Twitter, &c.
                      ]}))))
