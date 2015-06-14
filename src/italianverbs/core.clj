@@ -133,7 +133,9 @@
                      ;; Google OpenAuth (auth info protected by HTTPS)
                      (oauth2/workflow google/auth-config)
 
+                     ;; Simply uses the user's ring-session as their authentication.
                      (no-auth)
+
                      ;; add additional authentication methods below, e.g. Facebook, Twitter, &c.
                      ]}))))
 
@@ -146,9 +148,7 @@
             :body (slurp (io/resource "500.html"))}))))
 
 (defn -main [& [port]]
-  (let [port (Integer. (or port (env :port) 5000))
-        ;; TODO: heroku config:add SESSION_SECRET=$RANDOM_16_CHARS
-        store (cookie/cookie-store {:key (env :session-secret)})]
+  (let [port (Integer. (or port (env :port) 5000))]
     (jetty/run-jetty (-> #'app
                          ((if (env :production)
                             wrap-error-page
