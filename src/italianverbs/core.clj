@@ -108,9 +108,6 @@
             (do (log/debug "Unauthenticated user has an existing session: " ring-session)
                 nil)))))
 
-(defn handler [{session :session}]
-  (resp/response (str "HEllo " (:username session))))
-
 ;; TODO: clear out cache of sentences-per-user session when starting up.
 (def app
   (handler/site
