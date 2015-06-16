@@ -60,12 +60,12 @@
            (get (:cookies request) "ring-session"))
     (:value (get (:cookies request) "ring-session"))))
 
-(defn update-or-insert-session
+(defn insert-session-if-none
   ([session]
      (let [session-row (first (k/exec-raw ["SELECT session.*
                                               FROM session 
                                              WHERE ring_session = ?::uuid" [session]] :results))
-           debug (log/trace (str "update-or-insert-session: ring-session:" session))
+           debug (log/trace (str "insert-session-if-none: ring-session:" session))
            ]
        (if (not session-row)
          (insert-session session))))
@@ -82,7 +82,7 @@
                                              WHERE ring_session = ?::uuid
                                                AND access_token = ?
                                                AND user_id = ?" [session access-token user-id]] :results))
-           debug (log/trace (str "update-or-insert-session: session:" session))
+           debug (log/trace (str "insert-session-if-none: session:" session))
            ]
        (if (not session-row)
          (insert-session user-id access-token session)))))
@@ -117,7 +117,7 @@
          (if request (do
                        (log/trace (str "found user by access-token, and currently the request is: " request))
                        (log/debug (str "found user by access-token, and currently the ring-session (from request) is: " ring-session))
-                       (update-or-insert-session (get-in request [:cookies "ring-session" :value]) access-token user-id)))
+                       (insert-session-if-none (get-in request [:cookies "ring-session" :value]) access-token user-id)))
          email)
 
        ;; else, user could not be found locally by searching the 'session' table access token, so get user's info from google by using the access-token.
@@ -178,7 +178,7 @@
 
                              ring-session (get-in request [:cookies "ring-session" :value])
                              ]
-                         (update-or-insert-session (get-in request [:cookies "ring-session" :value]) access-token user-id))
+                         (insert-session-if-none (get-in request [:cookies "ring-session" :value]) access-token user-id))
                                                   
                        email))))))))))
 

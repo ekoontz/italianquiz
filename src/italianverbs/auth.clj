@@ -145,3 +145,34 @@
                   (get-loggedin-user-roles id))]
        [:td {:style "float:right;white-space:nowrap"} [:a {:href "/auth/logout"} "Log out"]]]]]))
 
+(defn no-auth [& {:keys [login-uri credential-fn login-failure-handler redirect-on-auth?]
+                  :as form-config
+                  :or {redirect-on-auth? true}}]
+  "This workflow simply sends a session cookie to the client if the client doesn't already have one. Using '?setsession=true' is used to prevent endless re-generation if the client refuses to supply a cookie to us."
+  (fn [{:keys [request-method params form-params]
+        :as request}]
+    (let [ring-session (get-in request [:cookies "ring-session" :value])
+          attempted-to-set-session? (get-in request [:query-params "setsession"])]
+      (log/trace "Checking session config for this unauthenticated, sessionless user: request: " request)
+
+      (cond
+       (and (not ring-session)
+            attempted-to-set-session?)
+       (do
+         (log/debug "User is blocking session cookies: not attempting to set.")
+         nil)
+       
+       (not ring-session)
+       (do
+         (log/debug "Creating a session for this unauthenticated, sessionless user: request: " request)
+         (let [response
+               {:status 302
+                :headers {"Location" "?setsession=true"}
+                :session {}}]
+           response))
+
+       true
+       (do (log/debug "Unauthenticated user has an existing session: " ring-session)
+           (google/insert-session-if-none ring-session)
+           nil)))))
+
