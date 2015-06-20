@@ -7,6 +7,7 @@
 (require '[digest])
 (require '[environ.core :refer [env]])
 (require '[friend-oauth2.workflow :as oauth2])
+(require '[italianverbs.user :refer [roles-of-email]])
 
 ;; TODO: remove this reverse dependency
 ;; (italianverbs.auth depends on italianverbs.auth.google)
@@ -56,20 +57,10 @@
       (log/warn (str "ALLOW_INTERNAL_ADMINS is enabled: allowing internally-authentication admins - should not be enabled in production")))
 
     (and (not (nil? authentication))
-         (or
-
-          ;; Internally-authenticated admins (Should not be used in production until passwords are not stored in plain text)
-          ;; i.e. in production: (= false (:allow-internal-admins env))
-          (and (:allow-internal-admins env)
-               (not (nil?
-                     (:italianverbs.auth.internal/admin
-                      (:roles authentication)))))
-   
-          ;; Google-authenticated admins - note that we decide here (not within google/) about whether the user
-          ;; is an admin.
-          (let [google-username (google/token2username (get-in authentication [:identity :access-token]) request)]
-            (or (= google-username "ekoontz@gmail.com")
-                (= google-username "franksfo2003@gmail.com")))))))
+         ;; Google-authenticated teachers - note that authorization is here, not within google/ - we make the decision about whether the user
+         ;; is a teacher here.
+         (let [google-username (google/token2username (get-in authentication [:identity :access-token]) request)]
+           (some #(= % :admin) (roles-of-email google-username))))))
 
 (defn has-teacher-role [ & [request]]
   (let [authentication (friend/current-authentication)]
@@ -81,8 +72,7 @@
          ;; Google-authenticated teachers - note that authorization is here, not within google/ - we make the decision about whether the user
          ;; is a teacher here.
          (let [google-username (google/token2username (get-in authentication [:identity :access-token]) request)]
-           (or (= google-username "ekoontz@gmail.com")
-               (= google-username "franksfo2003@gmail.com"))))))
+           (some #(= % :teacher) (roles-of-email google-username))))))
 
 ;; TODO: should be a macro, so that 'if-admin' is not evaluated unless (haz-admin) is true.
 (defn is-admin [if-admin]
