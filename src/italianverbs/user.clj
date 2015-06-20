@@ -11,6 +11,13 @@
 
 (declare user-model)
 
+(defn roles-of-user
+  "return the roles of user whose id is user-id"
+  ([user-id]
+     [:foo])
+  ([]
+     [:bar]))
+
 (def routes
   (let [headers
         {"Content-Type" "text/html;charset=utf-8"}]

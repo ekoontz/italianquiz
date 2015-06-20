@@ -7,7 +7,12 @@
 (require '[digest])
 (require '[environ.core :refer [env]])
 (require '[friend-oauth2.workflow :as oauth2])
+
+;; TODO: remove this reverse dependency
+;; (italianverbs.auth depends on italianverbs.auth.google)
+;; but until fixed, there is a dependence on a single authentication source (Google).
 (require '[italianverbs.auth.google :as google])
+
 (require '[italianverbs.auth.internal :as internal])
 (require '[italianverbs.korma :as db])
 (require '[italianverbs.session :as session])
@@ -66,10 +71,29 @@
             (or (= google-username "ekoontz@gmail.com")
                 (= google-username "franksfo2003@gmail.com")))))))
 
+(defn has-teacher-role [ & [request]]
+  (let [authentication (friend/current-authentication)]
+    (log/debug (str "haz-admin: current authentication:" (if (nil? authentication) " (none - authentication is null). " authentication)))
+    (if (= (:allow-internal-admins env) "true")
+      (log/warn (str "ALLOW_INTERNAL_ADMINS is enabled: allowing internally-authentication admins - should not be enabled in production")))
+
+    (and (not (nil? authentication))
+         ;; Google-authenticated teachers - note that authorization is here, not within google/ - we make the decision about whether the user
+         ;; is a teacher here.
+         (let [google-username (google/token2username (get-in authentication [:identity :access-token]) request)]
+           (or (= google-username "ekoontz@gmail.com")
+               (= google-username "franksfo2003@gmail.com"))))))
+
 ;; TODO: should be a macro, so that 'if-admin' is not evaluated unless (haz-admin) is true.
 (defn is-admin [if-admin]
   (if (haz-admin)
     if-admin
+    {:status 302
+     :headers {"Location" "/"}}))
+
+(defmacro if-teacher [do-as-teacher]
+  (if (has-teacher-role)
+    ,do-as-teacher
     {:status 302
      :headers {"Location" "/"}}))
 
@@ -140,7 +164,7 @@
           [:img#profile {:src picture}]])
        [:th {:style "display:none"}
         (str "Roles:")]
-       [:td {:style "white-space:nowrap;display:none"}
+       [:td {:style "white-space:nowrap;display:block"}
         (str/join ","
                   (get-loggedin-user-roles id))]
        [:td {:style "float:right;white-space:nowrap"} [:a {:href "/auth/logout"} "Log out"]]]]]))
