@@ -129,8 +129,8 @@
         (let [game-result (first 
                            (k/exec-raw
                             [(str "SELECT * 
-                          FROM game 
-                         WHERE id=? AND source=? AND target=? LIMIT 1")
+                                     FROM game 
+                                    WHERE id=? AND source=? AND target=? LIMIT 1")
                              [game source-language target-language]] :results))
               target-lexemes (map (fn [each-lexeme]
                                     each-lexeme)
