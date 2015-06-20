@@ -95,12 +95,10 @@
      :headers {"Location" "/auth/login"}}))
 
 (defn get-loggedin-user-roles [identity]
-  (map #(str/replace
-         (str/replace %
-                      #"^user" "student")
-         #"^admin" "teacher")
-
-       (-> identity friend/current-authentication :roles)))
+  (let [token (-> identity :current :access-token)]
+    (log/debug (str "get-logged-in-user-roles: token: " token))
+    (let [google-username (google/token2username token)]
+      (roles-of-email google-username))))
 
 (defn credential-fn [arg]
   (log/debug (str "calling credential-fn with arg: " arg))
