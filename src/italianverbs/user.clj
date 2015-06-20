@@ -4,9 +4,8 @@
    [clojure.data.json :as json]
    [clojure.tools.logging :as log]
    [compojure.core :as compojure :refer [GET PUT POST DELETE ANY]]
-   [korma.core :as db]
    [italianverbs.html :refer [page]]
-   [italianverbs.korma :as korma]
+   [korma.core :as k]
    [italianverbs.unify :as unify :refer [deserialize get-in ref? strip-refs unify]]])
 
 (declare user-model)
@@ -14,9 +13,30 @@
 (defn roles-of-user
   "return the roles of user whose id is user-id"
   ([user-id]
-     [:foo])
-  ([]
-     [:bar]))
+     (let [db-result
+           (:roles
+            (first
+             (k/exec-raw [(str "SELECT roles
+                               FROM vc_user_role
+                              WHERE user_id=?")
+                          [user-id]] :results)))]
+       (if db-result
+         (cons :student (map keyword (.getArray db-result)))))))
+
+(defn roles-of-email
+  "return the roles of user whose email is email"
+  ([email]
+     (let [db-result
+           (:roles
+            (first
+             (k/exec-raw [(str "SELECT roles 
+                                  FROM vc_user_role 
+                            INNER JOIN vc_user 
+                                    ON (vc_user_role.user_id = vc_user.id)
+                                   AND (vc_user.email = ?)")
+                          [email]] :results)))]
+       (if db-result
+         (cons :student (map keyword (.getArray db-result)))))))
 
 (def routes
   (let [headers
