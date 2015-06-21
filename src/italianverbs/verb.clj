@@ -38,7 +38,7 @@
                               {:body (html/page 
                                       "Generation" 
                                       (control-panel request
-                                                     (haz-admin))
+                                                     (haz-admin?))
                                       request
                                       {:css "/css/settings.css"
                                        :js "/js/gen.js"
@@ -116,7 +116,7 @@
                                                  lexs))
                                           all-words))))))))
 
-(defn control-panel [request haz-admin]
+(defn control-panel [request haz-admin?]
   (let [current-size "5,436"
         desired-size "10,000"
         show-nouns false
@@ -272,7 +272,7 @@
      
      (table-of-examples (+ 1 index) generate-this-many-at-once))))
 
-(defn select [request haz-admin]
+(defn select [request haz-admin?]
   (let [script "/* js goes here.. */"]
     (html
      [:div {:class "major verbs"}
@@ -286,17 +286,17 @@
         [:th "English"]
         [:th "Created"]
         [:th "Changed"]
-        (if haz-admin
+        (if haz-admin?
           [:th {:class "edit"} "Edit"])]
        
        (let [results (db/fetch :verb)]
-         (show-as-rows results haz-admin))
+         (show-as-rows results haz-admin?))
        ]
-      (if haz-admin
+      (if haz-admin?
         (new-verb-form))
       ])))
 
-(defn show-as-rows [results haz-admin & [i]]
+(defn show-as-rows [results haz-admin? & [i]]
   (if (not (empty? results))
     (let [i (if i i 1)]
 ;      (str (html [:tr
@@ -310,12 +310,12 @@
 ;
 ;                  [:td [:span {:class "date"}
 ;                        (f/unparse html/short-format (:updated (first results)))]]
-;                  (if haz-admin
+;                  (if haz-admin?
 ;                    [:td {:class "edit"} (delete-form (first results)) ])
 ;
 ;                  ]
 
-           (show-as-rows (rest results) haz-admin (+ i 1))))
+           (show-as-rows (rest results) haz-admin? (+ i 1))))
     "")
 
 (defn lookup [verb]
@@ -324,7 +324,7 @@
 (defn lookup-by-id [id]
   (first (db/fetch :verb {:_id id})))
 
-(defn select-one [verb haz-admin]
+(defn select-one [verb haz-admin?]
   (log/info (str "LOOKING UP VERB: " verb))
   (let [script "/* js goes here.. */"
         verb-id verb
@@ -349,7 +349,7 @@
        (reduce #(dissoc %1 %2) verb
                '(:_id :updated :created))]
 
-      (if haz-admin
+      (if haz-admin?
         [:div {:style "float:left;width:95%;margin:0.5em"}
          [:form {:method "post" :action (str "/verb/" verb-id "/update/")}
           [:input {:name "id" 

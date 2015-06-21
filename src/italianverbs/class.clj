@@ -13,11 +13,12 @@
    [compojure.core :as compojure :refer [GET PUT POST DELETE ANY]]
    [formative.core :as f]
    [formative.parse :as fp]
-   [italianverbs.auth :refer [get-user-id haz-admin is-authenticated]]
+   [italianverbs.auth :refer [get-user-id is-authenticated]]
    [italianverbs.html :as html]
    [italianverbs.korma :as db]
    [italianverbs.student :as student]
    [italianverbs.studenttest :as tests]
+   [italianverbs.user :refer [haz-admin?]]
    [korma.core :as k]))
 
 (declare add-test)
@@ -63,14 +64,14 @@
         (is-authenticated request
                           {:status 200
                            :body (html/page "Classes" 
-                                            (show request (haz-admin))
+                                            (show request (haz-admin?))
                                             request)}))
 
    (GET "/my" request
         (is-authenticated request
                           {:status 200
                            :body (html/page "My Classes" 
-                                            (show request (haz-admin))
+                                            (show request (haz-admin?))
                                             request)}))
 
 
@@ -163,7 +164,7 @@
         (is-authenticated request
                           {:body (html/page "Classes" (show-one
                                                        (:class (:route-params request))
-                                                       (haz-admin)
+                                                       (haz-admin?)
                                                        (get-user-id db/fetch))
                                             request)}))
 
@@ -214,7 +215,7 @@
    :validations [[:required [:name]]
                  [:min-length 1 :tests "Select one or more tests"]]})
 
-;; Note that new-form does not use haz-admin to check whether to render this form: if you aren't authenticated as an admin,
+;; Note that new-form does not use haz-admin? to check whether to render this form: if you aren't authenticated as an admin,
 ;; it would be a bug for this function to be called at all.
 (defn new-form [params & {:keys [problems]}]
   (let [now (java.util.Date.) ;; not using any date or time stuff in the form yet, but good to know about for later.
