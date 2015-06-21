@@ -1,7 +1,7 @@
 (ns italianverbs.about
   (:require
    [compojure.core :refer [GET]]
-   [italianverbs.auth :refer [haz-admin]]
+   [italianverbs.user :refer [haz-admin?]]
    [italianverbs.html :as html]))
 
 (declare about)
@@ -69,13 +69,13 @@
       [:i {:style "text-align:center;color:#ccc"} "Coming soon" ]]
      ]
 
-    (if (not (haz-admin request))
+    (if (not (haz-admin? request))
       [:div {:style "float:left;margin-left:25%;width:75%;margin-top:1em"}
        [:p "Use the dropdown within the tour to choose a class/game."]
        [:img {:width "350px" :src "/png/select_game.png"} ]])
 
     
-    (if (haz-admin request)
+    (if (haz-admin? request)
       [:div {:class "rounded flags manage"}
 
        [:h3 "Manage Games"]

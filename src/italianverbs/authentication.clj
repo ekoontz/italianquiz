@@ -1,4 +1,4 @@
-(ns italianverbs.auth)
+(ns italianverbs.authentication)
 
 ;; TODO: cleanup (require)s.
 (require '[clojure.tools.logging :as log])
@@ -7,7 +7,6 @@
 (require '[digest])
 (require '[environ.core :refer [env]])
 (require '[friend-oauth2.workflow :as oauth2])
-(require '[italianverbs.user :refer [roles-of-email]])
 
 ;; TODO: remove this reverse dependency
 ;; (italianverbs.auth depends on italianverbs.auth.google)
@@ -49,57 +48,6 @@
     (if current-authentication
       (google/token2username (get-in current-authentication [:identity :access-token])
                              request))))
-
-(defn haz-admin [ & [request]]
-  (let [authentication (friend/current-authentication)]
-    (log/debug (str "haz-admin: current authentication:" (if (nil? authentication) " (none - authentication is null). " authentication)))
-    (if (= (:allow-internal-admins env) "true")
-      (log/warn (str "ALLOW_INTERNAL_ADMINS is enabled: allowing internally-authentication admins - should not be enabled in production")))
-
-    (and (not (nil? authentication))
-         ;; Google-authenticated teachers - note that authorization is here, not within google/ - we make the decision about whether the user
-         ;; is a teacher here.
-         (let [google-username (google/token2username (get-in authentication [:identity :access-token]) request)]
-           (some #(= % :admin) (roles-of-email google-username))))))
-
-(defn has-teacher-role [ & [request]]
-  (let [authentication (friend/current-authentication)]
-    (log/debug (str "haz-admin: current authentication:" (if (nil? authentication) " (none - authentication is null). " authentication)))
-    (if (= (:allow-internal-admins env) "true")
-      (log/warn (str "ALLOW_INTERNAL_ADMINS is enabled: allowing internally-authentication admins - should not be enabled in production")))
-
-    (and (not (nil? authentication))
-         ;; Google-authenticated teachers - note that authorization is here, not within google/ - we make the decision about whether the user
-         ;; is a teacher here.
-         (let [google-username (google/token2username (get-in authentication [:identity :access-token]) request)]
-           (some #(= % :teacher) (roles-of-email google-username))))))
-
-;; TODO: should be a macro, so that 'if-admin' is not evaluated unless (haz-admin) is true.
-(defn is-admin [if-admin]
-  (if (haz-admin)
-    if-admin
-    {:status 302
-     :headers {"Location" "/"}}))
-
-(defmacro if-teacher [do-as-teacher]
-  (if (has-teacher-role)
-    ,do-as-teacher
-    {:status 302
-     :headers {"Location" "/"}}))
-
-;; TODO: should also be a macro.
-(defn is-authenticated [if-authenticated]
-  (if (not (nil? (friend/current-authentication)))
-    if-authenticated
-    {:status 302
-     :headers {"Location" "/auth/login"}}))
-
-(defn get-loggedin-user-roles [identity]
-  (let [token (-> identity :current :access-token)]
-    (log/debug (str "get-logged-in-user-roles: token: " token))
-    (let [google-username (google/token2username token)]
-      (roles-of-email google-username))))
-
 (defn credential-fn [arg]
   (log/debug (str "calling credential-fn with arg: " arg))
   (creds/bcrypt-credential-fn @internal/users arg))
@@ -150,11 +98,6 @@
        (if picture
          [:td
           [:img#profile {:src picture}]])
-       [:th {:style "display:none"}
-        (str "Roles:")]
-       [:td {:style "white-space:nowrap;display:block"}
-        (str/join ","
-                  (get-loggedin-user-roles id))]
        [:td {:style "float:right;white-space:nowrap"} [:a {:href "/auth/logout"} "Log out"]]]]]))
 
 (defn no-auth [& {:keys [login-uri credential-fn login-failure-handler redirect-on-auth?]
@@ -184,7 +127,7 @@
            response))
 
        true
-       (do (log/debug "Unauthenticated user has an existing session: " ring-session)
+       (do (log/trace "Unauthenticated user has an existing session: " ring-session)
            (google/insert-session-if-none ring-session)
            nil)))))
 

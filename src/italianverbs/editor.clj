@@ -9,12 +9,11 @@
 
    [formative.core :as f]
 
-   [italianverbs.auth :refer [is-admin]]
    [italianverbs.borges.reader :refer :all]
    [italianverbs.html :as html]
    [italianverbs.lexiconfn :refer [infinitives]]
    [italianverbs.unify :refer [get-in strip-refs unify]]
-
+   [italianverbs.user :refer [do-if-admin]]
    [hiccup.core :refer (html)]
    [korma.core :as k]))
 
@@ -48,24 +47,24 @@
 (def routes
   (compojure/routes
    (GET "/" request
-        (is-admin {:body (body "" (show-games request) request)
+        (do-if-admin {:body (body "" (show-games request) request)
                    :status 200
                    :headers headers}))
 
    ;; alias for '/editor' (above)
    (GET "/home" request
-        (is-admin
+        (do-if-admin
          {:status 302
           :headers {"Location" "/editor"}}))
 
    ;; language-specific: show only games and lists appropriate to a given language
    (GET "/:language" request
-        (is-admin {:body (body (str (short-language-name-to-long (:language (:route-params request))))
-                               (show-games (conj request
-                                                {:language (:language (:route-params request))}))
-                               request)
-                   :status 200
-                   :headers headers}))
+        (do-if-admin {:body (body (str (short-language-name-to-long (:language (:route-params request))))
+                                  (show-games (conj request
+                                                    {:language (:language (:route-params request))}))
+                                  request)
+                      :status 200
+                      :headers headers}))
 
    (GET "/:language/" request
          {:status 302
@@ -73,7 +72,7 @@
 
    (POST "/game/activate/:game" request
          ;; toggle activation of this game
-         (is-admin
+         (do-if-admin
           (let [debug (log/debug (str "PARAMS: " (:params request)))
                 message (toggle-activation (:game (:route-params request)) (= "on" (:active (:params request))))
                 language (:language (:params request))]
@@ -81,7 +80,7 @@
              :headers {"Location" (str "/editor/" language "?message=" message)}})))
 
    (GET "/game/delete/:game-to-delete" request
-        (is-admin
+        (do-if-admin
          (let [game-to-delete (:game-to-delete (:route-params request))]
            {:body (body (str "Editor: Confirm: delete game: " game-to-delete)
                         (show-games {:game-to-delete game-to-delete}) 
@@ -90,21 +89,21 @@
             :headers headers})))
 
    (POST "/game/delete/:game-to-delete" request
-         (is-admin
+         (do-if-admin
           (let [message (delete-game (:game-to-delete (:route-params request)))]
             {:status 302
              :headers {"Location" (str "/editor/" "?message=" message)}})))
 
    (POST "/game/edit/:game-to-edit" request
          (do (log/debug (str "Doing POST /game/edit/:game-to-edit with request: " request))
-             (is-admin (let [game-id (:game-to-edit (:route-params request))]
+             (do-if-admin (let [game-id (:game-to-edit (:route-params request))]
                          (update-game (:game-to-edit (:route-params request))
                                       (multipart-to-edn (:multipart-params request)))
                          {:status 302
                           :headers {"Location" (str "/editor/game/" game-id "?message=Edited+game:" game-id)}}))))
 
    (GET "/game/:game" request
-        (is-admin
+        (do-if-admin
          (let [game-id (Integer. (:game (:route-params request)))
                game (first (k/exec-raw ["SELECT * FROM game WHERE id=?" [(Integer. game-id)]] :results))]
            {:body (body (:name game) (show-game (:game (:route-params request))
@@ -114,7 +113,7 @@
             :headers headers})))
 
    (POST "/game/new" request
-         (is-admin
+         (do-if-admin
           (let [params (multipart-to-edn (:multipart-params request))
                 language (cond (and (:language params)
                                     (not (= (string/trim (:language params)) "")))

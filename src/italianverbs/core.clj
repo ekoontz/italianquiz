@@ -11,13 +11,14 @@
    [friend-oauth2.workflow :as oauth2]
    [hiccup.page :as h]
    [italianverbs.about :as about]
-   [italianverbs.auth :as auth]
+   [italianverbs.authentication :as auth]
    [italianverbs.auth.google :as google]
    [italianverbs.class :as class]
    [italianverbs.editor :as editor]
    [italianverbs.html :as html]
    [italianverbs.studenttest :as studenttest]
    [italianverbs.tour :as tour]
+   [italianverbs.user :as user]
    [italianverbs.verb :as verb]
 ;   [italianverbs.workbook :as workbook]
 
@@ -59,6 +60,9 @@
 
   (context "/tour" []
            tour/routes)
+
+  (context "/user" []
+           user/routes)
 
   ;; TODO: uncomment and make dependent on a environment (i.e. non-production).
 ;  (context "/workbook" []

@@ -12,7 +12,7 @@
    [clojure.tools.logging :as log]
    [hiccup.element :as e]
    [hiccup.page :as h]
-   [italianverbs.auth :as auth]
+   [italianverbs.authentication :as auth]
    [italianverbs.menubar :as menubar]
    [italianverbs.morphology :refer [fo]]
    [italianverbs.session :as session]

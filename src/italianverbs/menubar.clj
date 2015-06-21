@@ -3,7 +3,8 @@
    [hiccup core page]
    [ring.util.codec :as codec])
   (:require
-   [clojure.tools.logging :as log]))
+   [clojure.tools.logging :as log]
+   [italianverbs.user :as user]))
 
 (defn- menuitem [ {selected? :selected?
                    show? :show?
@@ -23,7 +24,7 @@
 
 (defn menubar [session-row current-url haz-authentication & [suffixes]]
   (let [roles (:roles haz-authentication)
-        haz-admin? (not (nil? (:italianverbs.auth/admin roles)))]
+        haz-admin? (user/haz-admin?)]
 
     (log/debug (str "Drawing menubar with current-url=" current-url))
     (log/debug (str "Menubar with suffixes: " suffixes))

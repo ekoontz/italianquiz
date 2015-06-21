@@ -7,7 +7,7 @@
 
     [compojure.core :as compojure :refer [GET PUT POST DELETE ANY]]
 
-    [italianverbs.auth :refer [is-admin]]
+    [italianverbs.user :refer [do-if-admin]]
     [italianverbs.engine :as engine]
     [italianverbs.korma :as korma]
     [italianverbs.lexiconfn :refer [sem-impl]]
@@ -22,7 +22,7 @@
 (def routes
   (compojure/routes
    (GET "/populate/:game" request
-        (is-admin (populate-page request)))))
+        (do-if-admin (populate-page request)))))
 
 (defn populate-page [request]
   {:status 200

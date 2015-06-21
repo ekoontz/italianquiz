@@ -6,7 +6,6 @@
 
 (require '[hiccup.core :refer (html)])
 
-(require '[italianverbs.auth :refer [is-admin]])
 (require '[italianverbs.cache :refer (build-lex-sch-cache create-index over spec-to-phrases)])
 (require '[italianverbs.forest :as forest])
 (require '[italianverbs.grammar.english :as gram])
@@ -19,6 +18,7 @@
 (require '[italianverbs.pos.english :as epos :refer (intransitivize transitive transitivize verb-subjective)])
 (require '[italianverbs.ug :refer :all])
 (require '[italianverbs.unify :as unify :refer (dissoc-paths get-in strip-refs)])
+(require '[italianverbs.user :refer [do-if-admin]])
 
 (def get-string morph/get-string)
 (def grammar gram/grammar)
@@ -231,10 +231,10 @@
 (def routes
   (compojure/routes
    (GET "/" request
-        (is-admin {:body (body language-name
-                               language-name request)
-                   :status 200
-                   :headers headers}))))
+        (do-if-admin {:body (body language-name
+                                  language-name request)
+                      :status 200
+                      :headers headers}))))
 
 (defn body [title content request]
   (html/page
