@@ -9,7 +9,7 @@
    [clojure.string :as string]
    [clojure.tools.logging :as log]
    [compojure.core :as compojure :refer [GET PUT POST DELETE ANY]]
-   [italianverbs.auth :refer (haz-admin)]
+   [italianverbs.user :refer (haz-admin?)]
 ;   [italianverbs.english :as en]
    [italianverbs.html :as html]
 ;   [italianverbs.italiano :as it]
