@@ -171,6 +171,8 @@
       :jss ["/js/editor.js" "/js/gen.js"]
       :onload (onload)})))
 
+(declare language-dropdown)
+
 (defn show-games [ & [ {editor-is-popup :editor-is-popup
                         game-to-edit :game-to-edit
                         game-to-delete :game-to-delete
@@ -202,23 +204,16 @@
         ]
     (html
 
-     [:div.dropdown {:style "margin-left:0.5em;float:left;width:auto"}
-      "Show games for:"
-      [:div {:style "float:right;padding-left:1em;width:auto;"}
-       [:form {:method "get"}
-        [:select#edit_which_language {:name "language"
-                                      :onchange (str "document.location='/editor/' + this.value")}
-         (map (fn [lang-pair]
-                (let [label (:label lang-pair)
-                      value (:value lang-pair)]
-                  [:option (conj {:value value}
-                                 (if (= language (:value lang-pair))
-                                   {:selected "selected"}
-                                   {}))
-                   label]))
-              [{:value "" :label "All Languages"}
-               {:value "es" :label "Español"}
-               {:value "it" :label "Italiano"}])]]]]
+     (language-dropdown language)
+     
+     [:div {:style "margin-top:0.5em;"}
+      [:h3 "My games"]
+      ]
+
+     [:div {:style "margin-top:0.5em;"}
+      [:h3 "Other teachers' games"]
+      ]
+     
 
      [:table {:class "striped padded"}
       [:tr
@@ -300,6 +295,26 @@
      (map (fn [result]
             (game-editor-form result game-to-edit game-to-delete true))
           results))))
+
+(defn language-dropdown [language]
+  (html
+   [:div.dropdown {:style "margin-left:0.5em;float:left;width:auto"}
+    "Show games for:"
+    [:div {:style "float:right;padding-left:1em;width:auto;"}
+     [:form {:method "get"}
+      [:select#edit_which_language {:name "language"
+                                    :onchange (str "document.location='/editor/' + this.value")}
+       (map (fn [lang-pair]
+              (let [label (:label lang-pair)
+                    value (:value lang-pair)]
+                [:option (conj {:value value}
+                               (if (= language (:value lang-pair))
+                                 {:selected "selected"}
+                                 {}))
+                 label]))
+            [{:value "" :label "All Languages"}
+             {:value "es" :label "Español"}
+             {:value "it" :label "Italiano"}])]]]]))
 
 (defn show-game [game-id & [ {refine :refine} ]]
   (let [game-id (Integer. game-id)
