@@ -107,7 +107,9 @@
    "desear" {:synsem {:cat :verb
                       :sem {:pred :desire}}}
    
-   "dormir" {:synsem {:cat :verb
+   "dormir" {:espanol {:boot-stem1 "duerm"
+                       :boot-stem2 "dorm"}
+             :synsem {:cat :verb
                       :sem {:pred :dormire}}}
    
    "echar" {:synsem {:cat :verb

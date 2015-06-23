@@ -113,7 +113,18 @@
                            (throw (Exception. (str "Can't regex-find on non-string: " infinitive " from word: " word)))))
            er-type (re-find #"er$" infinitive)
            ir-type (re-find #"ir$" infinitive)
-           stem (string/replace infinitive #"[iae]r$" "")
+
+           stem (cond (and (get-in word [:boot-stem1])
+                           (or (= (get-in word [:agr :number])
+                                  :sing)
+                               (and (= (get-in word [:agr :person])
+                                       :3rd)
+                                    (= (get-in word [:agr :number])
+                                       :plur))))
+                      (get-in word [:boot-stem1])
+                      true
+                      (string/replace infinitive #"[iae]r$" ""))
+
            last-stem-char-is-i (re-find #"ir$" infinitive)
            last-stem-char-is-e (re-find #"er$" infinitive)
            is-care-or-gare? (re-find #"[cg]ar$" infinitive)
