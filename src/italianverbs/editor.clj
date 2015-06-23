@@ -172,35 +172,16 @@
       :onload (onload)})))
 
 (declare language-dropdown)
+(declare show-game-table)
 
 (defn show-games [ & [ {editor-is-popup :editor-is-popup
-                        game-to-edit :game-to-edit
                         game-to-delete :game-to-delete
                         name-of-game :name-of-game
                         language :language} ]]
   (let [show-source-lists false
-        game-to-edit (if game-to-edit (Integer. game-to-edit))
         game-to-delete (if game-to-delete (Integer. game-to-delete))
         language (if language language "")
         debug (log/debug (str "THE LANGUAGE OF THE GAME IS: " language))
-
-        ;; TODO: doing SELECT DISTINCT surface,structure is too expensive below and gets worse
-        ;; as the number of games increase, but not doing DISTINCT is inaccurate.
-        ;; the expression-counting is too expensive for Heroku; disabling with 1=0.
-        sql "SELECT game.name AS name,game.id AS id,active,
-                    source,target,target_lex,target_grammar
-               FROM game
-              WHERE ((game.target = ?) OR (? = ''))
-           ORDER BY game.name"
-
-        debug (log/debug (str "GAME-CHOOSING LANGUAGE: " language))
-        debug (log/debug (str "GAME-CHOOSING SQL: " (string/replace sql "\n" " ")))
-        results (k/exec-raw [sql
-                             [language language] ]
-                            :results)
-
-        debug (log/debug (str "Number of results: " (.size results)))
-
         ]
     (html
 
@@ -208,75 +189,45 @@
      
      [:div {:style "margin-top:0.5em;"}
       [:h3 "My games"]
+
+      (let [sql "SELECT game.name AS name,game.id AS id,active,
+                        source,target,target_lex,target_grammar
+                   FROM game
+                  WHERE ((game.target = ?) OR (? = ''))
+                    AND ((game.created_by = ?))
+               ORDER BY game.name"
+
+            debug (log/debug (str "GAME-CHOOSING LANGUAGE: " language))
+            debug (log/debug (str "GAME-CHOOSING SQL: " (string/replace sql "\n" " ")))
+            results (k/exec-raw [sql
+                                 [language language 180]]
+                                :results)
+            debug (log/debug (str "Number of results: " (.size results)))]
+        (show-game-table results))
+
       ]
 
      [:div {:style "margin-top:0.5em;"}
       [:h3 "Other teachers' games"]
+
+      (let [sql "SELECT game.name AS name,game.id AS id,active,
+                        source,target,target_lex,target_grammar
+                   FROM game
+                  WHERE ((game.target = ?) OR (? = ''))
+                    AND ((game.created_by IS NULL) OR
+                         (game.created_by != ?))
+               ORDER BY game.name"
+
+            debug (log/debug (str "GAME-CHOOSING LANGUAGE: " language))
+            debug (log/debug (str "GAME-CHOOSING SQL: " (string/replace sql "\n" " ")))
+            results (k/exec-raw [sql
+                                 [language language 180]]
+                                :results)
+            debug (log/debug (str "Number of results: " (.size results)))]
+        (show-game-table results))
+
       ]
      
-
-     [:table {:class "striped padded"}
-      [:tr
-       [:th {:style "width:2em"} "Active?"]
-       [:th {:style "width:15em"} "Name"]
-       [:th {:style "width:auto"} "Verbs"]
-       [:th {:style "width:auto"} "Tenses"]
-       ]
-
-      (map
-       (fn [result]
-             (let [debug (log/debug (str "result info: " result))
-                   game-name-display
-                   (let [game-name (string/trim (:name result))]
-                     (if (= game-name "")
-                       "(untitled)"
-                       game-name))
-                   game-id (:id result)
-                   language-short-name (:target result)
-                   debug (log/debug (str "language-short-name:" language-short-name))
-                   language-keyword-name
-                   (str "" (sqlname-from-match (short-language-name-to-long language-short-name)) "")
-                   language-keyword
-                   (keyword language-keyword-name)]
-
-               [:tr
-
-                [:td
-                 [:form {:method "post"
-                         :enctype "multipart/form-data"
-                         :action (str "/editor/game/activate/" game-id)}
-                  [:input {:name "language"
-                           :type "hidden"
-                           :value language-short-name}]
-                  [:input (merge {:type "checkbox"
-                                  :onclick "submit()"
-                                  :name "active"}
-                                 (if (:active result)
-                                   {:checked "on"}))]]]
-
-                [:td
-                 (if (= game-to-edit game-id)
-                   [:input {:size (+ 5 (.length (:name result)))
-                            :value (:name result)}]
-                   (if (not editor-is-popup)
-                     ;; show as link
-                     [:a {:href (str "/editor/game/" game-id)} game-name-display]
-
-                     ;; show as popup
-                     [:div.edit_game {:onclick (str "edit_game_dialog(" game-id ")")} game-name-display]))]
-
-                [:td (string/join ", " (map #(html [:i %])
-                                           (map #(get-in % [:root language-keyword language-keyword])
-                                                (map json-read-str (.getArray (:target_lex result))))))]
-
-                [:td (string/join ", " (map #(html [:b (str %)])
-                                            (remove nil?
-                                                    (map #(get tenses-human-readable %)
-                                                         (map json-read-str (.getArray (:target_grammar result)))))))]
-
-                ]
-               ))
-           results)]
 
      (if (not (= "" language)) ;; don't show "New Game" if no language - confusing to users.
        [:div.new
@@ -291,10 +242,63 @@
          [:button {:name "submit_new_game" :disabled true :onclick "submit();"} "New Game"]
          ]])
 
-     ;; make the hidden game-editing forms.
-     (map (fn [result]
-            (game-editor-form result game-to-edit game-to-delete true))
-          results))))
+     )
+    )
+  )
+
+(defn show-game-table [results]
+  (html
+   (if (empty? results)
+     [:div [:i "None."]]
+     [:table {:class "striped padded"}
+      [:tr
+       [:th {:style "width:2em"} "Active?"]
+       [:th {:style "width:15em"} "Name"]
+       [:th {:style "width:auto"} "Verbs"]
+       [:th {:style "width:auto"} "Tenses"]
+       ]
+
+      (map
+       (fn [result]
+         (let [debug (log/debug (str "result info: " result))
+               game-name-display
+               (let [game-name (string/trim (:name result))]
+                 (if (= game-name "")
+                   "(untitled)"
+                   game-name))
+               game-id (:id result)
+               language-short-name (:target result)
+               debug (log/debug (str "language-short-name:" language-short-name))
+               language-keyword-name
+               (str "" (sqlname-from-match (short-language-name-to-long language-short-name)) "")
+               language-keyword
+               (keyword language-keyword-name)]
+           [:tr
+            [:td
+             [:form {:method "post"
+                     :enctype "multipart/form-data"
+                     :action (str "/editor/game/activate/" game-id)}
+              [:input {:name "language"
+                       :type "hidden"
+                       :value language-short-name}]
+              [:input (merge {:type "checkbox"
+                              :onclick "submit()"
+                              :name "active"}
+                             (if (:active result)
+                               {:checked "on"}))]]]
+          [:td
+           ;; show as link
+           [:a {:href (str "/editor/game/" game-id)} game-name-display]]
+            [:td (string/join ", " (map #(html [:i %])
+                                        (map #(get-in % [:root language-keyword language-keyword])
+                                             (map json-read-str (.getArray (:target_lex result))))))]
+            [:td (string/join ", " (map #(html [:b (str %)])
+                                        (remove nil?
+                                                (map #(get tenses-human-readable %)
+                                                     (map json-read-str (.getArray (:target_grammar result)))))))]
+            ]
+           ))
+       results)])))
 
 (defn language-dropdown [language]
   (html
