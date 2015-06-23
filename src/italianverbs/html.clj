@@ -808,7 +808,7 @@
                                       (friend/identity req)
                                       "(none)")))]
           (if-let [haz-admin (auth/current req)]
-            (auth/logged-in-content req (friend/identity req))
+            (auth/logged-in-content req)
             auth/login-form)))
       content))))
 

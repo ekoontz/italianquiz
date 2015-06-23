@@ -77,28 +77,36 @@
          [:td [:input {:type "submit" :class "button" :value "Login"}]]]]])
     ]])
 
-(defn logged-in-content [request id]
-  (log/debug (str "logged-in-content with request: " request))
-  (log/debug (str "logged-in-content with id: " id))
-  (let [username (cond (string? (:current id))
-                       (:current id)
 
-                       (map? (:current id))
-                       ;; if it's a map, google is only possibility for now.
-                       (google/token2username (-> id :current :access-token) request))
-        picture (if (map? (:current id))
-                  (google/token2picture (-> id :current :access-token)))
-        ]
-    
-    [:div {:class "login major" :style "display:block"}
-     [:table {:style "border:0px"}
-      [:tr
-       [:td
-        username]
-       (if picture
+(defn request2user [request]
+  ;; For now, google functionality is the only way to resolve a username from a request.
+  (let [id (friend/identity request)]
+    (google/token2username (-> id :current :access-token) request)))
+
+(defn logged-in-content [request]
+  (let [id (friend/identity request)]
+    (log/debug (str "logged-in-content with request: " request))
+    (log/debug (str "logged-in-content with id: " id))
+    (let [username (cond (string? (:current id))
+                         (:current id)
+
+                         (map? (:current id))
+                         ;; if it's a map, google is only possibility for now.
+                         (request2user request))
+
+          picture (if (map? (:current id))
+                    (google/token2picture (-> id :current :access-token)))
+          ]
+      [:div {:class "login major" :style "display:block"}
+       [:table {:style "border:0px"}
+        [:tr
          [:td
-          [:img#profile {:src picture}]])
-       [:td {:style "float:right;white-space:nowrap"} [:a {:href "/auth/logout"} "Log out"]]]]]))
+          username]
+         (if picture
+           [:td
+            [:img#profile {:src picture}]])
+         [:td {:style "float:right;white-space:nowrap"}
+          [:a {:href "/auth/logout"} "Log out"]]]]])))
 
 (defn no-auth [& {:keys [login-uri credential-fn login-failure-handler redirect-on-auth?]
                   :as form-config
