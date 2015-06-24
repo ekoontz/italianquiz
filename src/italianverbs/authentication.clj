@@ -14,7 +14,6 @@
 (require '[italianverbs.auth.google :as google])
 
 (require '[italianverbs.auth.internal :as internal])
-(require '[italianverbs.korma :as db])
 (require '[italianverbs.session :as session])
 (require '[cemerick.friend :as friend])
 (require '[cemerick.friend.credentials :as creds])
