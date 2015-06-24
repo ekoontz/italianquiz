@@ -9,11 +9,12 @@
 
    [formative.core :as f]
 
+   [italianverbs.authentication :as authentication]
    [italianverbs.borges.reader :refer :all]
    [italianverbs.html :as html]
    [italianverbs.lexiconfn :refer [infinitives]]
    [italianverbs.unify :refer [get-in strip-refs unify]]
-   [italianverbs.user :refer [do-if-admin]]
+   [italianverbs.user :refer [do-if-admin username2userid]]
    [hiccup.core :refer (html)]
    [korma.core :as k]))
 
@@ -61,7 +62,8 @@
    (GET "/:language" request
         (do-if-admin {:body (body (str (short-language-name-to-long (:language (:route-params request))))
                                   (show-games (conj request
-                                                    {:language (:language (:route-params request))}))
+                                                    {:user-id (username2userid (authentication/current request))
+                                                     :language (:language (:route-params request))}))
                                   request)
                       :status 200
                       :headers headers}))
@@ -78,15 +80,6 @@
                 language (:language (:params request))]
             {:status 302
              :headers {"Location" (str "/editor/" language "?message=" message)}})))
-
-   (GET "/game/delete/:game-to-delete" request
-        (do-if-admin
-         (let [game-to-delete (:game-to-delete (:route-params request))]
-           {:body (body (str "Editor: Confirm: delete game: " game-to-delete)
-                        (show-games {:game-to-delete game-to-delete}) 
-                        request)
-            :status 200
-            :headers headers})))
 
    (POST "/game/delete/:game-to-delete" request
          (do-if-admin
@@ -174,12 +167,10 @@
 (declare language-dropdown)
 (declare show-game-table)
 
-(defn show-games [ & [ {editor-is-popup :editor-is-popup
-                        game-to-delete :game-to-delete
-                        name-of-game :name-of-game
-                        language :language} ]]
+(defn show-games [ & [ {language :language
+                        user-id :user-id
+                        }]]
   (let [show-source-lists false
-        game-to-delete (if game-to-delete (Integer. game-to-delete))
         language (if language language "")
         debug (log/debug (str "THE LANGUAGE OF THE GAME IS: " language))
         ]
@@ -200,7 +191,7 @@
             debug (log/debug (str "GAME-CHOOSING LANGUAGE: " language))
             debug (log/debug (str "GAME-CHOOSING SQL: " (string/replace sql "\n" " ")))
             results (k/exec-raw [sql
-                                 [language language 180]]
+                                 [language language user-id]]
                                 :results)
             debug (log/debug (str "Number of results: " (.size results)))]
         (show-game-table results))
@@ -221,7 +212,7 @@
             debug (log/debug (str "GAME-CHOOSING LANGUAGE: " language))
             debug (log/debug (str "GAME-CHOOSING SQL: " (string/replace sql "\n" " ")))
             results (k/exec-raw [sql
-                                 [language language 180]]
+                                 [language language user-id]]
                                 :results)
             debug (log/debug (str "Number of results: " (.size results)))]
         (show-game-table results))

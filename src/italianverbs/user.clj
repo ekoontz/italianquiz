@@ -186,6 +186,12 @@
    ]
   )
 
+
+(defn username2userid [username]
+  (when username
+    (:id (first (k/exec-raw [(str "SELECT id FROM vc_user WHERE email=?")
+                             [username]] :results)))))
+
 (defn haz-admin? [ & [request]]
   (let [authentication (friend/current-authentication)]
     (log/debug (str "haz-admin: current authentication:" (if (nil? authentication) " (none - authentication is null). " authentication)))
