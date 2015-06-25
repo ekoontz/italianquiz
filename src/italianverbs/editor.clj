@@ -194,8 +194,7 @@
                                  [language language user-id]]
                                 :results)
             debug (log/debug (str "Number of results: " (.size results)))]
-        (show-game-table results))
-
+        (show-game-table results {:show-as-owner? true}))
       ]
 
      [:div {:style "margin-top:0.5em;"}
@@ -215,8 +214,7 @@
                                  [language language user-id]]
                                 :results)
             debug (log/debug (str "Number of results: " (.size results)))]
-        (show-game-table results))
-
+        (show-game-table results {:show-as-owner? false}))
       ]
      
 
@@ -237,13 +235,16 @@
     )
   )
 
-(defn show-game-table [results]
+(defn show-game-table [results & [{show-as-owner? :show-as-owner?}]]
+  (log/debug (str "showing as owner?: " show-as-owner?))
   (html
    (if (empty? results)
      [:div [:i "None."]]
      [:table {:class "striped padded"}
       [:tr
-       [:th {:style "width:2em"} "Active?"]
+       (if (= true show-as-owner?)
+         [:th {:style "width:2em"} "Active?"])
+
        [:th {:style "width:15em"} "Name"]
        [:th {:style "width:auto"} "Verbs"]
        [:th {:style "width:auto"} "Tenses"]
@@ -251,7 +252,7 @@
 
       (map
        (fn [result]
-         (let [debug (log/debug (str "result info: " result))
+         (let [debug (log/trace (str "result info: " result))
                game-name-display
                (let [game-name (string/trim (:name result))]
                  (if (= game-name "")
@@ -265,21 +266,23 @@
                language-keyword
                (keyword language-keyword-name)]
            [:tr
+
+            (if show-as-owner?
+              [:td
+               [:form {:method "post"
+                       :enctype "multipart/form-data"
+                       :action (str "/editor/game/activate/" game-id)}
+                [:input {:name "language"
+                         :type "hidden"
+                         :value language-short-name}]
+                [:input (merge {:type "checkbox"
+                                :onclick "submit()"
+                                :name "active"}
+                               (if (:active result)
+                                 {:checked "on"}))]]])
             [:td
-             [:form {:method "post"
-                     :enctype "multipart/form-data"
-                     :action (str "/editor/game/activate/" game-id)}
-              [:input {:name "language"
-                       :type "hidden"
-                       :value language-short-name}]
-              [:input (merge {:type "checkbox"
-                              :onclick "submit()"
-                              :name "active"}
-                             (if (:active result)
-                               {:checked "on"}))]]]
-          [:td
-           ;; show as link
-           [:a {:href (str "/editor/game/" game-id)} game-name-display]]
+             ;; show as link
+             [:a {:href (str "/editor/game/" game-id)} game-name-display]]
             [:td (string/join ", " (map #(html [:i %])
                                         (map #(get-in % [:root language-keyword language-keyword])
                                              (map json-read-str (.getArray (:target_lex result))))))]
