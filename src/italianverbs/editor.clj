@@ -186,7 +186,8 @@
                    FROM game
                   WHERE ((game.target = ?) OR (? = ''))
                     AND ((game.created_by = ?))
-               ORDER BY game.name"
+               ORDER BY game.name
+                  LIMIT 10"
 
             debug (log/debug (str "GAME-CHOOSING LANGUAGE: " language))
             debug (log/debug (str "GAME-CHOOSING SQL: " (string/replace sql "\n" " ")))
@@ -206,7 +207,8 @@
                   WHERE ((game.target = ?) OR (? = ''))
                     AND ((game.created_by IS NULL) OR
                          (game.created_by != ?))
-               ORDER BY game.name"
+               ORDER BY game.name
+                  LIMIT 10"
 
             debug (log/debug (str "GAME-CHOOSING LANGUAGE: " language))
             debug (log/debug (str "GAME-CHOOSING SQL: " (string/replace sql "\n" " ")))
@@ -316,7 +318,11 @@
 
 (defn show-game [game-id & [ {refine :refine} ]]
   (let [game-id (Integer. game-id)
-        game (first (k/exec-raw ["SELECT * FROM game WHERE id=?" [(Integer. game-id)]] :results))
+        game (first (k/exec-raw ["SELECT * 
+                                    FROM game 
+                                   WHERE id=?
+                                  "
+                                 [(Integer. game-id)]] :results))
         refine (if refine (read-string refine) nil)]
     (html
 
@@ -337,7 +343,7 @@
 
             ))
 
-         [:h3 "Verb/Tense Table"]
+         [:h3 "Verbs"]
 
          (verb-tense-table game {:refine refine})
 
@@ -509,7 +515,7 @@
         
         lexemes-for-this-game
         (sort
-         (let [lexemes (remove #(= % "{}") (.getArray (:target_lex game)))]
+         (let [lexemes (take 10 (remove #(= % "{}") (.getArray (:target_lex game))))]
            (zipmap
             (series 1 (.size lexemes) 1)
             (map (fn [x] x) lexemes))))]
@@ -558,23 +564,20 @@
                                (unify 
                                 (json-read-str tense-spec)
                                 lexeme-specification)
-                               count 
-                               (:count (first (k/exec-raw ["SELECT count(*) 
-                                                              FROM expression 
-                                                             WHERE structure @> ?::jsonb 
-                                                               AND structure @> ?::jsonb"
-                                                           [tense-spec
-                                                            lexeme-specification-json]] 
-                                                          :results)))]
+                               ]
                            [:td
                             {:class (if (= refine-param refine)
                                       "selected count" 
                                       (if (= 0 count)
                                         "zerowarning count"
                                         "count"))}
-                            [:a 
-                             {:href (str "/editor/game/" (:id game) "?refine=" refine-param)}
-                             (str count)]]))
+                            [:i {:class "fa fa-spinner fa-spin"} ""]
+
+
+                            ]
+
+                           )
+                         )
                        ;; end of map fn over all the possible tenses.
 
                        ;; coerce the database's value (of type jsonb[]) into a Clojure array.
