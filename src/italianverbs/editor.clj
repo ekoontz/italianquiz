@@ -349,48 +349,6 @@
          ;; (populate 50 en/small it/small (unify (pick one <target_grammar>) (pick one <target lex>)))
          ;; (populate 50 en/small it/small {:root {:italiano {:italiano "esprimere"}}})
 
-         ;; <form>
-         [:div {:style "border:0px dashed blue;float:left;display:block"}
-          (let [game (get-game-from-db game-id)]
-
-            
-            [:table {:style "display:none"}
-
-             [:tr
-              [:td {:colspan "2"}
-
-               [:textarea  {:style "font-family:monospace" :cols "40" :rows "10"}
-                (str "(take 10 (repeatedly #(populate-from " 
-                     (:source game) "/small " (:target game) "/small "
-                     "(:target_lex (get-game-from-db " game-id "))"
-                     "(:target_grammar (get-game-from-db " game-id ")))))"
-                     )
-                ]]]
-
-             [:tr
-              [:th "target_grammar"]
-              [:td
-               [:textarea {:style "font-family:monospace" :rows "10"}
-                (string/join "," (:target_grammar game))]]]
-
-             [:tr
-              [:th "target_lex"]
-              [:td
-               [:textarea {:style "font-family:monospace" :rows "10"}
-                (string/join "," (:target_lex game))]]]
-
-             [:tr
-              [:th "source"]
-              [:td (:source game)]]
-
-             [:tr
-              [:th "target"]
-              [:td (:target game)]]
-
-
-             ])]
-
-         ;; </form>
         ]])))
 
 (def headers {"Content-Type" "text/html;charset=utf-8"})
