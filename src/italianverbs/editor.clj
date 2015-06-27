@@ -601,9 +601,12 @@
                              )))
                        ;; end of map fn over all the possible tenses.
 
-                       (zipmap
-                        tenses
-                        (range 1 (+ 1 (.size tenses)))))
+                       ;; create a list of pairs: <1,tense1>, <2,tense2>... for
+                       ;; the list of tenses. (sort-by second..) assures the 1,2,.. ordering.
+                       (sort-by second
+                                (zipmap
+                                 tenses
+                                 (range 1 (+ 1 (.size tenses))))))
 
                   ] ;; :tr
                  )
