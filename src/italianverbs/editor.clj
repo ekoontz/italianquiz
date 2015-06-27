@@ -513,9 +513,13 @@
 
         language-keyword (keyword language-keyword-name)
 
+        sort-by-human-readable-name-of-tense (partial sort-by #(tenses-human-readable %))
+        
         ;; TODO: sort by tenses-human-readable for each element.
-        tenses (sort (map (fn [element] element)
-                          (.getArray (:target_grammar game))))
+        tenses (sort-by-human-readable-name-of-tense
+                (map (fn [element]
+                       (json-read-str element))
+                      (.getArray (:target_grammar game))))
         
         lexemes-for-this-game
         (sort
@@ -530,6 +534,8 @@
       (html
 
        [:table {:class "striped padded"}
+
+        ;; <header row>
         [:tr
          [:th {:style "width:1em"}]
          [:th {:style "text-align:left"} "Verb"]
@@ -542,8 +548,11 @@
                                        grammar-spec)]
                               (if tenses-human-readable
                                 tenses-human-readable "")))])
-              (map json-read-str (.getArray (:target_grammar game))))]
+              tenses)]
+;;              (map json-read-str (.getArray (:target_grammar game))))]
+        ;; </header row>
 
+        
         (map (fn [lexeme-spec]
                (let [lexeme-specification-json (second lexeme-spec)
                      lexeme-index (first lexeme-spec)
@@ -562,7 +571,7 @@
                            (let [tense-spec (first tense-spec-and-index)
                                  tense-index (second tense-spec-and-index)
                                  tense-specification-json tense-spec
-                                 tense-specification (json-read-str tense-specification-json)
+                                 tense-specification tense-specification-json
                                  tense (string/replace
                                         (let [tense-spec
                                               (get-in tense-specification
@@ -571,7 +580,7 @@
                                         ":" "")
                                  refine-param ;; combine the tense and lexeme together.
                                  (unify 
-                                  (json-read-str tense-spec)
+                                  tense-spec
                                   lexeme-specification)
                                  ]
                              [:td
@@ -592,9 +601,9 @@
                              )))
                        ;; end of map fn over all the possible tenses.
 
-                       (sort (zipmap
-                              tenses
-                              (range 1 (+ 1 (.size tenses))))))
+                       (zipmap
+                        tenses
+                        (range 1 (+ 1 (.size tenses)))))
 
                   ] ;; :tr
                  )
