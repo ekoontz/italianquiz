@@ -20,5 +20,8 @@ function edit_group_dialog(game_id) {
     $("#editgroup"+game_id)[0].style.display = "block";
 }
 
-function counts_per_verb_and_tense(dom_id,verb,tense) {
+function counts_per_verb_and_tense(dom_id,game_id,verb,tense) {
+    // do an ajax call to: GET /editor/(game_id)/(verb)/(tense)/count,
+    // return contents and use this to replace content
+    // (spinner) in dom_id.
 }

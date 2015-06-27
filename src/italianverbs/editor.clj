@@ -582,7 +582,7 @@
                                         }
                                  
                                  [:script {:type "text/javascript"}
-                                  (str "counts_per_verb_and_tense('" dom-id "'," lexeme-index "," tense-index ");")
+                                  (str "counts_per_verb_and_tense('" dom-id "'," (:id game) "," lexeme-index "," tense-index ");")
                                   ]
                                  ])]
                              )))
