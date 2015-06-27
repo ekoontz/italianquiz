@@ -512,6 +512,10 @@
         (str "" (sqlname-from-match (short-language-name-to-long language-short-name)) "")
 
         language-keyword (keyword language-keyword-name)
+
+        ;; TODO: sort by tenses-human-readable for each element.
+        tenses (sort (map (fn [element] element)
+                          (.getArray (:target_grammar game))))
         
         lexemes-for-this-game
         (sort
@@ -588,11 +592,9 @@
                              )))
                        ;; end of map fn over all the possible tenses.
 
-                       (let [tenses (map (fn [element] element)
-                                         (.getArray (:target_grammar game)))]
-                         (sort (zipmap
-                                tenses
-                                (range 1 (+ 1 (.size tenses)))))))
+                       (sort (zipmap
+                              tenses
+                              (range 1 (+ 1 (.size tenses))))))
 
                   ] ;; :tr
                  )
