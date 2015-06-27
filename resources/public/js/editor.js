@@ -20,3 +20,5 @@ function edit_group_dialog(game_id) {
     $("#editgroup"+game_id)[0].style.display = "block";
 }
 
+function counts_per_verb_and_tense(dom_id,verb,tense) {
+}

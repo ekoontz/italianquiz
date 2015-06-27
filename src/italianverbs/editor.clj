@@ -517,11 +517,11 @@
         (sort
          (let [lexemes (take 10 (remove #(= % "{}") (.getArray (:target_lex game))))]
            (zipmap
-            (series 1 (.size lexemes) 1)
+            (range 1 (.size lexemes))
             (map (fn [x] x) lexemes))))]
 
     (if (empty? lexemes-for-this-game)
-      (html [:i "Choose some verbs and tenses."])
+      (html [:i "Choose some verbs and tenses for this game."])
 
       (html
 
@@ -530,6 +530,7 @@
          [:th {:style "width:1em"}]
          [:th {:style "text-align:left"} "Verb"]
 
+         ;; create the table's header row: one <th> per verb tense.
          (map (fn [grammar-spec]
                 [:th.count (string/capitalize
                             (let [tenses-human-readable
@@ -541,47 +542,57 @@
 
         (map (fn [lexeme-spec]
                (let [lexeme-specification-json (second lexeme-spec)
-                     number-index (first lexeme-spec)
+                     lexeme-index (first lexeme-spec)
                      lexeme (str (get-in (json-read-str lexeme-specification-json)
                                          (language-to-spec-path language-short-name)))
                      lexeme-specification (json-read-str (second lexeme-spec)) 
                      ]
 
                  [:tr
-                  [:th {:style "text-align:right"} number-index]
+                  [:th {:style "text-align:right"} lexeme-index]
                   [:td lexeme]
 
-                  (map (fn [tense-spec]
-                         (let [tense-specification-json tense-spec
-                               tense-specification (json-read-str tense-specification-json)
-                               tense (string/replace
-                                      (let [tense-spec
-                                            (get-in tense-specification
-                                                    [:synsem :sem :tense])]
-                                        (if tense-spec tense-spec ""))
-                                      ":" "")
-                               refine-param ;; combine the tense and lexeme together.
-                               (unify 
-                                (json-read-str tense-spec)
-                                lexeme-specification)
-                               ]
-                           [:td
-                            {:class (if (= refine-param refine)
-                                      "selected count" 
-                                      (if (= 0 count)
-                                        "zerowarning count"
-                                        "count"))}
-                            [:i {:class "fa fa-spinner fa-spin"} ""]
-
-
-                            ]
-
-                           )
-                         )
+                  (map (fn [tense-spec-and-index]
+                         (do
+                           (log/debug (str "tense-spec-and-index: " tense-spec-and-index))
+                           (let [tense-spec (first tense-spec-and-index)
+                                 tense-index (second tense-spec-and-index)
+                                 tense-specification-json tense-spec
+                                 tense-specification (json-read-str tense-specification-json)
+                                 tense (string/replace
+                                        (let [tense-spec
+                                              (get-in tense-specification
+                                                      [:synsem :sem :tense])]
+                                          (if tense-spec tense-spec ""))
+                                        ":" "")
+                                 refine-param ;; combine the tense and lexeme together.
+                                 (unify 
+                                  (json-read-str tense-spec)
+                                  lexeme-specification)
+                                 ]
+                             [:td
+                              {:class (if (= refine-param refine)
+                                        "selected count" 
+                                        (if (= 0 count)
+                                          "zerowarning count"
+                                          "count"))}
+                              (let [dom-id (str "count-of-lex-" lexeme-index "-and-tense-"tense-index)]
+                                [:span {:id dom-id
+                                        :class "fa fa-spinner fa-spin"
+                                        }
+                                 
+                                 [:script {:type "text/javascript"}
+                                  (str "counts_per_verb_and_tense('" dom-id "'," lexeme-index "," tense-index ");")
+                                  ]
+                                 ])]
+                             )))
                        ;; end of map fn over all the possible tenses.
 
-                       ;; coerce the database's value (of type jsonb[]) into a Clojure array.
-                       (map (fn [x] x) (.getArray (:target_grammar game))))
+                       (let [tenses (map (fn [element] element)
+                                         (.getArray (:target_grammar game)))]
+                         (sort (zipmap
+                                tenses
+                                (range 1 (+ 1 (.size tenses)))))))
 
                   ] ;; :tr
                  )
@@ -964,6 +975,7 @@ ms: " params))))
         (= lang "es") :espanol
         true (str "unknown lang: " lang)))
 
+;; TODO: replace with standard (range).
 (defn series [from to increment]
   (if (or (< from to) (= from to))
     (cons
