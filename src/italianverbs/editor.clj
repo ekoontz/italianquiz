@@ -527,7 +527,7 @@
         
         lexemes-for-this-game
         (sort
-         (let [lexemes (take 10 (remove #(= % "{}") (.getArray (:target_lex game))))]
+         (let [lexemes (remove #(= % "{}") (.getArray (:target_lex game)))]
            (zipmap
             (range 1 (.size lexemes))
             (map (fn [x] x) lexemes))))]
