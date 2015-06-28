@@ -48,9 +48,13 @@
 (def routes
   (compojure/routes
    (GET "/" request
-        (do-if-admin {:body (body "" (show-games request) request)
-                   :status 200
-                   :headers headers}))
+        (do-if-admin {:body
+                      (body ""
+                            (show-games (conj request
+                                              {:user-id (username2userid (authentication/current request))}))
+                            request)
+                      :status 200
+                      :headers headers}))
 
    ;; alias for '/editor' (above)
    (GET "/home" request
