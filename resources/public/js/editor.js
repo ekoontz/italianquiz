@@ -24,4 +24,12 @@ function counts_per_verb_and_tense(dom_id,game_id,verb,tense) {
     // do an ajax call to: GET /editor/(game_id)/(verb)/(tense)/count,
     // return contents and use this to replace content
     // (spinner) in dom_id.
+    $.ajax({
+	datatype: "html",
+	url: "/editor/game/" + game_id + "/" + verb + "/" + tense,
+	success: function(content) {
+	    $("#" + dom_id).html(content);
+	    $("#" + dom_id).toggleClass("fa-spinner fa-spin",false);
+	}
+    });
 }

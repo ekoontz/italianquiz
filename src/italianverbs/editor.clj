@@ -95,6 +95,14 @@
                          {:status 302
                           :headers {"Location" (str "/editor/game/" game-id "?message=Edited+game:" game-id)}}))))
 
+   (GET "/game/:game/:verb/:tense" request
+        (do-if-admin
+         (let [game-id (Integer. (:game (:route-params request)))
+               game (first (k/exec-raw ["SELECT * FROM game WHERE id=?" [(Integer. game-id)]] :results))]
+           {:body "hello.."
+            :status 200
+            :headers headers})))
+
    (GET "/game/:game" request
         (do-if-admin
          (let [game-id (Integer. (:game (:route-params request)))
