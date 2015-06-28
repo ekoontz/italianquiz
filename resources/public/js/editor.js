@@ -21,15 +21,25 @@ function edit_group_dialog(game_id) {
 }
 
 function counts_per_verb_and_tense(dom_id,game_id,verb,tense) {
-    // do an ajax call to: GET /editor/(game_id)/(verb)/(tense)/count,
-    // return contents and use this to replace content
-    // (spinner) in dom_id.
+    // do an ajax call to: GET /editor/(game_id)/(verb)/(tense)/count.
+    // This server-side GET returns JSON of the count and a refine_param
+    // that is used to create a link for the count.
+    // Replace the spinner in $("#" + dom_id) with the count wrapped in a link
+    // so the user can click and see the details for the expressions aggregated
+    // into this count.
+    var game_url = "/editor/game/" + game_id;
+    var url = game_url + "/" + verb + "/" + tense;
     $.ajax({
-	datatype: "html",
-	url: "/editor/game/" + game_id + "/" + verb + "/" + tense,
+	datatype: "json",
+	url: url,
 	success: function(content) {
-	    $("#" + dom_id).html(content);
-	    $("#" + dom_id).toggleClass("fa-spinner fa-spin",false);
+	    var jsonResponse = jQuery.parseJSON(content);
+	    var count = jsonResponse.count;
+	    var refine_param = jsonResponse.refine_param;
+	    $("#" + dom_id).replaceWith($("<a href='" + game_url + "?refine=" + JSON.stringify(refine_param) + "'>" + count + "</a>"));
+	    if (count == 0) {
+		$("#" + dom_id).parent().addClass("zerowarning");
+	    }
 	}
     });
 }

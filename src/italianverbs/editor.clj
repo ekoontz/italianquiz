@@ -96,10 +96,43 @@
                           :headers {"Location" (str "/editor/game/" game-id "?message=Edited+game:" game-id)}}))))
 
    (GET "/game/:game/:verb/:tense" request
+        ;; Return translation pairs for this game's target and source language such that
+        ;; the target member of the pair has the given verb and tense.
         (do-if-admin
          (let [game-id (Integer. (:game (:route-params request)))
-               game (first (k/exec-raw ["SELECT * FROM game WHERE id=?" [(Integer. game-id)]] :results))]
-           {:body "hello.."
+               nth-verb (Integer. (:verb (:route-params request)))
+               nth-grammar-spec (Integer. (:tense (:route-params request)))
+               game (first (k/exec-raw ["SELECT target_lex,target_grammar
+                                           FROM game 
+                                          WHERE id=?" [(Integer. game-id)]] :results))
+               lexeme-spec (json-read-str (nth (map (fn [x] x) (.getArray (:target_lex game))) nth-verb))
+               grammar-spec (json-read-str (nth (map (fn [x] x) (.getArray (:target_grammar game))) nth-grammar-spec))
+
+               unified-spec ;; combine the tense and lexeme together into a single spec
+               (unify lexeme-spec grammar-spec)
+
+               sql
+               "SELECT count(*) 
+                  FROM (SELECT source.surface AS source,
+                               array_sort_unique(array_agg(target.surface)) AS targets
+                          FROM game
+                    RIGHT JOIN expression AS source
+                            ON source.language = game.source
+                    RIGHT JOIN expression AS target
+                            ON target.language = game.target
+                           AND ((source.structure->'synsem'->'sem') @> (target.structure->'synsem'->'sem'))
+                           AND target.structure @> ?::jsonb
+                         WHERE game.id=?
+                      GROUP BY source.surface) AS translation_pairs"
+
+               count (:count (first (k/exec-raw [sql
+                                                 [(json/write-str unified-spec)
+                                                  game-id] ]
+                                                :results)))
+               ]
+           {:body (json/write-str
+                   {:count count
+                    :refine_param unified-spec})
             :status 200
             :headers headers})))
 
@@ -158,7 +191,7 @@
                  (if (:refine (:params request))
                    [{:href nil
                      :content 
-                     (describe-spec (read-string (:refine (:params request))))
+                     (describe-spec (json-read-str (:refine (:params request))))
                     }]
 
                    ) ;; (if (:refine
@@ -331,7 +364,7 @@
                                    WHERE id=?
                                   "
                                  [(Integer. game-id)]] :results))
-        refine (if refine (read-string refine) nil)]
+        refine (if refine (json-read-str refine) nil)]
     (html
 
        [:div {:style "float:left;width:100%;margin-top:1em"}
@@ -529,7 +562,7 @@
         (sort
          (let [lexemes (remove #(= % "{}") (.getArray (:target_lex game)))]
            (zipmap
-            (range 1 (.size lexemes))
+            (range 0 (.size lexemes))
             (map (fn [x] x) lexemes))))]
 
     (if (empty? lexemes-for-this-game)
@@ -553,10 +586,8 @@
                               (if tenses-human-readable
                                 tenses-human-readable "")))])
               tenses)]
-;;              (map json-read-str (.getArray (:target_grammar game))))]
         ;; </header row>
 
-        
         (map (fn [lexeme-spec]
                (let [lexeme-specification-json (second lexeme-spec)
                      lexeme-index (first lexeme-spec)
@@ -566,7 +597,7 @@
                      ]
 
                  [:tr
-                  [:th {:style "text-align:right"} lexeme-index]
+                  [:th {:style "text-align:right"} (+ 1 lexeme-index)]
                   [:td lexeme]
 
                   (map (fn [tense-spec-and-index]
@@ -589,10 +620,8 @@
                                  ]
                              [:td
                               {:class (if (= refine-param refine)
-                                        "selected count" 
-                                        (if (= 0 count)
-                                          "zerowarning count"
-                                          "count"))}
+                                        "selected count"
+                                        "count")}
                               (let [dom-id (str "count-of-lex-" lexeme-index "-and-tense-"tense-index)]
                                 [:span {:id dom-id
                                         :class "fa fa-spinner fa-spin"
@@ -605,12 +634,12 @@
                              )))
                        ;; end of map fn over all the possible tenses.
 
-                       ;; create a list of pairs: <1,tense1>, <2,tense2>... for
-                       ;; the list of tenses. (sort-by second..) assures the 1,2,.. ordering.
+                       ;; create a list of pairs: <0,tense0>, <1,tense1>... for
+                       ;; the list of tenses. (sort-by second..) assures the 0,1,2,.. ordering.
                        (sort-by second
                                 (zipmap
                                  tenses
-                                 (range 1 (+ 1 (.size tenses))))))
+                                 (range 0 (.size tenses)))))
 
                   ] ;; :tr
                  )
