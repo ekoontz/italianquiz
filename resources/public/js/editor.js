@@ -36,7 +36,8 @@ function counts_per_verb_and_tense(dom_id,game_id,verb,tense) {
 	    var jsonResponse = jQuery.parseJSON(content);
 	    var count = jsonResponse.count;
 	    var refine_param = jsonResponse.refine_param;
-	    $("#" + dom_id).replaceWith($("<a href='" + game_url + "?refine=" + JSON.stringify(refine_param) + "'>" + count + "</a>"));
+	    var refine_url = game_url + "?refine=" + JSON.stringify(refine_param);
+	    $("#" + dom_id).replaceWith($("<a href='" + refine_url + "'>" + count + "</a>"));
 	    if (count == 0) {
 		$("#" + dom_id).parent().addClass("zerowarning");
 	    }
