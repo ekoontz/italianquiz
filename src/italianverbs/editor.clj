@@ -211,27 +211,21 @@
 (defn show-games [ & [ {language :language
                         user-id :user-id
                         }]]
+  (log/debug (str "GAME-CHOOSING LANGUAGE: " language))
   (let [show-source-lists false
-        language (if language language "")
-        debug (log/debug (str "THE LANGUAGE OF THE GAME IS: " language))
-        ]
+        language (if language language "")]
     (html
-
      (language-dropdown language)
      
      [:div {:style "margin-top:0.5em;"}
       [:h3 "My games"]
-
       (let [sql "SELECT game.name AS name,game.id AS id,active,
                         source,target,target_lex,target_grammar
                    FROM game
-                  WHERE ((game.target = ?) OR (? = ''))
-                    AND ((game.created_by = ?))
-               ORDER BY game.name
-                  LIMIT 10"
-
-            debug (log/debug (str "GAME-CHOOSING LANGUAGE: " language))
-            debug (log/debug (str "GAME-CHOOSING SQL: " (string/replace sql "\n" " ")))
+                  WHERE ((1=1) OR (game.target = ?) OR (? = ''))
+                    AND (game.created_by = ?)
+               ORDER BY game.name"
+            debug (log/debug (str "MY GAMES: GAME-CHOOSING SQL: " (string/replace sql "\n" " ")))
             results (k/exec-raw [sql
                                  [language language user-id]]
                                 :results)
@@ -248,11 +242,9 @@
                   WHERE ((game.target = ?) OR (? = ''))
                     AND ((game.created_by IS NULL) OR
                          (game.created_by != ?))
-               ORDER BY game.name
-                  LIMIT 10"
+               ORDER BY game.name"
 
-            debug (log/debug (str "GAME-CHOOSING LANGUAGE: " language))
-            debug (log/debug (str "GAME-CHOOSING SQL: " (string/replace sql "\n" " ")))
+            debug (log/debug (str "OTHER'S GAMES: GAME-CHOOSING SQL: " (string/replace sql "\n" " ")))
             results (k/exec-raw [sql
                                  [language language user-id]]
                                 :results)
