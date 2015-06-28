@@ -347,10 +347,6 @@
 
          (verb-tense-table game {:refine refine})
 
-         [:h3 "Expressions"]
-
-         (expressions-for-game game-id)
-
          ;; TOFINISH: working on making a form that lets us submit stuff like:
          ;; (populate 50 en/small it/small (unify (pick one <target_grammar>) (pick one <target lex>)))
          ;; (populate 50 en/small it/small {:root {:italiano {:italiano "esprimere"}}})
