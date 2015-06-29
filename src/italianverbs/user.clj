@@ -237,3 +237,9 @@
     {:status 302
      :headers {"Location" "/"}}))
 
+(defn do-if [auth-fn do-if-authorized do-if-not-authorized]
+  (if (auth-fn)
+    (do-if-authorized)
+    (do-if-not-authorized)))
+
+
