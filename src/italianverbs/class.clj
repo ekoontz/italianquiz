@@ -13,12 +13,12 @@
    [compojure.core :as compojure :refer [GET PUT POST DELETE ANY]]
    [formative.core :as f]
    [formative.parse :as fp]
-   [italianverbs.auth :refer [get-user-id is-authenticated]]
+
    [italianverbs.html :as html]
    [italianverbs.korma :as db]
    [italianverbs.student :as student]
    [italianverbs.studenttest :as tests]
-   [italianverbs.user :refer [haz-admin?]]
+   [italianverbs.user :refer [haz-admin? do-if-authenticated]]
    [korma.core :as k]))
 
 (declare add-test)
@@ -61,14 +61,14 @@
   (compojure/routes
 
    (GET "/" request
-        (is-authenticated request
+        (do-if-authenticated
                           {:status 200
                            :body (html/page "Classes" 
                                             (show request (haz-admin?))
                                             request)}))
 
    (GET "/my" request
-        (is-authenticated request
+        (do-if-authenticated
                           {:status 200
                            :body (html/page "My Classes" 
                                             (show request (haz-admin?))
@@ -161,11 +161,12 @@
                                 :headers {"Location" (str "/class/" class-id "?result=" (:message result))}}))))
 
    (GET "/:class" request
-        (is-authenticated request
+        (do-if-authenticated
                           {:body (html/page "Classes" (show-one
                                                        (:class (:route-params request))
                                                        (haz-admin?)
-                                                       (get-user-id db/fetch))
+                                        ;                                                       (get-user-id db/fetch))
+                                                       )
                                             request)}))
 
    (GET "/:class/" request
