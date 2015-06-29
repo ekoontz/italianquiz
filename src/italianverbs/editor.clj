@@ -14,7 +14,7 @@
    [italianverbs.html :as html]
    [italianverbs.lexiconfn :refer [infinitives]]
    [italianverbs.unify :refer [get-in strip-refs unify]]
-   [italianverbs.user :refer [do-if-admin username2userid]]
+   [italianverbs.user :refer [do-if do-if-admin username2userid]]
    [hiccup.core :refer (html)]
    [korma.core :as k]))
 
@@ -27,6 +27,7 @@
 (declare get-game-from-db)
 (declare headers)
 (declare insert-game)
+(declare is-owner-of?)
 (declare json-read-str)
 (declare language-to-spec-path)
 (declare multipart-to-edn)
@@ -48,13 +49,15 @@
 (def routes
   (compojure/routes
    (GET "/" request
-        (do-if-admin {:body
-                      (body ""
-                            (show-games (conj request
-                                              {:user-id (username2userid (authentication/current request))}))
-                            request)
+        (do-if-admin
+         {:body
+          (body ""
+                (show-games
+                 (conj request
+                       {:user-id (username2userid (authentication/current request))}))
+                request)
                       :status 200
-                      :headers headers}))
+          :headers headers}))
 
    ;; alias for '/editor' (above)
    (GET "/home" request
@@ -85,6 +88,11 @@
             {:status 302
              :headers {"Location" (str "/editor/" language "?message=" message)}})))
 
+   (POST "/game/clone/:game-id" request
+         (let [game-id (:game-id (:route-params request))]
+           {:status 302
+            :headers {"Location" (str "/editor/game/" game-id)}}))
+   
    (POST "/game/delete/:game-to-delete" request
          (do-if-admin
           (let [message (delete-game (:game-to-delete (:route-params request)))]
@@ -92,12 +100,24 @@
              :headers {"Location" (str "/editor/" "?message=" message)}})))
 
    (POST "/game/edit/:game-to-edit" request
-         (do (log/debug (str "Doing POST /game/edit/:game-to-edit with request: " request))
-             (do-if-admin (let [game-id (:game-to-edit (:route-params request))]
-                         (update-game (:game-to-edit (:route-params request))
-                                      (multipart-to-edn (:multipart-params request)))
-                         {:status 302
-                          :headers {"Location" (str "/editor/game/" game-id "?message=Edited+game:" game-id)}}))))
+         (let [game-id (:game-to-edit (:route-params request))
+               user (authentication/current request)]
+           (do-if
+            (fn []
+              (log/debug (str "Edit game: " game-id ": can user: '" user "' edit this game?"))
+              (is-owner-of? (Integer. game-id) user))
+            (fn []
+              (do
+                (log/warn (str "User:" user " is authorized to update this game."))
+                (update-game (:game-to-edit (:route-params request))
+                             (multipart-to-edn (:multipart-params request)))
+                {:status 302
+                 :headers {"Location" (str "/editor/game/" game-id "?message=Edited+game:" game-id)}}))
+            (fn []
+              (do
+                (log/warn (str "User:" user " tried to edit game: " game-id " but was denied authorization to do so."))
+                {:status 302
+                 :headers {"Location" (str "/editor/game/" game-id "?message=Unauthorized+to+edit+game:" game-id)}})))))
 
    (GET "/game/:game/:verb/:tense" request
         ;; Return translation pairs for this game's target and source language such that
@@ -145,7 +165,10 @@
          (let [game-id (Integer. (:game (:route-params request)))
                game (first (k/exec-raw ["SELECT * FROM game WHERE id=?" [(Integer. game-id)]] :results))]
            {:body (body (:name game) (show-game (:game (:route-params request))
-                                                {:refine (:refine (:params request))})
+                                                {:show-as-owner? (is-owner-of?
+                                                                 (Integer. game-id)
+                                                                 (authentication/current request))
+                                                 :refine (:refine (:params request))})
                         request)
             :status 200
             :headers headers})))
@@ -211,6 +234,20 @@
 
 (declare language-dropdown)
 (declare show-game-table)
+
+(defn is-owner-of? [game-id user]
+  "return true iff user (identified by their email) is the owner of the game whose is game-id"
+  (log/debug (str "is-owner-of: game-id:" game-id))
+  (log/debug (str "is-owner-of: user:   " user))
+  (let [result (first (k/exec-raw ["SELECT 1
+                                      FROM game
+                                INNER JOIN vc_user
+                                        ON (vc_user.email = ?)
+                                     WHERE game.id=?
+                                       AND game.created_by = vc_user.id"
+                                   [user game-id]]
+                                  :results))]
+    (not (nil? result))))
 
 (defn show-games [ & [ {language :language
                         user-id :user-id
@@ -353,20 +390,45 @@
              {:value "es" :label "Español"}
              {:value "it" :label "Italiano"}])]]]]))
 
-(defn show-game [game-id & [ {refine :refine} ]]
+(defn show-game [game-id & [ {refine :refine
+                              show-as-owner? :show-as-owner?} ]]
   (let [game-id (Integer. game-id)
         game (first (k/exec-raw ["SELECT * 
                                     FROM game 
-                                   WHERE id=?
-                                  "
-                                 [(Integer. game-id)]] :results))
+                                   WHERE id=?"
+                                 [game-id]] :results))
+        owner (:email
+               (first (k/exec-raw ["SELECT email 
+                                      FROM vc_user
+                                INNER JOIN game 
+                                        ON (vc_user.id = game.created_by)
+                                       AND (game.id = ?)"
+                                   [game-id]] :results)))
         refine (if refine (json-read-str refine) nil)]
     (html
 
        [:div {:style "float:left;width:100%;margin-top:1em"}
 
         [:div {:style "border:0px dashed green;float:right;width:50%;"}
-         (if game (game-editor-form game nil nil))]
+         (if show-as-owner?
+           (game-editor-form game nil nil)
+           (html
+            [:h2 "Game info"]
+
+            [:table {:class "striped"}
+             [:th "Owner"]
+             [:td (if owner owner [:i "No owner"])]]
+           
+            [:div {:style "width:100%;float:left"}
+             [:p
+              "You are not owner of this game, so you cannot edit it. You can clone it though:"]
+
+             [:form {:method "post"
+                     :action (str "/editor/game/clone/" game-id)}
+              [:button {:onclick "submit();"}
+               "Clone"
+               ]]]))]
+            
 
         [:div {:style "border:0px dashed green;float:left;width:50%"}
 
@@ -598,7 +660,7 @@
 
                   (map (fn [tense-spec-and-index]
                          (do
-                           (log/debug (str "tense-spec-and-index: " tense-spec-and-index))
+                           (log/trace (str "tense-spec-and-index: " tense-spec-and-index))
                            (let [tense-spec (first tense-spec-and-index)
                                  tense-index (second tense-spec-and-index)
                                  tense-specification-json tense-spec
@@ -760,7 +822,7 @@ ms: " params))))
                    "SET (name,source,target,target_lex,target_grammar) "
                    "= (?,?,?," target-lex-as-specs "," target-tenses-as-specs ") WHERE id=?")]
 
-      (log/debug (str "UPDATE sql: " sql))
+      (log/trace (str "UPDATE sql: " sql))
       (if dump-sql
         {:headers {"Content-type" "application/json;charset=utf-8"}
          :body (json/write-str {:sql sql
@@ -777,14 +839,14 @@ ms: " params))))
                           (Integer. game-id)]]))))))
 
 (defn multipart-to-edn [params]
-  (log/debug (str "multipart-to-edn input: " params))
+  (log/trace (str "multipart-to-edn input: " params))
   (let [output
         (zipmap (map #(keyword %)
                      (map #(string/replace % ":" "")
                           (map #(string/replace % "[]" "")
                                (keys params))))
                 (vals params))]
-    (log/debug (str "multipart-to-edn output: " output))
+    (log/trace (str "multipart-to-edn output: " output))
     output))
 
 ;; TODO: throw exception rather than "(no shortname for language)"
@@ -834,7 +896,7 @@ ms: " params))))
 (defn game-editor-form [game game-to-edit game-to-delete & [editpopup] ]
   (let [game-id (:id game)
         language (:language game)
-        debug (log/debug (str "ALL GAME INFO: " game))
+        debug (log/trace (str "ALL GAME INFO: " game))
         game-to-edit game-to-edit
         problems nil ;; TODO: should be optional param of this (defn)
         game-to-delete game-to-delete
@@ -880,10 +942,12 @@ ms: " params))))
 
                 [{:name :target_lex
                   :label "Verbs"
+                  :disabled "disabled"
                   :type :checkboxes
                   :cols 10
                   :options (map (fn [lexeme]
                                   {:label lexeme
+;                                   :options {"disabled" "disabled"}
                                    :value lexeme})
                                 (map #(:surface %)
                                      (k/exec-raw [(str "SELECT DISTINCT canonical AS surface
@@ -928,7 +992,7 @@ ms: " params))))
                 :target_lex (vec (remove #(or (nil? %)
                                               (= "" %))
                                          (map #(let [path [:root language-keyword language-keyword]
-                                                     debug (log/debug (str "CHECKBOX TICK (:target_lex) (path=" path ": ["
+                                                     debug (log/trace (str "CHECKBOX TICK (:target_lex) (path=" path ": ["
                                                                            (get-in % path nil) "]"))]
                                                  (get-in % path nil))
                                               (map json-read-str (seq (.getArray (:target_lex game)))))))
@@ -938,7 +1002,7 @@ ms: " params))))
                                                  (= "" %))
                                             (map #(let [debug (log/debug (str "tense: " %))
                                                         data (json-read-str %)]
-                                                    (log/debug (str "the data is: " data))
+                                                    (log/trace (str "target tense spec: " data))
                                                     (json/write-str data))
                                                  (seq (.getArray (:target_grammar game))))))
                 }
