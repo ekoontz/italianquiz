@@ -219,11 +219,11 @@
          (let [username (authentication/current request)]
            (some #(= % :teacher) (roles-of-email username))))))
 
-(defn do-if-authenticated [what-to-do]
-  (if (not (nil? (friend/current-authentication)))
-    what-to-do
-    {:status 302
-     :headers {"Location" "/"}}))
+(defmacro do-if-authenticated [what-to-do]
+  `(if (not (nil? (friend/current-authentication)))
+     ~what-to-do
+     {:status 302
+      :headers {"Location" "/?denied:+not+authenticated"}}))
 
 (defn do-if-admin [what-to-do]
   (if (haz-admin?)
