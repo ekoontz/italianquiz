@@ -50,23 +50,15 @@
 (def routes
   (compojure/routes
    (GET "/" request
-        (do-if
-         (fn [] (has-teacher-role request))
-         (fn []
-           {:body
-            (body ""
-                  (show-games
-                   (conj request
-                         {:user-id (username2userid (authentication/current request))}))
-                  request)
-            :status 200
-            :headers headers})
-         (fn []
-           (do (log/warn (str "Unauthorized attempt to access a teacher-only function."))
-               {:status 302
-                :headers {"Location" "/?message=Unauthorized: you+are+not+a+teacher"}}))))
-
-         
+        (do-if-teacher
+         {:body
+          (body ""
+                (show-games
+                 (conj request
+                       {:user-id (username2userid (authentication/current request))}))
+                request)
+          :status 200
+          :headers headers}))
    
    ;; alias for '/editor' (above)
    (GET "/home" request
@@ -130,21 +122,19 @@ INSERT INTO game
          (let [game-id (:game-to-edit (:route-params request))
                user (authentication/current request)]
            (do-if
-            (fn []
+            (do
               (log/debug (str "Edit game: " game-id ": can user: '" user "' edit this game?"))
               (is-owner-of? (Integer. game-id) user))
-            (fn []
-              (do
-                (log/warn (str "User:" user " is authorized to update this game."))
-                (update-game (:game-to-edit (:route-params request))
-                             (multipart-to-edn (:multipart-params request)))
-                {:status 302
-                 :headers {"Location" (str "/editor/game/" game-id "?message=Edited+game:" game-id)}}))
-            (fn []
-              (do
-                (log/warn (str "User:" user " tried to edit game: " game-id " but was denied authorization to do so."))
-                {:status 302
-                 :headers {"Location" (str "/editor/game/" game-id "?message=Unauthorized+to+edit+game:" game-id)}})))))
+            (do
+              (log/warn (str "User:" user " is authorized to update this game."))
+              (update-game (:game-to-edit (:route-params request))
+                           (multipart-to-edn (:multipart-params request)))
+              {:status 302
+               :headers {"Location" (str "/editor/game/" game-id "?message=Edited+game:" game-id)}})
+            (do
+              (log/warn (str "User:" user " tried to edit game: " game-id " but was denied authorization to do so."))
+              {:status 302
+               :headers {"Location" (str "/editor/game/" game-id "?message=Unauthorized+to+edit+game:" game-id)}}))))
 
    (GET "/game/:game/:verb/:tense" request
         ;; Return translation pairs for this game's target and source language such that
@@ -448,12 +438,13 @@ INSERT INTO game
            
             [:div {:style "width:100%;float:left"}
              [:p
-              "You are not owner of this game, so you cannot edit it. You can clone it though:"]
+              "You are not owner of this game, so you cannot edit it. You can copy it, though, 
+and you'll be edit your copy."]
 
              [:form {:method "post"
                      :action (str "/editor/game/clone/" game-id)}
               [:button {:onclick "submit();"}
-               "Clone"
+               "Copy"
                ]]]))]
             
 
@@ -1039,6 +1030,14 @@ ms: " params))))
                       :method "post"
                       :problems problems]]})
 
+     [:div.editgame
+      [:p "You can make a new copy of this game."]
+      [:form {:method "post"
+              :action (str "/editor/game/clone/" game-id)}
+       [:button {:onclick "submit();"}
+        "Copy"
+        ]]]
+     
      [:div.dangerzone
       [:h4 "Delete game"]
 

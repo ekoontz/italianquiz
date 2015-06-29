@@ -231,20 +231,20 @@
     {:status 302
      :headers {"Location" "/"}}))
 
-(defn do-if [auth-fn do-if-authorized do-if-not-authorized]
-  (if (auth-fn)
-    (do-if-authorized)
-    (do-if-not-authorized)))
+(defmacro do-if [auth-fn do-if-authorized do-if-not-authorized]
+  `(if ~auth-fn
+     ~do-if-authorized
+     ~do-if-not-authorized))
 
 (defn do-if-teacher [what-to-do]
-  (do-if has-teacher-role
-         (fn []
-           (do (log/info (str "Authorized attempt to access a teacher-only function."))
-               what-to-do))
-         (fn []
-           (do (log/warn (str "Unauthorized attempt to access a teacher-only function."))
-               {:status 302
-                :headers {"Location" "/?message=Unauthorized: you+are+not+a+teacher"}}))))
+  (do-if (has-teacher-role)
+         (do (log/info (str "Authorized attempt to access a teacher-only function."))
+             what-to-do)
+         (do (log/warn (str "Unauthorized attempt to access a teacher-only function."))
+             {:status 302
+              :headers {"Location" "/?message=Unauthorized: you+are+not+a+teacher"}})))
+
+
 
 
 
