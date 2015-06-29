@@ -89,9 +89,27 @@
              :headers {"Location" (str "/editor/" language "?message=" message)}})))
 
    (POST "/game/clone/:game-id" request
-         (let [game-id (:game-id (:route-params request))]
-           {:status 302
-            :headers {"Location" (str "/editor/game/" game-id)}}))
+          (let [source-game-id (:game-id (:route-params request))
+                user (authentication/current request)
+                user-id (username2userid user)]
+            (do-if-admin
+             (do
+               (log/info "cloning game: " source-game-id " for user: " user)
+               (let [new-game-id
+                     (:id (first
+                           (k/exec-raw ["
+INSERT INTO game
+           (source_groupings,target_groupings,source_lex,source_grammar,
+           target_lex,target_grammar,name,source,target,active,created_by)
+
+     SELECT source_groupings,target_groupings,source_lex,source_grammar,
+
+            target_lex,target_grammar,name || ' (copy)',source,target,false,?
+       FROM game
+      WHERE id=? RETURNING id"
+                            [user-id (Integer. source-game-id)]] :results)))]
+                 {:status 302
+                  :headers {"Location" (str "/editor/game/" new-game-id)}})))))
    
    (POST "/game/delete/:game-to-delete" request
          (do-if-admin
