@@ -71,7 +71,7 @@
          (insert-session session))))
   
   ([session access-token user-id]
-     (let [sql-only (log/info (str "SQL ONLY: "
+     (let [sql-only (log/debug (str "SQL ONLY: "
                                    (k/sql-only ["SELECT session.*
                                                    FROM session 
                                                   WHERE ring_session = ?::uuid
@@ -112,7 +112,7 @@
              user-id (:userid user-by-access-token)
              ring-session (get-in request [:cookies "ring-session" :value])]
          
-         (log/info (str "found user by access-token in Postgres vc_user database: email: "
+         (log/debug (str "found user by access-token in Postgres vc_user database: email: "
                         email))
          (if request (do
                        (log/trace (str "found user by access-token, and currently the request is: " request))
