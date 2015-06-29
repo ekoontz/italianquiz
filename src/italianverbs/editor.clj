@@ -14,7 +14,8 @@
    [italianverbs.html :as html]
    [italianverbs.lexiconfn :refer [infinitives]]
    [italianverbs.unify :refer [get-in strip-refs unify]]
-   [italianverbs.user :refer [do-if do-if-admin username2userid]]
+   [italianverbs.user :refer [do-if do-if-admin do-if-teacher
+                              has-teacher-role username2userid]]
    [hiccup.core :refer (html)]
    [korma.core :as k]))
 
@@ -49,16 +50,24 @@
 (def routes
   (compojure/routes
    (GET "/" request
-        (do-if-admin
-         {:body
-          (body ""
-                (show-games
-                 (conj request
-                       {:user-id (username2userid (authentication/current request))}))
-                request)
-                      :status 200
-          :headers headers}))
+        (do-if
+         (fn [] (has-teacher-role request))
+         (fn []
+           {:body
+            (body ""
+                  (show-games
+                   (conj request
+                         {:user-id (username2userid (authentication/current request))}))
+                  request)
+            :status 200
+            :headers headers})
+         (fn []
+           (do (log/warn (str "Unauthorized attempt to access a teacher-only function."))
+               {:status 302
+                :headers {"Location" "/?message=Unauthorized: you+are+not+a+teacher"}}))))
 
+         
+   
    ;; alias for '/editor' (above)
    (GET "/home" request
         (do-if-admin
@@ -281,7 +290,7 @@ INSERT INTO game
       (let [sql "SELECT game.name AS name,game.id AS id,active,
                         source,target,target_lex,target_grammar
                    FROM game
-                  WHERE ((1=1) OR (game.target = ?) OR (? = ''))
+                  WHERE ((game.target = ?) OR (? = ''))
                     AND (game.created_by = ?)
                ORDER BY game.name"
             debug (log/debug (str "MY GAMES: GAME-CHOOSING SQL: " (string/replace sql "\n" " ")))
