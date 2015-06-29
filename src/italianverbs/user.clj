@@ -238,7 +238,7 @@
 
 (defn do-if-teacher [what-to-do]
   (do-if (has-teacher-role)
-         (do (log/info (str "Authorized attempt to access a teacher-only function."))
+         (do (log/debug (str "Authorized attempt to access a teacher-only function."))
              what-to-do)
          (do (log/warn (str "Unauthorized attempt to access a teacher-only function."))
              {:status 302
