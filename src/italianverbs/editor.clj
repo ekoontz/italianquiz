@@ -62,13 +62,13 @@
    
    ;; alias for '/editor' (above)
    (GET "/home" request
-        (do-if-admin
+        (do-if-teacher
          {:status 302
           :headers {"Location" "/editor"}}))
 
    ;; language-specific: show only games and lists appropriate to a given language
    (GET "/:language" request
-        (do-if-admin {:body (body (str (short-language-name-to-long (:language (:route-params request))))
+        (do-if-teacher {:body (body (str (short-language-name-to-long (:language (:route-params request))))
                                   (show-games (conj request
                                                     {:user-id (username2userid (authentication/current request))
                                                      :language (:language (:route-params request))}))
@@ -82,7 +82,7 @@
 
    (POST "/game/activate/:game" request
          ;; toggle activation of this game
-         (do-if-admin
+         (do-if-teacher
           (let [debug (log/debug (str "PARAMS: " (:params request)))
                 message (toggle-activation (:game (:route-params request)) (= "on" (:active (:params request))))
                 language (:language (:params request))]
@@ -93,7 +93,7 @@
           (let [source-game-id (:game-id (:route-params request))
                 user (authentication/current request)
                 user-id (username2userid user)]
-            (do-if-admin
+            (do-if-teacher
              (do
                (log/info "cloning game: " source-game-id " for user: " user)
                (let [new-game-id
@@ -113,7 +113,7 @@ INSERT INTO game
                   :headers {"Location" (str "/editor/game/" new-game-id)}})))))
    
    (POST "/game/delete/:game-to-delete" request
-         (do-if-admin
+         (do-if-teacher
           (let [message (delete-game (:game-to-delete (:route-params request)))]
             {:status 302
              :headers {"Location" (str "/editor/" "?message=" message)}})))
@@ -139,7 +139,7 @@ INSERT INTO game
    (GET "/game/:game/:verb/:tense" request
         ;; Return translation pairs for this game's target and source language such that
         ;; the target member of the pair has the given verb and tense.
-        (do-if-admin
+        (do-if-teacher
          (let [game-id (Integer. (:game (:route-params request)))
                nth-verb (Integer. (:verb (:route-params request)))
                nth-grammar-spec (Integer. (:tense (:route-params request)))
@@ -178,7 +178,7 @@ INSERT INTO game
             :headers headers})))
 
    (GET "/game/:game" request
-        (do-if-admin
+        (do-if-teacher
          (let [game-id (Integer. (:game (:route-params request)))
                game (first (k/exec-raw ["SELECT * FROM game WHERE id=?" [(Integer. game-id)]] :results))]
            {:body (body (:name game) (show-game (:game (:route-params request))
@@ -191,7 +191,7 @@ INSERT INTO game
             :headers headers})))
 
    (POST "/game/new" request
-         (do-if-admin
+         (do-if-teacher
           (let [params (multipart-to-edn (:multipart-params request))
                 language (cond (and (:language params)
                                     (not (= (string/trim (:language params)) "")))
