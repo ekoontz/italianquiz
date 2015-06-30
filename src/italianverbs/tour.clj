@@ -132,7 +132,7 @@
                                          FROM expression AS source
                                    INNER JOIN question
                                            ON question.source = source.id
-                                     ORDER BY issued ASC")
+                                     ORDER BY issued DESC LIMIT 10")
                                  []] :results))])
                        request
                        {})})
