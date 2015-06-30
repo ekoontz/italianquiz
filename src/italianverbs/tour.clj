@@ -178,8 +178,11 @@
 (defn sync-question-info [ & [{game-id :game-id
                                source-id :source-id
                                session-id :session-id}]]
+  ;; TODO: save answer within question.
+  ;; Look for where we set 'time_to_correct_response' to know how to add answer to question.
+  "create a question. currently the answer is not tracked (but should be)."
   (log/info (str "sync-question-info: game-id:" game-id))
-  (log/info (str "sync-question-info: source-id: " source-id))
+  (log/info (str "sync-question-info: expression source: " source-id))
   (log/info (str "sync-question-info: session-id: " session-id))
   (:id (first (k/exec-raw [(str "INSERT INTO question (game,source,session_id)
                                       VALUES (?,?,?::uuid) RETURNING id")
