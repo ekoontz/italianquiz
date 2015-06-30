@@ -16,6 +16,7 @@ CREATE TABLE question (
     id integer DEFAULT nextval('question_id_seq'::regclass) NOT NULL,
     issued timestamp without time zone DEFAULT now(),
     source integer REFERENCES expression,
+    answer text, -- the user's answer as a string.
     time_to_correct_response integer
 );
 

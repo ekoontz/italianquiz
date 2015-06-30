@@ -257,6 +257,8 @@ function decrement_remaining_tour_question_time() {
     log(DEBUG,"decrement remaining time..");
 }
 
+// TODO: correct_answer should be an array of possibile correct answers,
+// rather than a single possibile correct answer.
 function submit_user_guess(guess,correct_answer,target_language,target_locale,game_id) {
     log(INFO,"submit_user_guess() guess: " + guess);
     if (guess == correct_answer) {
@@ -273,6 +275,7 @@ function submit_user_guess(guess,correct_answer,target_language,target_locale,ga
 	    cache: false,
 	    type: "POST",
 	    data: {question: question_id,
+		   answer: guess,
 		   time: time_to_correct_response},
             dataType: "html",
             url: "/tour/update-question"}).done(function(content) {

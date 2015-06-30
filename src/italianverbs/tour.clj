@@ -101,15 +101,19 @@
      (POST "/update-question" request
            (let [session (:value (get (:cookies request) "ring-session"))
                  question (Integer. (get (:form-params request) "question"))
-                 ttcr (Integer. (get (:form-params request) "time"))]
+                 ttcr (Integer. (get (:form-params request) "time"))
+                 answer (get (:form-params request) "answer")]
              (log/debug (str "UPDATE QUESTION: POST: " request))
              (log/debug (str "UPDATE QUESTION: form-params: " (:form-params request)))
              (log/debug (str "UPDATE QUESTION: session: " session))
              (log/debug (str "UPDATE QUESTION: ttcr: " ttcr))
+             (log/debug (str "UPDATE QUESTION: answer: " answer))
              (log/debug (str "UPDATE question SET (time_to_correct_response) = " ttcr " WHERE (id = " question " AND session_id = " session))
              
-             (k/exec-raw [(str "UPDATE question SET (time_to_correct_response) = (?) WHERE (id = ? AND session_id = ?::uuid)")
-                          [ttcr question session]])
+             (k/exec-raw [(str "UPDATE question 
+                                   SET (time_to_correct_response,answer) = (?,?) 
+                                 WHERE (id = ? AND session_id = ?::uuid)")
+                          [ttcr answer question session]])
              {:status 200
               :headers {"Content-Type" "application/json;charset=utf-8"}
               :body (write-str (:status (str "updated question: " (:question (:form-params request)))))}))
@@ -178,8 +182,9 @@
 (defn sync-question-info [ & [{game-id :game-id
                                source-id :source-id
                                session-id :session-id}]]
-  ;; TODO: save answer within question.
-  ;; Look for where we set 'time_to_correct_response' to know how to add answer to question.
+  ;; Here we insert a question but leave the answer column null.
+  ;; The answer is filled in later when the user POSTs to /tour/update-question,
+  ;; where we add the user's correct answer and the TTCR (time-to-correct-response).
   "create a question. currently the answer is not tracked (but should be)."
   (log/info (str "sync-question-info: game-id:" game-id))
   (log/info (str "sync-question-info: expression source: " source-id))
