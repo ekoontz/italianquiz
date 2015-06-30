@@ -393,16 +393,28 @@ function update_user_input(target_language,target_locale) {
     var percent = (prefix.length / correct_answer.length) * 100;
     $("#userprogress").css("width",percent+"%");
 	
-    if ((prefix != '') && (prefix.toLowerCase() == correct_answer.toLowerCase())) {
+    if ((prefix.length > 0) && (prefix.toLowerCase() == correct_answer.toLowerCase())) {
 	/* user got it right - 'flash' their answer and submit the answer for them. */
 	$("#gameinput").css("background","lime");
+
+	$("#gameinput").keyup(function(event){
+	    log(DEBUG,"You hit the key: " + event.keyCode);
+	});
+
+	submit_user_guess(prefix,correct_answer,target_language,target_locale);
 	
-	setTimeout(function(){
+	setTimeout(function() {
 	    log(INFO,"submitting correct answer: " + correct_answer);
-	    submit_user_guess(prefix,correct_answer,target_language,target_locale);
+
 	    // reset userprogress bar
 	    $("#userprogress").css("width","0");
-	    }, 500);
+	    $("#gameinput").focus();
+	    $("#gameinput").val("");
+	    $("#gameinput").keyup(function(event){
+		log(DEBUG,"You hit the key: " + event.keyCode);
+		update_user_input(target_language,target_locale);
+	    });
+	},2000);
     }
 }
 
