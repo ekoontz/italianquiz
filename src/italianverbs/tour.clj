@@ -98,6 +98,46 @@
           {:status 302
            :headers {"Location" "/tour/it/generate-q-and-a"}})
 
+     ;; TODO: join against users to show usernames rather than just session id.
+     (GET "/report" request
+          {:status 200
+           :headers headers
+           :body (page "Report"
+                       (let [rows nil]
+                         [:table {:class "striped padded"}
+                          [:tr
+                           [:th "id"]
+                           [:th "Question"]
+                           [:th "Answer"]
+                           [:th {:style "text-align:right"} "Time To Correct Response"]
+                           [:th "Session"]
+                           [:th {:style "text-align:right"} "Issued"]
+                           ]
+
+                          (map (fn [row]
+                                 [:tr
+                                  [:td (:id row)]
+                                  [:td (:question row)]
+                                  [:td (:answer row)]
+                                  [:td {:style "text-align:right"} (:ttcr row)]
+                                  [:td (:session row)]
+                                  [:td {:style "text-align:right"} (:issued row)]])
+                               (k/exec-raw
+                                [(str "SELECT question.id,
+                                              source.surface AS question,
+                                              question.answer,
+                                              question.time_to_correct_response AS ttcr,
+                                              session_id AS session,
+                                              issued
+                                         FROM expression AS source
+                                   INNER JOIN question
+                                           ON question.source = source.id
+                                     ORDER BY issued ASC")
+                                 []] :results))])
+                       request
+                       {})})
+
+
      (POST "/update-question" request
            (let [session (:value (get (:cookies request) "ring-session"))
                  question (Integer. (get (:form-params request) "question"))
