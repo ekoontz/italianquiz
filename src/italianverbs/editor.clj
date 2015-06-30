@@ -80,6 +80,7 @@
          {:status 302
           :headers {"Location" (str "/editor/" (:language (:route-params request)))}})
 
+   ;; TODO: tighten 'do-if' restriction here: check if user is owner of this game.
    (POST "/game/activate/:game" request
          ;; toggle activation of this game
          (do-if-teacher
@@ -360,6 +361,7 @@ INSERT INTO game
                (keyword language-keyword-name)]
            [:tr
 
+            ;; TODO: if not owner, still show activate checkbox, but make it disabled.
             (if show-as-owner?
               [:td
                [:form {:method "post"
