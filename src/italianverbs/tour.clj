@@ -53,12 +53,12 @@
           {:status 200
            :headers headers
            :body (page "Map Tour" (tour "es" "ES") request {:onload "start_tour('es','ES');"
-                                                       :css ["/css/tour.css"]
-                                                       :jss ["/js/cities.js"
-                                                             "/js/gen.js"
-                                                             "/js/leaflet.js"
-                                                             "/js/es.js"
-                                                             "/js/tour.js"]})})
+                                                            :css ["/css/tour.css"]
+                                                            :jss ["/js/cities.js"
+                                                                  "/js/gen.js"
+                                                                  "/js/leaflet.js"
+                                                                  "/js/es.js"
+                                                                  "/js/tour.js"]})})
      (GET "/es/MX" request
           {:status 200
            :headers headers
