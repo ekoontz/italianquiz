@@ -295,9 +295,12 @@ INSERT INTO game
      [:div {:style "margin-top:0.5em;"}
       [:h3 "Other teachers' games"]
 
-      (let [sql "SELECT game.name AS name,game.id AS id,active,
+      (let [sql "SELECT vc_user.given_name || ' ' || vc_user.family_name AS owner,
+                        game.name AS name,game.id AS id,active,
                         source,target,target_lex,target_grammar
                    FROM game
+              LEFT JOIN vc_user
+                     ON (vc_user.id = game.created_by)
                   WHERE ((game.target = ?) OR (? = ''))
                     AND ((game.created_by IS NULL) OR
                          (game.created_by != ?))
@@ -337,7 +340,8 @@ INSERT INTO game
      [:table {:class "striped padded"}
       [:tr
        (if (= true show-as-owner?)
-         [:th {:style "width:2em"} "Active?"])
+         [:th {:style "width:2em"} "Active?"]
+         [:th "Owner"])
 
        [:th {:style "width:15em"} "Name"]
        [:th {:style "width:auto"} "Verbs"]
@@ -361,7 +365,6 @@ INSERT INTO game
                (keyword language-keyword-name)]
            [:tr
 
-            ;; TODO: if not owner, still show activate checkbox, but make it disabled.
             (if show-as-owner?
               [:td
                [:form {:method "post"
@@ -374,7 +377,11 @@ INSERT INTO game
                                 :onclick "submit()"
                                 :name "active"}
                                (if (:active result)
-                                 {:checked "on"}))]]])
+                                 {:checked "on"}))]]]
+              ;; else, show owner name.
+              [:td
+               (or (:owner result) [:i "no owner"])])
+
             [:td
              ;; show as link
              [:a {:href (str "/editor/game/" game-id)} game-name-display]]
@@ -416,8 +423,9 @@ INSERT INTO game
                                     FROM game 
                                    WHERE id=?"
                                  [game-id]] :results))
-        owner (:email
-               (first (k/exec-raw ["SELECT email 
+        owner (:owner
+               (first (k/exec-raw ["SELECT vc_user.email,
+                                           vc_user.given_name || ' ' || vc_user.family_name AS owner
                                       FROM vc_user
                                 INNER JOIN game 
                                         ON (vc_user.id = game.created_by)
@@ -440,8 +448,7 @@ INSERT INTO game
            
             [:div {:style "width:100%;float:left"}
              [:p
-              "You are not owner of this game, so you cannot edit it. You can copy it, though, 
-and you'll be edit your copy."]
+              "You can copy this game to edit a copy of it."]
 
              [:form {:method "post"
                      :action (str "/editor/game/clone/" game-id)}
