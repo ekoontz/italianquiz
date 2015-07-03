@@ -122,7 +122,14 @@ INSERT INTO game
             {:status 302
              :headers {"Location" (str "/editor/" "?message=" message)}})))
 
-   (POST "/game/edit/:game-to-edit" request
+   ;; TODO: implement:
+   ;; (GET "/game/:game-to-edit/edit" request
+   ;; which:
+   ;; 1. checks if user can edit game - if so, 2. else 3.
+   ;; 2. (show-game :show-as-owner true)
+   ;; 3. redirect to /game/:game with ?message=unauthorized.
+
+   (POST "/game/:game-to-edit/edit" request
          (let [game-id (:game-to-edit (:route-params request))
                user (authentication/current request)]
            (do-if
@@ -436,7 +443,8 @@ INSERT INTO game
                               show-as-owner? :show-as-owner?} ]]
   (let [game-id (Integer. game-id)
         ;; get game and user info
-        game (first (k/exec-raw ["SELECT source_groupings,
+        game (first (k/exec-raw ["SELECT game.id AS game_id,
+                                         source_groupings,
                                          target_groupings,
                                          source_lex,
                                          source_grammar,
@@ -754,7 +762,7 @@ INSERT INTO game
                                         }
                                  
                                  [:script {:type "text/javascript"}
-                                  (str "counts_per_verb_and_tense('" dom-id "'," (:id game) "," lexeme-index "," tense-index ");")
+                                  (str "counts_per_verb_and_tense('" dom-id "'," (:game_id game) "," lexeme-index "," tense-index ");")
                                   ]
                                  ])]
                              )))
@@ -962,7 +970,7 @@ ms: " params))))
 
 ;; TODO: has fallen victim to parameter-itis (too many unnamed parameters)
 (defn game-editor-form [game game-to-edit game-to-delete & [editpopup] ]
-  (let [game-id (:id game)
+  (let [game-id (:game_id game)
         language (:language game)
         debug (log/trace (str "ALL GAME INFO: " game))
         game-to-edit game-to-edit
@@ -1011,7 +1019,7 @@ ms: " params))))
         ]]]]
      
      (f/render-form
-      {:action (str "/editor/game/edit/" game-id)
+      {:action (str "/editor/game/" game-id "/edit")
        :enctype "multipart/form-data"
        :method :post
        :fields (concat
