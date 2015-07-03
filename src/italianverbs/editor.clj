@@ -435,10 +435,24 @@ INSERT INTO game
 (defn show-game [game-id & [ {refine :refine
                               show-as-owner? :show-as-owner?} ]]
   (let [game-id (Integer. game-id)
-        game (first (k/exec-raw ["SELECT *
-                                    FROM game 
-                                   WHERE id=?"
-                                 [game-id]] :results))
+        ;; get game and user info
+        game (first (k/exec-raw ["SELECT source_groupings,
+                                         target_groupings,
+                                         source_lex,
+                                         source_grammar,
+                                         target_lex,
+                                         target_grammar,
+                                         name,
+                                         source,
+                                         target,
+                                         active,
+                                         to_char(game.created_on, ?) AS created_on,
+                                         vc_user.given_name || ' ' || vc_user.family_name AS created_by
+                                    FROM game
+                               LEFT JOIN vc_user
+                                      ON (vc_user.id = game.created_by)
+                                   WHERE game.id=?"
+                                 [time-format game-id]] :results))
         created-on (:created_on game)
         owner (:owner
                (first (k/exec-raw ["SELECT vc_user.email,
@@ -990,8 +1004,11 @@ ms: " params))))
       [:table
        [:tr
         [:th "Created"]
-        [:td (:created game)]
-        ]]]
+        [:td (:created_on game)]
+       [:tr
+        [:th "Created by"]
+        [:td (:created_by game)]
+        ]]]]
      
      (f/render-form
       {:action (str "/editor/game/edit/" game-id)
