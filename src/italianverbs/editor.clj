@@ -47,6 +47,9 @@
 (declare update-game)
 (declare verb-tense-table)
 
+;; TODO move to core.clj
+(def time-format "FMDay, Month FMDD YYYY HH24:MI TZ")
+
 (def routes
   (compojure/routes
    (GET "/" request
@@ -284,20 +287,18 @@ INSERT INTO game
       [:h3 "My games"]
 
       (let [sql "SELECT game.name AS name,game.id AS id,active,
-                        source,target,target_lex,target_grammar
+                        source,target,target_lex,target_grammar,
+                        to_char(game.created, ?) AS created
                    FROM game
                   WHERE ((game.target = ?) OR (? = ''))
                     AND (game.created_by = ?)
                ORDER BY game.name"
             debug (log/debug (str "MY GAMES: GAME-CHOOSING SQL: " (string/replace sql "\n" " ")))
             results (k/exec-raw [sql
-                                 [language language user-id]]
+                                 [time-format language language user-id]]
                                 :results)
             debug (log/debug (str "Number of results: " (.size results)))]
         (show-game-table results {:show-as-owner? true}))
-
-
-
 
      (if (not (= "" language)) ;; don't show "New Game" if no language - confusing to users.
        [:div.new
@@ -323,7 +324,8 @@ INSERT INTO game
 
       (let [sql "SELECT vc_user.given_name || ' ' || vc_user.family_name AS owner,
                         game.name AS name,game.id AS id,active,
-                        source,target,target_lex,target_grammar
+                        source,target,target_lex,target_grammar,
+                        to_char(game.created, ?) AS created
                    FROM game
               LEFT JOIN vc_user
                      ON (vc_user.id = game.created_by)
@@ -334,7 +336,7 @@ INSERT INTO game
 
             debug (log/debug (str "OTHER'S GAMES: GAME-CHOOSING SQL: " (string/replace sql "\n" " ")))
             results (k/exec-raw [sql
-                                 [language language user-id]]
+                                 [time-format language language user-id]]
                                 :results)
             debug (log/debug (str "Number of results: " (.size results)))]
         (show-game-table results {:show-as-owner? false}))
@@ -355,6 +357,7 @@ INSERT INTO game
          [:th {:style "width:2em"} "Active?"]
          [:th "Owner"])
 
+       [:th "Created"]
        [:th {:style "width:15em"} "Name"]
        [:th {:style "width:auto"} "Verbs"]
        [:th {:style "width:auto"} "Tenses"]
@@ -376,7 +379,6 @@ INSERT INTO game
                language-keyword
                (keyword language-keyword-name)]
            [:tr
-
             (if show-as-owner?
               [:td
                [:form {:method "post"
@@ -394,6 +396,8 @@ INSERT INTO game
               [:td
                (or (:owner result) [:i "no owner"])])
 
+            [:td (:created result)]
+            
             [:td
              ;; show as link
              [:a {:href (str "/editor/game/" game-id)} game-name-display]]
@@ -438,7 +442,8 @@ INSERT INTO game
         created-on (:created game)
         owner (:owner
                (first (k/exec-raw ["SELECT vc_user.email,
-                                           vc_user.given_name || ' ' || vc_user.family_name AS owner
+                                           vc_user.given_name || ' ' || vc_user.family_name AS owner,
+                                           game.created
                                       FROM vc_user
                                 INNER JOIN game 
                                         ON (vc_user.id = game.created_by)
@@ -452,6 +457,8 @@ INSERT INTO game
         [:div {:style "border:0px dashed green;float:right;width:50%;"}
          (if show-as-owner?
            (game-editor-form game nil nil)
+
+           ;; else, not owner:
            (html
             [:div {:style "width:95%;margin:2%;float:left"}
              [:h2 "Game info"]
@@ -940,7 +947,7 @@ ms: " params))))
     ;; return the row ID of the game that has been inserted.
     (first (k/exec-raw [sql [name source target user-id]] :results))))
 
-;; TODO: has fallen victim to parameteritis (too many unnamed parameters)
+;; TODO: has fallen victim to parameter-itis (too many unnamed parameters)
 (defn game-editor-form [game game-to-edit game-to-delete & [editpopup] ]
   (let [game-id (:id game)
         language (:language game)
@@ -980,6 +987,13 @@ ms: " params))))
      {:class (str "editgame " (if editpopup "editpopup"))
       :id (str "editgame" game-id)}
 
+     [:div {:style "float:left;width:100%"}
+      [:table
+       [:tr
+        [:th "Created"]
+        [:td (:created game)]
+        ]]]
+     
      (f/render-form
       {:action (str "/editor/game/edit/" game-id)
        :enctype "multipart/form-data"
