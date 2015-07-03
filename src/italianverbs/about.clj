@@ -78,7 +78,7 @@
     (if (haz-admin? request)
       [:div {:class "rounded flags manage"}
 
-       [:h3 "Manage Games"]
+       [:h3 "Games"]
 
        [:div {:class "flag smallflag"}
         [:a {:href "/editor/it"}
