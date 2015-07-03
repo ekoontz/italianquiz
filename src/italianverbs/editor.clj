@@ -447,7 +447,7 @@ INSERT INTO game
                                 INNER JOIN game 
                                         ON (vc_user.id = game.created_by)
                                        AND (game.id = ?)"
-                                   [time-format game-id]] :results)))
+                                   [game-id]] :results)))
         refine (if refine (json-read-str refine) nil)]
     (html
 
