@@ -288,7 +288,7 @@ INSERT INTO game
 
       (let [sql "SELECT game.name AS name,game.id AS id,active,
                         source,target,target_lex,target_grammar,
-                        to_char(game.created, ?) AS created
+                        to_char(game.created_on, ?) AS created_on
                    FROM game
                   WHERE ((game.target = ?) OR (? = ''))
                     AND (game.created_by = ?)
@@ -325,7 +325,7 @@ INSERT INTO game
       (let [sql "SELECT vc_user.given_name || ' ' || vc_user.family_name AS owner,
                         game.name AS name,game.id AS id,active,
                         source,target,target_lex,target_grammar,
-                        to_char(game.created, ?) AS created
+                        to_char(game.created_on, ?) AS created_on
                    FROM game
               LEFT JOIN vc_user
                      ON (vc_user.id = game.created_by)
@@ -357,7 +357,7 @@ INSERT INTO game
          [:th {:style "width:2em"} "Active?"]
          [:th "Owner"])
 
-       [:th "Created"]
+       [:th {:style "white-space:nowrap"} "Created On"]
        [:th {:style "width:15em"} "Name"]
        [:th {:style "width:auto"} "Verbs"]
        [:th {:style "width:auto"} "Tenses"]
@@ -396,7 +396,7 @@ INSERT INTO game
               [:td
                (or (:owner result) [:i "no owner"])])
 
-            [:td (:created result)]
+            [:td (:created_on result)]
             
             [:td
              ;; show as link
@@ -435,20 +435,19 @@ INSERT INTO game
 (defn show-game [game-id & [ {refine :refine
                               show-as-owner? :show-as-owner?} ]]
   (let [game-id (Integer. game-id)
-        game (first (k/exec-raw ["SELECT * 
+        game (first (k/exec-raw ["SELECT *
                                     FROM game 
                                    WHERE id=?"
                                  [game-id]] :results))
-        created-on (:created game)
+        created-on (:created_on game)
         owner (:owner
                (first (k/exec-raw ["SELECT vc_user.email,
-                                           vc_user.given_name || ' ' || vc_user.family_name AS owner,
-                                           game.created
+                                           vc_user.given_name || ' ' || vc_user.family_name AS owner
                                       FROM vc_user
                                 INNER JOIN game 
                                         ON (vc_user.id = game.created_by)
                                        AND (game.id = ?)"
-                                   [game-id]] :results)))
+                                   [time-format game-id]] :results)))
         refine (if refine (json-read-str refine) nil)]
     (html
 
@@ -469,7 +468,7 @@ INSERT INTO game
                [:td (if owner owner [:i "No owner"])]
                ]
               [:tr
-               [:th "Created"]
+               [:th "Created On"]
                [:td (if created-on created-on [:i "No creation date"])]
                ]
               ]
