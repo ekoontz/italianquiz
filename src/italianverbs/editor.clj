@@ -202,14 +202,18 @@ INSERT INTO game
                                (do (log/debug (str "POST /game/new: trying to guess language from game's name: " (:name params)))
                                    (let [result (short-language-name-from-match (:name params))]
                                      (log/debug (str "guess was: " result))
-                                     result)))]
-            ;; Defaults: source language=English.
-            (let [game (insert-game (:name params) "en" language
-                                    (:source_groupings params)
-                                    (:target_groupings params))]
+                                     result)))
+
+                user (authentication/current request)
+                user-id (username2userid user)
+                ;; Defaults: source language=English.
+                game (insert-game (:name params) "en" language
+                                  (:source_groupings params)
+                                  (:target_groupings params)
+                                  user-id)]
               {:status 302 :headers {"Location" 
                                      (str "/editor/game/" (:id game)
-                                          "?message=Created game:" (:name game))}}))))))
+                                          "?message=Created game:" (:name game))}})))))
 
 (defn body [title content request]
   (let [language (:language (:route-params request))
@@ -278,6 +282,7 @@ INSERT INTO game
      
      [:div {:style "margin-top:0.5em;"}
       [:h3 "My games"]
+
       (let [sql "SELECT game.name AS name,game.id AS id,active,
                         source,target,target_lex,target_grammar
                    FROM game
@@ -290,6 +295,27 @@ INSERT INTO game
                                 :results)
             debug (log/debug (str "Number of results: " (.size results)))]
         (show-game-table results {:show-as-owner? true}))
+
+
+
+
+     (if (not (= "" language)) ;; don't show "New Game" if no language - confusing to users.
+       [:div.new
+        [:form {:method "post"
+                :enctype "multipart/form-data"
+                :action "/editor/game/new"}
+
+         ;; TODO: don't disable button unless and until input is something besides whitespace.
+         [:input {:onclick "submit_new_game.disabled = false;"
+                  :name "name" :size "50" :placeholder (str "Enter the name of a new " (short-language-name-to-long language) " game")} ]
+
+         [:input {:type "hidden" :name "language" :value language} ]
+
+         [:button {:name "submit_new_game" :disabled true :onclick "submit();"} "New Game"]
+         ]])
+
+
+
       ]
 
      [:div {:style "margin-top:0.5em;"}
@@ -313,20 +339,6 @@ INSERT INTO game
             debug (log/debug (str "Number of results: " (.size results)))]
         (show-game-table results {:show-as-owner? false}))
       ]
-     
-
-     (if (not (= "" language)) ;; don't show "New Game" if no language - confusing to users.
-       [:div.new
-        [:form {:method "post"
-                :enctype "multipart/form-data"
-                :action "/editor/game/new"}
-
-         [:input {:onclick "submit_new_game.disabled = false;"
-                  :name "name" :size "50" :placeholder (str "Type the name of a new " (short-language-name-to-long language) " game")} ]
-         [:input {:type "hidden" :name "language" :value language} ]
-
-         [:button {:name "submit_new_game" :disabled true :onclick "submit();"} "New Game"]
-         ]])
 
      )
     )
@@ -423,6 +435,7 @@ INSERT INTO game
                                     FROM game 
                                    WHERE id=?"
                                  [game-id]] :results))
+        created-on (:created game)
         owner (:owner
                (first (k/exec-raw ["SELECT vc_user.email,
                                            vc_user.given_name || ' ' || vc_user.family_name AS owner
@@ -440,21 +453,29 @@ INSERT INTO game
          (if show-as-owner?
            (game-editor-form game nil nil)
            (html
-            [:h2 "Game info"]
-
-            [:table {:class "striped"}
-             [:th "Owner"]
-             [:td (if owner owner [:i "No owner"])]]
+            [:div {:style "width:95%;margin:2%;float:left"}
+             [:h2 "Game info"]
+             
+             [:table {:class "striped"}
+              [:tr
+               [:th "Owner"]
+               [:td (if owner owner [:i "No owner"])]
+               ]
+              [:tr
+               [:th "Created"]
+               [:td (if created-on created-on [:i "No creation date"])]
+               ]
+              ]
            
-            [:div {:style "width:100%;float:left"}
-             [:p
-              "You can copy this game to edit a copy of it."]
-
-             [:form {:method "post"
-                     :action (str "/editor/game/clone/" game-id)}
-              [:button {:onclick "submit();"}
-               "Copy"
-               ]]]))]
+             [:div {:style "width:100%;float:left;margin-top:1em"}
+              [:p
+               "You can copy this game to edit a copy of it:"]
+             
+              [:form {:method "post"
+                      :action (str "/editor/game/clone/" game-id)}
+               [:button {:onclick "submit();"}
+                "Copy"
+                ]]]]))]
             
 
         [:div {:style "border:0px dashed green;float:left;width:50%"}
@@ -895,7 +916,7 @@ ms: " params))))
         :else
         (str "(no shortname for language:" match-string " detected.")))
 
-(defn insert-game [name source target source-set target-set]
+(defn insert-game [name source target source-set target-set user-id]
   "Create a game with a name, a source and target language and two
   arrays, one for the source language and one for the target
   language. Each array is an integer which refers to a set of
@@ -913,11 +934,11 @@ ms: " params))))
         (str "ARRAY[" 
              (string/join "," (map #(str "" (string/join "," %) "") source-set)) "]::integer[]")
         target-grouping-str (str "ARRAY[" (string/join "," (map #(str "" (string/join "," %) "") target-set)) "]::integer[]")
-        sql (str "INSERT INTO game (name,source_groupings,target_groupings,source,target)
-                       SELECT ?, " source-grouping-str "," target-grouping-str ",?,? RETURNING id")]
+        sql (str "INSERT INTO game (name,source_groupings,target_groupings,source,target,created_by)
+                       SELECT ?, " source-grouping-str "," target-grouping-str ",?,?,? RETURNING id")]
     (log/debug (str "inserting new game with sql: " sql))
     ;; return the row ID of the game that has been inserted.
-    (first (k/exec-raw [sql [name source target]] :results))))
+    (first (k/exec-raw [sql [name source target user-id]] :results))))
 
 ;; TODO: has fallen victim to parameteritis (too many unnamed parameters)
 (defn game-editor-form [game game-to-edit game-to-delete & [editpopup] ]
