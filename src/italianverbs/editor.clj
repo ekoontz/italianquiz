@@ -85,13 +85,21 @@
 
    ;; TODO: tighten 'do-if' restriction here: check if user is owner of this game.
    (POST "/game/activate/:game" request
-         ;; toggle activation of this game
-         (do-if-teacher
-          (let [debug (log/debug (str "PARAMS: " (:params request)))
-                message (toggle-activation (:game (:route-params request)) (= "on" (:active (:params request))))
-                language (:language (:params request))]
-            {:status 302
-             :headers {"Location" (str "/editor/" language "?message=" message)}})))
+         (let [game-id (:game (:route-params request))
+               user (authentication/current request)]
+           (do-if
+            (do
+              (log/debug (str "Activate game: " game-id ": can user: '" user "' activate this game?"))
+              (is-owner-of? (Integer. game-id) user))
+            (let [debug (log/debug (str "PARAMS: " (:params request)))
+                  message (toggle-activation (:game (:route-params request)) (= "on" (:active (:params request))))
+                  language (:language (:params request))]
+              {:status 302
+               :headers {"Location" (str "/editor/" language "?message=" message)}})
+            (do
+              (log/warn (str "User:" user " tried to activate game: " game-id " but was denied authorization to do so."))
+              {:status 302
+               :headers {"Location" (str "/editor/game/" game-id "?message=Unauthorized+to+activate+game:" game-id)}}))))
 
    (POST "/game/clone/:game-id" request
           (let [source-game-id (:game-id (:route-params request))
@@ -121,7 +129,7 @@ INSERT INTO game
                user (authentication/current request)]
            (do-if
             (do
-              (log/debug (str "Edit game: " game-id ": can user: '" user "' delete this game?"))
+              (log/debug (str "Delete game: " game-id ": can user: '" user "' delete this game?"))
               (is-owner-of? (Integer. game-id) user))
             (do
               (let [message (delete-game (:game-to-delete (:route-params request)))]
