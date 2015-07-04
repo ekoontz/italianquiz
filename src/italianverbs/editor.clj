@@ -117,11 +117,21 @@ INSERT INTO game
                   :headers {"Location" (str "/editor/game/" new-game-id)}})))))
    
    (POST "/game/delete/:game-to-delete" request
-         (do-if-teacher
-          (let [message (delete-game (:game-to-delete (:route-params request)))]
-            {:status 302
-             :headers {"Location" (str "/editor/" "?message=" message)}})))
-
+         (let [game-id (:game-to-delete (:route-params request))
+               user (authentication/current request)]
+           (do-if
+            (do
+              (log/debug (str "Edit game: " game-id ": can user: '" user "' delete this game?"))
+              (is-owner-of? (Integer. game-id) user))
+            (do
+              (let [message (delete-game (:game-to-delete (:route-params request)))]
+                {:status 302
+                 :headers {"Location" (str "/editor/" "?message=" message)}}))
+            (do
+              (log/warn (str "User:" user " tried to delete game: " game-id " but was denied authorization to do so."))
+              {:status 302
+               :headers {"Location" (str "/editor/game/" game-id "?message=Unauthorized+to+delete+game:" game-id)}}))))
+  
    ;; TODO: implement:
    ;; (GET "/game/:game-to-edit/edit" request
    ;; which:
