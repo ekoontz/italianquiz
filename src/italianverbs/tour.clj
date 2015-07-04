@@ -340,8 +340,8 @@
            true
            "")]))
 
-;; TODO: Move this to javascript (tour.js) - tour.clj should only be involved in
-;; routing requests to responses.
+;; TODO: Move HTML rendering to javascript (tour.js) - tour.clj should only be involved in
+;; routing requests to functions that respond with JSON.
 (defn tour [language locale chosen-game]
   (log/info (str "(tour : chosen-game=" chosen-game) ")")
   [:div#game
@@ -349,11 +349,6 @@
    [:div#correctanswer 
     " "
     ]
-   
-   (game-chooser (if chosen-game (Integer. chosen-game) nil)
-                 language
-                 locale
-                 )
 
     [:div#map ]
 
@@ -386,6 +381,12 @@
       "0"
       ]
      ]
+
+   
+    (game-chooser (if chosen-game (Integer. chosen-game) nil)
+                  language
+                  locale)
+
     ]
 
    ]
@@ -424,7 +425,7 @@
                            WHERE game = ?") [game-id]] :results)))
 
 (defn game-chooser [current-game target-language locale]
-  [:div#chooser {:class "tourelement"}
+  [:div#chooser
 
    "Choose your class/game:"
 

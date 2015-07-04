@@ -65,7 +65,7 @@
                           (re-find #"/editor" current-url)))
                  :show? haz-admin?
                  :current-url current-url 
-                 :text "Games"
+                 :text "Edit Games"
                  :url-for-this-item "/editor"})
 
       (menuitem {:selected?

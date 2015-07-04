@@ -201,6 +201,7 @@ function get_position_from_profile(target_language) {
     return retval;
 }
 
+// TODO: rename; not really a loop - no for() or while().
 function tour_loop(target_language,target_locale) {
     var game_id = $("#chooserselect").val();
     create_tour_question(target_language,target_locale,game_id);
@@ -216,7 +217,7 @@ function create_tour_question(target_language,target_locale,game_id) {
     // generate a question-and-answers pair.
     update_tour_q_and_a = function (content) {
 
-	// Set the current time so that we can calculate time-to-correct-response in submit_user_guest().
+	// Set the current time so that we can calculate time-to-correct-response in submit_user_guess().
 	question_at = (new Date).getTime();
 
 	// question is .source; answers are in .targets.
@@ -265,7 +266,6 @@ function submit_user_guess(guess,correct_answer,target_language,target_locale,ga
 	log(INFO,"You got one right!");
 	log(DEBUG,"calling update_map with target_language: " + target_language + " and target_locale:" + target_locale);
 	update_map($("#tourquestion").html(), guess,target_language,target_locale);
-	$("#gameinput").html("");
 	$("#gameinput").css("background","transparent");
 	$("#gameinput").css("color","lightblue");
 	

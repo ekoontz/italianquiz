@@ -69,15 +69,6 @@
     z-index:2;
 }
 
-#chooser {
-    float:left;
-    position:absolute;
-    top:35%;
-    right:2px;
-    color:green;
-    z-index:2;
-}
-
 #scorevalue {
     text-align:right;
 }
