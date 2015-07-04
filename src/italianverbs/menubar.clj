@@ -100,6 +100,14 @@
 
       (menuitem {:selected?
                  (and (not (nil? current-url))
+                      (re-find #"/test" current-url))
+                 :current-url current-url
+                 :text "My Profile"
+                 :url-for-this-item "/me"
+                 :show? true})
+
+      (menuitem {:selected?
+                 (and (not (nil? current-url))
                       (re-find #"/class" current-url))
                  :current-url current-url
                  :text "My Classes"

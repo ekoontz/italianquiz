@@ -16,6 +16,7 @@
    [italianverbs.class :as class]
    [italianverbs.editor :as editor]
    [italianverbs.html :as html]
+   [italianverbs.me :as me]
    [italianverbs.studenttest :as studenttest]
    [italianverbs.tour :as tour]
    [italianverbs.user :as user]
@@ -54,6 +55,9 @@
 
   (context "/gen" []
            verb/routes)
+
+  (context "/me" []
+           me/routes)
 
   (context "/test" []
            studenttest/routes)
