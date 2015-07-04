@@ -155,7 +155,7 @@ INSERT INTO game
               (log/debug (str "Edit game: " game-id ": can user: '" user "' edit this game?"))
               (is-owner-of? (Integer. game-id) user))
             (do
-              (log/warn (str "User:" user " is authorized to update this game."))
+              (log/info (str "User:" user " is authorized to update this game."))
               (update-game (:game-to-edit (:route-params request))
                            (multipart-to-edn (:multipart-params request)))
               {:status 302
