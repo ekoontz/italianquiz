@@ -26,27 +26,26 @@
                   :jss ["/css/me.js"]})}))))
 
 (defn me [request]
-  [:div#me {:class "major"}
+  (let [profile {}]
+    [:div#me {:class "major"}
 
-  [:h2 "My profile"]
+     [:h2 "My profile"]
 
-   [:h3 "Overall"]
-   
-   (profile-table)
+     [:h3 "Overall"]
+     
+     (profile-table profile)
 
-   [:h3 "The foo game"]
+     [:h3 "The foo game"]
+     
+     (profile-table profile)
+     
+     [:h3 "The bar game"]
+     
+     (profile-table profile)
 
-   (profile-table)
-   
-   [:h3 "The bar game"]
+     ]))
 
-   (profile-table)
-
-   ]
-
-  )
-
-(defn profile-table []
+(defn profile-table [profile]
   [:table.profile
    [:tr
     [:td {:class "level0"}
