@@ -9,6 +9,7 @@
    [korma.core :as k]))
 
 (declare me)
+(declare profile-table)
 
 (def routes
   (let [headers {"Content-Type" "text/html;charset=utf-8"}]
@@ -31,32 +32,95 @@
 
    [:h3 "Overall"]
    
-   [:table
-
-
-    ]
-
+   (profile-table)
 
    [:h3 "The foo game"]
+
+   (profile-table)
    
-   [:table
-
-
-    ]
-
    [:h3 "The bar game"]
-   
-   [:table
 
-
-    ]
-
+   (profile-table)
 
    ]
 
   )
 
+(defn profile-table []
+  [:table.profile
+   [:tr
+    [:td {:class "level0"}
+     "&nbsp;"
+     ]
+    [:td {:class "level1"}
+     "&nbsp;"
+     ]
+    [:td {:class "level2"}
+     "&nbsp;"
+     ]
+    [:td {:class "level3"}
+     "&nbsp;"
+     ]
+    [:td {:class "level4"}
+     "&nbsp;"
+     ]
+    [:td {:class "level5"}
+     "&nbsp;"
+     ]
+     [:td {:class "level6"}
+      "&nbsp;"
+      ]
+    ]
 
-  
+   [:tr
+    [:td {:class "level0"}
+     "&nbsp;"
+     ]
+    [:td {:class "level1"}
+     "&nbsp;"
+     ]
+    [:td {:class "level2"}
+     "&nbsp;"
+     ]
+    [:td {:class "level3"}
+     "&nbsp;"
+     ]
+    [:td {:class "level4"}
+     "&nbsp;"
+     ]
+    [:td {:class "level5"}
+     "&nbsp;"
+     ]
+     [:td {:class "level6"}
+      "&nbsp;"
+      ]
+    ]
+
+   [:tr
+    [:td {:class "level0"}
+     "&nbsp;"
+     ]
+    [:td {:class "level1"}
+     "&nbsp;"
+     ]
+    [:td {:class "level2"}
+     "&nbsp;"
+     ]
+    [:td {:class "level3"}
+     "&nbsp;"
+     ]
+    [:td {:class "level4"}
+     "&nbsp;"
+     ]
+    [:td {:class "level5"}
+     "&nbsp;"
+     ]
+     [:td {:class "level6"}
+      "&nbsp;"
+      ]
+    ]
+
+
+   ])
 
 

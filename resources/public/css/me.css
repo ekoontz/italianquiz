@@ -1,5 +1,51 @@
 #me {
 }
 
+table.profile {
+    border-spacing: 0.25em;
+    border-collapse: separate;
+}
 
+table.profile td {
+    width:5em;
+    padding:0.5em;
+    margin:0.5em;
+    -moz-border-radius:5px;
+    -webkit-border-radius:5px;
+    border-radius:5px;
+    border:1px solid #003300; // should be same color as level9
+
+}
+
+
+.level0 {
+    background:#eeffcc;
+}
+.level1 {
+    background:#00ff00;
+}
+.level2 {
+    background:#00e500;
+}
+.level3 {
+    background:#00cc00;
+}
+.level4 {
+    background:#00b200;
+}
+.level5 {
+    background:#009900;
+}
+.level6 {
+    background:#007f00;
+}
+.level7 {
+    background:#006600;
+}
+.level8 {
+    background:#004c00;
+}
+.level9 {
+    background:#003300;
+}
 
