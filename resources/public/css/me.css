@@ -1,4 +1,17 @@
 #me {
+    float:left;
+    width:100%;
+}
+
+#myprofile {
+    float:left;
+    width:48%;
+}
+
+/* used to show user's most recent work. */
+#last {
+    float:right;
+    width:48%;
 }
 
 table.profile {
