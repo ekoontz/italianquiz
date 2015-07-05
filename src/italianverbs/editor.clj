@@ -1234,6 +1234,11 @@ ms: " params))))
    {:synsem {:sem {:tense :past :aspect :perfect}}} "past"
    {:synsem {:sem {:tense :present}}} "present"})
 
+;; reverse of tenses-human-readable, immediately-above.
+(def human-tenses-to-spec
+  (zipmap (vals tenses-human-readable)
+          (keys tenses-human-readable)))
+
 (defn get-game-from-db [game-id]
   (let [result (first (k/exec-raw ["SELECT * FROM game WHERE id=?" [game-id]] :results))]
     (merge (dissoc 
