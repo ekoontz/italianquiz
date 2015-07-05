@@ -27,54 +27,76 @@
                   :css ["/css/me.css"]
                   :jss ["/css/me.js"]})}))))
 
-(defn me [request]
-  (let [profile [
-                 {:tense :present
-                  :verb "parlare"
-                  :level 5}
+;; TODO: move to test/me
+(def mock-profile
+  [
+   {:tense :present
+    :verb "parlare"
+    :level 5}
 
-                 {:tense :present
-                  :verb "bere"
-                  :level 1}
+   {:tense :present
+    :verb "bere"
+    :level 1}
 
-                 {:tense :present
-                  :verb "alzare"
-                  :level 1}
+   {:tense :present
+    :verb "alzare"
+    :level 1}
 
-                 {:tense :imperfetto
-                  :verb "alzare"
-                  :level 2}
+   {:tense :imperfetto
+    :verb "alzare"
+    :level 2}
                  
-                 {:tense :imperfetto
-                  :verb "mangiare"
-                  :level 4}
+   {:tense :imperfetto
+    :verb "mangiare"
+    :level 4}
 
-                 {:tense :passato
-                  :verb "parlare"
-                  :level 6}
-                
-                 {:tense :conditional
-                  :verb "bere"
-                  :level 8
-                  }
-                 ]]
-    [:div#me
+   {:tense :passato
+    :verb "parlare"
+    :level 6}
+   
+   {:tense :conditional
+    :verb "bere"
+    :level 8
+    }
+   ])
+
+(defn get-in-profile [spec]
+  "look in question table to find out user's profile for this particular spec."
+  (let [sql "SELECT DISTINCT question.id,
+       source.surface AS question,
+       target.surface AS possible_answer,
+       question.answer,
+       question.time_to_correct_response AS ttcr,
+       session_id AS session,
+       issued
+       FROM expression AS source
+ INNER JOIN expression AS target
+         ON ((target.structure->'synsem'->'sem') @>
+             (source.structure->'synsem'->'sem'))
+        AND (source.language = 'en')
+        AND (target.language = 'it')
+ INNER JOIN question
+         ON question.source = source.id"]
+    ))
+
+(defn me [request]
+  [:div#me
+   
+   [:div#myprofile {:class "major"}
     
-     [:div#myprofile {:class "major"}
-
-      [:h2 "Profile"]
-
-      [:h3 "Overall"]
-     
-      (profile-table profile)
-      
-      ]
-
-     [:div#last {:class "major"}
-      [:h2 "Latest questions"]
-      (latest-questions)      
-      ]
-     ]))
+    [:h2 "Profile"]
+    
+    [:h3 "Overall"]
+    
+    (profile-table mock-profile)
+    
+    ]
+   
+   [:div#last {:class "major"}
+    [:h2 "Latest questions"]
+    (latest-questions)      
+    ]
+   ])
 
 (declare find-in-profile)
 
