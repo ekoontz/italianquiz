@@ -28,9 +28,22 @@
                   :jss ["/css/me.js"]})}))))
 
 (defn me [request]
-  (let [profile {:verb "parlare"
-                 :tense :present
-                 }]
+  (let [profile {
+                 {:tense :present}
+                 {"parlare" 0
+                  "alzare" 1}
+
+                 {:tense :imperfetto}
+                 {"mangiare" 2
+                  "alzare" 3}
+
+                 {:tense :passato}
+                 {"parlare" 2
+                  "alzare" 4}
+
+                 }
+
+        ]
     [:div#me
     
      [:div#myprofile {:class "major"}
@@ -41,13 +54,6 @@
      
       (profile-table profile)
       
-      [:h3 "The foo game"]
-      
-      (profile-table profile)
-      
-      [:h3 "The bar game"]
-      
-     (profile-table profile)
       ]
 
 
@@ -111,81 +117,28 @@
              (:ttcr result)]]))
        results)])))
 
+
+(declare profile-row)
+
 (defn profile-table [profile]
   [:table.profile
-   [:tr
-    [:td {:class "level0"}
-     "&nbsp;"
-     ]
-    [:td {:class "level1"}
-     "&nbsp;"
-     ]
-    [:td {:class "level2"}
-     "&nbsp;"
-     ]
-    [:td {:class "level3"}
-     "&nbsp;"
-     ]
-    [:td {:class "level4"}
-     "&nbsp;"
-     ]
-    [:td {:class "level5"}
-     "&nbsp;"
-     ]
-     [:td {:class "level6"}
-      "&nbsp;"
-      ]
-    ]
-
-   [:tr
-    [:td {:class "level0"}
-     "&nbsp;"
-     ]
-    [:td {:class "level1"}
-     "&nbsp;"
-     ]
-    [:td {:class "level2"}
-     "&nbsp;"
-     ]
-    [:td {:class "level3"}
-     "&nbsp;"
-     ]
-    [:td {:class "level4"}
-     "&nbsp;"
-     ]
-    [:td {:class "level5"}
-     "&nbsp;"
-     ]
-     [:td {:class "level6"}
-      "&nbsp;"
-      ]
-    ]
-
-   [:tr
-    [:td {:class "level0"}
-     "&nbsp;"
-     ]
-    [:td {:class "level1"}
-     "&nbsp;"
-     ]
-    [:td {:class "level2"}
-     "&nbsp;"
-     ]
-    [:td {:class "level3"}
-     "&nbsp;"
-     ]
-    [:td {:class "level4"}
-     "&nbsp;"
-     ]
-    [:td {:class "level5"}
-     "&nbsp;"
-     ]
-     [:td {:class "level6"}
-      "&nbsp;"
-      ]
-    ]
-
-
+   (map (fn [key]
+          (profile-row key (get profile key)))
+        (keys profile))
    ])
+
+(declare profile-column)
+
+(defn profile-row [key columns]
+  [:tr
+   (map (fn [column]
+          (profile-column column (get columns column)))
+        (keys columns))])
+
+(defn profile-column [key val]
+  (let [level val]
+    [:td {:class (str "level" level)}
+     (str key " &nbsp;")]))
+
 
 

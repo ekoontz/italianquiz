@@ -20,14 +20,14 @@ table.profile {
 }
 
 table.profile td {
-    width:5em;
+    height:3em;
+    width:7em;
     padding:0.5em;
     margin:0.5em;
     -moz-border-radius:5px;
     -webkit-border-radius:5px;
     border-radius:5px;
     border:1px solid #003300; // should be same color as level9
-
 }
 
 
