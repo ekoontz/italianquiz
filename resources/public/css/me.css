@@ -19,9 +19,17 @@ table.profile {
     border-collapse: separate;
 }
 
+table.profile th {
+    text-align:center;
+}
+
+table.profile th.tense {
+    text-align:left;
+}
+
 table.profile td {
     height:3em;
-    width:7em;
+    width:5em;
     padding:0.5em;
     margin:0.5em;
     -moz-border-radius:5px;

@@ -29,20 +29,28 @@
 
 (defn me [request]
   (let [profile {
+
                  {:tense :present}
                  {"parlare" 0
-                  "alzare" 1}
+                  "bere" 1
+                  "alzare" 2}
 
+                 {:tense :foo}
+                 {"macchiare" 5}
+                 
                  {:tense :imperfetto}
-                 {"mangiare" 2
-                  "alzare" 3}
-
-                 {:tense :passato}
-                 {"parlare" 2
+                 {"mangiare" 3
                   "alzare" 4}
 
+                 {:tense :passato}
+                 {"parlare" 5
+                  "alzare" 6}
+                
+                 {:tense :conditional}
+                 {"parlare" 7
+                  "bere" 8
+                  "alzare" 9}
                  }
-
         ]
     [:div#me
     
@@ -56,12 +64,57 @@
       
       ]
 
-
      [:div#last {:class "major"}
       [:h2 "Latest questions"]
       (latest-questions)      
       ]
      ]))
+
+(declare profile-row)
+
+(defn profile-table [profile]
+  (let [sorted-elements (reverse (sort-by :tense profile))
+
+        profile
+        (zipmap (keys sorted-elements)
+                (vals sorted-elements))
+
+        verbs (sort (set (flatten (map keys (vals sorted-elements)))))
+
+        tenses (keys profile)
+        
+        ]
+    [:table.profile
+
+     ;; top row: show all verbs
+     [:tr
+
+      (map (fn [verb]
+             [:th verb])
+           verbs)
+      
+      ]
+
+     (map (fn [tense]
+            (profile-row tense (get profile tense) verbs))
+          tenses)
+     ]))
+
+(declare profile-column)
+
+(defn profile-row [key tense-row verbs]
+  [:tr
+   (map (fn [verb]
+          (profile-column verb (get tense-row verb)))
+        verbs)
+
+   ;; final column in this row: every row represents one tense, so show that tense's name.
+   [:th.tense (:tense key)]])
+
+(defn profile-column [key val]
+  (let [level val]
+    [:td {:class (str "level" level)}
+     (str " &nbsp;")]))
 
 (defn latest-questions []
   (let [query
@@ -116,29 +169,3 @@
             [:td {:class profile}
              (:ttcr result)]]))
        results)])))
-
-
-(declare profile-row)
-
-(defn profile-table [profile]
-  [:table.profile
-   (map (fn [key]
-          (profile-row key (get profile key)))
-        (keys profile))
-   ])
-
-(declare profile-column)
-
-(defn profile-row [key columns]
-  [:tr
-   (map (fn [column]
-          (profile-column column (get columns column)))
-        (keys columns))])
-
-(defn profile-column [key val]
-  (let [level val]
-    [:td {:class (str "level" level)}
-     (str key " &nbsp;")]))
-
-
-
