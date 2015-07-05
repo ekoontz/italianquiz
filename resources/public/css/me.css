@@ -24,11 +24,15 @@ table.profile th {
 }
 
 table.profile th > div {
-    width:4em;
+    width:6em;
     overflow:hidden;
 }
 
-table.profile th.tense {
+table.profile td > div {
+    overflow:hidden;
+}
+
+table.profile th.verb {
     text-align:left;
 }
 

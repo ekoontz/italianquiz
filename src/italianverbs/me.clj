@@ -28,27 +28,36 @@
                   :jss ["/css/me.js"]})}))))
 
 (defn me [request]
-  (let [profile {
+  (let [profile [
+                 {:tense :present
+                  :verb "parlare"
+                  :level 5}
 
-                 {:tense :present}
-                 {"parlare" 0
-                  "bere" 1
-                  "alzare" 2}
+                 {:tense :present
+                  :verb "bere"
+                  :level 1}
+
+                 {:tense :present
+                  :verb "alzare"
+                  :level 1}
+
+                 {:tense :imperfetto
+                  :verb "alzare"
+                  :level 2}
                  
-                 {:tense :imperfetto}
-                 {"mangiare" 3
-                  "alzare" 4}
+                 {:tense :imperfetto
+                  :verb "mangiare"
+                  :level 4}
 
-                 {:tense :passato}
-                 {"parlare" 5
-                  "alzare" 6}
+                 {:tense :passato
+                  :verb "parlare"
+                  :level 6}
                 
-                 {:tense :conditional}
-                 {"parlare" 7
-                  "bere" 8
-                  "alzare" 9}
-                 }
-        ]
+                 {:tense :conditional
+                  :verb "bere"
+                  :level 8
+                  }
+                 ]]
     [:div#me
     
      [:div#myprofile {:class "major"}
@@ -67,51 +76,45 @@
       ]
      ]))
 
-(declare profile-row)
+(declare find-in-profile)
 
 (defn profile-table [profile]
-  (let [sorted-elements (reverse (sort-by :tense profile))
-
-        profile
-        (zipmap (keys sorted-elements)
-                (vals sorted-elements))
-
-        verbs (sort (set (flatten (map keys (vals sorted-elements)))))
-
-        tenses (keys profile)
-        
+  (let [verbs (sort (set (flatten (map :verb profile))))
+        tenses (sort (set (flatten (map :tense profile))))
         ]
     [:table.profile
 
-     ;; top row: show all verbs
+     ;; top row: show all tenses
      [:tr
+      (map (fn [tense]
+             [:th [:div tense]])
+           tenses)]
+     
+     (map (fn [verb]
+            [:tr
+             (map (fn [tense]
+                    (let [in-profile (find-in-profile {:verb verb
+                                                       :tense tense}
+                                                      profile)
+                          level (if in-profile (:level in-profile) "")
+                          ]
+                      [:td {:class (str "level" level)}
+                       (str "&nbsp; ")]))
+                  tenses)
 
-      (map (fn [verb]
-             [:th [:div verb]])
-           verbs)
-      
-      ]
-
-     (map (fn [tense]
-            (profile-row tense (get profile tense) verbs))
-          tenses)
+             [:th.verb verb]])
+          verbs)
      ]))
 
-(declare profile-column)
-
-(defn profile-row [key tense-row verbs]
-  [:tr
-   (map (fn [verb]
-          (profile-column verb (get tense-row verb)))
-        verbs)
-
-   ;; final column in this row: every row represents one tense, so show that tense's name.
-   [:th.tense (:tense key)]])
-
-(defn profile-column [key val]
-  (let [level val]
-    [:td {:class (str "level" level)}
-     (str " &nbsp;")]))
+(defn find-in-profile [ {verb :verb
+                         tense :tense} profile]
+  (if (not (empty? profile))
+    (let [item (first profile)]
+      (if (and (= verb (:verb item))
+               (= tense (:tense item)))
+        item
+        (find-in-profile {:verb verb
+                          :tense tense} (rest profile))))))
 
 (defn latest-questions []
   (let [query
@@ -119,7 +122,7 @@
                 issued AS issued_sortby,
                 expression.surface AS question,answer,
                 time_to_correct_response AS ttcr
-           FROM question 
+           FROM question
      INNER JOIN expression 
              ON (expression.id = question.source) 
        ORDER BY issued_sortby DESC 
