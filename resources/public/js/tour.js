@@ -409,7 +409,6 @@ function update_user_input(target_language,target_locale) {
 	    // reset userprogress bar
 	    $("#userprogress").css("width","0");
 	    $("#gameinput").focus();
-	    $("#gameinput").val("");
 	    $("#gameinput").keyup(function(event){
 		log(DEBUG,"You hit the key: " + event.keyCode);
 		update_user_input(target_language,target_locale);
