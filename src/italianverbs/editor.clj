@@ -11,6 +11,7 @@
 
    [italianverbs.authentication :as authentication]
    [italianverbs.borges.reader :refer :all]
+   [italianverbs.config :refer [time-format]]
    [italianverbs.html :as html]
    [italianverbs.lexiconfn :refer [infinitives]]
    [italianverbs.unify :refer [get-in strip-refs unify]]
@@ -46,9 +47,6 @@
 (declare toggle-activation)
 (declare update-game)
 (declare verb-tense-table)
-
-;; TODO move to core.clj
-(def time-format "FMDay, Month FMDD YYYY HH24:MI TZ")
 
 (def routes
   (compojure/routes
