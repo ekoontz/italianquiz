@@ -34,9 +34,6 @@
                  {"parlare" 0
                   "bere" 1
                   "alzare" 2}
-
-                 {:tense :foo}
-                 {"macchiare" 5}
                  
                  {:tense :imperfetto}
                  {"mangiare" 3
@@ -90,7 +87,7 @@
      [:tr
 
       (map (fn [verb]
-             [:th verb])
+             [:th [:div verb]])
            verbs)
       
       ]
