@@ -376,10 +376,9 @@ INSERT INTO game
      [:div [:i "None."]]
      [:table {:class "striped padded"}
       [:tr
-       (if (= true show-as-owner?)
-         [:th {:style "width:2em"} "Active?"]
+       [:th {:style "width:2em"} "Active?"]
+       (if (not (= true show-as-owner?))
          [:th "Owner"])
-
        [:th {:style "white-space:nowrap"} "Created On"]
        [:th {:style "width:15em"} "Name"]
        [:th {:style "width:auto"} "Verbs"]
@@ -402,8 +401,8 @@ INSERT INTO game
                language-keyword
                (keyword language-keyword-name)]
            [:tr
-            (if show-as-owner?
-              [:td
+            [:td
+             (if show-as-owner?
                [:form {:method "post"
                        :enctype "multipart/form-data"
                        :action (str "/editor/game/activate/" game-id)}
@@ -414,8 +413,12 @@ INSERT INTO game
                                 :onclick "submit()"
                                 :name "active"}
                                (if (:active result)
-                                 {:checked "on"}))]]]
-              ;; else, show owner name.
+                                 {:checked "on"}))]]
+               (if (:active result)
+                 "Active"
+                 ))]
+            
+            (if (not show-as-owner?)
               [:td
                (or (:owner result) [:i "no owner"])])
 
