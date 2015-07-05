@@ -6,8 +6,6 @@
             [italianverbs.unify :refer (fail? get-in merge unifyc)]
             [clojure.string :as string]))
 
-(log/info "ug.clj: start.")
-
 (def phrasal {:phrasal true})
 
 ;;    [1]
@@ -286,6 +284,4 @@
   (let [root (ref :top)]
     {:root root
      :comp root}))
-
-(log/info "ug.clj: done.")
 
