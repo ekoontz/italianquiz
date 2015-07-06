@@ -88,3 +88,6 @@ div.info > div {
     background:#003300;
 }
 
+div.debugme {
+    display:none;
+}

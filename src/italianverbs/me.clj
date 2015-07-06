@@ -11,6 +11,7 @@
    [italianverbs.unify :refer [unify]]
    [korma.core :as k]))
 
+(declare get-in-profile)
 (declare latest-questions)
 (declare me)
 (declare profile-table)
@@ -25,9 +26,22 @@
            :body
            (page "My page" (me request)
                  request
-                 {:onload "me()" ;; pass along userid
+                 {:onload "me_onload();"
                   :css ["/css/me.css"]
-                  :jss ["/css/me.js"]})}))))
+                  :jss ["/js/me.js"]
+                  })})
+
+     (GET "/:verb/:tense" request
+          (let [verb (:verb (:route-params request))
+                tense (:tense (:route-params request))
+                debug (log/debug (str "tense: " tense))
+                debug (log/debug (str "verb: " verb))
+                response
+                ;; TODO: generalize beyond en -> it.
+                (get-in-profile verb (keyword tense) "en" "it")]
+            {:body (write-str response)
+             :status 200
+             :headers headers})))))
 
 ;; TODO: move to test/me
 (def mock-profile
@@ -77,7 +91,7 @@
      (k/exec-raw
       [(str
        "SELECT count(question.id),
-               sum(question.time_to_correct_response) AS ttcr
+               avg(question.time_to_correct_response) AS ttcr
        FROM expression AS source
  INNER JOIN expression AS target
          ON ((target.structure->'synsem'->'sem') @>
@@ -152,27 +166,46 @@
      (map (fn [verb]
             (let [profiles-for-verb
                   (map (fn [tense]
-                         (get-in-profile verb (keyword tense) "en" "it"))
+                         (merge {:tense tense}
+
+                                ;; TODO: only works for en->it: generalize.
+                                ;;   (get-in-profile verb (keyword tense) "en" "it")))
+                                ))
                        tenses)]
-              (if (not (empty? (filter #(and (not (nil? %))
+              (if (or true (not (empty? (filter #(and (not (nil? %))
                                              (> (:count %) 0))
-                                       profiles-for-verb)))
+                                       profiles-for-verb))))
                 [:tr
                  [:th.verb verb]
                  (map (fn [in-profile]
-                        (let [level (if (and in-profile
-                                             (> (:count in-profile) 0))
-                                      (ttcr-to-level
-                                       (/ (:ttcr in-profile)
-                                          (:count in-profile)))
-                                      0)]
-                        [:td {:class (str "level" level)}
-                         (if (and in-profile
-                                  (> (:count in-profile) 0))
-                           [:div.info
-                            [:div (:ttcr in-profile)]
-                            [:div (:count in-profile)]]
-                           " &nbsp; ")]))
+                        (let [tense (string/replace-first (:tense in-profile) ":" "")
+
+                              ;; TODO: validate dom-id or use a uuid or something rather than
+                              ;; munging together dom id names.
+                              dom-id (str "profile-verb-" verb "-tense-" tense)
+
+                              ]
+                              
+                          [:td
+
+                           [:span {:id dom-id
+                                   :class "fa fa-spinner fa-spin"
+                                   }
+                                 
+                            [:script {:type "text/javascript"}
+                             (str "profile_verb_and_tense('"
+                                  dom-id "','"
+                                  verb "','"
+                                  tense "');")
+                             ]]
+
+                           
+                           (if (or true (and in-profile
+                                             (> (:count in-profile) 0)))
+                             [:div.info
+                              [:div (:ttcr in-profile)]
+                              [:div (:count in-profile)]]
+                             " &nbsp; ")]))
                       profiles-for-verb)])))
           verbs)
      ]))
