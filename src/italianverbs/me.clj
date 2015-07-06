@@ -11,6 +11,9 @@
    [italianverbs.unify :refer [unify]]
    [korma.core :as k]))
 
+;; TODO: language-specific
+(def tenses (sort [:present :conditional :past :imperfect :future]))
+
 (declare get-in-profile)
 (declare latest-questions)
 (declare me)
@@ -42,43 +45,6 @@
             {:body (write-str response)
              :status 200
              :headers headers})))))
-
-;; TODO: move to test/me
-(def mock-profile
-  [
-   {:tense :present
-    :verb "parlare"
-    :level 5}
-
-   {:tense :present
-    :verb "bere"
-    :level 1}
-
-   {:tense :present
-    :verb "alzare"
-    :level 1}
-
-   {:tense :imperfect
-    :verb "alzare"
-    :level 2}
-
-   {:tense :future
-    :verb "alzare"
-    :level 2}
-                 
-   {:tense :imperfect
-    :verb "mangiare"
-    :level 4}
-
-   {:tense :past
-    :verb "parlare"
-    :level 6}
-   
-   {:tense :conditional
-    :verb "bere"
-    :level 8
-    }
-   ])
 
 (defn get-in-profile [verb tense source target]
   "look in question table to find out user's profile for this particular spec."
@@ -113,7 +79,7 @@
     
     [:h3 "Overall"]
     
-    (profile-table mock-profile)
+    (profile-table)
     
     ]
    
@@ -123,37 +89,13 @@
     ]
    ])
 
-(declare find-in-profile)
-
-(defn ttcr-to-level [ttcr]
-  (cond
-   (or (nil? ttcr)
-       (> ttcr 20000)) ;; really bad.
-   0
-   
-   (> ttcr 10000)
-   1
-   
-   (> ttcr 5000)
-   2
-   
-   (> ttcr 2500)
-   3
-   
-   true ;; really good!
-   4))
-
-(defn profile-table [profile]
-  (let [verbs (sort (set (flatten (map :verb profile))))
-        verbs (map :verb (k/exec-raw
+(defn profile-table [ & [game]]
+  (let [verbs (map :verb (k/exec-raw
                           [(str "SELECT DISTINCT 
                              structure->'root'->'italiano'->>'italiano' AS verb 
                         FROM expression 
                        WHERE (structure->'root'->'italiano'->'italiano') IS NOT NULL 
-                    ORDER BY verb ASC")] :results))
-
-        tenses (sort (set (flatten (map :tense profile))))
-        ]
+                    ORDER BY verb ASC")] :results))]
     [:table.profile
 
      ;; top row: show all tenses
@@ -163,6 +105,7 @@
              [:th [:div tense]])
            tenses)]
      
+     ;; one row per verb.
      (map (fn [verb]
             (let [profiles-for-verb
                   (map (fn [tense]
@@ -210,16 +153,23 @@
           verbs)
      ]))
 
-(defn find-in-profile [ {verb :verb
-                         tense :tense} profile]
-  
-  (if (not (empty? profile))
-    (let [item (first profile)]
-      (if (and (= verb (:verb item))
-               (= tense (:tense item)))
-        item
-        (find-in-profile {:verb verb
-                          :tense tense} (rest profile))))))
+(defn ttcr-to-level [ttcr]
+  (cond
+   (or (nil? ttcr)
+       (> ttcr 20000)) ;; really bad.
+   0
+   
+   (> ttcr 10000)
+   1
+   
+   (> ttcr 5000)
+   2
+   
+   (> ttcr 2500)
+   3
+   
+   true ;; really good!
+   4))
 
 (defn latest-questions []
   (let [query
@@ -231,7 +181,7 @@
      INNER JOIN expression 
              ON (expression.id = question.source) 
        ORDER BY issued_sortby DESC 
-          LIMIT 50"
+          LIMIT 20"
 
         results (k/exec-raw [query [time-format]]
                             :results)]
