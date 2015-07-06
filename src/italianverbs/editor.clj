@@ -13,7 +13,6 @@
    [italianverbs.borges.reader :refer :all]
    [italianverbs.config :refer [time-format]]
    [italianverbs.html :as html]
-   [italianverbs.lexiconfn :refer [infinitives]]
    [italianverbs.unify :refer [get-in strip-refs unify]]
    [italianverbs.user :refer [do-if do-if-admin do-if-teacher
                               has-teacher-role username2userid]]
@@ -31,6 +30,7 @@
 (declare insert-game)
 (declare is-owner-of?)
 (declare json-read-str)
+(declare language-to-spec)
 (declare language-to-spec-path)
 (declare multipart-to-edn)
 (declare onload)
@@ -808,6 +808,12 @@ INSERT INTO game
         language-keyword (keyword language-keyword-name)]
     [:root language-keyword language-keyword]))
 
+(defn language-to-root-spec [short-language-name root]
+  "Take a language name like 'it' and a verb root and turn it into a map like: {:root {:italiano {:italiano <root>}}}."
+  (let [language-keyword-name (sqlname-from-match (short-language-name-to-long short-language-name))
+        language-keyword (keyword language-keyword-name)]
+    {:root {language-keyword {language-keyword root}}}))
+
 ;; TODO: throw exception rather than "???" for unknown languages.
 (defn short-language-name-to-long [lang]
   (cond (= lang "it") "Italian"
@@ -1236,7 +1242,7 @@ ms: " params))))
 
 ;; reverse of tenses-human-readable, immediately-above.
 (def human-tenses-to-spec
-  (zipmap (vals tenses-human-readable)
+  (zipmap (map keyword (vals tenses-human-readable))
           (keys tenses-human-readable)))
 
 (defn get-game-from-db [game-id]

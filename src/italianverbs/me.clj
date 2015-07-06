@@ -6,7 +6,9 @@
    [clojure.tools.logging :as log]
    [compojure.core :as compojure :refer [GET PUT POST DELETE ANY]]
    [italianverbs.config :refer [time-format]]
+   [italianverbs.editor :refer [human-tenses-to-spec language-to-root-spec]]
    [italianverbs.html :refer [page]]
+   [italianverbs.unify :refer [unify]]
    [korma.core :as k]))
 
 (declare latest-questions)
@@ -42,15 +44,19 @@
     :verb "alzare"
     :level 1}
 
-   {:tense :imperfetto
+   {:tense :imperfect
+    :verb "alzare"
+    :level 2}
+
+   {:tense :future
     :verb "alzare"
     :level 2}
                  
-   {:tense :imperfetto
+   {:tense :imperfect
     :verb "mangiare"
     :level 4}
 
-   {:tense :passato
+   {:tense :past
     :verb "parlare"
     :level 6}
    
@@ -60,24 +66,29 @@
     }
    ])
 
-(defn get-in-profile [spec]
+(defn get-in-profile [verb tense source target]
   "look in question table to find out user's profile for this particular spec."
-  (let [sql "SELECT DISTINCT question.id,
-       source.surface AS question,
-       target.surface AS possible_answer,
-       question.answer,
-       question.time_to_correct_response AS ttcr,
-       session_id AS session,
-       issued
+  (let [spec
+        (unify
+         (get human-tenses-to-spec tense)
+         (language-to-root-spec target verb)
+         )]
+    (first
+     (k/exec-raw
+      [(str
+       "SELECT count(question.id),
+               sum(question.time_to_correct_response) AS ttcr
        FROM expression AS source
  INNER JOIN expression AS target
          ON ((target.structure->'synsem'->'sem') @>
              (source.structure->'synsem'->'sem'))
-        AND (source.language = 'en')
-        AND (target.language = 'it')
+        AND (source.language = ?)
+        AND (target.language = ?)
+        AND (target.structure @> '" (write-str spec) "')
  INNER JOIN question
-         ON question.source = source.id"]
-    ))
+         ON question.source = source.id
+        AND (question.answer = target.surface)")
+       [source target]] :results))))
 
 (defn me [request]
   [:div#me
@@ -100,36 +111,67 @@
 
 (declare find-in-profile)
 
+(defn ttcr-to-level [ttcr]
+  (cond
+   (or (nil? ttcr)
+       (> ttcr 20000)) ;; really bad.
+   0
+   
+   (> ttcr 10000)
+   1
+   
+   (> ttcr 5000)
+   2
+   
+   (> ttcr 2500)
+   3
+   
+   true ;; really good!
+   4))
+
 (defn profile-table [profile]
   (let [verbs (sort (set (flatten (map :verb profile))))
+        verbs (map :verb (k/exec-raw
+                          [(str "SELECT DISTINCT 
+                             structure->'root'->'italiano'->>'italiano' AS verb 
+                        FROM expression 
+                       WHERE (structure->'root'->'italiano'->'italiano') IS NOT NULL 
+                    ORDER BY verb ASC")] :results))
+
         tenses (sort (set (flatten (map :tense profile))))
         ]
     [:table.profile
 
      ;; top row: show all tenses
      [:tr
+      [:th "&nbsp;"]
       (map (fn [tense]
              [:th [:div tense]])
            tenses)]
      
      (map (fn [verb]
             [:tr
+             [:th.verb verb]
              (map (fn [tense]
-                    (let [in-profile (find-in-profile {:verb verb
-                                                       :tense tense}
-                                                      profile)
-                          level (if in-profile (:level in-profile) "")
-                          ]
+                    (let [in-profile
+                          (get-in-profile verb (keyword tense) "en" "it")
+                          level (if (and in-profile
+                                         (> (:count in-profile) 0))
+                                  (ttcr-to-level
+                                   (/ (:ttcr in-profile)
+                                      (:count in-profile)))
+                                  0)]
                       [:td {:class (str "level" level)}
-                       (str "&nbsp; ")]))
+                       (str
+                        " &nbsp; ")]))
                   tenses)
-
-             [:th.verb verb]])
+            ])
           verbs)
      ]))
 
 (defn find-in-profile [ {verb :verb
                          tense :tense} profile]
+  
   (if (not (empty? profile))
     (let [item (first profile)]
       (if (and (= verb (:verb item))
@@ -168,22 +210,7 @@
        (fn [result]
          (let [ttcr (:ttcr result)
                profile
-               (cond
-                (or (nil? ttcr)
-                    (> ttcr 20000)) ;; really bad.
-                "level0"
-
-                (> ttcr 10000)
-                "level1"
-
-                (> ttcr 5000)
-                "level2"
-
-                (> ttcr 2500)
-                "level3"
-
-                true ;; really good!
-                "level4")]
+               (str "level" (ttcr-to-level ttcr))]
            [:tr
             [:td (:issued result)]
             [:td (:question result)]
