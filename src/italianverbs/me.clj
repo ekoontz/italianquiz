@@ -162,8 +162,12 @@
                                       (:count in-profile)))
                                   0)]
                       [:td {:class (str "level" level)}
-                       (str
-                        " &nbsp; ")]))
+                        (if (and in-profile
+                                 (> (:count in-profile) 0))
+                          [:div.info
+                           [:div (:ttcr in-profile)]
+                           [:div (:count in-profile)]]
+                          " &nbsp; ")]))
                   tenses)
             ])
           verbs)

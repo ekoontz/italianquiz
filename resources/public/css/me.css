@@ -24,7 +24,7 @@ table.profile th {
 }
 
 table.profile th > div {
-    width:6em;
+    width:4em;
     overflow:hidden;
 }
 
@@ -47,6 +47,15 @@ table.profile td {
     border:1px solid #003300; // should be same color as level9
 }
 
+table.profile td > div.info {
+    font-size:small;
+}
+
+div.info > div {
+    float:left;
+    text-align:center;
+    width:100%;
+}
 
 .level0 {
     background:#eeffcc;
