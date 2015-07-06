@@ -150,26 +150,30 @@
            tenses)]
      
      (map (fn [verb]
-            [:tr
-             [:th.verb verb]
-             (map (fn [tense]
-                    (let [in-profile
-                          (get-in-profile verb (keyword tense) "en" "it")
-                          level (if (and in-profile
-                                         (> (:count in-profile) 0))
-                                  (ttcr-to-level
-                                   (/ (:ttcr in-profile)
-                                      (:count in-profile)))
-                                  0)]
-                      [:td {:class (str "level" level)}
-                        (if (and in-profile
-                                 (> (:count in-profile) 0))
-                          [:div.info
-                           [:div (:ttcr in-profile)]
-                           [:div (:count in-profile)]]
-                          " &nbsp; ")]))
-                  tenses)
-            ])
+            (let [profiles-for-verb
+                  (map (fn [tense]
+                         (get-in-profile verb (keyword tense) "en" "it"))
+                       tenses)]
+              (if (not (empty? (filter #(and (not (nil? %))
+                                             (> (:count %) 0))
+                                       profiles-for-verb)))
+                [:tr
+                 [:th.verb verb]
+                 (map (fn [in-profile]
+                        (let [level (if (and in-profile
+                                             (> (:count in-profile) 0))
+                                      (ttcr-to-level
+                                       (/ (:ttcr in-profile)
+                                          (:count in-profile)))
+                                      0)]
+                        [:td {:class (str "level" level)}
+                         (if (and in-profile
+                                  (> (:count in-profile) 0))
+                           [:div.info
+                            [:div (:ttcr in-profile)]
+                            [:div (:count in-profile)]]
+                           " &nbsp; ")]))
+                      profiles-for-verb)])))
           verbs)
      ]))
 
