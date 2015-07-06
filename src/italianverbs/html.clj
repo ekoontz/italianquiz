@@ -746,8 +746,12 @@
    [:script {:type "text/javascript" :src "/js/search.js"}]
    
    (include-js "/js/prettify.js")
-   (include-js "/js/lang-clj.js")
-   (include-js "/js/d3.v2.min.js")
+
+   ;; things I haven't had time to play with.
+   ;; commented out to help startup speed while not being used.
+   ;;   (include-js "/js/lang-clj.js")
+   ;;   (include-js "/js/d3.v2.min.js")
+
    (include-js "/js/log4.js")
 
    (if js
