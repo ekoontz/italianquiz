@@ -81,7 +81,6 @@
          {:status 302
           :headers {"Location" (str "/editor/" (:language (:route-params request)))}})
 
-   ;; TODO: tighten 'do-if' restriction here: check if user is owner of this game.
    (POST "/game/activate/:game" request
          (let [game-id (:game (:route-params request))
                user (authentication/current request)]
@@ -138,13 +137,6 @@ INSERT INTO game
               {:status 302
                :headers {"Location" (str "/editor/game/" game-id "?message=Unauthorized+to+delete+game:" game-id)}}))))
   
-   ;; TODO: implement:
-   ;; (GET "/game/:game-to-edit/edit" request
-   ;; which:
-   ;; 1. checks if user can edit game - if so, 2. else 3.
-   ;; 2. (show-game :show-as-owner true)
-   ;; 3. redirect to /game/:game with ?message=unauthorized.
-
    (POST "/game/:game-to-edit/edit" request
          (let [game-id (:game-to-edit (:route-params request))
                user (authentication/current request)]
