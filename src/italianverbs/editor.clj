@@ -334,10 +334,11 @@ INSERT INTO game
 
       ]
 
-     [:div {:style "margin-top:0.5em;"}
-      [:h3 "Other teachers' games"]
+     (do-if-admin ;; only admins can see other teachers' games
+      [:div {:style "margin-top:0.5em;"}
+       [:h3 "Other teachers' games"]
 
-      (let [sql "SELECT vc_user.given_name || ' ' || vc_user.family_name AS owner,
+       (let [sql "SELECT vc_user.given_name || ' ' || vc_user.family_name AS owner,
                         game.name AS name,game.id AS id,active,
                         source,target,target_lex,target_grammar,
                         to_char(game.created_on, ?) AS created_on
@@ -349,13 +350,14 @@ INSERT INTO game
                          (game.created_by != ?))
                ORDER BY game.name"
 
-            debug (log/debug (str "OTHER'S GAMES: GAME-CHOOSING SQL: " (string/replace sql "\n" " ")))
-            results (k/exec-raw [sql
+             debug (log/debug (str "OTHER'S GAMES: GAME-CHOOSING SQL: " (string/replace sql "\n" " ")))
+             results (k/exec-raw [sql
                                  [time-format language language user-id]]
-                                :results)
-            debug (log/debug (str "Number of results: " (.size results)))]
-        (show-game-table results {:show-as-owner? false}))
-      ]
+                                 :results)
+             debug (log/debug (str "Number of results: " (.size results)))]
+         (show-game-table results {:show-as-owner? false}))
+       ]
+      "")
 
      )
     )
