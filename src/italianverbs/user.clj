@@ -238,16 +238,20 @@
          {:status 302
           :headers {"Location" "/?denied:+not+authenticated"}})))
 
-(defn do-if-admin [what-to-do]
-  (if (haz-admin?)
-    what-to-do
-    {:status 302
-     :headers {"Location" "/"}}))
 
 (defmacro do-if [auth-fn do-if-authorized do-if-not-authorized]
   `(if ~auth-fn
      ~do-if-authorized
      ~do-if-not-authorized))
+
+(defn do-if-admin [what-to-do & [else]]
+  (do-if (has-admin-role)
+         (do (log/debug (str "Authorized attempt to access an admin-only function."))
+             what-to-do)
+         (if else else
+             (do (log/warn (str "Unauthorized attempt to access an admin-only function."))
+                 {:status 302
+                  :headers {"Location" "/?message=Unauthorized: you+are+not+an+admin"}}))))
 
 (defn do-if-teacher [what-to-do & [else]]
   (do-if (has-teacher-role)
