@@ -207,6 +207,18 @@
       (log/debug (str "ARE YOU ADMIN? " result))
       result)))
 
+(defn has-admin-role [ & [request]]
+  (let [authentication (friend/current-authentication)]
+    (log/debug (str "haz-admin: current authentication:" (if (nil? authentication) " none " authentication)))
+    (if (= (:allow-internal-admins env) "true")
+      (log/warn (str "ALLOW_INTERNAL_ADMINS is enabled: allowing internally-authentication admins - should not be enabled in production")))
+
+    (and (not (nil? authentication))
+         ;; Google-authenticated teachers - note that authorization is here, not within google/ - we make the decision about whether the user
+         ;; is a teacher here.
+         (let [username (authentication/current request)]
+           (some #(= % :admin) (roles-of-email username))))))
+
 (defn has-teacher-role [ & [request]]
   (let [authentication (friend/current-authentication)]
     (log/debug (str "haz-admin: current authentication:" (if (nil? authentication) " none " authentication)))
@@ -219,11 +231,12 @@
          (let [username (authentication/current request)]
            (some #(= % :teacher) (roles-of-email username))))))
 
-(defmacro do-if-authenticated [what-to-do]
+(defmacro do-if-authenticated [what-to-do & [else]]
   `(if (not (nil? (friend/current-authentication)))
      ~what-to-do
-     {:status 302
-      :headers {"Location" "/?denied:+not+authenticated"}}))
+     (if ~else ~else
+         {:status 302
+          :headers {"Location" "/?denied:+not+authenticated"}})))
 
 (defn do-if-admin [what-to-do]
   (if (haz-admin?)
