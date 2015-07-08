@@ -236,13 +236,15 @@
      ~do-if-authorized
      ~do-if-not-authorized))
 
-(defn do-if-teacher [what-to-do]
+(defn do-if-teacher [what-to-do & [else]]
   (do-if (has-teacher-role)
          (do (log/debug (str "Authorized attempt to access a teacher-only function."))
              what-to-do)
-         (do (log/warn (str "Unauthorized attempt to access a teacher-only function."))
-             {:status 302
-              :headers {"Location" "/?message=Unauthorized: you+are+not+a+teacher"}})))
+         (if else else
+             (do (log/warn (str "Unauthorized attempt to access a teacher-only function."))
+                 {:status 302
+                  :headers {"Location" "/?message=Unauthorized: you+are+not+a+teacher"}}))))
+
 
 
 

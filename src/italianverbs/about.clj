@@ -1,7 +1,7 @@
 (ns italianverbs.about
   (:require
    [compojure.core :refer [GET]]
-   [italianverbs.user :refer [haz-admin?]]
+   [italianverbs.user :refer [do-if-teacher haz-admin?]]
    [italianverbs.html :as html]))
 
 (declare about)
@@ -75,32 +75,35 @@
        [:img {:width "350px" :src "/png/select_game.png"} ]])
 
     
-    (if (haz-admin? request)
-      [:div {:class "rounded flags manage"}
+    (do-if-teacher
+     [:div {:class "rounded flags manage"}
 
-       [:h3 "Games"]
+      [:h3 "Games"]
 
-       [:div {:class "flag smallflag"}
-        [:a {:href "/editor/it"}
-          [:img {:src "/png/Flag_of_Italy.svg.png" }]]
-        [:a {:href "/editor/it"}
-         [:div.language "Italiano"]
-         ]
+      [:div {:class "flag smallflag"}
+       [:a {:href "/editor/it"}
+        [:img {:src "/png/Flag_of_Italy.svg.png" }]]
+       [:a {:href "/editor/it"}
+        [:div.language "Italiano"]
         ]
+       ]
 
-       [:div {:class "flag smallflag"}
-        [:a {:href "/editor/es"}
-         [:img {:src "/png/Flag_of_Spain.svg.png" }]]
-        [:a {:href "/editor/es"}
-         [:div.language "Español"]
-         ]
+      [:div {:class "flag smallflag"}
+       [:a {:href "/editor/es"}
+        [:img {:src "/png/Flag_of_Spain.svg.png" }]]
+       [:a {:href "/editor/es"}
+        [:div.language "Español"]
         ]
+       ]
        
-       [:div {:class "flag smallflag"}
-        [:img {:src "/png/Flag_of_France.svg.png" }]
-        [:div.language "Français"]
-        [:i {:style "text-align:center;color:#ccc"} "Coming soon"]]]
-      )
+      [:div {:class "flag smallflag"}
+       [:img {:src "/png/Flag_of_France.svg.png" }]
+       [:div.language "Français"]
+       [:i {:style "text-align:center;color:#ccc"} "Coming soon"]]]
+
+     "" ;; else, don't show game editor.
+     
+     )
     
     ])
 
