@@ -1,7 +1,8 @@
 (ns italianverbs.about
   (:require
    [compojure.core :refer [GET]]
-   [italianverbs.user :refer [do-if-teacher haz-admin?]]
+   [italianverbs.user :refer [do-if do-if-teacher haz-admin?
+                              has-admin-role has-teacher-role]]
    [italianverbs.html :as html]))
 
 (declare about)
@@ -69,11 +70,11 @@
       [:i {:style "text-align:center;color:#ccc"} "Coming soon" ]]
      ]
 
-    (if (not (haz-admin? request))
+    (do-if (not (or (has-teacher-role) (has-admin-role)))
       [:div {:style "float:left;margin-left:25%;width:75%;margin-top:1em"}
        [:p "Use the dropdown within the tour to choose a class/game."]
-       [:img {:width "350px" :src "/png/select_game.png"} ]])
-
+       [:img {:width "350px" :src "/png/select_game.png"} ]]
+      "") ;; teachers and admins don't need to see this.
     
     (do-if-teacher
      [:div {:class "rounded flags manage"}
