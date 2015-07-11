@@ -2,15 +2,19 @@ function me_onload() {
     // initialize global state,etc.
 }
 
-function profile_verb_and_tense(dom_id,verb,tense) {
+function profile_verb_and_tense(dom_id,target,verb,tense) {
     // load the info for this dom_id, which is the verb and the tense.
     // TODO: add server-side support for /me/game/:gameid
     // then we can have: var url = "/me/game/" + game_id;
 
     // ..until then, no game variable.
     var url = "/me";
-    
-    var url = url + "/" + verb + "/" + tense;
+    var source = "en";
+    var url = url +
+	"/" + source +
+	"/" + target +
+	"/" + verb +
+	"/" + tense;
     $.ajax({
 	datatype: "json",
 	url: url,

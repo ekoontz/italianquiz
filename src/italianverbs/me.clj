@@ -34,14 +34,16 @@
                   :jss ["/js/me.js"]
                   })})
 
-     (GET "/:verb/:tense" request
-          (let [verb (:verb (:route-params request))
+     (GET "/:source/:target/:verb/:tense" request
+          (let [source (:source (:route-params request))
+                target (:target (:route-params request))
                 tense (:tense (:route-params request))
+                verb (:verb (:route-params request))
                 debug (log/trace (str "tense: " tense))
                 debug (log/trace (str "verb: " verb))
                 response
                 ;; TODO: generalize beyond en -> it.
-                (get-in-profile verb (keyword tense) "en" "it")]
+                (get-in-profile verb (keyword tense) source target)]
             {:body (write-str response)
              :status 200
              :headers headers})))))
@@ -84,7 +86,7 @@
         (first
          (k/exec-raw
           [(str
-            "SELECT ttcr,row_id
+            "SELECT ttcr,row_id AS median_row
                FROM (SELECT source.surface AS source,
                             target.surface AS target,
                             question.time_to_correct_response AS ttcr,
@@ -117,7 +119,7 @@
     
     [:h3 "Overall"]
     
-    (profile-table)
+    (profile-table "it")
     
     ]
    
@@ -127,13 +129,17 @@
     ]
    ])
 
-(defn profile-table [ & [game]]
-  (let [verbs (map :verb (k/exec-raw
+(defn profile-table [ target & [game]]
+  (let [source "english"
+        target-long "italiano"
+        verbs (map :verb (k/exec-raw
                           [(str "SELECT DISTINCT 
-                             structure->'root'->'italiano'->>'italiano' AS verb 
+                             structure->'root'->?->>? AS verb 
                         FROM expression 
-                       WHERE (structure->'root'->'italiano'->'italiano') IS NOT NULL 
-                    ORDER BY verb ASC")] :results))]
+                       WHERE (structure->'root'->?->?) IS NOT NULL 
+                    ORDER BY verb ASC")
+                           [target-long target-long
+                            target-long target-long] ] :results))]
     [:table.profile
 
      ;; top row: show all tenses
@@ -147,11 +153,7 @@
      (map (fn [verb]
             (let [profiles-for-verb
                   (map (fn [tense]
-                         (merge {:tense tense}
-
-                                ;; TODO: only works for en->it: generalize.
-                                ;;   (get-in-profile verb (keyword tense) "en" "it")))
-                                ))
+                         (merge {:tense tense}))
                        tenses)]
               (if (or true (not (empty? (filter #(and (not (nil? %))
                                              (> (:count %) 0))
@@ -174,10 +176,11 @@
                                    }
                                  
                             [:script {:type "text/javascript"}
-                             (str "profile_verb_and_tense('"
-                                  dom-id "','"
-                                  verb "','"
-                                  tense "');")
+                             (str "profile_verb_and_tense(" 
+                                  "'" dom-id "'," 
+                                  "'" target "'," 
+                                  "'" verb "'," 
+                                  "'" tense "');")
                              ]]
 
                            
@@ -188,7 +191,8 @@
                               [:div (:count in-profile)]]
                              " &nbsp; ")]))
                       profiles-for-verb)])))
-          verbs)
+          verbs
+          )
      ]))
 
 (defn ttcr-to-level [ttcr]
