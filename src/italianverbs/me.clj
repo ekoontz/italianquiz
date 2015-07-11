@@ -51,24 +51,62 @@
   (let [spec
         (unify
          (get human-tenses-to-spec tense)
+
+         ;; commented out temporarily for testing:
          (language-to-root-spec target verb)
-         )]
-    (first
-     (k/exec-raw
-      [(str
-       "SELECT count(question.id),
-               avg(question.time_to_correct_response) AS ttcr
-       FROM expression AS source
- INNER JOIN expression AS target
-         ON ((target.structure->'synsem'->'sem') @>
-             (source.structure->'synsem'->'sem'))
-        AND (source.language = ?)
-        AND (target.language = ?)
-        AND (target.structure @> '" (write-str spec) "')
- INNER JOIN question
-         ON question.source = source.id
-        AND (question.answer = target.surface)")
-       [source target]] :results))))
+         )
+
+        ;; 1. get counts
+        count-result
+        (first
+         (k/exec-raw
+          [(str
+            "SELECT count(*)
+               FROM expression AS source
+         INNER JOIN expression AS target
+                 ON ((target.structure->'synsem'->'sem') @>
+                     (source.structure->'synsem'->'sem'))
+                AND (target.structure @> '" (write-str spec) "')
+                AND (source.language = ?)
+                AND (target.language = ?)
+         INNER JOIN question
+                 ON question.source = source.id
+                AND (question.answer = target.surface)")
+           [source target]] :results))
+
+        count-result
+        (if count-result
+          (:count count-result)
+          0)
+        
+        ;; 2. get the median result, ordered by time-to-correct response
+        median
+        (first
+         (k/exec-raw
+          [(str
+            "SELECT ttcr,row_id
+               FROM (SELECT source.surface AS source,
+                            target.surface AS target,
+                            question.time_to_correct_response AS ttcr,
+                            row_number() 
+                             OVER (order by question.time_to_correct_response) AS row_id
+                       FROM expression AS source
+                 INNER JOIN expression AS target
+                         ON ((target.structure->'synsem'->'sem') @>
+                             (source.structure->'synsem'->'sem'))
+                        AND (target.structure @> '" (write-str spec) "')
+                        AND (source.language = ?)
+                        AND (target.language = ?)
+                 INNER JOIN question
+                         ON question.source = source.id
+                        AND (question.answer = target.surface)) AS median_question
+                      WHERE median_question.row_id BETWEEN ?/2.0 
+                        AND ?/2.0+1")
+           [source target count-result count-result]
+           ] :results))]
+    (if median
+      median
+      {:ttcr 0})))
 
 (defn me [request]
   [:div#me
