@@ -401,19 +401,24 @@ function update_user_input(target_language,target_locale) {
 	    log(DEBUG,"You hit the key: " + event.keyCode);
 	});
 
-	submit_user_guess(prefix,correct_answer,target_language,target_locale);
-	
-	setTimeout(function() {
-	    log(INFO,"submitting correct answer: " + correct_answer);
+	log(INFO,"submitting correct answer: " + correct_answer);
 
-	    // reset userprogress bar
-	    $("#userprogress").css("width","0");
-	    $("#gameinput").focus();
-	    $("#gameinput").keyup(function(event){
-		log(DEBUG,"You hit the key: " + event.keyCode);
-		update_user_input(target_language,target_locale);
-	    });
-	},2000);
+	$("#correctanswer").css("display","block");
+	$("#correctanswer").fadeOut(2000,function () {
+
+	    setTimeout(function() {
+		$("#correctanswer").css("display","none");
+		// reset userprogress bar
+		$("#userprogress").css("width","0");
+		$("#gameinput").focus();
+		$("#gameinput").keyup(function(event){
+		    log(DEBUG,"You hit the key: " + event.keyCode);
+		    update_user_input(target_language,target_locale);
+		});
+		submit_user_guess(prefix,correct_answer,target_language,target_locale);
+
+	    },100);
+	});
     }
 }
 
