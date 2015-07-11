@@ -161,7 +161,6 @@ function start_tour(target_language,target_locale,game_id) {
 		.bindPopup("<b>Bienvenidos!</b>").openPopup();
 	}
     }
-
     
     L.circle([current_lat, 
 	      current_long], 10, {
@@ -256,39 +255,6 @@ function response_to_update() {
 
 function decrement_remaining_tour_question_time() {
     log(DEBUG,"decrement remaining time..");
-}
-
-// TODO: correct_answer should be an array of possibile correct answers,
-// rather than a single possible correct answer.
-function submit_user_guess(guess,correct_answer,target_language,target_locale,game_id) {
-    log(INFO,"submit_user_guess() guess: " + guess);
-    if (guess == correct_answer) {
-	log(INFO,"You got one right!");
-	log(DEBUG,"calling update_map with target_language: " + target_language + " and target_locale:" + target_locale);
-	update_map($("#tourquestion").html(), guess,target_language,target_locale);
-	$("#gameinput").css("background","transparent");
-	$("#gameinput").css("color","lightblue");
-	
-	var time_to_correct_response = (new Date).getTime() - question_at;
-	
-	$.ajax({
-	    cache: false,
-	    type: "POST",
-	    data: {question: question_id,
-		   answer: guess,
-		   time: time_to_correct_response},
-            dataType: "html",
-            url: "/tour/update-question"}).done(function(content) {
-		log(DEBUG,"response to /update-question: " + content);
-	    });
-	
-	increment_map_score(); // here the 'score' is in kilometri (distance traveled)
-	// TODO: score should vary depending on the next 'leg' of the trip.
-	// go to next question.
-	return tour_loop(target_language,target_locale);
-    }
-    log(INFO, "Your guess: '" + guess + "' did not match any answers, unfortunately.");
-    return false;
 }
 
 function longest_prefix_and_correct_answer(user_input,correct_answers) {
@@ -394,8 +360,6 @@ function update_user_input(target_language,target_locale) {
     $("#userprogress").css("width",percent+"%");
 	
     var guess = prefix;
-    // TODO: correct_answer should be an array of possibile correct answers,
-    // rather than a single possible correct answer.
     if ((prefix.length > 0) && (guess.toLowerCase() == correct_answer.toLowerCase())) {
 	var time_to_correct_response = (new Date).getTime() - question_at;
 
