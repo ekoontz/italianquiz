@@ -45,8 +45,8 @@
 #correctanswer {
     font-size:200%;
     position:absolute;
-    left:50%;
-    top:10%;
+    left:35%;
+    top:15%;
     white-space:nowrap;
     display:none;
     border-radius: 5px;
@@ -58,14 +58,20 @@
 #gotitright {
     font-size:200%;
     position:absolute;
-    left:50%;
-    top:10%;
+    left:15%;
+    top:15%;
     white-space:nowrap;
     display:none;
     border-radius: 5px;
     border:2px solid darkgrey;
     background: lightgreen;
     z-index:10;
+    padding:0.5em;
+    text-align:center;
+}
+
+#gotitright h4,h2 {
+    width:100%;
 }
 
 button#non_lo_so {
@@ -248,6 +254,13 @@ and (orientation : landscape) {
     #gameinputdiv {
 	top:2%;
 	left:53%;
+    }
+
+    #correctanswer {
+	left:50%;
+    }
+    #gotitright {
+	left:50%;
     }
 }
 

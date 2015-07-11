@@ -228,7 +228,6 @@ function create_tour_question(target_language,target_locale,game_id) {
 
 	// update answers with all targets.
 	$("#correctanswer").html("");
-	$("#gotitright").html("");
 
 	log(DEBUG,"TARGETS ARE: " + q_and_a.targets);
 	correct_answers = q_and_a.targets;
@@ -238,7 +237,6 @@ function create_tour_question(target_language,target_locale,game_id) {
 	    log(DEBUG,"TARGET INDEX IS: " + index);
 	    log(DEBUG,"TARGET VALUE IS: " + value);
 	    $("#correctanswer").append("<div id='answer_"+i+"'>" + value + "</div>");
-	    $("#gotitright").append("<div id='answer_"+i+"'>" + value + "</div>");
 	    i++;
 	});
 	question_id = q_and_a.question_id;
@@ -395,11 +393,23 @@ function update_user_input(target_language,target_locale) {
     var percent = (prefix.length / correct_answer.length) * 100;
     $("#userprogress").css("width",percent+"%");
 	
-    var guess = prefix.toLowerCase();
+    var guess = prefix;
     // TODO: correct_answer should be an array of possibile correct answers,
     // rather than a single possible correct answer.
-    if ((prefix.length > 0) && (guess == correct_answer.toLowerCase())) {
+    if ((prefix.length > 0) && (guess.toLowerCase() == correct_answer.toLowerCase())) {
 	var time_to_correct_response = (new Date).getTime() - question_at;
+
+	$("#gotitright").html("<h4>"+
+			      $("#tourquestion").html() +
+			      "</h4>"+
+			      "<h2>"+
+			      guess +
+			      "</h2>"
+			      );
+	$("#gotitright").css("display","block");
+	$("#gotitright").fadeOut(5000,function () {
+	    log(INFO,"fadeOut() is over.");
+	});
 
 	/* user got it right - 'flash' their answer and submit the answer for them. */
 	$("#gameinput").css("background","lime");
@@ -429,19 +439,12 @@ function update_user_input(target_language,target_locale) {
 
 	log(INFO,"submitting correct answer: " + correct_answer);
 
-	$("#gotitright").css("display","block");
-	$("#gotitright").fadeOut(1000,function () {
-	    // reset userprogress bar
-	    $("#userprogress").css("width","0");
-	    $("#gameinput").focus();
-	    $("#gameinput").keyup(function(event){
-		log(DEBUG,"You hit the key: " + event.keyCode);
-		update_user_input(target_language,target_locale);
-	    });
-	    // TODO: score should vary depending on the next 'leg' of the trip.
-	    // go to next question.
-	    return tour_loop(target_language,target_locale);
-	});
+	// reset userprogress bar
+	$("#userprogress").css("width","0");
+	$("#gameinput").focus();
+	// TODO: score should vary depending on the next 'leg' of the trip.
+	// go to next question.
+	return tour_loop(target_language,target_locale);
     }
 }
 
