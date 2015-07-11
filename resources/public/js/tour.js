@@ -228,6 +228,7 @@ function create_tour_question(target_language,target_locale,game_id) {
 
 	// update answers with all targets.
 	$("#correctanswer").html("");
+	$("#gotitright").html("");
 
 	log(DEBUG,"TARGETS ARE: " + q_and_a.targets);
 	correct_answers = q_and_a.targets;
@@ -237,6 +238,7 @@ function create_tour_question(target_language,target_locale,game_id) {
 	    log(DEBUG,"TARGET INDEX IS: " + index);
 	    log(DEBUG,"TARGET VALUE IS: " + value);
 	    $("#correctanswer").append("<div id='answer_"+i+"'>" + value + "</div>");
+	    $("#gotitright").append("<div id='answer_"+i+"'>" + value + "</div>");
 	    i++;
 	});
 	question_id = q_and_a.question_id;
@@ -259,7 +261,7 @@ function decrement_remaining_tour_question_time() {
 }
 
 // TODO: correct_answer should be an array of possibile correct answers,
-// rather than a single possibile correct answer.
+// rather than a single possible correct answer.
 function submit_user_guess(guess,correct_answer,target_language,target_locale,game_id) {
     log(INFO,"submit_user_guess() guess: " + guess);
     if (guess == correct_answer) {
@@ -393,7 +395,12 @@ function update_user_input(target_language,target_locale) {
     var percent = (prefix.length / correct_answer.length) * 100;
     $("#userprogress").css("width",percent+"%");
 	
-    if ((prefix.length > 0) && (prefix.toLowerCase() == correct_answer.toLowerCase())) {
+    var guess = prefix.toLowerCase();
+    // TODO: correct_answer should be an array of possibile correct answers,
+    // rather than a single possible correct answer.
+    if ((prefix.length > 0) && (guess == correct_answer.toLowerCase())) {
+	var time_to_correct_response = (new Date).getTime() - question_at;
+
 	/* user got it right - 'flash' their answer and submit the answer for them. */
 	$("#gameinput").css("background","lime");
 
@@ -401,23 +408,39 @@ function update_user_input(target_language,target_locale) {
 	    log(DEBUG,"You hit the key: " + event.keyCode);
 	});
 
+	log(INFO,"You got one right!");
+	log(DEBUG,"calling update_map with target_language: " + target_language + " and target_locale:" + target_locale);
+	update_map($("#tourquestion").html(), guess,target_language,target_locale);
+	$("#gameinput").css("background","transparent");
+	$("#gameinput").css("color","lightblue");
+		
+	$.ajax({
+	    cache: false,
+	    type: "POST",
+	    data: {question: question_id,
+		   answer: guess,
+		   time: time_to_correct_response},
+            dataType: "html",
+            url: "/tour/update-question"}).done(function(content) {
+		log(DEBUG,"response to /update-question: " + content);
+	    });
+	
+	increment_map_score(); // here the 'score' is in kilometri (distance traveled)
+
 	log(INFO,"submitting correct answer: " + correct_answer);
 
-	$("#correctanswer").css("display","block");
-	$("#correctanswer").fadeOut(2000,function () {
-
-	    setTimeout(function() {
-		$("#correctanswer").css("display","none");
-		// reset userprogress bar
-		$("#userprogress").css("width","0");
-		$("#gameinput").focus();
-		$("#gameinput").keyup(function(event){
-		    log(DEBUG,"You hit the key: " + event.keyCode);
-		    update_user_input(target_language,target_locale);
-		});
-		submit_user_guess(prefix,correct_answer,target_language,target_locale);
-
-	    },100);
+	$("#gotitright").css("display","block");
+	$("#gotitright").fadeOut(1000,function () {
+	    // reset userprogress bar
+	    $("#userprogress").css("width","0");
+	    $("#gameinput").focus();
+	    $("#gameinput").keyup(function(event){
+		log(DEBUG,"You hit the key: " + event.keyCode);
+		update_user_input(target_language,target_locale);
+	    });
+	    // TODO: score should vary depending on the next 'leg' of the trip.
+	    // go to next question.
+	    return tour_loop(target_language,target_locale);
 	});
     }
 }

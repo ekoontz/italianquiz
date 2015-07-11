@@ -350,6 +350,10 @@
     " "
     ]
 
+   [:div#gotitright
+    " "
+    ]
+
     [:div#map ]
 
    [:div#streetview

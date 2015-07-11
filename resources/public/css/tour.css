@@ -45,7 +45,20 @@
 #correctanswer {
     font-size:200%;
     position:absolute;
-    left:40%;
+    left:50%;
+    top:10%;
+    white-space:nowrap;
+    display:none;
+    border-radius: 5px;
+    border:2px solid darkgrey;
+    background: lightgreen;
+    z-index:10;
+}
+
+#gotitright {
+    font-size:200%;
+    position:absolute;
+    left:50%;
     top:10%;
     white-space:nowrap;
     display:none;
