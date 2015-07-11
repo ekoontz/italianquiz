@@ -37,8 +37,8 @@
      (GET "/:verb/:tense" request
           (let [verb (:verb (:route-params request))
                 tense (:tense (:route-params request))
-                debug (log/debug (str "tense: " tense))
-                debug (log/debug (str "verb: " verb))
+                debug (log/trace (str "tense: " tense))
+                debug (log/trace (str "verb: " verb))
                 response
                 ;; TODO: generalize beyond en -> it.
                 (get-in-profile verb (keyword tense) "en" "it")]
