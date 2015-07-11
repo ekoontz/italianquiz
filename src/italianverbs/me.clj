@@ -244,6 +244,6 @@
             [:td (:issued result)]
             [:td (:question result)]
             [:td (:answer result)]
-            [:td {:class profile}
+            [:td {:class (str "profile " profile)}
              (:ttcr result)]]))
        results)])))

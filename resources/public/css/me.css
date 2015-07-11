@@ -47,6 +47,10 @@ table.profile td {
     border:1px solid #003300; // should be same color as level9
 }
 
+td.profile {
+    text-align:right;
+}
+
 table.profile td > div.info {
     font-size:small;
 }
