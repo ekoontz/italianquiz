@@ -24,10 +24,25 @@ function profile_verb_and_tense(dom_id,target,verb,tense) {
 	    var mean_ttcr = jsonResponse.mean;
 	    var count = jsonResponse.count;
 	    var ttcr = jsonResponse.ttcr;
+	    var verb = jsonResponse.verb;
+	    var tense = jsonResponse.tense;
 	    var level = ttcr_to_level(ttcr);
 
 	    $("#" + dom_id).parent().addClass("level"+level);
-	    $("#" + dom_id).replaceWith("&nbsp;");
+	    $("#" + dom_id).replaceWith(
+		"<a href='/me/"+ source + "/" + target + "/" +
+		    verb + "/" + tense +
+		"'>" +
+		    "<table class='stats'>" +
+		    "<tr>"+
+		    "<th>count</th>" +
+		    "<td>" + count + "</td>" +
+		    "</tr>" +
+		    "<tr>"+
+		    "<th>ttcr</th>" +
+		    "<td>" + ttcr + "</td>" +
+		    "</tr>" +
+		    "</table>");
 	}
     });
 }

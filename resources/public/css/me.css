@@ -36,7 +36,7 @@ table.profile th.verb {
     text-align:left;
 }
 
-table.profile td {
+table.profile > tbody > tr > td {
     height:3em;
     width:2em;
     padding:0.5em;
@@ -44,7 +44,25 @@ table.profile td {
     -moz-border-radius:5px;
     -webkit-border-radius:5px;
     border-radius:5px;
-    border:1px solid #003300; // should be same color as level9
+    border:1px solid #ccc;
+}
+
+table.stats {
+    width:100%;
+    border-collapse:collapse;
+    font-size:75%;
+}
+table.stats th,td {
+    padding:0;
+    margin:0;
+}
+
+table.stats th {
+    text-align:left;
+}
+
+table.stats td {
+    text-align:right;
 }
 
 td.profile {

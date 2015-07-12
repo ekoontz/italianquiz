@@ -101,13 +101,18 @@
                  INNER JOIN question
                          ON question.source = source.id
                         AND (question.answer = target.surface)) AS median_question
-                      WHERE median_question.row_id BETWEEN ?/2.0 
+                      WHERE median_question.row_id 
+                    BETWEEN ?/2.0 
                         AND ?/2.0+1")
-           [source target count-result count-result]
-           ] :results))]
-    (if median
-      median
-      {:ttcr 0})))
+           [source target count-result count-result]] :results))]
+    (merge {:count count-result
+            :source source
+            :verb verb
+            :target target
+            :tense tense}
+           (if median
+             median
+             {:ttcr 0}))))
 
 (defn me [language]
   [:div#me
