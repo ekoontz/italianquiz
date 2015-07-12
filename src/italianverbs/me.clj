@@ -6,7 +6,9 @@
    [clojure.tools.logging :as log]
    [compojure.core :as compojure :refer [GET PUT POST DELETE ANY]]
    [italianverbs.config :refer [time-format]]
-   [italianverbs.editor :refer [human-tenses-to-spec language-to-root-spec]]
+   [italianverbs.editor :refer [human-tenses-to-spec
+                                language-to-root-spec
+                                language-to-root-keyword]]
    [italianverbs.html :refer [page]]
    [italianverbs.unify :refer [unify]]
    [korma.core :as k]))
@@ -27,7 +29,8 @@
           {:headers headers
            :status 200
            :body
-           (page "My page" (me request)
+           (page "My page"
+                 (me "it")
                  request
                  {:onload "me_onload();"
                   :css ["/css/me.css"]
@@ -42,7 +45,6 @@
                 debug (log/trace (str "tense: " tense))
                 debug (log/trace (str "verb: " verb))
                 response
-                ;; TODO: generalize beyond en -> it.
                 (get-in-profile verb (keyword tense) source target)]
             {:body (write-str response)
              :status 200
@@ -53,10 +55,7 @@
   (let [spec
         (unify
          (get human-tenses-to-spec tense)
-
-         ;; commented out temporarily for testing:
-         (language-to-root-spec target verb)
-         )
+         (language-to-root-spec target verb))
 
         ;; 1. get counts
         count-result
@@ -110,7 +109,7 @@
       median
       {:ttcr 0})))
 
-(defn me [request]
+(defn me [language]
   [:div#me
    
    [:div#myprofile {:class "major"}
@@ -119,7 +118,7 @@
     
     [:h3 "Overall"]
     
-    (profile-table "it")
+    (profile-table language)
     
     ]
    
@@ -130,8 +129,7 @@
    ])
 
 (defn profile-table [ target & [game]]
-  (let [source "english"
-        target-long "italiano"
+  (let [target-long (language-to-root-keyword target)
         verbs (map :verb (k/exec-raw
                           [(str "SELECT DISTINCT 
                              structure->'root'->?->>? AS verb 
