@@ -32,14 +32,15 @@
    [:h3 "Sessions"]
    (tablize
     (k/exec-raw
-     ["SELECT substring(access_token from 0 for 10) || '...' AS access_token,
-              to_char(created,?) AS created,
-              ring_session AS ring_session,
-              user_id
-         FROM session
-     ORDER BY created DESC 
-        LIMIT 20" [time-format]] :results)
-    {:cols [:access_token :created :ring_session :user_id]}
+     ["SELECT substring(access_token from 0 for 10) || '..' AS access_token,
+       to_char(session.created,?) AS created,
+       substring(ring_session::text from 0 for 10) || '..'  AS ring_session,
+       users.given_name || ' ' || users.family_name AS user,
+       users.email
+  FROM session
+LEFT JOIN vc_user AS users ON users.id = session.user_id
+  ORDER BY created DESC" [time-format]] :results)
+    {:cols [:created :access_token :ring_session :email :user]}
 
     )])
 
