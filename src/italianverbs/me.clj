@@ -1,7 +1,7 @@
 (ns italianverbs.me
   (:refer-clojure :exclude [get-in])
   (:require
-   [clojure.data.json :refer [write-str]]
+   [clojure.data.json :as json]
    [clojure.string :as string]
    [clojure.tools.logging :as log]
    [compojure.core :as compojure :refer [GET PUT POST DELETE ANY]]
@@ -46,7 +46,7 @@
                 debug (log/trace (str "verb: " verb))
                 response
                 (get-in-profile verb (keyword tense) source target)]
-            {:body (write-str response)
+            {:body (json/write-str response)
              :status 200
              :headers headers})))))
 
@@ -67,7 +67,7 @@
          INNER JOIN expression AS target
                  ON ((target.structure->'synsem'->'sem') @>
                      (source.structure->'synsem'->'sem'))
-                AND (target.structure @> '" (write-str spec) "')
+                AND (target.structure @> '" (json/write-str spec) "')
                 AND (source.language = ?)
                 AND (target.language = ?)
          INNER JOIN question
@@ -95,7 +95,7 @@
                  INNER JOIN expression AS target
                          ON ((target.structure->'synsem'->'sem') @>
                              (source.structure->'synsem'->'sem'))
-                        AND (target.structure @> '" (write-str spec) "')
+                        AND (target.structure @> '" (json/write-str spec) "')
                         AND (source.language = ?)
                         AND (target.language = ?)
                  INNER JOIN question
@@ -133,10 +133,13 @@
     ]
    ])
 
+;; TODO: use html/tablize rather than this custom function.
 (defn profile-table [ target & [game]]
   (let [target-long (language-to-root-keyword target)
-        verbs (map :verb (k/exec-raw
-                          [(str "SELECT DISTINCT 
+        verbs (map :verb
+                   (k/exec-raw
+                    [(str
+                      "SELECT DISTINCT 
                              structure->'root'->?->>? AS verb 
                         FROM expression 
                        WHERE (structure->'root'->?->?) IS NOT NULL 
@@ -216,6 +219,7 @@
    true ;; really good!
    4))
 
+;; TODO: use html/tablize rather than this custom function.
 (defn latest-questions []
   (let [query
         "SELECT to_char(issued,?) AS issued,
