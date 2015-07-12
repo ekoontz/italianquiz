@@ -330,8 +330,6 @@ INSERT INTO game
          [:button {:name "submit_new_game" :disabled true :onclick "submit();"} "New Game"]
          ]])
 
-
-
       ]
 
      (do-if-admin ;; only admins can see other teachers' games
