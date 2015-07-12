@@ -796,15 +796,19 @@ INSERT INTO game
              ;; all possible lexemes for this game.
              lexemes-for-this-game)]))))
 
+
+(defn language-to-root-keyword [short-language-name]
+  (sqlname-from-match (short-language-name-to-long short-language-name)))
+
 (defn language-to-spec-path [short-language-name]
   "Take a language name like 'it' and turn it into an array like: [:root :italiano :italiano]."
-  (let [language-keyword-name (sqlname-from-match (short-language-name-to-long short-language-name))
+  (let [language-keyword-name (language-to-root-keyword)
         language-keyword (keyword language-keyword-name)]
     [:root language-keyword language-keyword]))
 
 (defn language-to-root-spec [short-language-name root]
   "Take a language name like 'it' and a verb root and turn it into a map like: {:root {:italiano {:italiano <root>}}}."
-  (let [language-keyword-name (sqlname-from-match (short-language-name-to-long short-language-name))
+  (let [language-keyword-name (language-to-root-keyword short-language-name)
         language-keyword (keyword language-keyword-name)]
     {:root {language-keyword {language-keyword root}}}))
 
