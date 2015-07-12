@@ -11,6 +11,7 @@
    [friend-oauth2.workflow :as oauth2]
    [hiccup.page :as h]
    [italianverbs.about :as about]
+   [italianverbs.admin :as admin]
    [italianverbs.authentication :as auth]
    [italianverbs.auth.google :as google]
    [italianverbs.class :as class]
@@ -43,6 +44,9 @@
   ;; top-level page: currently redirects to the "Cloud" game.
   (GET "/" request
        (resp/redirect "/about"))
+
+  (context "/admin" []
+           admin/routes)
 
   (context "/auth" []
            auth/routes)

@@ -6,21 +6,7 @@
    [clojure.tools.logging :as log]
    [italianverbs.user :as user]))
 
-(defn- menuitem [ {selected? :selected?
-                   show? :show?
-                   current-url :current-url
-                   text :text
-                   url-for-this-item :url-for-this-item
-                   requires-admin :requires-admin
-                   requires-authentication :requires-authentication
-                   haz-admin :haz-admin
-                   haz-authentication :haz-authentication}]
-  (if show?
-    [:div
-     (if (or selected?
-             (= current-url url-for-this-item))
-       {:class "selected"})
-     [:a {:href url-for-this-item} text]]))
+(declare menuitem)
 
 (defn menubar [session-row current-url haz-authentication & [suffixes]]
   (let [roles (:roles haz-authentication)
@@ -100,12 +86,21 @@
 
       (menuitem {:selected?
                  (and (not (nil? current-url))
-                      (re-find #"/test" current-url))
+                      (re-find #"/me" current-url))
                  :current-url current-url
                  :text "My Profile"
                  :url-for-this-item "/me"
                  :show? true})
 
+      (menuitem {:selected?
+                 (and (not (nil? current-url))
+                      (re-find #"/admin" current-url))
+                 :current-url current-url
+                 :text "Admin"
+                 :requires-admin true
+                 :url-for-this-item "/admin"
+                 :show? haz-admin?})
+      
       (menuitem {:selected?
                  (and (not (nil? current-url))
                       (re-find #"/class" current-url))
@@ -114,6 +109,22 @@
                  :url-for-this-item (str "/class/my" (if (get suffixes :class)
                                                        (get suffixes :class)))
                  :show? (and false haz-authentication (not haz-admin?))})])))
+
+(defn- menuitem [ {selected? :selected?
+                   show? :show?
+                   current-url :current-url
+                   text :text
+                   url-for-this-item :url-for-this-item
+                   requires-admin :requires-admin
+                   requires-authentication :requires-authentication
+                   haz-admin :haz-admin
+                   haz-authentication :haz-authentication}]
+  (if show?
+    [:div
+     (if (or selected?
+             (= current-url url-for-this-item))
+       {:class "selected"})
+     [:a {:href url-for-this-item} text]]))
 
 
 
