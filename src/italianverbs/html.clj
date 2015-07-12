@@ -943,4 +943,29 @@
    workbook/workbookq will format this accordingly."
   {:plain expr})
 
+(defn tablize [rows & [{cols :cols}]]
+  "Take a vector of maps, each of which is a row from a db table, and render it 
+in HTML. If :cols is supplied, use it as the vector of column names as keywords.
+"
 
+  (if (empty? rows)
+    [:div [:i "None."]]
+
+    ;; else
+    [:table {:class "striped padded"}
+     [:tr
+      (map (fn [col]
+             [:th (string/capitalize (string/replace-first (str col) ":" ""))])
+           (if cols
+             cols
+             (keys (first rows))))]
+     (map
+      (fn [row]
+        [:tr
+         (map (fn [col]
+                [:td (get row col)])
+              (if cols
+                cols
+                (keys row)))])
+
+      rows)]))
