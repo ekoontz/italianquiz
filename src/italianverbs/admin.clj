@@ -39,7 +39,7 @@
        users.email
   FROM session
 LEFT JOIN vc_user AS users ON users.id = session.user_id
-  ORDER BY created DESC" [time-format]] :results)
+  ORDER BY session.created DESC" [time-format]] :results)
     {:cols [:created :access_token :ring_session :email :user]}
 
     )])
