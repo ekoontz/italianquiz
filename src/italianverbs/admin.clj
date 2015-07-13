@@ -35,7 +35,9 @@
      (k/exec-raw
       ["SELECT users.given_name || ' ' || users.family_name AS user,
                users.email
-          FROM vc_user AS users" []] :results))
+          FROM vc_user 
+            AS users 
+      ORDER BY users.family_name,users.given_name" []] :results))
 
     [:h3 "Roles"]
     (tablize
@@ -44,7 +46,8 @@
                users.email,role
           FROM vc_user_role
     INNER JOIN vc_user AS users 
-            ON users.id = vc_user_role.user_id" []] :results)
+            ON users.id = vc_user_role.user_id
+      ORDER BY users.family_name,users.given_name" []] :results)
      )
     
 
