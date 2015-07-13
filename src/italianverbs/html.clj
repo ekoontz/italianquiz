@@ -955,7 +955,11 @@ in HTML. If :cols is supplied, use it as the vector of column names as keywords.
     [:table {:class "striped padded"}
      [:tr
       (map (fn [col]
-             [:th (string/capitalize (string/replace-first (str col) ":" ""))])
+             [:th (string/capitalize
+                   (string/replace
+                    (string/replace-first (str col) ":" "")
+                    "_" " "))
+              ])
            (if cols
              cols
              (keys (first rows))))]
