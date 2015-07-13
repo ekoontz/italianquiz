@@ -114,12 +114,18 @@
              median
              {:ttcr 0}))))
 
+(declare instructor-selector)
+
 (defn me [language]
   [:div#me
    
    [:div#myprofile {:class "major"}
     
     [:h2 "Profile"]
+
+    [:h3 "Instructor"]
+
+    (instructor-selector)
     
     [:h3 "Overall"]
     
@@ -128,10 +134,25 @@
     ]
    
    [:div#last {:class "major"}
-    [:h2 "Latest questions"]
+    [:h2 "Your latest questions"]
     (latest-questions)      
     ]
    ])
+
+(defn instructor-selector []
+  [:select
+   [:option {:value ""} "No instructor chosen"]
+   (map (fn [row]
+          [:option {:value (:instructor_id row)}
+           (:instructor row)])
+        (k/exec-raw
+         ["SELECT users.given_name || ' ' || users.family_name AS instructor,
+                  users.id AS instructor_id
+             FROM vc_user_role
+       INNER JOIN vc_user AS users 
+               ON users.id = vc_user_role.user_id
+            WHERE role = 'teacher'
+         ORDER BY users.family_name,users.given_name" []] :results))])
 
 ;; TODO: use html/tablize rather than this custom function.
 (defn profile-table [ target & [game]]
@@ -243,7 +264,7 @@
        [:th "When"]
        [:th "Question"]
        [:th "Answer"]
-       [:th "Profile"]
+       [:th "Time"]
        ]
       
       (map
