@@ -29,10 +29,32 @@
   [:div#admin {:class "major"}
    [:h2 "Admin"]
 
-   [:h3 "Sessions"]
-   (tablize
-    (k/exec-raw
-     ["SELECT substring(access_token from 0 for 10) || '..' AS access_token,
+   [:div {:style "float:left;width:48%"}
+    [:h3 "Users"]
+    (tablize
+     (k/exec-raw
+      ["SELECT users.given_name || ' ' || users.family_name AS user,
+               users.email
+          FROM vc_user AS users" []] :results))
+
+    [:h3 "Roles"]
+    (tablize
+     (k/exec-raw
+      ["SELECT users.given_name || ' ' || users.family_name AS user,
+               users.email,role
+          FROM vc_user_role
+    INNER JOIN vc_user AS users 
+            ON users.id = vc_user_role.user_id" []] :results)
+     )
+    
+
+    ]
+
+   [:div {:style "float:left;width:48%"}
+    [:h3 "Sessions"]
+    (tablize
+     (k/exec-raw
+      ["SELECT substring(access_token from 0 for 10) || '..' AS access_token,
        to_char(session.created,?) AS created,
        substring(ring_session::text from 0 for 10) || '..'  AS ring_session,
        users.given_name || ' ' || users.family_name AS user,
@@ -40,9 +62,13 @@
   FROM session
 LEFT JOIN vc_user AS users ON users.id = session.user_id
   ORDER BY session.created DESC" [time-format]] :results)
-    {:cols [:created :access_token :ring_session :email :user]}
+     {:cols [:created :email :user :access_token :ring_session]}
+     )]
+   ])
 
-    )])
+
+   
+
 
 
 
