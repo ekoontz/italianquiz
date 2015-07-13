@@ -33,11 +33,17 @@
     [:h3 "Users"]
     (tablize
      (k/exec-raw
-      ["SELECT users.given_name || ' ' || users.family_name AS user,
-               users.email
-          FROM vc_user 
-            AS users 
-      ORDER BY users.family_name,users.given_name" []] :results))
+      ["SELECT users.given_name || ' ' || users.family_name AS name,
+               users.email,to_char(max(session.created),?) AS last_login
+          FROM vc_user
+            AS users
+     LEFT JOIN session
+            ON (session.user_id = users.id)
+      GROUP BY email,name
+      ORDER BY last_login,name" [time-format]] :results)
+     {:cols [:email :name :last_login]}
+
+     )
 
     [:h3 "Roles"]
     (tablize
@@ -62,9 +68,10 @@
        substring(ring_session::text from 0 for 10) || '..'  AS ring_session,
        users.given_name || ' ' || users.family_name AS user,
        users.email
-  FROM session
-LEFT JOIN vc_user AS users ON users.id = session.user_id
-  ORDER BY session.created DESC" [time-format]] :results)
+          FROM session
+     LEFT JOIN vc_user AS users 
+            ON users.id = session.user_id
+      ORDER BY session.created DESC" [time-format]] :results)
      {:cols [:created :email :user :access_token :ring_session]}
      )]
    ])
