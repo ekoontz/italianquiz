@@ -48,7 +48,7 @@
     [:h3 "Roles"]
     (tablize
      (k/exec-raw
-      ["SELECT users.given_name || ' ' || users.family_name AS user,
+      ["SELECT users.given_name || ' ' || users.family_name AS name,
                users.email,role
           FROM vc_user_role
     INNER JOIN vc_user AS users 
