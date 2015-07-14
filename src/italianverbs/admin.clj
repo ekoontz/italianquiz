@@ -34,29 +34,20 @@
     (tablize
      (k/exec-raw
       ["SELECT users.given_name || ' ' || users.family_name AS name,
-               users.email,to_char(max(session.created),?) AS last_login
+               users.email,
+               array_sort_unique(array_agg(role)) AS roles,
+               to_char(max(users.created),?) AS joined,
+               to_char(max(session.created),?) AS last_login
           FROM vc_user
             AS users
+     LEFT JOIN vc_user_role
+            ON (users.id = vc_user_role.user_id)
      LEFT JOIN session
             ON (session.user_id = users.id)
       GROUP BY email,name
-      ORDER BY last_login,name" [time-format]] :results)
-     {:cols [:email :name :last_login]}
+      ORDER BY last_login,name" [time-format time-format]] :results)
+     {:cols [:email :name :joined :last_login :roles]}
 
-     )
-
-    [:h3 "Roles"]
-    (tablize
-     (k/exec-raw
-      ["SELECT users.given_name || ' ' || users.family_name AS name,
-               users.email,array_sort_unique(array_agg(role)) AS roles
-          FROM vc_user AS users
-    INNER JOIN vc_user_role
-            ON users.id = vc_user_role.user_id
-      GROUP BY users.given_name,users.family_name,users.email
-      ORDER BY users.family_name,users.given_name"
-       []] :results)
-     {:cols [:email :name :roles]}
      )
     
 
