@@ -49,11 +49,14 @@
     (tablize
      (k/exec-raw
       ["SELECT users.given_name || ' ' || users.family_name AS name,
-               users.email,role
-          FROM vc_user_role
-    INNER JOIN vc_user AS users 
+               users.email,array_sort_unique(array_agg(role)) AS roles
+          FROM vc_user AS users
+    INNER JOIN vc_user_role
             ON users.id = vc_user_role.user_id
-      ORDER BY users.family_name,users.given_name" []] :results)
+      GROUP BY users.given_name,users.family_name,users.email
+      ORDER BY users.family_name,users.given_name"
+       []] :results)
+     {:cols [:email :name :roles]}
      )
     
 
