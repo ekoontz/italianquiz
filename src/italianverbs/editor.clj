@@ -799,7 +799,7 @@ INSERT INTO game
 
 (defn language-to-spec-path [short-language-name]
   "Take a language name like 'it' and turn it into an array like: [:root :italiano :italiano]."
-  (let [language-keyword-name (language-to-root-keyword)
+  (let [language-keyword-name (language-to-root-keyword short-language-name)
         language-keyword (keyword language-keyword-name)]
     [:root language-keyword language-keyword]))
 
