@@ -10,7 +10,9 @@
 
 (defn menubar [session-row current-url haz-authentication & [suffixes]]
   (let [roles (:roles haz-authentication)
-        haz-admin? (user/haz-admin?)]
+        haz-admin? (user/haz-admin?)
+        haz-teacher? (user/has-teacher-role)
+        ]
 
     (log/debug (str "Drawing menubar with current-url=" current-url))
     (log/debug (str "Menubar with suffixes: " suffixes))
@@ -49,7 +51,7 @@
                      (= current-url "/editor")
                      (and (not (nil? current-url))
                           (re-find #"/editor" current-url)))
-                 :show? haz-admin?
+                 :show? (or haz-admin? haz-teacher?)
                  :current-url current-url 
                  :text "Edit Games"
                  :url-for-this-item "/editor"})
