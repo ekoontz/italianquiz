@@ -973,3 +973,14 @@ in HTML. If :cols is supplied, use it as the vector of column names as keywords.
                 (keys row)))])
 
       rows)]))
+
+(defn multipart-to-edn [params]
+  (log/trace (str "multipart-to-edn input: " params))
+  (let [output
+        (zipmap (map #(keyword %)
+                     (map #(string/replace % ":" "")
+                          (map #(string/replace % "[]" "")
+                               (keys params))))
+                (vals params))]
+    (log/trace (str "multipart-to-edn output: " output))
+    output))

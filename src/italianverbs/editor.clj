@@ -32,7 +32,6 @@
 (declare json-read-str)
 (declare language-to-spec)
 (declare language-to-spec-path)
-(declare multipart-to-edn)
 (declare onload)
 (declare series)
 (declare show-games)
@@ -147,7 +146,7 @@ INSERT INTO game
             (do
               (log/info (str "User:" user " is authorized to update this game."))
               (update-game (:game-to-edit (:route-params request))
-                           (multipart-to-edn (:multipart-params request)))
+                           (html/multipart-to-edn (:multipart-params request)))
               {:status 302
                :headers {"Location" (str "/editor/game/" game-id "?message=Edited+game:" game-id)}})
             (do
@@ -211,7 +210,7 @@ INSERT INTO game
 
    (POST "/game/new" request
          (do-if-teacher
-          (let [params (multipart-to-edn (:multipart-params request))
+          (let [params (html/multipart-to-edn (:multipart-params request))
                 language (cond (and (:language params)
                                     (not (= (string/trim (:language params)) "")))
                                (:language params)
@@ -839,7 +838,7 @@ INSERT INTO game
 (defn update-game [game-id params]
   (let [game-id game-id
         dump-sql false
-        params (multipart-to-edn params)
+        params (html/multipart-to-edn params)
         debug  (log/debug (str "UPDATING GAME WITH PARAMS (converted to keywords): " params))
 
         source-grouping-set (cond
@@ -934,17 +933,6 @@ ms: " params))))
                           (:source params)
                           (:target params)
                           (Integer. game-id)]]))))))
-
-(defn multipart-to-edn [params]
-  (log/trace (str "multipart-to-edn input: " params))
-  (let [output
-        (zipmap (map #(keyword %)
-                     (map #(string/replace % ":" "")
-                          (map #(string/replace % "[]" "")
-                               (keys params))))
-                (vals params))]
-    (log/trace (str "multipart-to-edn output: " output))
-    output))
 
 ;; TODO: throw exception rather than "(no shortname for language)"
 (defn short-language-name-from-match [match-string]
