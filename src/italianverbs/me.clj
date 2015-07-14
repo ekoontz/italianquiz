@@ -5,12 +5,14 @@
    [clojure.string :as string]
    [clojure.tools.logging :as log]
    [compojure.core :as compojure :refer [GET PUT POST DELETE ANY]]
+   [italianverbs.authentication :as authentication]
    [italianverbs.config :refer [time-format]]
    [italianverbs.editor :refer [human-tenses-to-spec
                                 language-to-root-spec
                                 language-to-root-keyword]]
-   [italianverbs.html :refer [page]]
+   [italianverbs.html :refer [multipart-to-edn page]]
    [italianverbs.unify :refer [unify]]
+   [italianverbs.user :refer [username2userid]]
    [korma.core :as k]))
 
 ;; TODO: language-specific
@@ -20,6 +22,7 @@
 (declare latest-questions)
 (declare me)
 (declare profile-table)
+(declare set-teacher-of-student)
 
 (def routes
   (let [headers {"Content-Type" "text/html;charset=utf-8"}]
@@ -30,13 +33,19 @@
            :status 200
            :body
            (page "My page"
-                 (me "it")
+                 (me "it" request)
                  request
                  {:onload "me_onload();"
                   :css ["/css/me.css"]
                   :jss ["/js/me.js"]
                   })})
 
+     (POST "/teacher" request
+             (set-teacher-of-student request)
+             {:status 302
+              :headers {"Location"
+                        (str "/me")}})
+     
      (GET "/:source/:target/:verb/:tense" request
           (let [source (:source (:route-params request))
                 target (:target (:route-params request))
@@ -116,43 +125,59 @@
 
 (declare instructor-selector)
 
-(defn me [language]
-  [:div#me
+(defn me [language request]
+  (let [user (username2userid (authentication/current request))
+        current-teacher
+        (:teacher
+         (first
+          (k/exec-raw
+           ["SELECT teacher FROM vc_user WHERE id=?"
+            [user]] :results)))]
+    (log/debug (str "(me): current teacher for user: " user " is: " current-teacher))
+    [:div#me   
+     [:div#myprofile {:class "major"}
+      [:h2 "Profile"]
+      [:h3 "Teacher"]
+      (instructor-selector current-teacher)
+      [:h3 "Overall"]    
+      (profile-table language)    
+      ]
    
-   [:div#myprofile {:class "major"}
-    
-    [:h2 "Profile"]
+     [:div#last {:class "major"}
+      [:h2 "Your latest questions"]
+      (latest-questions)      
+      ]
+     ]))
 
-    [:h3 "Instructor"]
+;; TODO: move to JS.
+(defn instructor-selector [current-teacher]
+  [:form {:method "POST"
+          :action "/me/teacher"}
 
-    (instructor-selector)
-    
-    [:h3 "Overall"]
-    
-    (profile-table language)
-    
-    ]
-   
-   [:div#last {:class "major"}
-    [:h2 "Your latest questions"]
-    (latest-questions)      
-    ]
-   ])
+   [:select#instructor
+    {:name "teacher"
+     :onchange "choose_teacher();"}
+          [:option {:value ""} "No teacher chosen"]
 
-(defn instructor-selector []
-  [:select
-   [:option {:value ""} "No instructor chosen"]
-   (map (fn [row]
-          [:option {:value (:instructor_id row)}
-           (:instructor row)])
-        (k/exec-raw
-         ["SELECT users.given_name || ' ' || users.family_name AS instructor,
-                  users.id AS instructor_id
-             FROM vc_user_role
-       INNER JOIN vc_user AS users 
-               ON users.id = vc_user_role.user_id
-            WHERE role = 'teacher'
-         ORDER BY users.family_name,users.given_name" []] :results))])
+          (map (fn [row]
+                 [:option (merge
+                           (if (= current-teacher (:instructor_id row))
+                             {:selected "selected"}
+                             {})
+                           {:value (:instructor_id row)})
+            (:instructor row)])
+               
+               (k/exec-raw
+          ["SELECT users.given_name || ' ' || users.family_name AS instructor,
+                   users.id AS instructor_id
+              FROM vc_user_role
+        INNER JOIN vc_user AS users 
+                ON users.id = vc_user_role.user_id
+             WHERE role = 'teacher'
+          ORDER BY users.family_name,users.given_name" []] :results))]
+
+   [:button {:id "change_teacher"
+             :disabled true :onclick "submit();"} "Choose Teacher"]])
 
 ;; TODO: use html/tablize rather than this custom function.
 (defn profile-table [ target & [game]]
@@ -279,3 +304,24 @@
             [:td {:class (str "profile " profile)}
              (:ttcr result)]]))
        results)])))
+
+(defn set-teacher-of-student [request]
+  (let [teacher (get (:form-params request) "teacher")
+        user (username2userid (authentication/current request))]
+    (log/info (str "student: (username=" (authentication/current request) ","
+                   "          userid=" user ")"
+                   " is setting their teacher to: "
+                   teacher))
+
+    (try (k/exec-raw ["UPDATE vc_user SET teacher=?
+                                    WHERE id=?"
+                      [(Integer. teacher) user]])
+         (catch Exception e
+           (do
+             (log/error (str "failed to UPDATE vc_user with teacher=" teacher
+                             " and id=" user ":exception was:" e)))))))
+
+
+         
+
+

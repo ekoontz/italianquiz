@@ -2,6 +2,11 @@ function me_onload() {
     // initialize global state,etc.
 }
 
+function choose_teacher() {
+    $("#change_teacher")[0].disabled = false;
+    var teacher = $("#instructor").val();
+}
+
 function profile_verb_and_tense(dom_id,target,verb,tense) {
     // load the info for this dom_id, which is the verb and the tense.
     // TODO: add server-side support for /me/game/:gameid
