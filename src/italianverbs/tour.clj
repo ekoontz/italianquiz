@@ -5,11 +5,13 @@
    [clojure.string :as string]
    [clojure.tools.logging :as log]
    [compojure.core :as compojure :refer [GET PUT POST DELETE ANY]]
+   [italianverbs.authentication :as authentication]
    [italianverbs.borges.reader :refer [generate-question-and-correct-set]]
    [italianverbs.editor :refer [json-read-str]]
    [italianverbs.html :refer [page]]
    [italianverbs.morphology :refer (fo remove-parens)]
    [italianverbs.unify :refer (get-in unify)]
+   [italianverbs.user :refer (username2userid)]
    [korma.core :as k]))
 
 ;; For now, source language and locale are constant.
@@ -38,13 +40,14 @@
                                    (Integer. chosen-game))]
              (page "Map Tour" (tour "it" "IT"
                                     chosen-game
-                                    ) request {:onload (str "start_tour('it','IT','" chosen-game "');")
-                                               :css ["/css/tour.css"]
-                                               :jss ["/js/cities.js"
-                                                     "/js/gen.js"
-                                                     "/js/leaflet.js"
-                                                     "/js/it.js"
-                                                     "/js/tour.js"]}))})
+                                    (username2userid (authentication/current request)))
+                   request {:onload (str "start_tour('it','IT','" chosen-game "');")
+                            :css ["/css/tour.css"]
+                            :jss ["/js/cities.js"
+                                  "/js/gen.js"
+                                  "/js/leaflet.js"
+                                  "/js/it.js"
+                                  "/js/tour.js"]}))})
      (GET "/es" request
           {:status 302
            :headers {"Location" "/tour/es/ES"}})
@@ -52,23 +55,26 @@
      (GET "/es/ES" request
           {:status 200
            :headers headers
-           :body (page "Map Tour" (tour "es" "ES") request {:onload "start_tour('es','ES');"
-                                                            :css ["/css/tour.css"]
-                                                            :jss ["/js/cities.js"
-                                                                  "/js/gen.js"
-                                                                  "/js/leaflet.js"
-                                                                  "/js/es.js"
-                                                                  "/js/tour.js"]})})
+           :body (page "Map Tour" (tour "es" "ES")
+                       request {:onload "start_tour('es','ES');"
+                                :css ["/css/tour.css"]
+                                :jss ["/js/cities.js"
+                                      "/js/gen.js"
+                                      "/js/leaflet.js"
+                                      "/js/es.js"
+                                      "/js/tour.js"]})})
      (GET "/es/MX" request
           {:status 200
            :headers headers
-           :body (page "Map Tour" (tour "es" "MX") request {:onload "start_tour('es','MX');"
-                                                            :css ["/css/tour.css"]
-                                                            :jss ["/js/cities.js"
-                                                                  "/js/gen.js"
-                                                                  "/js/leaflet.js"
-                                                                  "/js/es.js"
-                                                                  "/js/tour.js"]})})
+           :body (page "Map Tour" (tour "es" "MX")
+                       request {:onload "start_tour('es','MX');"
+                                :css ["/css/tour.css"]
+                                :jss ["/js/cities.js"
+                                      "/js/gen.js"
+                                      "/js/leaflet.js"
+                                      "/js/es.js"
+                                      "/js/tour.js"]})})
+
      (GET "/it/generate-q-and-a" request
           (generate-q-and-a "it" "IT" request))
 
@@ -342,7 +348,7 @@
 
 ;; TODO: Move HTML rendering to javascript (tour.js) - tour.clj should only be involved in
 ;; routing requests to functions that respond with JSON.
-(defn tour [language locale chosen-game]
+(defn tour [language locale chosen-game user-id]
   (log/info (str "(tour : chosen-game=" chosen-game) ")")
   [:div#game
 
@@ -388,8 +394,7 @@
 
    
     (game-chooser (if chosen-game (Integer. chosen-game) nil)
-                  language
-                  locale)
+                  language locale user-id)
 
     ]
 
@@ -428,7 +433,7 @@
                             FROM inflections_per_game
                            WHERE game = ?") [game-id]] :results)))
 
-(defn game-chooser [current-game target-language locale]
+(defn game-chooser [current-game target-language locale user-id]
   [:div#chooser
 
    "Choose your class/game:"
@@ -445,11 +450,17 @@
                                {:selected true}
                                {})]
              [:option (merge if-selected {:value (:id row)}) (:name row)]))
-         (k/exec-raw [(str "SELECT name,id
+         (k/exec-raw [(str "SELECT name,game.id
                               FROM game
-                             WHERE target=?
-                               AND active = true") [target-language]] :results))
-    ]])
+                        INNER JOIN vc_user AS teacher
+                                ON teacher.id = game.created_by
+                        INNER JOIN vc_user
+                                AS student
+                                ON student.teacher = teacher.id
+                             WHERE student.id = ?
+                               AND target=?
+                               AND active = true")
+                      [user-id target-language]] :results))]])
 
 (defn evaluate [user-response]
   (let [params (:form-params user-response)]
