@@ -335,7 +335,7 @@ INSERT INTO game
       [:div {:style "margin-top:0.5em;"}
        [:h3 "Other teachers' games"]
 
-       (let [sql "SELECT vc_user.given_name || ' ' || vc_user.family_name AS owner,
+       (let [sql "SELECT trim(vc_user.given_name || ' ' || vc_user.family_name) AS owner,
                         game.name AS name,game.id AS id,active,
                         source,target,target_lex,target_grammar,
                         to_char(game.created_on, ?) AS created_on
