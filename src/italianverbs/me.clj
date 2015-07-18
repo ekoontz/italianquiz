@@ -165,10 +165,12 @@
                              {:selected "selected"}
                              {})
                            {:value (:instructor_id row)})
-            (:instructor row)])
-               
+                  (if (empty? (:instructor row))
+                    (:email row)
+                    (:instructor row))])
                (k/exec-raw
           ["SELECT users.given_name || ' ' || users.family_name AS instructor,
+                   users.email,
                    users.id AS instructor_id
               FROM vc_user_role
         INNER JOIN vc_user AS users 
