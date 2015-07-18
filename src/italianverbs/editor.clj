@@ -390,7 +390,10 @@ INSERT INTO game
                language-keyword-name
                (str "" (sqlname-from-match (short-language-name-to-long language-short-name)) "")
                language-keyword
-               (keyword language-keyword-name)]
+               (keyword language-keyword-name)
+               owner (:owner result)
+               email (:email result)
+               ]
            [:tr
             [:td
              (if show-as-owner?
@@ -411,7 +414,11 @@ INSERT INTO game
             
             (if (not show-as-owner?)
               [:td
-               (or (:owner result) [:i "no owner"])])
+               (if (not (empty? owner))
+                 owner
+                 (if (not (empty? email))
+                   email
+                   [:i "no owner"]))])
 
             [:td (:created_on result)]
             
@@ -465,21 +472,22 @@ INSERT INTO game
                                          target,
                                          active,
                                          to_char(game.created_on, ?) AS created_on,
-                                         vc_user.given_name || ' ' || vc_user.family_name AS created_by
+                                         trim(vc_user.given_name || ' ' || vc_user.family_name) AS created_by
                                     FROM game
                                LEFT JOIN vc_user
                                       ON (vc_user.id = game.created_by)
                                    WHERE game.id=?"
                                  [time-format game-id]] :results))
         created-on (:created_on game)
-        owner (:owner
-               (first (k/exec-raw ["SELECT vc_user.email,
-                                           vc_user.given_name || ' ' || vc_user.family_name AS owner
-                                      FROM vc_user
-                                INNER JOIN game 
-                                        ON (vc_user.id = game.created_by)
-                                       AND (game.id = ?)"
-                                   [game-id]] :results)))
+        owner-info (first (k/exec-raw ["SELECT vc_user.email,
+                                           trim(vc_user.given_name || ' ' || vc_user.family_name) AS owner
+                                          FROM vc_user
+                                    INNER JOIN game 
+                                            ON (vc_user.id = game.created_by)
+                                           AND (game.id = ?)"
+                                       [game-id]] :results))
+        owner (:owner owner-info)
+        email (:email owner-info)
         refine (if refine (json-read-str refine) nil)]
     (html
 
@@ -497,7 +505,14 @@ INSERT INTO game
              [:table {:class "striped"}
               [:tr
                [:th "Owner"]
-               [:td (if owner owner [:i "No owner"])]
+
+               (if (not show-as-owner?)
+                 [:td
+                  (if (not (empty? owner))
+                    owner
+                    (if (not (empty? email))
+                      email
+                      [:i "no owner"]))])
                ]
               [:tr
                [:th "Created On"]
@@ -521,12 +536,8 @@ INSERT INTO game
          (if refine
            (html
             [:h3 (describe-spec refine)]
-            [:div.spec
-             (html/tablize refine)]
-
-            (source-to-target-mappings game-id refine)
-
-            ))
+            [:div.spec (html/tablize refine)]
+            (source-to-target-mappings game-id refine)))
 
          [:h3 "Verbs"]
 
@@ -585,7 +596,9 @@ INSERT INTO game
         results (k/exec-raw [sql
                              [(json/write-str spec)
                               game-id] ]
-                            :results)]
+                            :results)
+        ]
+    
     (if (empty? results)
       (html [:div [:p "No matches."]])
       (html
@@ -610,8 +623,8 @@ INSERT INTO game
 
                 [:td
                  (:source (second result))]
-                [:td
-                 (string/join "," (.getArray (:targets (second result))))]
+
+                [:td (string/join "," (.getArray (:targets (second result))))]
 
                 (if show-edit-buttons
                   [:td
