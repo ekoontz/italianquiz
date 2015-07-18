@@ -32,7 +32,9 @@
                                (let [verb (:fill-verb member-of-unit)]
                                  (.size (fill-verb
                                          (:fill-verb member-of-unit)
-                                         1
+                                         (if (:count member-of-unit)
+                                           (:count member-of-unit)
+                                           1)
                                          (:source-model member-of-unit)
                                          (:target-model member-of-unit))))))))
                        unit)))
