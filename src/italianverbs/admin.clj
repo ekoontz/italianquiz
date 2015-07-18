@@ -2,7 +2,7 @@
   (:require
    [italianverbs.config :refer [time-format]]
    [compojure.core :as compojure :refer [GET PUT POST DELETE ANY]]
-   [italianverbs.html :refer [page tablize]]
+   [italianverbs.html :refer [page rows2table]]
    [italianverbs.user :refer [do-if-admin]]
    [korma.core :as k]))
 
@@ -31,7 +31,7 @@
 
    [:div {:style "float:left;width:48%"}
     [:h3 "Users"]
-    (tablize
+    (rows2table
      (k/exec-raw
       ["SELECT users.given_name || ' ' || users.family_name AS name,
                users.email,
@@ -55,7 +55,7 @@
 
    [:div {:style "float:left;width:48%"}
     [:h3 "Sessions"]
-    (tablize
+    (rows2table
      (k/exec-raw
       ["SELECT substring(access_token from 0 for 10) || '..' AS access_token,
        to_char(session.created,?) AS created,

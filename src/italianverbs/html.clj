@@ -943,7 +943,7 @@
    workbook/workbookq will format this accordingly."
   {:plain expr})
 
-(defn tablize [rows & [{cols :cols}]]
+(defn rows2table [rows & [{cols :cols}]]
   "Take a vector of maps, each of which is a row from a db table, and render it 
 in HTML. If :cols is supplied, use it as the vector of column names as keywords.
 "
