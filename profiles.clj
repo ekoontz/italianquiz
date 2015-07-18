@@ -9,7 +9,9 @@
  {:env {:use-ssl true}}
   
  :travis-ci
- {:env {:postgres-env "travis-ci"}}}
+ {:env {:database-url "postgres://verbcoach@localhost:5432/verbcoach"
+        :postgres-env "travis-ci"}}}
+
 
 
 

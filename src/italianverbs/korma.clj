@@ -29,70 +29,62 @@
 (def postgres_env (env :postgres-env))
 
 (defdb korma-db 
-  (cond (env :database-url)        
-        (let [ssl-usage-suffix
-              (cond (= (env :use-ssl) "false")
-                    (do
-                      (log/warn (str "SSL was disabled with USE_SSL=false in your environment "
-                                     "for your database connection. "
-                                     "Not recommended in production."))
-                      "")
+  (let [ssl-usage-suffix
+        (cond (= (env :use-ssl) "false")
+              (do
+                (log/warn (str "SSL was disabled with USE_SSL=false in your environment "
+                               "for your database connection. "
+                               "Not recommended in production."))
+                "")
+              (= (env :use-ssl "true"))
+              (do
+                (log/info (str "SSL is enabled for your database connection: good."))
+                "")
+              true
+              (do
+                (log/info (str "USE_SSL not set in your environment: we will enable it by default."))
+                ""))
+        database-url (cond
+                      (env :database-url)
+                      (env :database-url)
 
-                    (= (env :use-ssl "true"))
-                    (do
-                      (log/info (str "SSL is enabled for your database connection: good."))
-                      "")
+                      (= postgres_env "travis-ci")
+                      (str "postgres://postgres@localhost:5432/verbcoach")
+                            
+                      true
+                      (do
+                        (log/warn
+                         (str "DATABASE_URL not set in your environment: defaulting to:"
+                              "postgres://verbcoach@localhost:5432/verbcoach"))
+                        (str "postgres://verbcoach@localhost:5432/verbcoach")))]
 
-                    true
-                    (do
-                      (log/info (str "USE_SSL not set in your environment: we will enable it by default."))
-                      ""))
-
-              database-url
-              (str (env :database-url)
-;                   ssl-usage-suffix
-                   )]
-
-          ;; this constructs the actual database connection which is used throughout the code base.
-          (postgres
-           ;; thanks to Jeroen van Dijk via http://stackoverflow.com/a/14625874
-           (let [[_ user password host port db] 
-                 (re-matches #"postgres://(?:(.+):(.*)@)?([^:]+)(?::(\d+))?/(.+)" 
-                             database-url)
-
-                 redacted-database-url
-                 (if (and password (not (empty? password)))
-                   (string/replace database-url
-                                   (str ":" password)
-                                   ":******")
-                   database-url)
-                 ]
-             (if (nil? db)
-               (throw (Exception. (str "could not find database name in your database-url: '"
-                                       database-url "'"))))
-
-             
-             
-             (log/info (str "scanned DATABASE_URL:" redacted-database-url "; found:"
-                            "(user,host,db)=(" user "," host "," db ")"))
+    ;; this constructs the actual database connection which is used throughout the code base.
+    (postgres
+     ;; thanks to Jeroen van Dijk via http://stackoverflow.com/a/14625874
+     (let [[_ user password host port db] 
+           (re-matches #"postgres://(?:(.+):(.*)@)?([^:]+)(?::(\d+))?/(.+)" 
+                       database-url)
+           
+           redacted-database-url
+           (if (and password (not (empty? password)))
+             (string/replace database-url
+                             (str ":" password)
+                             ":******")
+             database-url)
+           ]
+       (if (nil? db)
+         (throw (Exception. (str "could not find database name in your database-url: '"
+                                 database-url "'"))))
+       
+       
+       
+       (log/info (str "scanned DATABASE_URL:" redacted-database-url "; found:"
+                      "(user,host,db)=(" user "," host "," db ")"))
              {:db db
               :user user
               :password password
               :host host
-              :port (or port "5432")})))
-
-        (= postgres_env "travis-ci")
-        (do
-          (log/info (str "using travis-ci postgres connection."))
-          travis-ci)
-        (= postgres_env "workstation")
-        (do
-          (log/info (str "using workstation-environment postgres connection."))
-          workstation)
-        true
-        (do
-          (log/warn (str "DATABASE_URL not set in your environment: defaulting to 'workstation'."))
-          workstation)))
+              :port (or port "5432")}))))
 
 ;; TODO: remove (or move) everything below here: not being used anywhere.
 
