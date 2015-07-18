@@ -38,7 +38,7 @@
 ;; TODO: more fine-grained approach to dealing with exceptions:
 ;; should be sensitive to what caused the failure:
 ;; (which language,lexicon,grammar,etc..).
-(def mask-populate-errors false)
+(def mask-populate-errors true)
 
 (defn expression-pair [source-language-model target-language-model spec]
   "Generate a pair: {:source <source_expression :target <target_expression>}.
