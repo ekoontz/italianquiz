@@ -366,7 +366,7 @@
       (str stem "")
 
       (and (= person :3rd) (= number :sing)
-           (re-find #"[lnr]y$" stem))
+           (re-find #"[dlnr]y$" stem))
       (let [stem-minus-final-y (replace root #"y$" "")]
         (str stem-minus-final-y "ies"))
 
