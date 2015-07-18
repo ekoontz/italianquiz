@@ -227,5 +227,3 @@
                              (remove-parens (fo answer))))
        :semantics semantics
        :right_context_of_answer ""})}))
-
-
