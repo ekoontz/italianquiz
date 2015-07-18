@@ -11,58 +11,23 @@
 
 (require '[environ.core :refer [env]])
 
-;; http://sqlkorma.com/docs#db
-(def workstation 
-  (postgres {:db "verbcoach"
-             :user "verbcoach"
-             :password (env :postgres-secret)
-             :host "localhost"
-             :port "5432"}))
-
-(def travis-ci 
-  (postgres {:db "verbcoach"
-             :user "postgres"
-             :host "localhost"
-             :port "5432"}))
-
-;; TODO remove: using database-url instead.
-(def postgres_env (env :postgres-env))
-
 (defdb korma-db 
-  (let [ssl-usage-suffix
-        (cond (= (env :use-ssl) "false")
-              (do
-                (log/warn (str "SSL was disabled with USE_SSL=false in your environment "
-                               "for your database connection. "
-                               "Not recommended in production."))
-                "")
-              (= (env :use-ssl "true"))
-              (do
-                (log/info (str "SSL is enabled for your database connection: good."))
-                "")
-              true
-              (do
-                (log/info (str "USE_SSL not set in your environment: we will enable it by default."))
-                ""))
-        database-url (cond
+  (let [database-url (cond
                       (env :database-url)
                       (env :database-url)
-
-                      (= postgres_env "travis-ci")
-                      (str "postgres://postgres@localhost:5432/verbcoach")
-                            
+                      
                       true
                       (do
                         (log/warn
                          (str "DATABASE_URL not set in your environment: defaulting to:"
-                              "postgres://verbcoach:verbcoach@localhost:5432/verbcoach"))
-                        (str "postgres://verbcoach:verbcoach@localhost:5432/verbcoach")))]
+                              "postgres://verbcoach@localhost:5432/verbcoach"))
+                        (str "postgres://verbcoach@localhost:5432/verbcoach")))]
 
     ;; this constructs the actual database connection which is used throughout the code base.
     (postgres
      ;; thanks to Jeroen van Dijk via http://stackoverflow.com/a/14625874
-     (let [[_ user password host port db] 
-           (re-matches #"postgres://(?:(.+):(.*)@)?([^:]+)(?::(\d+))?/(.+)" 
+     (let [[_ user password host port db]
+           (re-matches #"postgres://(?:([^:]+):?(.*)@)?([^:]+)(?::(\d+))?/(.+)"
                        database-url)
            
            redacted-database-url
@@ -75,8 +40,6 @@
        (if (nil? db)
          (throw (Exception. (str "could not find database name in your database-url: '"
                                  database-url "'"))))
-       
-       
        
        (log/info (str "scanned DATABASE_URL:" redacted-database-url "; found:"
                       "(user,host,db)=(" user "," host "," db ")"))
