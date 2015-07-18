@@ -8,4 +8,5 @@ before_script:
   - psql -U postgres verbcoach < src/sql/borges.sql
   - psql -U postgres verbcoach < src/sql/editor.sql
   - psql -U postgres verbcoach < src/sql/lexeme.sql
+sudo: false
 
