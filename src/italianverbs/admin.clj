@@ -29,7 +29,7 @@
   [:div#admin {:class "major"}
    [:h2 "Admin"]
 
-   [:div {:style "float:left;width:48%"}
+   [:div.twocolumn
     [:h3 "Users"]
     (rows2table
      (k/exec-raw
@@ -53,7 +53,7 @@
 
     ]
 
-   [:div {:style "float:left;width:48%"}
+   [:div.twcolumn
     [:h3 "Sessions"]
     (rows2table
      (k/exec-raw
