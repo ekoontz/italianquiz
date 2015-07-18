@@ -55,25 +55,45 @@
      (GET "/es/ES" request
           {:status 200
            :headers headers
-           :body (page "Map Tour" (tour "es" "ES")
-                       request {:onload "start_tour('es','ES');"
-                                :css ["/css/tour.css"]
-                                :jss ["/js/cities.js"
-                                      "/js/gen.js"
-                                      "/js/leaflet.js"
-                                      "/js/es.js"
-                                      "/js/tour.js"]})})
+           :body
+           (let [chosen-game (get (:query-params request) "game")
+                 chosen-game (cond (= "" chosen-game)
+                                   nil
+                                   (nil? chosen-game)
+                                   nil
+                                   true
+                                   (Integer. chosen-game))]
+             (page "Map Tour" (tour "es" "ES"
+                                    chosen-game
+                                    (username2userid (authentication/current request)))
+                   request {:onload "start_tour('es','ES');"
+                            :css ["/css/tour.css"]
+                            :jss ["/js/cities.js"
+                                  "/js/gen.js"
+                                  "/js/leaflet.js"
+                                  "/js/es.js"
+                                  "/js/tour.js"]}))})
      (GET "/es/MX" request
           {:status 200
            :headers headers
-           :body (page "Map Tour" (tour "es" "MX")
-                       request {:onload "start_tour('es','MX');"
-                                :css ["/css/tour.css"]
-                                :jss ["/js/cities.js"
-                                      "/js/gen.js"
-                                      "/js/leaflet.js"
-                                      "/js/es.js"
-                                      "/js/tour.js"]})})
+           :body
+           (let [chosen-game (get (:query-params request) "game")
+                 chosen-game (cond (= "" chosen-game)
+                                   nil
+                                   (nil? chosen-game)
+                                   nil
+                                   true
+                                   (Integer. chosen-game))]
+             (page "Map Tour" (tour "es" "MX"
+                                    chosen-game
+                                    (username2userid (authentication/current request)))
+                   request {:onload "start_tour('es','MX');"
+                            :css ["/css/tour.css"]
+                            :jss ["/js/cities.js"
+                                  "/js/gen.js"
+                                  "/js/leaflet.js"
+                                  "/js/es.js"
+                                  "/js/tour.js"]}))})
 
      (GET "/it/generate-q-and-a" request
           (generate-q-and-a "it" "IT" request))
@@ -81,7 +101,11 @@
      (GET "/it/IT/generate-q-and-a" request
           (generate-q-and-a "it" "IT" request))
 
-     (GET "/it/step" request
+     (GET "/es/ES/step" request
+          (get-step-for-user "es" "ES" request))
+     (GET "/es/MX/step" request
+          (get-step-for-user "es" "MX" request))
+     (GET "/it/IT/step" request
           (get-step-for-user "it" "IT" request))
 
     (GET "/es/ES/generate-q-and-a" request
@@ -220,6 +244,7 @@
                  "Cache-Control" "no-cache, no-store, must-revalidate"
                  "Pragma" "no-cache"
                  "Expires" "0"}]
+    ;; TODO: just a stub now: should look in DB and find user's last position.
     {:status 200
      :headers headers
      :body (write-str {:position 0

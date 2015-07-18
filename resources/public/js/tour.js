@@ -111,7 +111,7 @@ function get_heading(path,position_index) {
 }
 
 function start_tour(target_language,target_locale,game_id) {
-    var position_info = get_position_from_profile(target_language);
+    var position_info = get_position_from_profile(target_language,target_locale);
     step = position_info.position;
     direction = position_info.direction;
 
@@ -186,14 +186,14 @@ function start_tour(target_language,target_locale,game_id) {
     tour_loop(target_language,target_locale,game_id);
 }
 
-function get_position_from_profile(target_language) {
+function get_position_from_profile(target_language,target_locale) {
     /* determine where user is on map based on their profile. */
     var retval;
     $.ajax({
 	async: false,
 	cache: false,
         dataType: "json",
-        url: "/tour/" + target_language + "/step",
+        url: "/tour/" + target_language + "/" + target_locale + "/step",
         success: function (content) {
 	    retval = content;
 	}});
