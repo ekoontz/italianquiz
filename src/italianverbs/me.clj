@@ -169,7 +169,7 @@
                     (:email row)
                     (:instructor row))])
                (k/exec-raw
-          ["SELECT users.given_name || ' ' || users.family_name AS instructor,
+          ["SELECT trim(users.given_name || ' ' || users.family_name) AS instructor,
                    users.email,
                    users.id AS instructor_id
               FROM vc_user_role
