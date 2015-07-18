@@ -53,7 +53,7 @@
 
     ]
 
-   [:div.twcolumn
+   [:div.twocolumn
     [:h3 "Sessions"]
     (rows2table
      (k/exec-raw
