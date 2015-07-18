@@ -33,13 +33,14 @@
         (let [ssl-usage-suffix
               (cond (= (env :use-ssl) "false")
                     (do
-                      (log/warn (str "SSL was disabled with USE_SSL=false in your environment. "
+                      (log/warn (str "SSL was disabled with USE_SSL=false in your environment "
+                                     "for your database connection. "
                                      "Not recommended in production."))
                       "")
 
                     (= (env :use-ssl "true"))
                     (do
-                      (log/info (str "SSL is enabled in your environment - good."))
+                      (log/info (str "SSL is enabled for your database connection: good."))
                       "")
 
                     true
