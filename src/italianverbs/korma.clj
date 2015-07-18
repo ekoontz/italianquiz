@@ -33,28 +33,54 @@
         (let [ssl-usage-suffix
               (cond (= (env :use-ssl) "false")
                     (do
-                      (log/warn (str "SSL was disabled with USE_SSL=false in your environment."))
+                      (log/warn (str "SSL was disabled with USE_SSL=false in your environment. "
+                                     "Not recommended in production."))
                       "")
+
+                    (= (env :use-ssl "true"))
+                    (do
+                      (log/info (str "SSL is enabled in your environment - good."))
+                      "")
+
                     true
-                    "?ssl=true&sslfactory=org.postgresql.ssl.NonValidatingFactory")
+                    (do
+                      (log/info (str "USE_SSL not set in your environment: we will enable it by default."))
+                      ""))
+
               database-url
-              (str (env :database-url) ssl-usage-suffix)]
+              (str (env :database-url)
+;                   ssl-usage-suffix
+                   )]
+
+          ;; this constructs the actual database connection which is used throughout the code base.
           (postgres
            ;; thanks to Jeroen van Dijk via http://stackoverflow.com/a/14625874
            (let [[_ user password host port db] 
                  (re-matches #"postgres://(?:(.+):(.*)@)?([^:]+)(?::(\d+))?/(.+)" 
                              database-url)]
-             (log/info (str "using DATABASE_URL:"
-                            "user: " user ";"
-                            "host: " host ";"
-                            "db: " db ""))
+             (if (nil? db)
+               (throw (Exception. (str "could not find database name in your database-url: '"
+                                       database-url "'"))))
+
+             (log/info (str "scanned DATABASE_URL:" database-url "; found:"
+                            "(user/host/db)=(" user "/" host "/" db))
 
              {:user user
               :password password
               :host host
               :port (or port 80)
               :db db
-              })))
+              }
+
+
+             {:db db ;"verbcoach"
+              :user user
+              :password (env :postgres-secret)
+              :host host
+              :port (or port "5432")}
+
+
+             )))
 
         (= postgres_env "travis-ci")
         (do

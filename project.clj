@@ -50,13 +50,5 @@
 
   :hooks [environ.leiningen.hooks]
 
-  ;; You must define POSTGRES_ENV and (if needed) POSTGRES_SECRET
-  ;; in your environment so that 'lein ring server[-headless]' can work.
-  ;; See src/italianverbs/korma.clj for a list of supported
-  ;; POSTGRES_ENVs.
-  :profiles {:workstation {:env {:postgres-env "workstation"}}
-             :production {:env {:postgres-env "heroku"}}
-             :travis-ci {:env {:postgres-env "travis-ci"}}}
-
   ;; italianverbs.core/app is defined in src/italianverbs/core.clj.
   :ring {:handler italianverbs.core/app})
