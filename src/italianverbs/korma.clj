@@ -57,30 +57,28 @@
            ;; thanks to Jeroen van Dijk via http://stackoverflow.com/a/14625874
            (let [[_ user password host port db] 
                  (re-matches #"postgres://(?:(.+):(.*)@)?([^:]+)(?::(\d+))?/(.+)" 
-                             database-url)]
+                             database-url)
+
+                 redacted-database-url
+                 (if (and password (not (empty? password)))
+                   (string/replace database-url
+                                   (str ":" password)
+                                   ":******")
+                   database-url)
+                 ]
              (if (nil? db)
                (throw (Exception. (str "could not find database name in your database-url: '"
                                        database-url "'"))))
 
-             (log/info (str "scanned DATABASE_URL:" database-url "; found:"
-                            "(user/host/db)=(" user "/" host "/" db))
-
-             {:user user
+             
+             
+             (log/info (str "scanned DATABASE_URL:" redacted-database-url "; found:"
+                            "(user,host,db)=(" user "," host "," db ")"))
+             {:db db
+              :user user
               :password password
               :host host
-              :port (or port 80)
-              :db db
-              }
-
-
-             {:db db ;"verbcoach"
-              :user user
-              :password (env :postgres-secret)
-              :host host
-              :port (or port "5432")}
-
-
-             )))
+              :port (or port "5432")})))
 
         (= postgres_env "travis-ci")
         (do
