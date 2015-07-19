@@ -124,10 +124,10 @@
 (def small
   (future
     (let [grammar
-          (filter #(or (= (:rule %) "s-conditional")
-                       (= (:rule %) "s-present")
-                       (= (:rule %) "s-future")
-                       (= (:rule %) "s-imperfetto")
+          (filter #(or (= (:rule %) "s-conditional-nonphrasal")
+                       (= (:rule %) "s-present-nonphrasal")
+                       (= (:rule %) "s-future-nonphrasal")
+                       (= (:rule %) "s-imperfetto-nonphrasal")
                        (= (:rule %) "s-aux")
                        (= (:rule %) "vp-aux"))
                   grammar)

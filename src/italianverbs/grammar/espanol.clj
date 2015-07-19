@@ -183,6 +183,7 @@
                             :synsem {:cat :prep}})
 
                    (unifyc c10
+                           root-is-head-root
                            {:head {:phrasal true ;; only a vp-aux may be the head child, not simply a lexical auxiliary verb.
                                    :synsem {:aux true}}
                             :rule "s-aux"
@@ -190,43 +191,79 @@
                                      :cat :verb
                                      :sem {:aspect :perfect
                                            :tense :past}}})
-
                    (unifyc c10
-                          {:rule "s-future"
-                           :synsem {:aux false
-                                    :infl :futuro
-                                    :cat :verb
-                                    :sem {:tense :futuro}}})
-
+                           root-is-head-root
+                           {:rule "s-future-phrasal"
+                            :head {:phrasal true}
+                            :synsem {:aux false
+                                     :infl :futuro
+                                     :cat :verb
+                                     :sem {:tense :futuro}}})
                    (unifyc c10
-                          {:rule "s-conditional"
-                           :synsem {:aux false
-                                    :infl :conditional
-                                    :cat :verb
-                                    :sem {:tense :conditional}}})
-
+                           root-is-head
+                           {:rule "s-future-nonphrasal"
+                            :head {:phrasal false}
+                            :synsem {:aux false
+                                     :infl :futuro
+                                     :cat :verb
+                                     :sem {:tense :futuro}}})
                    (unifyc c10
-                           {:rule "s-imperfetto"
+                           root-is-head-root
+                           {:rule "s-conditional-phrasal"
+                            :head {:phrasal true}
+                            :synsem {:aux false
+                                     :infl :conditional
+                                     :cat :verb
+                                     :sem {:tense :conditional}}})
+                   (unifyc c10
+                           root-is-head
+                           {:rule "s-conditional-nonphrasal"
+                            :head {:phrasal false}
+                            :synsem {:aux false
+                                     :infl :conditional
+                                     :cat :verb
+                                     :sem {:tense :conditional}}})
+                   (unifyc c10
+                           root-is-head-root
+                           {:rule "s-imperfetto-phrasal"
+                            :head {:phrasal true}
                             :synsem {:aux false
                                      :infl :imperfetto
                                      :cat :verb
                                      :sem {:aspect :progressive
                                            :tense :past}}})
-
                    (unifyc c10
-                           {:rule "s-present"
+                           root-is-head
+                           {:rule "s-imperfetto-nonphrasal"
+                            :head {:phrasal false}
+                            :synsem {:aux false
+                                     :infl :imperfetto
+                                     :cat :verb
+                                     :sem {:aspect :progressive
+                                           :tense :past}}})
+                   (unifyc c10
+                           root-is-head-root
+                           {:rule "s-present-phrasal"
+                            :head {:phrasal true}
                             :synsem {:aux false
                                      :infl :present
                                      :cat :verb
                                      :sem {:aspect :progressive
                                            :tense :present}}})
-
+                   (unifyc c10
+                           root-is-head
+                           {:rule "s-present-nonphrasal"
+                            :head {:phrasal false}
+                            :synsem {:aux false
+                                     :infl :present
+                                     :cat :verb
+                                     :sem {:aspect :progressive
+                                           :tense :present}}})
                    (unifyc h21
                            {:rule "vp-infinitive"
                             :synsem {:aux false
                                      :infl :infinitive
                                      :cat :verb}})
-
                    (unifyc h21
                            {:rule "vp-aux"
                             :head {:phrasal false}
@@ -248,32 +285,27 @@
                                        :sem {:tense :past}
                                        :subcat {:2 {:agr obj-agr}}}
                               :espanol {:b {:obj-agr obj-agr}}}))
-
                    (unifyc h21
                            {:rule "vp-future"
                             :synsem {:aux false
                                      :infl :futuro
                                      :cat :verb}})
-
                    (unifyc h21
                           {:rule "vp-imperfetto"
                            :synsem {:aux false
                                     :infl :imperfetto
                                     :cat :verb}})
-
                    (unifyc h21
                            {:rule "vp-past"
                             :synsem {:aux false
                                      :infl :past
                                      :cat :verb}})
-
                    (unifyc h21
                            {:rule "vp-present"
                             :synsem {:aux false
                                      :infl :present
                                      :sem {:tense :present}
                                      :cat :verb}})
-
                    (unifyc c21
                            {:comp {:phrasal false
                                    :synsem {:cat :noun
@@ -281,7 +313,6 @@
                             :rule "vp-pronoun"
                             :synsem {:cat :verb
                                      :infl {:not :past}}})
-
                    (unifyc h10
                            {:head {:phrasal false
                                    :synsem {:cat :sent-modifier}}
