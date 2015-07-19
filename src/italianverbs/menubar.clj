@@ -104,15 +104,6 @@
 
       (menuitem {:selected?
                  (and (not (nil? current-url))
-                      (re-find #"/class" current-url))
-                 :current-url current-url
-                 :text "Classes"
-                 :url-for-this-item (str "/class" (if (get suffixes :class)
-                                                    (get suffixes :class)))
-                 :show? (and false haz-admin?)})
-
-      (menuitem {:selected?
-                 (and (not (nil? current-url))
                       (re-find #"/test" current-url))
                  :current-url current-url
                  :text "Tests"
