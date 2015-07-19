@@ -69,6 +69,17 @@
 
       (menuitem {:selected?
                  (or (and (not (nil? current-url))
+                          (re-find #"/class" current-url))
+                     (= current-url "/class")
+                     (and (not (nil? current-url))
+                          (re-find #"/class" current-url)))
+                 :show? haz-authentication
+                 :current-url current-url 
+                 :text "My Classes"
+                 :url-for-this-item "/class"})
+
+      (menuitem {:selected?
+                 (or (and (not (nil? current-url))
                           (re-find #"/tour" current-url))
                      (= current-url "/tour")
                      (and (not (nil? current-url))
