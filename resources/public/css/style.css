@@ -563,3 +563,10 @@ table.striped tr:nth-of-type(odd) {
     border-radius: 5px;
     border:4px solid #caecae;
 }
+
+div.rows2table {
+    padding:0.0em;
+    float:left;
+    width: 80%;
+    margin:0.5em;
+}

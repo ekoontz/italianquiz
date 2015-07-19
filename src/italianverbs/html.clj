@@ -949,39 +949,39 @@
   "Take a vector of maps, each of which is a row from a db table, and render it 
 in HTML. If :cols is supplied, use it as the vector of column names as keywords.
 "
-  (if (empty? rows)
-    [:div [:i "None."]]
+  [:div.rows2table
+   (if (empty? rows)
+     [:div [:i "None."]]
 
-    ;; else
-    [:table {:class "striped padded"}
-     ;; top row: column headers
-     [:tr
-      (map (fn [col]
-             [:th
-              (if (get th-styles col)
-                {:style (get th-styles col)})
-              (string/capitalize
-               (string/replace
+     ;; else
+     [:table {:class "striped padded"}
+      ;; top row: column headers
+      [:tr
+       (map (fn [col]
+              [:th
+               (if (get th-styles col)
+                 {:style (get th-styles col)})
+               (string/capitalize
+                (string/replace
                 (string/replace-first (str col) ":" "")
                 "_" " "))
-              ])
-           (if cols
+               ])
+            (if cols
              cols
              (keys (first rows))))]
-     ;; body rows
-     (map
-      (fn [row]
-        [:tr
-         (map (fn [col]
-                [:td
-                 (if (get col-fns col)
-                   ((get col-fns col) row)
-                   (get row col))])
-              (if cols
-                cols
-                (keys row)))])
-
-      rows)]))
+      ;; body rows
+      (map
+       (fn [row]
+         [:tr
+          (map (fn [col]
+                 [:td
+                  (if (get col-fns col)
+                    ((get col-fns col) row)
+                    (get row col))])
+               (if cols
+                 cols
+                 (keys row)))])
+       rows)])])
 
 (defn multipart-to-edn [params]
   (log/trace (str "multipart-to-edn input: " params))
