@@ -4,7 +4,7 @@
 
 ## Introduction
 
-A web application to drill basic aspects of Italian grammar. It is
+A web application to drill basic aspects of grammar. It is
 written in Clojure, a Lisp that runs on the Java Virtual Machine
 (JVM). The grammatical and lexical formalism is based on <a
 href="http://en.wikipedia.org/wiki/Head-driven_phrase_structure_grammar">Head
