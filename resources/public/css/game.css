@@ -1,3 +1,7 @@
+div.gamelist {
+    margin-bottom:1em;
+}
+
 #game {
     width:100%;
     border:0px dashed green;

@@ -16,6 +16,7 @@
    [italianverbs.auth.google :as google]
    [italianverbs.class :as class]
    [italianverbs.editor :as editor]
+   [italianverbs.game :as game]
    [italianverbs.html :as html]
    [italianverbs.me :as me]
    [italianverbs.student :as student]
@@ -42,7 +43,7 @@
 (def server-hostname (.getHostName (java.net.InetAddress/getLocalHost)))
 
 (defroutes main-routes
-  ;; top-level page: currently redirects to the "Cloud" game.
+  ;; TODO: redirect to /games
   (GET "/" request
        (resp/redirect "/about"))
 
@@ -58,6 +59,10 @@
   (context "/editor" []
            editor/routes)
 
+  (context "/game" []
+           game/routes)
+
+  ;; TODO: disable
   (context "/gen" []
            verb/routes)
 
@@ -67,6 +72,7 @@
   (context "/student" []
            student/routes)
 
+    ;; TODO: disable
   (context "/test" []
            studenttest/routes)
 
