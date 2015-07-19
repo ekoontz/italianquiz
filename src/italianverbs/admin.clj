@@ -22,7 +22,7 @@
                   request
                   {:onload "admin_onload();"
                    :css ["/css/admin.css"]
-                  :jss ["/js/admin.js"]
+                   :jss ["/js/admin.js"]
                    })})))))
 
 (defn admin []
