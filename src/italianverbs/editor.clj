@@ -11,7 +11,8 @@
 
    [italianverbs.authentication :as authentication]
    [italianverbs.borges.reader :refer :all]
-   [italianverbs.config :refer [language-dropdown time-format]]
+   [italianverbs.config :refer [language-dropdown sqlname-from-match
+                                time-format]]
    [italianverbs.html :as html :refer [banner page]]
    [italianverbs.unify :refer [get-in strip-refs unify]]
    [italianverbs.user :refer [do-if do-if-admin do-if-teacher
@@ -39,7 +40,6 @@
 (declare short-language-name-from-match)
 (declare show-game)
 (declare source-to-target-mappings)
-(declare sqlname-from-match)
 (declare tenses-as-editables)
 (declare tenses-human-readable)
 (declare toggle-activation)
