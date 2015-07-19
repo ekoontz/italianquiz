@@ -36,12 +36,12 @@
          {:body
           (page "My Classes"
                 (let [userid (username2userid (authentication/current request))]
-                  [:div {:class "major"}
+                  [:div#classes {:class "major"}
                    (do-if-teacher
-                    [:div#classes {:class "classlist"}
+                    [:div {:class "classlist"}
                      [:h2 "Classes I'm teaching"]])
 
-                   [:div#classes {:class "classlist"}
+                   [:div {:class "classlist"}
                     [:h2 "Classes I'm enrolled in"]]
                    ])
                    
