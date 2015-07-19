@@ -32,26 +32,48 @@
 
                    (do-if-teacher
                     [:div {:class "gamelist"}
-                     [:h2 "Games for classes I'm teaching"]])
+                     [:h2 "Games for classes I'm teaching"]
+                     (let [results (k/exec-raw
+                                    ["SELECT *
+                                        FROM game_in_class"
+                                     []] :results)]
+                       (rows2table results
+                                   {}
+                                   ))
+
+                     [:h3 "Add a new game for a class"]
+
+                     [:div 
+                      "form goes here.."
+                      
+                      ]
+                     
+
+                     ])
 
                     [:div {:class "gamelist"}
                      [:h2 "Games I'm playing"]
                      (let [results (k/exec-raw
-                                    ["SELECT student,game
+                                    ["SELECT *
                                         FROM student_in_game
                                        WHERE student=?"
                                      [user-id]] :results)]
                        (rows2table results
-                                   {:cols [:name :picture :email]
-                                    :th-styles {:name "width:10em;"}
-                                    :col-fns {:name (fn [result] (html [:a {:href (str "/student/" (:id result))}
-                                                                        (:name result)]))
-                                              :picture (fn [result] (html [:img {:width "50px" :src (:picture result)}]))}}
+                                   {}
                                    ))
                      ]
                    
                    [:div {:class "gamelist"}
-                    [:h2 "New Games Available"]]
+                    [:h2 "New Games Available"]
+
+                     (let [results (k/exec-raw
+                                    ["SELECT *
+                                        FROM game_in_class"
+                                     []] :results)]
+                       (rows2table results
+                                   {}))
+
+                    ]
                    ])
                    
                 request
