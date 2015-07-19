@@ -16,7 +16,7 @@
    [italianverbs.config :refer [time-format]]
    [italianverbs.html :as html :refer [banner page rows2table]]
    [italianverbs.korma :as db]
-   [italianverbs.user :refer [do-if-authenticated username2userid]]
+   [italianverbs.user :refer [do-if-authenticated do-if-teacher username2userid]]
    [korma.core :as k]))
 
 (declare headers)
@@ -36,8 +36,15 @@
          {:body
           (page "My Classes"
                 (let [userid (username2userid (authentication/current request))]
-                  [:div#students {:class "major"}
-                   [:h2 "My Classes"]])
+                  [:div {:class "major"}
+                   (do-if-teacher
+                    [:div#classes {:class "classlist"}
+                     [:h2 "Classes I'm teaching"]])
+
+                   [:div#classes {:class "classlist"}
+                    [:h2 "Classes I'm enrolled in"]]
+                   ])
+                   
                 request
                 resources)}))
 
