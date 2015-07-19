@@ -1132,25 +1132,6 @@ ms: " params))))
                                    INNER JOIN games
                                            ON games_to_use.game = games.id")] :results))))
 
-;; sqlnames: 'english','espanol' <- note: no accent on 'n' ,'italiano', ..
-(defn sqlname-from-match [match-string]
-  (cond (nil? match-string)
-        (str "(no sqlname for language: (nil) detected).")
-        (re-find #"espanol" (string/lower-case match-string))
-        "espanol"
-        (re-find #"español" (string/lower-case match-string))
-        "espanol"
-        (re-find #"english" (string/lower-case match-string))
-        "english"
-        (re-find #"italiano" (string/lower-case match-string))
-        "italiano"
-        (re-find #"italian" (string/lower-case match-string))
-        "italiano"
-        (re-find #"spanish" (string/lower-case match-string))
-        "espanol"
-        :else
-        (str "(no sqlname for language:" match-string " detected.")))
-
 (defn json-read-str [json]
   (json/read-str json
                  :key-fn keyword
