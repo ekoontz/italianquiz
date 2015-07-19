@@ -35,9 +35,10 @@
                 (let [teacher (username2userid (authentication/current request))
                       results (k/exec-raw
                                ["SELECT id,to_char(created,?),
-                                  email,trim(given_name || ' ' || family_name) AS name,
-                                  picture,teacher
-                             FROM vc_user WHERE teacher=?"
+                                        email,trim(given_name || ' ' || family_name) AS name,
+                                        picture,teacher
+                                   FROM vc_user
+                                  WHERE teacher=?"
                                 [time-format teacher]] :results)]
                   [:div#students {:class "major"}
                    [:h2 "My Students"]
