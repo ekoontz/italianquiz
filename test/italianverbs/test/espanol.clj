@@ -32,7 +32,7 @@
                     [k filtered-v]))))
         grammar
         (filter #(or (= (:rule %) "vp-present")
-                     (= (:rule %) "s-present")
+                     (= (:rule %) "s-present-phrasal")
                      (= (:rule %) "noun-phrase1"))
                 es/grammar)]
 
