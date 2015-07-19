@@ -27,13 +27,30 @@
         (do-if-authenticated
          {:body
           (page "My Games"
-                (let [userid (username2userid (authentication/current request))]
+                (let [user-id (username2userid (authentication/current request))]
                   [:div {:class "major"}
-                   (do-if-teacher
-                    [:div#games {:class "gamelist"}
-                     [:h2 "Games I'm playing"]])
 
-                   [:div#games {:class "gamelist"}
+                   (do-if-teacher
+                    [:div {:class "gamelist"}
+                     [:h2 "Games for classes I'm teaching"]])
+
+                    [:div {:class "gamelist"}
+                     [:h2 "Games I'm playing"]
+                     (let [results (k/exec-raw
+                                    ["SELECT student,game
+                                        FROM student_in_game
+                                       WHERE student=?"
+                                     [user-id]] :results)]
+                       (rows2table results
+                                   {:cols [:name :picture :email]
+                                    :th-styles {:name "width:10em;"}
+                                    :col-fns {:name (fn [result] (html [:a {:href (str "/student/" (:id result))}
+                                                                        (:name result)]))
+                                              :picture (fn [result] (html [:img {:width "50px" :src (:picture result)}]))}}
+                                   ))
+                     ]
+                   
+                   [:div {:class "gamelist"}
                     [:h2 "New Games Available"]]
                    ])
                    
