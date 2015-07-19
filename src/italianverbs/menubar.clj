@@ -58,6 +58,17 @@
 
       (menuitem {:selected?
                  (or (and (not (nil? current-url))
+                          (re-find #"/editor" current-url))
+                     (= current-url "/editor")
+                     (and (not (nil? current-url))
+                          (re-find #"/editor" current-url)))
+                 :show? (or haz-admin? haz-teacher?)
+                 :current-url current-url 
+                 :text "My Students"
+                 :url-for-this-item "/student"})
+
+      (menuitem {:selected?
+                 (or (and (not (nil? current-url))
                           (re-find #"/tour" current-url))
                      (= current-url "/tour")
                      (and (not (nil? current-url))

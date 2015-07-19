@@ -2,16 +2,54 @@
   (:use [hiccup core])
   (:require
    [clj-time.core :as t]
+   [clojure.data.json :as json]
    [clojure.string :as string]
    [clojure.tools.logging :as log]
+   [compojure.core :as compojure :refer [GET PUT POST DELETE ANY]]
    [formative.core :as f]
    [formative.parse :as fp]
-   [italianverbs.html :as html]
+   [italianverbs.authentication :as authentication]
+   [italianverbs.config :refer [time-format]]
+   [italianverbs.html :refer [page]]
    [italianverbs.korma :as db]
+   [italianverbs.user :refer [do-if-teacher username2userid]]
    [korma.core :as k]))
 
+(declare headers)
 (declare table)
 (declare tr)
+(declare show-students)
+(def html-headers {"Content-Type" "text/html;charset=utf-8"})
+(def json-headers {"Content-type" "application/json;charset=utf-8"})
+
+(def routes
+  (compojure/routes
+   (GET "/" request
+        (do-if-teacher
+         {:body
+          (page "Students"
+                (show-students
+                 (conj request
+                       {:user-id (username2userid (authentication/current request))}))
+                request)
+          :status 200
+          :headers headers}))
+
+   (GET "/self" request
+        (do-if-teacher
+         {:headers json-headers
+          :body
+          (let [results (k/exec-raw
+                         ["SELECT id,to_char(created,?),
+                                  email,trim(given_name || ' ' || family_name),
+                                  picture,teacher
+                             FROM vc_user"
+                                     [time-format]] :results)]
+            (json/write-str results))}))))
+   
+
+(defn show-students [request]
+  (str "students.."))
 
 (def enroll-form
   {:action "/student/new"
