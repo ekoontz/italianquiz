@@ -1,5 +1,7 @@
 /* class css */
 
 div.classlist {
+    float:left;
+    width:100%;
     margin-bottom:1em;
 }

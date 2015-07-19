@@ -39,12 +39,27 @@
                   [:div#classes {:class "major"}
                    (do-if-teacher
                     [:div {:class "classlist"}
-                     [:h2 "Classes I'm teaching"]])
+                     [:h2 "Classes I'm teaching"]
+
+                     [:div.rows2table
+                      (let [results (k/exec-raw
+                                     ["SELECT *
+                                       FROM class"
+                                      []] :results)
+                            ]
+                        (rows2table results
+                                    {}))]])
 
                    [:div {:class "classlist"}
-                    [:h2 "Classes I'm enrolled in"]]
-                   ])
-                   
+                    [:h2 "Classes I'm enrolled in"]
+
+                    (let [results (k/exec-raw
+                                   ["SELECT *
+                                        FROM student_in_class"
+                                     []] :results)]
+                      (rows2table results
+                                  {}))]])
+
                 request
                 resources)}))
 
