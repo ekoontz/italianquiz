@@ -58,10 +58,10 @@
 
       (menuitem {:selected?
                  (or (and (not (nil? current-url))
-                          (re-find #"/editor" current-url))
-                     (= current-url "/editor")
+                          (re-find #"/student" current-url))
+                     (= current-url "/student")
                      (and (not (nil? current-url))
-                          (re-find #"/editor" current-url)))
+                          (re-find #"/student" current-url)))
                  :show? (or haz-admin? haz-teacher?)
                  :current-url current-url 
                  :text "My Students"
