@@ -570,3 +570,8 @@ div.rows2table {
     width: 95%;
     margin:0.5em;
 }
+
+div.new {
+    float:left;
+    width:95%;
+}

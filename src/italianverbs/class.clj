@@ -11,6 +11,7 @@
    [clj-time.core :as t]
    [clojure.tools.logging :as log]
    [compojure.core :as compojure :refer [GET PUT POST DELETE ANY]]
+   [formative.core :as f]
    [hiccup.core :refer (html)]
    [italianverbs.authentication :as authentication]
    [italianverbs.config :refer [time-format]]
@@ -48,17 +49,39 @@
                                       []] :results)
                             ]
                         (rows2table results
-                                    {}))]])
+                                    {}))]
+
+                     [:div.new
+                       [:h3 "Create a new class:"]
+                      
+                      (f/render-form
+                       {:action "/class/new"
+                        :enctype "multipart/form-data"
+                        :method "post"
+                        :fields [{:name :name :size 50 :label "Name"}]})
+                      ]]
+
+                    )
 
                    [:div {:class "classlist"}
                     [:h2 "Classes I'm enrolled in"]
 
                     (let [results (k/exec-raw
                                    ["SELECT *
-                                        FROM student_in_class"
+                                       FROM student_in_class"
                                      []] :results)]
                       (rows2table results
-                                  {}))]])
+                                  {}))]
+
+                     [:div.new
+                      [:form {:action "/class/join"
+                              :method "post"}
+                       [:h3 "Join a new class:"]
+                       
+                       ]]
+
+
+                   ])
 
                 request
                 resources)}))
