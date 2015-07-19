@@ -11,7 +11,7 @@
 
    [italianverbs.authentication :as authentication]
    [italianverbs.borges.reader :refer :all]
-   [italianverbs.config :refer [time-format]]
+   [italianverbs.config :refer [language-dropdown time-format]]
    [italianverbs.html :as html :refer [banner page]]
    [italianverbs.unify :refer [get-in strip-refs unify]]
    [italianverbs.user :refer [do-if do-if-admin do-if-teacher
@@ -51,10 +51,12 @@
    (GET "/" request
         (do-if-teacher
          {:body
-          (page "My Students"
-                (show-games
-                 (conj request
-                       {:user-id (username2userid (authentication/current request))}))
+          (page "My Games"
+                [:div {:class "major"}
+                 [:h2 "My Games"]
+                 (show-games
+                  (conj request
+                        {:user-id (username2userid (authentication/current request))}))]
                 request)
           :status 200
           :headers headers}))
@@ -68,9 +70,9 @@
    ;; language-specific: show only games and lists appropriate to a given language
    (GET "/:language" request
         (do-if-teacher {:body (body (str (short-language-name-to-long (:language (:route-params request))))
-                                  (show-games (conj request
-                                                    {:user-id (username2userid (authentication/current request))
-                                                     :language (:language (:route-params request))}))
+                                    (show-games (conj request
+                                                       {:user-id (username2userid (authentication/current request))
+                                                        :language (:language (:route-params request))}))
                                   request)
                       :status 200
                       :headers headers}))
@@ -270,7 +272,6 @@ INSERT INTO game
       :jss ["/js/editor.js" "/js/gen.js"]
       :onload (onload)})))
 
-(declare language-dropdown)
 (declare show-game-table)
 
 (defn is-owner-of? [game-id user]
@@ -295,7 +296,6 @@ INSERT INTO game
         language (if language language "")]
     (html
      (language-dropdown language)
-     
      [:div {:style "margin-top:0.5em;"}
       [:h3 "My games"]
 
@@ -434,26 +434,6 @@ INSERT INTO game
             ]
            ))
        results)])))
-
-(defn language-dropdown [language]
-  (html
-   [:div.dropdown {:style "margin-left:0.5em;float:left;width:auto"}
-    "Show games for:"
-    [:div {:style "float:right;padding-left:1em;width:auto;"}
-     [:form {:method "get"}
-      [:select#edit_which_language {:name "language"
-                                    :onchange (str "document.location='/editor/' + this.value")}
-       (map (fn [lang-pair]
-              (let [label (:label lang-pair)
-                    value (:value lang-pair)]
-                [:option (conj {:value value}
-                               (if (= language (:value lang-pair))
-                                 {:selected "selected"}
-                                 {}))
-                 label]))
-            [{:value "" :label "All Languages"}
-             {:value "es" :label "Español"}
-             {:value "it" :label "Italiano"}])]]]]))
 
 (defn show-game [game-id & [ {refine :refine
                               show-as-owner? :show-as-owner?} ]]
