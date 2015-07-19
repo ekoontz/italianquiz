@@ -943,31 +943,40 @@
    workbook/workbookq will format this accordingly."
   {:plain expr})
 
-(defn rows2table [rows & [{cols :cols}]]
+(defn rows2table [rows & [{cols :cols
+                           col-fns :col-fns
+                           th-styles :th-styles}]]
   "Take a vector of maps, each of which is a row from a db table, and render it 
 in HTML. If :cols is supplied, use it as the vector of column names as keywords.
 "
-
   (if (empty? rows)
     [:div [:i "None."]]
 
     ;; else
     [:table {:class "striped padded"}
+     ;; top row: column headers
      [:tr
       (map (fn [col]
-             [:th (string/capitalize
-                   (string/replace
-                    (string/replace-first (str col) ":" "")
-                    "_" " "))
+             [:th
+              (if (get th-styles col)
+                {:style (get th-styles col)})
+              (string/capitalize
+               (string/replace
+                (string/replace-first (str col) ":" "")
+                "_" " "))
               ])
            (if cols
              cols
              (keys (first rows))))]
+     ;; body rows
      (map
       (fn [row]
         [:tr
          (map (fn [col]
-                [:td (get row col)])
+                [:td
+                 (if (get col-fns col)
+                   ((get col-fns col) row)
+                   (get row col))])
               (if cols
                 cols
                 (keys row)))])
@@ -984,3 +993,13 @@ in HTML. If :cols is supplied, use it as the vector of column names as keywords.
                 (vals params))]
     (log/trace (str "multipart-to-edn output: " output))
     output))
+
+(defn banner [segments]
+  (if (not (empty? segments))
+    (html (if (:href (first segments)) 
+            [:a {:href (:href (first segments))}
+             (:content (first segments))]
+            (:content (first segments)))
+          (if (not (empty? (rest segments))) " : ")
+          (banner (rest segments)))))
+

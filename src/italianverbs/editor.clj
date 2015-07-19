@@ -12,14 +12,13 @@
    [italianverbs.authentication :as authentication]
    [italianverbs.borges.reader :refer :all]
    [italianverbs.config :refer [time-format]]
-   [italianverbs.html :as html]
+   [italianverbs.html :as html :refer [banner page]]
    [italianverbs.unify :refer [get-in strip-refs unify]]
    [italianverbs.user :refer [do-if do-if-admin do-if-teacher
                               has-teacher-role username2userid]]
    [hiccup.core :refer (html)]
    [korma.core :as k]))
 
-(declare banner)
 (declare body)
 (declare delete-game)
 (declare describe-spec)
@@ -52,7 +51,7 @@
    (GET "/" request
         (do-if-teacher
          {:body
-          (body ""
+          (page "My Students"
                 (show-games
                  (conj request
                        {:user-id (username2userid (authentication/current request))}))
@@ -1204,15 +1203,6 @@ ms: " params))))
     (cons
      from
      (series (+ from increment) to increment))))
-
-(defn banner [segments]
-  (if (not (empty? segments))
-    (html (if (:href (first segments)) 
-            [:a {:href (:href (first segments))}
-             (:content (first segments))]
-            (:content (first segments)))
-          (if (not (empty? (rest segments))) " : ")
-          (banner (rest segments)))))
 
 (def tenses-as-editables
   [{:label "conditional"
