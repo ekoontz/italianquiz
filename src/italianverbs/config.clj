@@ -154,3 +154,10 @@
    {:label "present"
     :value (json/write-str {:synsem {:sem {:tense :present}}})}])
 
+
+;; TODO: throw exception rather than "unknown language"
+(defn short-language-name-to-edn [lang]
+  (cond (= lang "it") :italiano
+        (= lang "en") :english
+        (= lang "es") :espanol
+        true (str "unknown lang: " lang)))
