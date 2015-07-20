@@ -16,6 +16,7 @@
                                 sqlname-from-match
                                 tenses-human-readable
                                 time-format]]
+   [italianverbs.editor :as editor]
    [italianverbs.html :as html :refer [banner page rows2table]]
    [italianverbs.korma :as db]
    [italianverbs.user :refer [do-if do-if-admin do-if-authenticated do-if-teacher username2userid]]
@@ -54,7 +55,6 @@
           (page "My Games"
                 (let [user-id (username2userid (authentication/current request))]
                   [:div {:class "major"}
-
                    (do-if-teacher
                     [:div {:class "gamelist"}
                      [:h2 "Games for classes I'm teaching"]
@@ -105,10 +105,10 @@
 
                     ]
                    ])
-                   
                 request
-                resources)}))
-
+                resources)
+          :status 200
+          :headers html-headers}))))
 
    ;; language-specific: show only games and lists appropriate to a given language
    (GET "/:language" request
@@ -243,11 +243,11 @@ INSERT INTO game
         (do-if-teacher
          (let [game-id (Integer. (:game (:route-params request)))
                game (first (k/exec-raw ["SELECT * FROM game WHERE id=?" [(Integer. game-id)]] :results))]
-           {:body (body (:name game) (show-game (:game (:route-params request))
-                                                {:show-as-owner? (is-owner-of?
-                                                                 (Integer. game-id)
-                                                                 (authentication/current request))
-                                                 :refine (:refine (:params request))})
+           {:body (body (show-game (:game (:route-params request))
+                                   {:show-as-owner? (is-owner-of?
+                                                     (Integer. game-id)
+                                                     (authentication/current request))
+                                    :refine (:refine (:params request))})
                         request)
             :status 200
             :headers html-headers})))
@@ -274,7 +274,7 @@ INSERT INTO game
                                   user-id)]
               {:status 302 :headers {"Location" 
                                      (str "/editor/game/" (:id game)
-                                          "?message=Created game:" (:name game))}})))))
+                                          "?message=Created game:" (:name game))}})))
 
 
 (defn show-game-table [results & [{show-as-owner? :show-as-owner?}]]
