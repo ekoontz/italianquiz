@@ -901,7 +901,7 @@ ms: " params))))
         ]]]]
      
      (f/render-form
-      {:action (str "/editor/game/" game-id "/edit")
+      {:action (str "/game/" game-id "/edit")
        :enctype "multipart/form-data"
        :method :post
        :fields (concat
@@ -950,7 +950,7 @@ ms: " params))))
 
                 )
 
-       :cancel-href (str "/editor/" language)
+       :cancel-href (str "/" language)
        :values {:name (:name game)
                 :target (:target game)
                 :source (:source game)
@@ -976,14 +976,14 @@ ms: " params))))
                 }
 
        :validations [[:required [:name]
-                      :action "/editor"
+                      :action "/game"
                       :method "post"
                       :problems problems]]})
 
      [:div.editgame
       [:p "You can make a new copy of this game."]
       [:form {:method "post"
-              :action (str "/editor/game/clone/" game-id)}
+              :action (str "/game/clone/" game-id)}
        [:button {:onclick "submit();"}
         "Copy"
         ]]]
@@ -994,7 +994,7 @@ ms: " params))))
       [:div {:style "float:right"}
        [:form
         {:method "post"
-         :action (str "/editor/game/delete/" (if language (str language "/")) game-id)}
+         :action (str "/game/delete/" (if language (str language "/")) game-id)}
         [:button.confirm_delete {:onclick (str "submit();")} "Delete Game"]]]
       ]
      ]))
