@@ -119,14 +119,13 @@
               (log/debug (str "Activate game: " game-id ": can user: '" user "' activate this game?"))
               (is-owner-of? (Integer. game-id) user))
             (let [debug (log/debug (str "PARAMS: " (:params request)))
-                  message (toggle-activation (:game (:route-params request)) (= "on" (:active (:params request))))
-                  language (:language (:params request))]
+                  message (toggle-activation (:game (:route-params request)) (= "on" (:active (:params request))))]
               {:status 302
-               :headers {"Location" (str "/game/" language "?message=" message)}})
+               :headers {"Location" (str "/game?message=" message)}})
             (do
               (log/warn (str "User:" user " tried to activate game: " game-id " but was denied authorization to do so."))
               {:status 302
-               :headers {"Location" (str "/game/" game-id "?message=Unauthorized+to+activate+game:" game-id)}}))))
+               :headers {"Location" (str "/game/?message=Unauthorized+to+activate+game:" game-id)}}))))
 
    (POST "/clone/:game-id" request
           (let [source-game-id (:game-id (:route-params request))
