@@ -5,6 +5,7 @@
    [clojure.string :as string]
    [clojure.tools.logging :as log]
    [compojure.core :as compojure :refer [GET PUT POST DELETE ANY]]
+   [formative.core :as f]
    [hiccup.core :refer (html)]
    [italianverbs.authentication :as authentication]
    [italianverbs.config :refer [describe-spec json-read-str
@@ -14,6 +15,7 @@
                                 short-language-name-to-edn
                                 short-language-name-to-long
                                 sqlname-from-match
+                                tenses-as-editables
                                 tenses-human-readable
                                 time-format]]
    [italianverbs.html :as html :refer [banner page rows2table]]
@@ -108,20 +110,6 @@
                 resources)
           :status 200
           :headers html-headers}))
-
-   ;; language-specific: show only games and lists appropriate to a given language
-   (GET "/:language" request
-        (do-if-teacher {:body (body (str (short-language-name-to-long (:language (:route-params request))))
-                                    (show-games (conj request
-                                                       {:user-id (username2userid (authentication/current request))
-                                                        :language (:language (:route-params request))}))
-                                  request)
-                      :status 200
-                      :headers html-headers}))
-
-   (GET "/:language/" request
-         {:status 302
-          :headers {"Location" (str "/editor/" (:language (:route-params request)))}})
 
    (POST "/activate/:game" request
          (let [game-id (:game (:route-params request))
@@ -238,6 +226,19 @@ INSERT INTO game
             :status 200
             :headers json-headers})))
 
+   (GET "/:game" request
+        (do-if-teacher
+         (let [game-id (Integer. (:game (:route-params request)))
+               game (first (k/exec-raw ["SELECT * FROM game WHERE id=?" [(Integer. game-id)]] :results))]
+           {:body (body (:name game) (show-game (:game (:route-params request))
+                                                {:show-as-owner? (is-owner-of?
+                                                                  (Integer. game-id)
+                                                                  (authentication/current request))
+                                                 :refine (:refine (:params request))})
+                        request)
+            :status 200
+            :headers html-headers})))
+   
    (POST "/new" request
          (do-if-teacher
           (let [params (html/multipart-to-edn (:multipart-params request))
@@ -349,7 +350,6 @@ INSERT INTO game
   (let [show-source-lists false
         language (if language language "")]
     (html
-     (language-dropdown language "/game/")
      [:div {:style "margin-top:0.5em;"}
 
       (let [sql "SELECT game.name AS name,game.id AS id,active,
@@ -366,21 +366,20 @@ INSERT INTO game
             debug (log/debug (str "Number of results: " (.size results)))]
         (show-game-table results {:show-as-owner? true}))
 
-     (if (not (= "" language)) ;; don't show "New Game" if no language - confusing to users.
-       [:div.new
-        [:form {:method "post"
-                :enctype "multipart/form-data"
-                :action "/game/new"}
+      ;; TODO: show language as dropdown within 'new language' form.
+      [:div.new
+       [:form {:method "post"
+               :enctype "multipart/form-data"
+               :action "/game/new"}
+        
+        ;; TODO: don't disable button unless and until input is something besides whitespace.
+        [:input {:onclick "submit_new_game.disabled = false;"
+                 :name "name" :size "50" :placeholder (str "Enter the name of a new game.")} ]
+        
+        [:input {:type "hidden" :name "language" :value language} ]
 
-         ;; TODO: don't disable button unless and until input is something besides whitespace.
-         [:input {:onclick "submit_new_game.disabled = false;"
-                  :name "name" :size "50" :placeholder (str "Enter the name of a new " (short-language-name-to-long language) " game")} ]
-
-         [:input {:type "hidden" :name "language" :value language} ]
-
-         [:button {:name "submit_new_game" :disabled true :onclick "submit();"} "New Game"]
-         ]])
-
+        [:button {:name "submit_new_game" :disabled true :onclick "submit();"} "New Game"]
+        ]]
       ]
 
      (do-if-admin ;; only admins can see other teachers' games
@@ -443,11 +442,8 @@ INSERT INTO game
                                            ON games_to_use.game = games.id")] :results))))
 
 (defn body [title content request]
-  (let [language (:language (:route-params request))
-        game-id (:game (:route-params request))
-        game (if game-id (first (k/exec-raw ["SELECT * FROM game WHERE id=?" [(Integer. game-id)]] :results)))
-        language (if language language
-                     (:target game))]
+  (let [game-id (:game (:route-params request))
+        game (if game-id (first (k/exec-raw ["SELECT * FROM game WHERE id=?" [(Integer. game-id)]] :results)))]
     (html/page
      title
      (html
@@ -456,9 +452,6 @@ INSERT INTO game
         (banner (concat 
                  [{:href "/game" 
                    :content "My Games"}]
-                 (if language
-                   [{:href (str "/game/" language)
-                     :content (short-language-name-to-long language)}])
                  (if game
                    [{:href (if (:refine (:params request))
                              (str "/game/" game-id))
@@ -478,7 +471,7 @@ INSERT INTO game
       content])
      request
      {:css "/css/game.css"
-      :jss ["/js/game.js" "/js/gen.js"]
+      :jss [ "/js/editor.js" "/js/game.js" "/js/gen.js"]
       :onload (onload)})))
 
 (defn toggle-activation [game active]
@@ -598,7 +591,6 @@ ms: " params))))
                           (:source params)
                           (:target params)
                           (Integer. game-id)]]))))))
-
 
 (defn show-game [game-id & [ {refine :refine
                               show-as-owner? :show-as-owner?} ]]
@@ -858,3 +850,168 @@ ms: " params))))
              
              ;; all possible lexemes for this game.
              lexemes-for-this-game)]))))))
+;; TODO: has fallen victim to parameter-itis (too many unnamed parameters)
+(defn game-editor-form [game game-to-edit game-to-delete & [editpopup] ]
+  (let [game-id (:game_id game)
+        language (:language game)
+        debug (log/trace (str "ALL GAME INFO: " game))
+        game-to-edit game-to-edit
+        problems nil ;; TODO: should be optional param of this (defn)
+        game-to-delete game-to-delete
+
+        source-group-ids (:source_group_ids game)
+        source-groups (if source-group-ids
+                        (vec (remove #(or (nil? %)
+                                          (= "" (string/trim (str %))))
+                                     (.getArray (:source_group_ids game))))
+                        [])
+        target-group-ids (:target_group_ids game)
+        target-groups (if target-group-ids
+                        (vec (remove #(or (nil? %)
+                                          (= "" (string/trim (str %))))
+                                     (.getArray (:target_group_ids game))))
+                        [])
+        debug (log/debug (str "creating checkbox form with currently-selected source-groups: " source-groups))
+        debug (log/debug (str "creating checkbox form with currently-selected target-groups: " target-groups))
+
+        language-short-name (:target game)
+        debug (log/debug (str "language-short-name:" language-short-name))
+        language-keyword-name
+        (str "" (sqlname-from-match (short-language-name-to-long language-short-name)) "")
+
+        language-keyword
+        (keyword language-keyword-name)
+
+        debug (log/debug (str "language-keyword-name: " language-keyword-name))
+        debug (log/debug (str "language-short-name: " language-short-name))
+
+        ]
+    [:div
+     {:class (str "editgame " (if editpopup "editpopup"))
+      :id (str "editgame" game-id)}
+
+     [:div {:style "float:left;width:100%"}
+      [:table
+       [:tr
+        [:th "Created"]
+        [:td (:created_on game)]
+       [:tr
+        [:th "Created by"]
+        [:td (:created_by game)]
+        ]]]]
+     
+     (f/render-form
+      {:action (str "/editor/game/" game-id "/edit")
+       :enctype "multipart/form-data"
+       :method :post
+       :fields (concat
+
+                [{:name :name :size 50 :label "Name"}]
+
+                [{:name :target_lex
+                  :label "Verbs"
+                  :disabled "disabled"
+                  :type :checkboxes
+                  :cols 10
+                  :options (map (fn [lexeme]
+                                  {:label lexeme
+;                                   :options {"disabled" "disabled"}
+                                   :value lexeme})
+                                (map #(:surface %)
+                                     (k/exec-raw [(str "SELECT DISTINCT canonical AS surface
+                                                          FROM lexeme 
+                                                         WHERE language=?
+                                                           AND structure->'synsem'->>'cat' = 'verb'
+                                                           AND structure->'synsem'->>'infl' = 'top'
+                                                      ORDER BY surface ASC")
+                                                  [language-short-name]]
+                                                  :results)))}]
+
+                [{:name :target_tenses
+                  :label "Tenses"
+                  :type :checkboxes
+                  :cols 12
+                  :options (map (fn [row]
+                                  {:label (:label row)
+                                   :value (:value row)})
+                                tenses-as-editables)}]
+
+                [{:name :source :type :hidden
+                  :label "Source Language"
+                  :options [{:value "en" :label "English"}
+                            {:value "it" :label "Italian"}
+                            {:value "es" :label "Spanish"}]}]
+
+                [{:name :target :type :hidden
+                  :label "Target Language"
+                  :options [{:value "en" :label "English"}
+                            {:value "it" :label "Italian"}
+                            {:value "es" :label "Spanish"}]}]
+
+                )
+
+       :cancel-href (str "/editor/" language)
+       :values {:name (:name game)
+                :target (:target game)
+                :source (:source game)
+                :source_groupings source-groups
+                :target_groupings target-groups
+
+                :target_lex (vec (remove #(or (nil? %)
+                                              (= "" %))
+                                         (map #(let [path [:root language-keyword language-keyword]
+                                                     debug (log/trace (str "CHECKBOX TICK (:target_lex) (path=" path ": ["
+                                                                           (get-in % path nil) "]"))]
+                                                 (get-in % path nil))
+                                              (map json-read-str (seq (.getArray (:target_lex game)))))))
+
+
+                :target_tenses (vec (remove #(or (nil? %)
+                                                 (= "" %))
+                                            (map #(let [debug (log/debug (str "tense: " %))
+                                                        data (json-read-str %)]
+                                                    (log/trace (str "target tense spec: " data))
+                                                    (json/write-str data))
+                                                 (seq (.getArray (:target_grammar game))))))
+                }
+
+       :validations [[:required [:name]
+                      :action "/editor"
+                      :method "post"
+                      :problems problems]]})
+
+     [:div.editgame
+      [:p "You can make a new copy of this game."]
+      [:form {:method "post"
+              :action (str "/editor/game/clone/" game-id)}
+       [:button {:onclick "submit();"}
+        "Copy"
+        ]]]
+     
+     [:div.dangerzone
+      [:h4 "Delete game"]
+
+      [:div {:style "float:right"}
+       [:form
+        {:method "post"
+         :action (str "/editor/game/delete/" (if language (str language "/")) game-id)}
+        [:button.confirm_delete {:onclick (str "submit();")} "Delete Game"]]]
+      ]
+     ]))
+
+(defn onload []
+  (string/join " "
+               (map (fn [game]
+                      (let [game-id (:game game)
+                            source (:source game)
+                            target (:target game)]
+                        (str
+                         "log(INFO,'editor onload: loading gen_per_verb( " game-id " )');"
+                         "gen_per_verb('" game-id "','" source "','" target "');")))
+                    (k/exec-raw [(str "SELECT games_to_use.game,games.source,games.target
+                                         FROM games_to_use
+                                   INNER JOIN games
+                                           ON games_to_use.game = games.id")] :results))))
+
+
+

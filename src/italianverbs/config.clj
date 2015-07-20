@@ -137,3 +137,20 @@
    {:synsem {:sem {:tense :past :aspect :progressive}}} "imperfect"
    {:synsem {:sem {:tense :past :aspect :perfect}}} "past"
    {:synsem {:sem {:tense :present}}} "present"})
+
+(def tenses-as-editables
+  [{:label "conditional"
+    :value (json/write-str {:synsem {:sem {:tense :conditional}}})}
+
+   {:label "future"
+    :value (json/write-str {:synsem {:sem {:tense :futuro}}})}
+
+   {:label "imperfect"
+    :value (json/write-str {:synsem {:sem {:tense :past
+                                           :aspect :progressive}}})}
+   {:label "past"
+    :value (json/write-str {:synsem {:sem {:tense :past
+                                           :aspect :perfect}}})}
+   {:label "present"
+    :value (json/write-str {:synsem {:sem {:tense :present}}})}])
+
