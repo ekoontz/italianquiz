@@ -16,7 +16,6 @@
                                 sqlname-from-match
                                 tenses-human-readable
                                 time-format]]
-   [italianverbs.editor :as editor]
    [italianverbs.html :as html :refer [banner page rows2table]]
    [italianverbs.korma :as db]
    [italianverbs.user :refer [do-if do-if-admin do-if-authenticated do-if-teacher username2userid]]
@@ -57,7 +56,7 @@
                   [:div {:class "major"}
                    (do-if-teacher
                     [:div {:class "gamelist"}
-                     [:h2 "Games for classes I'm teaching"]
+                     [:h2 "Games in classes I'm teaching"]
 
                      (show-games
                       (conj request
@@ -108,7 +107,7 @@
                 request
                 resources)
           :status 200
-          :headers html-headers}))))
+          :headers html-headers}))
 
    ;; language-specific: show only games and lists appropriate to a given language
    (GET "/:language" request
@@ -135,11 +134,11 @@
                   message (toggle-activation (:game (:route-params request)) (= "on" (:active (:params request))))
                   language (:language (:params request))]
               {:status 302
-               :headers {"Location" (str "/editor/" language "?message=" message)}})
+               :headers {"Location" (str "/game/" language "?message=" message)}})
             (do
               (log/warn (str "User:" user " tried to activate game: " game-id " but was denied authorization to do so."))
               {:status 302
-               :headers {"Location" (str "/editor/game/" game-id "?message=Unauthorized+to+activate+game:" game-id)}}))))
+               :headers {"Location" (str "/game/" game-id "?message=Unauthorized+to+activate+game:" game-id)}}))))
 
    (POST "/clone/:game-id" request
           (let [source-game-id (:game-id (:route-params request))
@@ -162,7 +161,7 @@ INSERT INTO game
       WHERE id=? RETURNING id"
                             [user-id (Integer. source-game-id)]] :results)))]
                  {:status 302
-                  :headers {"Location" (str "/editor/game/" new-game-id)}})))))
+                  :headers {"Location" (str "/game/" new-game-id)}})))))
    
    (POST "/delete/:game-to-delete" request
          (let [game-id (:game-to-delete (:route-params request))
@@ -174,11 +173,11 @@ INSERT INTO game
             (do
               (let [message (delete-game (:game-to-delete (:route-params request)))]
                 {:status 302
-                 :headers {"Location" (str "/editor/" "?message=" message)}}))
+                 :headers {"Location" (str "/game/" "?message=" message)}}))
             (do
               (log/warn (str "User:" user " tried to delete game: " game-id " but was denied authorization to do so."))
               {:status 302
-               :headers {"Location" (str "/editor/game/" game-id "?message=Unauthorized+to+delete+game:" game-id)}}))))
+               :headers {"Location" (str "/game/" game-id "?message=Unauthorized+to+delete+game:" game-id)}}))))
   
    (POST "/:game-to-edit/edit" request
          (let [game-id (:game-to-edit (:route-params request))
@@ -192,11 +191,11 @@ INSERT INTO game
               (update-game (:game-to-edit (:route-params request))
                            (html/multipart-to-edn (:multipart-params request)))
               {:status 302
-               :headers {"Location" (str "/editor/game/" game-id "?message=Edited+game:" game-id)}})
+               :headers {"Location" (str "/game/" game-id "?message=Edited+game:" game-id)}})
             (do
               (log/warn (str "User:" user " tried to edit game: " game-id " but was denied authorization to do so."))
               {:status 302
-               :headers {"Location" (str "/editor/game/" game-id "?message=Unauthorized+to+edit+game:" game-id)}}))))
+               :headers {"Location" (str "/game/" game-id "?message=Unauthorized+to+edit+game:" game-id)}}))))
 
    (GET "/:game/:verb/:tense" request
         ;; Return translation pairs for this game's target and source language such that
@@ -239,19 +238,6 @@ INSERT INTO game
             :status 200
             :headers json-headers})))
 
-   (GET "/:game" request
-        (do-if-teacher
-         (let [game-id (Integer. (:game (:route-params request)))
-               game (first (k/exec-raw ["SELECT * FROM game WHERE id=?" [(Integer. game-id)]] :results))]
-           {:body (body (show-game (:game (:route-params request))
-                                   {:show-as-owner? (is-owner-of?
-                                                     (Integer. game-id)
-                                                     (authentication/current request))
-                                    :refine (:refine (:params request))})
-                        request)
-            :status 200
-            :headers html-headers})))
-
    (POST "/new" request
          (do-if-teacher
           (let [params (html/multipart-to-edn (:multipart-params request))
@@ -273,8 +259,11 @@ INSERT INTO game
                                   (:target_groupings params)
                                   user-id)]
               {:status 302 :headers {"Location" 
-                                     (str "/editor/game/" (:id game)
-                                          "?message=Created game:" (:name game))}})))
+                                     (str "/game/" (:id game)
+                                          "?message=Created game:" (:name game))}}
+              )
+          )
+         )
 
 
 (defn show-game-table [results & [{show-as-owner? :show-as-owner?}]]
@@ -316,7 +305,7 @@ INSERT INTO game
              (if show-as-owner?
                [:form {:method "post"
                        :enctype "multipart/form-data"
-                       :action (str "/editor/game/activate/" game-id)}
+                       :action (str "/game/activate/" game-id)}
                 [:input {:name "language"
                          :type "hidden"
                          :value language-short-name}]
@@ -341,7 +330,7 @@ INSERT INTO game
             
             [:td
              ;; show as link
-             [:a {:href (str "/editor/game/" game-id)} game-name-display]]
+             [:a {:href (str "/game/" game-id)} game-name-display]]
             [:td (string/join ", " (map #(html [:i %])
                                         (map #(get-in % [:root language-keyword language-keyword])
                                              (map json-read-str (.getArray (:target_lex result))))))]
@@ -381,7 +370,7 @@ INSERT INTO game
        [:div.new
         [:form {:method "post"
                 :enctype "multipart/form-data"
-                :action "/editor/game/new"}
+                :action "/game/new"}
 
          ;; TODO: don't disable button unless and until input is something besides whitespace.
          [:input {:onclick "submit_new_game.disabled = false;"
@@ -465,14 +454,14 @@ INSERT INTO game
       [:div {:class "major"}
        [:h2 
         (banner (concat 
-                 [{:href "/editor" 
+                 [{:href "/game" 
                    :content "Game Editor"}]
                  (if language
-                   [{:href (str "/editor/" language)
+                   [{:href (str "/game/" language)
                      :content (short-language-name-to-long language)}])
                  (if game
                    [{:href (if (:refine (:params request))
-                             (str "/editor/game/" game-id))
+                             (str "/game/" game-id))
                      :content (if (= "" (string/trim title)) "(untitled)" title)}])
 
                  (if (:refine (:params request))
@@ -488,8 +477,8 @@ INSERT INTO game
 
       content])
      request
-     {:css "/css/editor.css"
-      :jss ["/js/editor.js" "/js/gen.js"]
+     {:css "/css/game.css"
+      :jss ["/js/game.js" "/js/gen.js"]
       :onload (onload)})))
 
 (defn toggle-activation [game active]
@@ -680,7 +669,7 @@ ms: " params))))
                "You can copy this game to edit a copy of it:"]
              
               [:form {:method "post"
-                      :action (str "/editor/game/clone/" game-id)}
+                      :action (str "/game/clone/" game-id)}
                [:button {:onclick "submit();"}
                 "Copy"
                 ]]]]))]
@@ -868,4 +857,4 @@ ms: " params))))
                ) ;; end of map fn over all the possible lexemes for this game.
              
              ;; all possible lexemes for this game.
-             lexemes-for-this-game)]))))
+             lexemes-for-this-game)]))))))
