@@ -455,7 +455,7 @@ INSERT INTO game
        [:h2 
         (banner (concat 
                  [{:href "/game" 
-                   :content "Game Editor"}]
+                   :content "My Games"}]
                  (if language
                    [{:href (str "/game/" language)
                      :content (short-language-name-to-long language)}])
