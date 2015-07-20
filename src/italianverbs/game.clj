@@ -56,29 +56,15 @@
           (page "My Games"
                 (let [user-id (username2userid (authentication/current request))]
                   [:div {:class "major"}
+                   [:h2 "My Games"]
+
                    (do-if-teacher
-                    [:div {:class "gamelist"}
-                     [:h2 "Games in classes I'm teaching"]
+                    [:div {:class "gamelist" :style "width:95%;float:left"}
+                     [:h3 "Games in classes I'm teaching"]
 
                      (show-games
                       (conj request
                             {:user-id (username2userid (authentication/current request))}))
-                     
-                     (let [results (k/exec-raw
-                                    ["SELECT *
-                                        FROM game_in_class"
-                                     []] :results)]
-                       (rows2table results
-                                   {}
-                                   ))
-
-                     [:h3 "Add a new game for a class"]
-
-                     [:div 
-                      "form goes here.."
-                      
-                      ]
-                     
 
                      ])
 
@@ -262,10 +248,8 @@ INSERT INTO game
                                      (str "/game/" (:id game)
                                           "?message=Created game:" (:name game))}}
               )
-          )
-         )
-
-
+          ))))
+   
 (defn show-game-table [results & [{show-as-owner? :show-as-owner?}]]
   (log/debug (str "showing as owner?: " show-as-owner?))
   (html
@@ -365,8 +349,9 @@ INSERT INTO game
             debug (log/debug (str "Number of results: " (.size results)))]
         (show-game-table results {:show-as-owner? true}))
 
-      ;; TODO: show language as dropdown within 'new language' form.
-      [:div.new
+      ;; TODO: 'new game' should be within the context of a class:
+      ;; /class/:id/game/new
+      [:div.new {:style "display:none"}
        [:form {:method "post"
                :enctype "multipart/form-data"
                :action "/game/new"}
@@ -382,7 +367,7 @@ INSERT INTO game
       ]
 
      (do-if-admin ;; only admins can see other teachers' games
-      [:div {:style "margin-top:0.5em;"}
+      [:div {:style "margin-top:0.5em;display:none"}
        [:h3 "Other teachers' games"]
 
        (let [sql "SELECT trim(vc_user.given_name || ' ' || vc_user.family_name) AS owner,
@@ -403,9 +388,7 @@ INSERT INTO game
                                  :results)
              debug (log/debug (str "Number of results: " (.size results)))]
          (show-game-table results {:show-as-owner? false}))
-       ]
-      "")
-
+       ])
      )
     )
   )
@@ -848,7 +831,8 @@ ms: " params))))
                ) ;; end of map fn over all the possible lexemes for this game.
              
              ;; all possible lexemes for this game.
-             lexemes-for-this-game)]))))))
+             lexemes-for-this-game)]))))
+
 ;; TODO: has fallen victim to parameter-itis (too many unnamed parameters)
 (defn game-editor-form [game game-to-edit game-to-delete & [editpopup] ]
   (let [game-id (:game_id game)
