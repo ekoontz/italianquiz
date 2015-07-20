@@ -26,13 +26,13 @@
 (declare delete-game)
 (declare game-to-edit)
 (declare game-editor-form)
-(declare headers)
 (declare onload)
 (declare insert-game)
 (declare is-owner-of?)
 (declare show-students)
 (declare show-game)
 (declare show-game-table)
+(declare show-games)
 (declare source-to-target-mappings)
 (declare table)
 (declare toggle-activation)
@@ -46,9 +46,6 @@
                 :css ["/css/game.css"]
                 :jss ["/js/game/js"]})
 
-
-(declare show-games)
-
 (def routes
   (compojure/routes
    (GET "/" request
@@ -61,6 +58,11 @@
                    (do-if-teacher
                     [:div {:class "gamelist"}
                      [:h2 "Games for classes I'm teaching"]
+
+                     (show-games
+                      (conj request
+                            {:user-id (username2userid (authentication/current request))}))
+                     
                      (let [results (k/exec-raw
                                     ["SELECT *
                                         FROM game_in_class"
@@ -116,13 +118,13 @@
                                                         :language (:language (:route-params request))}))
                                   request)
                       :status 200
-                      :headers headers}))
+                      :headers html-headers}))
 
    (GET "/:language/" request
          {:status 302
           :headers {"Location" (str "/editor/" (:language (:route-params request)))}})
 
-   (POST "/game/activate/:game" request
+   (POST "/activate/:game" request
          (let [game-id (:game (:route-params request))
                user (authentication/current request)]
            (do-if
@@ -139,7 +141,7 @@
               {:status 302
                :headers {"Location" (str "/editor/game/" game-id "?message=Unauthorized+to+activate+game:" game-id)}}))))
 
-   (POST "/game/clone/:game-id" request
+   (POST "/clone/:game-id" request
           (let [source-game-id (:game-id (:route-params request))
                 user (authentication/current request)
                 user-id (username2userid user)]
@@ -162,7 +164,7 @@ INSERT INTO game
                  {:status 302
                   :headers {"Location" (str "/editor/game/" new-game-id)}})))))
    
-   (POST "/game/delete/:game-to-delete" request
+   (POST "/delete/:game-to-delete" request
          (let [game-id (:game-to-delete (:route-params request))
                user (authentication/current request)]
            (do-if
@@ -178,7 +180,7 @@ INSERT INTO game
               {:status 302
                :headers {"Location" (str "/editor/game/" game-id "?message=Unauthorized+to+delete+game:" game-id)}}))))
   
-   (POST "/game/:game-to-edit/edit" request
+   (POST "/:game-to-edit/edit" request
          (let [game-id (:game-to-edit (:route-params request))
                user (authentication/current request)]
            (do-if
@@ -196,7 +198,7 @@ INSERT INTO game
               {:status 302
                :headers {"Location" (str "/editor/game/" game-id "?message=Unauthorized+to+edit+game:" game-id)}}))))
 
-   (GET "/game/:game/:verb/:tense" request
+   (GET "/:game/:verb/:tense" request
         ;; Return translation pairs for this game's target and source language such that
         ;; the target member of the pair has the given verb and tense.
         (do-if-teacher
@@ -235,9 +237,9 @@ INSERT INTO game
                    {:count count
                     :refine_param unified-spec})
             :status 200
-            :headers headers})))
+            :headers json-headers})))
 
-   (GET "/game/:game" request
+   (GET "/:game" request
         (do-if-teacher
          (let [game-id (Integer. (:game (:route-params request)))
                game (first (k/exec-raw ["SELECT * FROM game WHERE id=?" [(Integer. game-id)]] :results))]
@@ -250,7 +252,7 @@ INSERT INTO game
             :status 200
             :headers headers})))
 
-   (POST "/game/new" request
+   (POST "/new" request
          (do-if-teacher
           (let [params (html/multipart-to-edn (:multipart-params request))
                 language (cond (and (:language params)
@@ -275,6 +277,82 @@ INSERT INTO game
                                           "?message=Created game:" (:name game))}})))))
 
 
+(defn show-game-table [results & [{show-as-owner? :show-as-owner?}]]
+  (log/debug (str "showing as owner?: " show-as-owner?))
+  (html
+   (if (empty? results)
+     [:div [:i "None."]]
+     [:table {:class "striped padded"}
+      [:tr
+       [:th {:style "width:2em"} "Active?"]
+       (if (not (= true show-as-owner?))
+         [:th "Owner"])
+       [:th {:style "white-space:nowrap"} "Created On"]
+       [:th {:style "width:15em"} "Name"]
+       [:th {:style "width:auto"} "Verbs"]
+       [:th {:style "width:auto"} "Tenses"]
+       ]
+
+      (map
+       (fn [result]
+         (let [debug (log/trace (str "result info: " result))
+               game-name-display
+               (let [game-name (string/trim (:name result))]
+                 (if (= game-name "")
+                   "(untitled)"
+                   game-name))
+               game-id (:id result)
+               language-short-name (:target result)
+               debug (log/debug (str "language-short-name:" language-short-name))
+               language-keyword-name
+               (str "" (sqlname-from-match (short-language-name-to-long language-short-name)) "")
+               language-keyword
+               (keyword language-keyword-name)
+               owner (:owner result)
+               email (:email result)
+               ]
+           [:tr
+            [:td
+             (if show-as-owner?
+               [:form {:method "post"
+                       :enctype "multipart/form-data"
+                       :action (str "/editor/game/activate/" game-id)}
+                [:input {:name "language"
+                         :type "hidden"
+                         :value language-short-name}]
+                [:input (merge {:type "checkbox"
+                                :onclick "submit()"
+                                :name "active"}
+                               (if (:active result)
+                                 {:checked "on"}))]]
+               (if (:active result)
+                 "Active"
+                 ))]
+            
+            (if (not show-as-owner?)
+              [:td
+               (if (not (empty? owner))
+                 owner
+                 (if (not (empty? email))
+                   email
+                   [:i "no owner"]))])
+
+            [:td (:created_on result)]
+            
+            [:td
+             ;; show as link
+             [:a {:href (str "/editor/game/" game-id)} game-name-display]]
+            [:td (string/join ", " (map #(html [:i %])
+                                        (map #(get-in % [:root language-keyword language-keyword])
+                                             (map json-read-str (.getArray (:target_lex result))))))]
+            [:td (string/join ", " (map #(html [:b (str %)])
+                                        (remove nil?
+                                                (map #(get tenses-human-readable %)
+                                                     (map json-read-str (.getArray (:target_grammar result)))))))]
+            ]
+           ))
+       results)])))
+
 (defn show-games [ & [ {language :language
                         user-id :user-id
                         }]]
@@ -282,9 +360,8 @@ INSERT INTO game
   (let [show-source-lists false
         language (if language language "")]
     (html
-     (language-dropdown language)
+     (language-dropdown language "/game/")
      [:div {:style "margin-top:0.5em;"}
-      [:h3 "My games"]
 
       (let [sql "SELECT game.name AS name,game.id AS id,active,
                         source,target,target_lex,target_grammar,
