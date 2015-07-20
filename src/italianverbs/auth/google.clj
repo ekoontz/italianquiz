@@ -62,13 +62,16 @@
 
 (defn insert-session-if-none
   ([session]
-     (let [session-row (first (k/exec-raw ["SELECT session.*
-                                              FROM session 
-                                             WHERE ring_session = ?::uuid" [session]] :results))
-           debug (log/trace (str "insert-session-if-none: ring-session:" session))
-           ]
-       (if (not session-row)
-         (insert-session session))))
+     (if (nil? session)
+       (log/warn (str "session was unexpectedly null."))
+
+       (let [session-row (first (k/exec-raw ["SELECT session.*
+                                                FROM session 
+                                               WHERE ring_session = ?::uuid" [session]] :results))
+             debug (log/trace (str "insert-session-if-none: ring-session:" session))
+             ]
+         (if (not session-row)
+           (insert-session session)))))
   
   ([session access-token user-id]
      (let [sql-only (log/debug (str "SQL ONLY: "
@@ -184,17 +187,28 @@
 
 (defn insert-session
   ([ring-session]
-     (log/info (str "inserting new session record (session=" ring-session))
-     (k/exec-raw [(str "INSERT INTO session (ring_session)
+     (if (nil? ring-session)
+       (log/warn (str "not inserting session since ring_session is nil."))
+
+       ;; else
+       (do
+         (log/info (str "inserting new session record (session=" ring-session))
+         (k/exec-raw [(str "INSERT INTO session (ring_session)
                              VALUES (?::uuid)")
-                  [ring-session]]))
+                      [ring-session]]))))
+
   ([user-id access-token ring-session]
-     (log/info (str "inserting new session record (session=" ring-session))
-     (log/info (str "                             (access-token=" access-token))
-     (log/info (str "                             (user-id=" user-id))
-     (k/exec-raw [(str "INSERT INTO session (access_token,user_id,ring_session)
+     (if (nil? ring-session)
+       (log/warn (str "not inserting session since ring session is nil."))
+
+       ;; else
+       (do
+         (log/info (str "inserting new session record (session=" ring-session))
+         (log/info (str "                             (access-token=" access-token))
+         (log/info (str "                             (user-id=" user-id))
+         (k/exec-raw [(str "INSERT INTO session (access_token,user_id,ring_session)
                              VALUES (?,?,?::uuid)")
-                  [access-token user-id ring-session]])))
+                      [access-token user-id ring-session]])))))
 
 (defn token2info [access-token]
   (first (k/exec-raw [(str "SELECT vc_user.* 
