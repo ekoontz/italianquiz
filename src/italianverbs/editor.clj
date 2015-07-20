@@ -46,6 +46,7 @@
 (declare update-game)
 (declare verb-tense-table)
 
+
 (def routes
   (compojure/routes
    (GET "/" request
@@ -71,10 +72,10 @@
    (GET "/:language" request
         (do-if-teacher {:body (body (str (short-language-name-to-long (:language (:route-params request))))
                                     (show-games (conj request
-                                                       {:user-id (username2userid (authentication/current request))
-                                                        :language (:language (:route-params request))}))
-                                  request)
-                      :status 200
+                                                      {:user-id (username2userid (authentication/current request))
+                                                       :language (:language (:route-params request))}))
+                                    request)
+                        :status 200
                       :headers headers}))
 
    (GET "/:language/" request
