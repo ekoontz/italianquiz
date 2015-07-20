@@ -25,7 +25,6 @@
 
 (defn credential-fn [token]
   ;;lookup token in DB or whatever to fetch appropriate :roles
-  (log/error (str "CREDENTIAL FN TOKEN: " token))
   {:identity token :roles #{::user}})
 
 (def uri-config
