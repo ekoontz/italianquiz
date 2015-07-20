@@ -250,7 +250,7 @@ INSERT INTO game
                                                  :refine (:refine (:params request))})
                         request)
             :status 200
-            :headers headers})))
+            :headers html-headers})))
 
    (POST "/new" request
          (do-if-teacher
