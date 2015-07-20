@@ -68,6 +68,12 @@
                  :url-for-this-item "/student"})
 
       (menuitem {:show? haz-authentication
+                 :selected?
+                 (or (and (not (nil? current-url))
+                          (re-find #"/game" current-url))
+                     (= current-url "/game")
+                     (and (not (nil? current-url))
+                          (re-find #"/game" current-url)))
                  :current-url current-url 
                  :text "My Games"
                  :url-for-this-item "/game"})
