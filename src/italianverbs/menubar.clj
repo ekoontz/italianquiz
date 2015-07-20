@@ -45,13 +45,14 @@
                  :requires-admin false
                  :requires-authentication false})
 
+      ;; deprecated: remove: using /game instead.
       (menuitem {:selected?
                  (or (and (not (nil? current-url))
                           (re-find #"/editor" current-url))
                      (= current-url "/editor")
                      (and (not (nil? current-url))
                           (re-find #"/editor" current-url)))
-                 :show? (or haz-admin? haz-teacher?)
+                 :show? (and false (or haz-admin? haz-teacher?))
                  :current-url current-url 
                  :text "Edit Games"
                  :url-for-this-item "/editor"})
