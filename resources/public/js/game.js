@@ -1,5 +1,8 @@
 // Begin configurable section.
 
+function game_onload() {
+}
+
 var encouragements = [
     "Bene!",
     "Certo!",
