@@ -29,12 +29,12 @@
 (def resources {:onload "class_onload();"
                 :css ["/css/class.css"]
                 :jss ["/js/class/js"]})
-
 (def routes
   (compojure/routes
    (GET "/" request
         (do-if-authenticated
-         {:body
+         {:headers html-headers
+          :body
           (page "My Classes"
                 (let [userid (username2userid (authentication/current request))]
                   [:div#classes {:class "major"}
@@ -45,20 +45,25 @@
                      [:div.rows2table
                       (let [results (k/exec-raw
                                      ["SELECT *
-                                       FROM class"
-                                      []] :results)
+                                       FROM class
+                                      WHERE teacher=?"
+                                      [userid]] :results)
                             ]
                         (rows2table results
                                     {}))]
 
                      [:div.new
-                       [:h3 "Create a new class:"]
+                       [:h3 "Create a new class that I'm teaching:"]
                       
                       (f/render-form
                        {:action "/class/new"
                         :enctype "multipart/form-data"
                         :method "post"
-                        :fields [{:name :name :size 50 :label "Name"}]})
+                        :fields [{:name :name :size 50 :label "Name"}
+                                 ;; TODO: use (config/language-radio-buttons)
+                                 {:name :lang :label "Language" :type "radios"
+                                  :options [{:value "es" :label "Español"}
+                                            {:value "it" :label "Italiano"}]}]})
                       ]]
 
                     )
@@ -86,20 +91,39 @@
                 request
                 resources)}))
 
+   (POST "/new" request
+         (do-if-teacher
+          (let [userid (username2userid (authentication/current request))
+                params (:params request)]
+            (log/info (str "creating new class with params: " (:params request)))
+            (let [new-game-id
+                  (:id (first
+                        (k/exec-raw ["
+INSERT INTO class (name,teacher,language)
+     VALUES (?,?,?) RETURNING id"
+                         [(:name params)
+                          userid
+                          (:lang params)  ]] :results )))]
+              {:status 302 :headers {"Location"
+                                     (str "/class/" new-game-id 
+                                          "?message=Created game")}}))))
    (GET "/:class" request
         (do-if-authenticated
          {:body
           (let [class (Integer. (:class (:route-params request)))]
             (page "Class"
                   (let [userid (username2userid (authentication/current request))
-                        result {}]
-                    [:div#students {:class "major"}
-                     [:h2 (banner [{:href "/class"
-                                    :content "My Classes"}
-                                   {:href nil
-                                    :content (:name result)}])]
-                     [:div {:style "padding:1em"}
-                      [:img {:width "50px" :src (:picture result)}]]])
-                  request
-                  resources))}))))
+                        class-map (first (k/exec-raw ["SELECT * FROM class WHERE id=?"
+                                                      [class]] :results))]
+                   [:div#students {:class "major"}
+                    [:h2 (banner [{:href "/class"
+                                   :content "My Classes"}
+                                  {:href nil
+                                   :content (:name class-map)}])]
+                    [:div {:style "padding:1em"}
+                     "(class info goes here.)"]])
+                request
+                resources))}))
+   ))
+
 
