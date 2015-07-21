@@ -109,7 +109,8 @@ INSERT INTO class (name,teacher,language)
                                           "?message=Created game")}}))))
    (GET "/:class" request
         (do-if-authenticated
-         {:body
+         {:headers html-headers
+          :body
           (let [class (Integer. (:class (:route-params request)))]
             (page "Class"
                   (let [userid (username2userid (authentication/current request))
