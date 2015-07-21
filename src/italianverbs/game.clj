@@ -257,7 +257,7 @@ INSERT INTO game
      [:div [:i "None."]]
      [:table {:class "striped padded"}
       [:tr
-       [:th {:style "width:2em"} "Active?"]
+       [:th {:style "width:2em"} "Games"]
        (if (not (= true show-as-owner?))
          [:th "Owner"])
        [:th {:style "white-space:nowrap"} "Created On"]
