@@ -5,3 +5,11 @@ div.classlist {
     width:100%;
     margin-bottom:1em;
 }
+
+div.new {
+    float:left;
+    width:95%;
+}
+
+div.new h3 {
+}
