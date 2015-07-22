@@ -46,6 +46,7 @@ div.major {
 div.major h2 {
     padding:0.25em;
     margin:0;
+    margin-bottom:0.25em;
     background: #caecae;
 }
 
