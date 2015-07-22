@@ -14,7 +14,7 @@
    [formative.core :as f]
    [hiccup.core :refer (html)]
    [italianverbs.authentication :as authentication]
-   [italianverbs.config :refer [time-format]]
+   [italianverbs.config :refer [short-language-name-to-long time-format]]
    [italianverbs.html :as html :refer [banner page rows2table]]
    [italianverbs.korma :as db]
    [italianverbs.user :refer [do-if-authenticated do-if-teacher username2userid]]
@@ -24,6 +24,8 @@
 (declare table)
 (declare tr)
 (declare show-students)
+(declare show-classes)
+
 (def html-headers {"Content-Type" "text/html;charset=utf-8"})
 (def json-headers {"Content-type" "application/json;charset=utf-8"})
 (def resources {:onload "class_onload();"
@@ -40,20 +42,20 @@
                   [:div#classes {:class "major"}
                    (do-if-teacher
                     [:div {:class "classlist"}
+                     [:h2 (banner [{:content "My Classes"}])]
+
                      [:h2 "Classes I'm teaching"]
 
-                     [:div.rows2table
-                      (let [results (k/exec-raw
-                                     ["SELECT *
-                                       FROM class
-                                      WHERE teacher=?"
-                                      [userid]] :results)
-                            ]
-                        (rows2table results
-                                    {}))]
+                     (let [results (k/exec-raw
+                                    ["SELECT id,name,language,
+                                             to_char(class.created,?) AS created
+                                        FROM class
+                                       WHERE teacher=?"
+                                     [time-format userid]] :results)]
+                       (show-classes results :cols [:name :language :created]))
 
                      [:div.new
-                       [:h3 "Create a new class that I'm teaching:"]
+                       [:h3 "Create a new class:"]
                       
                       (f/render-form
                        {:action "/class/new"
@@ -79,15 +81,16 @@
                                   {}))]
 
                      [:div.new
+                      [:h3 "Join a new class:"]
                       [:form {:action "/class/join"
                               :method "post"}
-                       [:h3 "Join a new class:"]
-                       
-                       ]]
-
-
+                       ]
+                      (let [results (k/exec-raw
+                                     ["SELECT *
+                                         FROM class"
+                                      []] :results)]
+                        (show-classes results))]
                    ])
-
                 request
                 resources)}))
 
@@ -126,5 +129,19 @@ INSERT INTO class (name,teacher,language)
                 request
                 resources))}))
    ))
+
+(defn show-classes [results & {cols :cols}]
+  (html
+   [:div.rows2table
+    (rows2table results
+                {:cols cols
+                 :col-fns {:name (fn [result]
+                                   (html [:a {:href (str "/class/" (:id result))}
+                                          (:name result)]))
+                           :language (fn [result]
+                                       (short-language-name-to-long
+                                        (:language result)))
+                           }}
+                )]))
 
 
