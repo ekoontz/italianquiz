@@ -167,7 +167,7 @@ INSERT INTO class (name,teacher,language)
                                                      (:name student)]))}})])
                      [:div.add 
                       [:a {:href (str "/class/" class "/student/add")}
-                       "Add a new Student"]]
+                       "Add a new student"]]
 
                      ;; TODO: change LEFT JOIN to INNER JOIN after development is done.
                      [:h3 "Games"]
@@ -187,7 +187,7 @@ INSERT INTO class (name,teacher,language)
                                      )])
                      [:div.add 
                       [:a {:href (str "/class/" class "/game/add")}
-                       "Add a new Game"]]
+                       "Add a new game"]]
 
                      ]])
                 request
