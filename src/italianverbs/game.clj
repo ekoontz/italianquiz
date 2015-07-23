@@ -47,7 +47,6 @@
 (def resources {:onload "game_onload();"
                 :css ["/css/game.css"]
                 :jss ["/js/game/js"]})
-
 (def routes
   (compojure/routes
    (GET "/" request
@@ -62,6 +61,7 @@
                     [:div {:class "gamelist" :style "width:95%;float:left"}
                      [:h3 "Games in classes I'm teaching"]
 
+                     ;; TODO: replace with JOIN ON games_in_class WHERE teacher=user-id
                      (show-games
                       (conj request
                             {:user-id (username2userid (authentication/current request))}))
