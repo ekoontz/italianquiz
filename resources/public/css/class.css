@@ -13,3 +13,8 @@ div.new {
 
 div.new h3 {
 }
+
+div.add {
+    width:100%;
+    float:left;
+}

@@ -44,7 +44,7 @@
                     [:div {:class "classlist"}
                      [:h2 (banner [{:content "My Classes"}])]
 
-                     [:h2 "Classes I'm teaching"]
+                     [:h3 "Classes I'm teaching"]
 
                      (let [results (k/exec-raw
                                     ["SELECT id,name,language,
@@ -71,7 +71,7 @@
                     )
 
                    [:div {:class "classlist"}
-                    [:h2 "Classes I'm enrolled in"]
+                    [:h3 "Classes I'm enrolled in"]
 
                     (let [results (k/exec-raw
                                    ["SELECT *
@@ -117,18 +117,64 @@ INSERT INTO class (name,teacher,language)
           (let [class (Integer. (:class (:route-params request)))]
             (page "Class"
                   (let [userid (username2userid (authentication/current request))
-                        class-map (first (k/exec-raw ["SELECT * FROM class WHERE id=?"
-                                                      [class]] :results))]
+                        class-map (first
+                                   (k/exec-raw
+                                    ["SELECT class.id,
+                                             class.name,
+                                             class.language,
+                                             to_char(class.created,?) AS created,
+                                             trim(teacher.given_name || ' ' || teacher.family_name) AS teacher,
+                                             teacher.email AS teacher_email
+                                        FROM class
+                                  INNER JOIN vc_user AS teacher
+                                          ON teacher.id = class.teacher
+                                       WHERE class.id=?"
+                                     [time-format class]] :results))]
                    [:div#students {:class "major"}
                     [:h2 (banner [{:href "/class"
                                    :content "My Classes"}
                                   {:href nil
                                    :content (:name class-map)}])]
-                    [:div {:style "padding:1em"}
-                     "(class info goes here.)"]])
+                    [:div
+                     [:table
+                      [:tr
+                       [:th "Created"]
+                       [:td (:created class-map)]
+                       [:th "Teacher"]
+                       [:td (:teacher class-map)]
+                       [:th "Email"]
+                       [:td (:teacher_email class-map)]
+                       ]
+                      ]
+
+                     [:h3 "Students"]
+                     (let [students (k/exec-raw
+                                     ["SELECT * FROM vc_user"
+                                      []] :results)]
+                       [:div.rows2table
+                        (rows2table students)])
+
+                     [:div.add 
+                      [:a {:href (str "/class/" class "/student/add")}
+                       "Add a new Student"]]
+                     
+                     [:h3 "Games"]
+
+                     (let [games (k/exec-raw
+                                     ["SELECT * FROM game"
+                                      []] :results)]
+                       [:div.rows2table
+                        (rows2table games)])
+
+                     [:div.add 
+                      [:a {:href (str "/class/" class "/game/add")}
+                       "Add a new Game"]]
+
+                     
+                     ]])
                 request
-                resources))}))
-   ))
+                resources))}))))
+
 
 (defn show-classes [results & {cols :cols}]
   (html
