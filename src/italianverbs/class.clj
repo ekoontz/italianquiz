@@ -148,29 +148,47 @@ INSERT INTO class (name,teacher,language)
                       ]
 
                      [:h3 "Students"]
+                     ;; TODO: change LEFT JOIN to INNER JOIN after development is done.
                      (let [students (k/exec-raw
-                                     ["SELECT * FROM vc_user"
-                                      []] :results)]
+                                     ["SELECT trim(given_name || ' ' || family_name) AS name,
+                                              picture,teacher,email,
+                                              to_char(student_in_class.enrolled,?) AS enrolled
+                                         FROM vc_user
+                                    LEFT JOIN student_in_class
+                                           ON (student_in_class.student = vc_user.id)"
+                                      [time-format]] :results)]
                        [:div.rows2table
-                        (rows2table students)])
-
+                        (rows2table students
+                                    {:cols [:name :picture :email :enrolled]
+                                     :col-fns
+                                     {:picture (fn [picture] (html [:img {:width "50px" :src (:picture picture)}]))
+                                      :name (fn [student]
+                                              (html [:a {:href (str "/student/" (:id student))}
+                                                     (:name student)]))}})])
                      [:div.add 
                       [:a {:href (str "/class/" class "/student/add")}
                        "Add a new Student"]]
-                     
+
+                     ;; TODO: change LEFT JOIN to INNER JOIN after development is done.
                      [:h3 "Games"]
-
                      (let [games (k/exec-raw
-                                     ["SELECT * FROM game"
-                                      []] :results)]
+                                  ["SELECT game.id,game.name AS game,
+                                           to_char(game_in_class.added,?) AS added
+                                      FROM game
+                                 LEFT JOIN game_in_class
+                                        ON (game_in_class.game=game.id)"
+                                   [time-format]] :results)]
                        [:div.rows2table
-                        (rows2table games)])
-
+                        (rows2table games
+                                    {:cols [:game :added]
+                                     :col-fns
+                                     {:game (fn [game] (html [:a {:href (str "/game/" (:id game))}
+                                                              (:game game)]))}}
+                                     )])
                      [:div.add 
                       [:a {:href (str "/class/" class "/game/add")}
                        "Add a new Game"]]
 
-                     
                      ]])
                 request
                 resources))}))))
