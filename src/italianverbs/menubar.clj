@@ -57,17 +57,6 @@
                  :text "Edit Games"
                  :url-for-this-item "/editor"})
 
-      (menuitem {:selected?
-                 (or (and (not (nil? current-url))
-                          (re-find #"/student" current-url))
-                     (= current-url "/student")
-                     (and (not (nil? current-url))
-                          (re-find #"/student" current-url)))
-                 :show? (or haz-admin? haz-teacher?)
-                 :current-url current-url 
-                 :text "My Students"
-                 :url-for-this-item "/student"})
-
       (menuitem {:show? haz-authentication
                  :selected?
                  (or (and (not (nil? current-url))
@@ -118,6 +107,17 @@
                  :text "My Profile"
                  :url-for-this-item "/me"
                  :show? true})
+
+      (menuitem {:selected?
+                 (or (and (not (nil? current-url))
+                          (re-find #"/student" current-url))
+                     (= current-url "/student")
+                     (and (not (nil? current-url))
+                          (re-find #"/student" current-url)))
+                 :show? (or haz-admin? haz-teacher?)
+                 :current-url current-url
+                 :text "My Students"
+                 :url-for-this-item "/student"})
 
       (menuitem {:selected?
                  (and (not (nil? current-url))
