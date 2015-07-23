@@ -15,6 +15,9 @@ div.new h3 {
 }
 
 div.add {
-    width:100%;
+    border-top:1px solid #bbb;
+    padding-top:0.5em;
+    margin-left:1em;
+    width:90%;
     float:left;
 }
