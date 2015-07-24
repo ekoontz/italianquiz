@@ -258,7 +258,10 @@ INSERT INTO class (name,teacher,language)
                                      :col-fns
                                      {:add (fn [game] (html [:button "Add"]))
                                       :game (fn [game] (html [:a {:href (str "/game/" (:id game))}
-                                                              (:game game)]))}}
+                                                              (:game game)]))
+                                      :created (fn [game] (html [:a {:href (str "/game/" (:id game))}
+                                                                 (:created game)]))
+                                      }}
                                      )])
 
                      ]])
