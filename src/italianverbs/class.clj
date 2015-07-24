@@ -138,6 +138,8 @@ INSERT INTO class (name,teacher,language)
                     [:div
                      [:table
                       [:tr
+                       [:th "Language"]
+                       [:td (short-language-name-to-long (:language class-map))]
                        [:th "Created"]
                        [:td (:created class-map)]
                        [:th "Teacher"]
@@ -190,6 +192,77 @@ INSERT INTO class (name,teacher,language)
                        "Add a new game"]]
 
                      ]])
+                request
+                resources))}))
+
+
+      (GET "/:class/game/add" request
+        (do-if-authenticated
+         {:headers html-headers
+          :body
+          (let [class (Integer. (:class (:route-params request)))]
+            (page "Add a game"
+                  (let [userid (username2userid (authentication/current request))
+                        class-map (first
+                                   (k/exec-raw
+                                    ["SELECT class.id,
+                                             class.name,
+                                             class.language,
+                                             to_char(class.created,?) AS created,
+                                             trim(teacher.given_name || ' ' || teacher.family_name) AS teacher,
+                                             teacher.email AS teacher_email
+                                        FROM class
+                                  INNER JOIN vc_user AS teacher
+                                          ON teacher.id = class.teacher
+                                       WHERE class.id=?"
+                                     [time-format class]] :results))]
+                   [:div#students {:class "major"}
+                    [:h2 (banner [{:href "/class"
+                                   :content "My Classes"}
+                                  {:href (str "/class/" (:id class-map))
+                                   :content (:name class-map)}
+                                  {:href nil
+                                   :content "Add a game"}])]
+                    [:div
+                     [:table
+                      [:tr
+                       [:th "Language"]
+                       [:td (short-language-name-to-long (:language class-map))]
+                       [:th "Created"]
+                       [:td (:created class-map)]
+                       [:th "Teacher"]
+                       [:td (:teacher class-map)]
+                       [:th "Email"]
+                       [:td (:teacher_email class-map)]
+                       ]
+                      ]
+
+                     [:h3 "Choose a game to add"]
+
+                     ;; TODO: show all games that are *not* in this game.
+                     (let [games (k/exec-raw
+                                  ["SELECT 'Add',game.id,game.name AS game,
+                                           to_char(game.created_on,?) AS created,
+                                           trim(game_creator.given_name || ' ' || game_creator.family_name) AS creator,
+                                           game_creator.email AS creator_email
+                                      FROM game
+                                 LEFT JOIN game_in_class
+                                        ON (game_in_class.game=game.id)
+                                       AND (game.target=?)
+                                 LEFT JOIN vc_user AS game_creator
+                                        ON (game.created_by = game_creator.id)"
+                                   [time-format (:language class-map)]] :results)]
+                       [:div.rows2table
+                        (rows2table games
+                                    {:cols [:add :game :created :creator :creator_email]
+                                     :col-fns
+                                     {:add (fn [game] (html [:button "Add"]))
+                                      :game (fn [game] (html [:a {:href (str "/game/" (:id game))}
+                                                              (:game game)]))}}
+                                     )])
+
+                     ]])
+
                 request
                 resources))}))))
 
