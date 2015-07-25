@@ -102,34 +102,8 @@
                                                            (map json-read-str
                                                                 (.getArray target-grammar))))))))
                                      }}
-                                   ))
-                     [:h3 "Create a new game"]
-
-                     [:div.new {:style "display:block"}
-                      [:form {:method "post"
-                              :enctype "multipart/form-data"
-                              :action "/game/new"}
-        
-                       ;; TODO: don't disable button unless and until input is something besides whitespace.
-                       [:input {:onclick "submit_new_game.disabled = false;"
-                                :name "name" :size "50" :placeholder (str "Enter the name of a new game.")} ]
-
-                       [:div {:style "float:left;width:99%;padding:0.5em"}
-                        [:table.language_radio
-                         [:tr
-                          (map (fn [option]
-                                 [:td
-                                  [:input {:type "radio" :label (:label option) :name "language" :value (:value option)}
-                                   (:label option)]])
-                               (:options (language-radio-buttons)))]]]
-                       
-                       [:button {:name "submit_new_game" :disabled true :onclick "submit();"} "New Game"]
-
-                       ]]])
-
-
+                                   ))])
                    (do-if-teacher
-
                     [:div {:class "gamelist"}
                      [:h3 "Games I created"]
                      (let [results (k/exec-raw
@@ -169,6 +143,29 @@
                                    ))
                      ]
                     )
+
+
+                   (do-if-teacher
+                    [:div {:class "gamelist"}
+                     [:h3 "Create a new game"]
+                     [:div.new {:style "display:block"}
+                      [:form {:method "post"
+                              :enctype "multipart/form-data"
+                              :action "/game/new"}
+                       ;; TODO: don't disable button unless and until input is something besides whitespace.
+                       [:input {:onclick "submit_new_game.disabled = false;"
+                                :name "name" :size "50" :placeholder (str "Enter the name of a new game.")} ]
+                       [:div {:style "float:left;width:99%;padding:0.5em"}
+                        [:table.language_radio
+                         [:tr
+                          (map (fn [option]
+                                 [:td
+                                  [:input {:type "radio" :label (:label option) :name "language" :value (:value option)}
+                                   (:label option)]])
+                               (:options (language-radio-buttons)))]]]
+                       [:button {:name "submit_new_game" :disabled true :onclick "submit();"} "New Game"]
+                       ]]])
+
                    
                    [:div {:class "gamelist"}
                     [:h3 "Games I'm playing"]
