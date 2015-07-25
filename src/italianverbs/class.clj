@@ -174,7 +174,7 @@ INSERT INTO class (name,teacher,language)
 
                      [:h3 "Games"]
                      (let [games (k/exec-raw
-                                  ["SELECT game.id,game.name AS game,
+                                  ["SELECT 'remove',game.id,game.name AS game,
                                            trim(owner.given_name || ' ' || owner.family_name) AS created_by,
                                            owner.id AS owner_id,
                                            to_char(game_in_class.added,?) AS added
@@ -188,13 +188,22 @@ INSERT INTO class (name,teacher,language)
                                    [time-format class]] :results)]
                        [:div.rows2table
                         (rows2table games
-                                    {:cols [:game :created_by :added]
+                                    {:cols [:remove :game :created_by :added]
+                                     :td-styles
+                                     {:remove "text-align:center"}
+                                     :th-styles
+                                     {:remove "text-align:center;width:3em"}
                                      :col-fns
-                                     {:created_by
-                                      (fn [game] (html [:a {:href (str "/teacher/" (:owner_id game))}
-                                                        (:created_by game)]))
+                                     ;; TODO: add some javascript confirmation "are you sure?" stuff rather
+                                     ;; than simply removing the game from the class.
+                                     {:remove (fn [game]
+                                                (html [:form {:action (str "/class/" class
+                                                                           "/game/" (:id game) "/delete")
+                                                              :method "post"}
+                                                       [:button {:onclick "submit()"} "Remove"]]))
+                                      :created_by (fn [game] (html [:a {:href (str "/teacher/" (:owner_id game))}
+                                                                    (:created_by game)]))
                                       :game (fn [game] (html [:a {:href (str "/game/" (:id game))}
-
                                                               (if (or (nil? (:game game))
                                                                       (not (= "" (string/trim (:game game)))))
                                                                 (:game game) "(untitled)")]))}}
@@ -313,11 +322,18 @@ INSERT INTO class (name,teacher,language)
                                            WHERE game = ? AND class=?)" [game class game class]])
                {:status 302
                 :headers {"Location" (str "/class/" class "?message=Added game.")}})))
+
+      (POST "/:class/game/:game/delete" request
+            ;; TODO: check if this user is the teacher of the game: add (is-teacher-of? <game> <user>)
+            (do-if-teacher
+             (let [debug (log/debug (str "/:class/game/:game/add with route params:" (:route-params request)))
+                   class (Integer. (:class (:route-params request)))
+                   game (Integer. (:game (:route-params request)))]
+               (k/exec-raw ["DELETE FROM game_in_class WHERE game=? AND class=?" [game class]])
+               {:status 302
+                :headers {"Location" (str "/class/" class "?message=Removed game.")}})))
       )
   )
-
-
-
 
 (defn show-classes [results & {cols :cols}]
   (html
@@ -332,5 +348,3 @@ INSERT INTO class (name,teacher,language)
                                         (:language result)))
                            }}
                 )]))
-
-
