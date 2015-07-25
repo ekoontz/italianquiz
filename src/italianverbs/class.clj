@@ -9,6 +9,7 @@
   (:refer-clojure :exclude [class])
   (:require
    [clj-time.core :as t]
+   [clojure.string :as string]
    [clojure.tools.logging :as log]
    [compojure.core :as compojure :refer [GET PUT POST DELETE ANY]]
    [formative.core :as f]
@@ -171,21 +172,32 @@ INSERT INTO class (name,teacher,language)
                       [:a {:href (str "/class/" class "/student/add")}
                        "Add a new student"]]
 
-                     ;; TODO: change LEFT JOIN to INNER JOIN after development is done.
                      [:h3 "Games"]
                      (let [games (k/exec-raw
                                   ["SELECT game.id,game.name AS game,
+                                           trim(owner.given_name || ' ' || owner.family_name) AS created_by,
+                                           owner.id AS owner_id,
                                            to_char(game_in_class.added,?) AS added
                                       FROM game
-                                 LEFT JOIN game_in_class
-                                        ON (game_in_class.game=game.id)"
-                                   [time-format]] :results)]
+                                INNER JOIN game_in_class
+                                        ON (game_in_class.game=game.id
+                                       AND  game_in_class.class=?)
+                                 LEFT JOIN vc_user AS owner 
+                                        ON (owner.id = game.created_by)
+                                  ORDER BY game_in_class.added DESC"
+                                   [time-format class]] :results)]
                        [:div.rows2table
                         (rows2table games
-                                    {:cols [:game :added]
+                                    {:cols [:game :created_by :added]
                                      :col-fns
-                                     {:game (fn [game] (html [:a {:href (str "/game/" (:id game))}
-                                                              (:game game)]))}}
+                                     {:created_by
+                                      (fn [game] (html [:a {:href (str "/teacher/" (:owner_id game))}
+                                                        (:created_by game)]))
+                                      :game (fn [game] (html [:a {:href (str "/game/" (:id game))}
+
+                                                              (if (or (nil? (:game game))
+                                                                      (not (= "" (string/trim (:game game)))))
+                                                                (:game game) "(untitled)")]))}}
                                      )])
                      [:div.add 
                       [:a {:href (str "/class/" class "/game/add")}
@@ -195,8 +207,9 @@ INSERT INTO class (name,teacher,language)
                 request
                 resources))}))
 
-
-      (GET "/:class/game/add" request
+   (GET "/:class/game/add"
+        request
+        ;; TODO: check if this user is the teacher of the game: add (is-teacher-of? <game> <user>)
         (do-if-authenticated
          {:headers html-headers
           :body
@@ -246,19 +259,31 @@ INSERT INTO class (name,teacher,language)
                                            trim(game_creator.given_name || ' ' || game_creator.family_name) AS creator,
                                            game_creator.email AS creator_email
                                       FROM game
-                                 LEFT JOIN game_in_class
-                                        ON (game_in_class.game=game.id)
-                                       AND (game.target=?)
                                  LEFT JOIN vc_user AS game_creator
-                                        ON (game.created_by = game_creator.id)"
-                                   [time-format (:language class-map)]] :results)]
+                                        ON (game.created_by = game_creator.id)
+                                     WHERE game.target = ?
+                                       AND game.id
+                                    NOT IN (SELECT game
+                                              FROM game_in_class
+                                             WHERE class = ?)"
+                                   [time-format (:language class-map) class]] :results)]
                        [:div.rows2table
                         (rows2table games
                                     {:cols [:add :game :created :creator :creator_email]
+                                     :td-styles
+                                     {:add "text-align:center"}
+                                     :th-styles
+                                     {:add "text-align:center;width:3em"}
                                      :col-fns
-                                     {:add (fn [game] (html [:button "Add"]))
+                                     {:add (fn [game] (html
+                                                       [:form {:action (str "/class/" class
+                                                                            "/game/" (:id game) "/add")
+                                                               :method "post"}
+                                                        [:button {:onclick "submit()"} "Add"]]))
                                       :game (fn [game] (html [:a {:href (str "/game/" (:id game))}
-                                                              (:game game)]))
+                                                              (if (or (nil? (:game game))
+                                                                      (not (= "" (string/trim (:game game)))))
+                                                                (:game game) "(untitled)")]))
                                       :created (fn [game] (html [:a {:href (str "/game/" (:id game))}
                                                                  (:created game)]))
                                       }}
@@ -267,7 +292,31 @@ INSERT INTO class (name,teacher,language)
                      ]])
 
                 request
-                resources))}))))
+                resources
+
+                ))}
+
+         )
+        )
+
+      (POST "/:class/game/:game/add" request
+            ;; TODO: check if this user is the teacher of the game: add (is-teacher-of? <game> <user>)
+            (do-if-teacher
+             (let [debug (log/debug (str "/:class/game/:game/add with route params:" (:route-params request)))
+                   class (Integer. (:class (:route-params request)))
+                   game (Integer. (:game (:route-params request)))]
+               (k/exec-raw ["INSERT INTO game_in_class (game,class) 
+                                  SELECT ?,?
+                                   WHERE 
+                              NOT EXISTS (SELECT game,class 
+                                            FROM game_in_class 
+                                           WHERE game = ? AND class=?)" [game class game class]])
+               {:status 302
+                :headers {"Location" (str "/class/" class "?message=Added game.")}})))
+      )
+  )
+
+
 
 
 (defn show-classes [results & {cols :cols}]
