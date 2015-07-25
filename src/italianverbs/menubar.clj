@@ -21,10 +21,10 @@
 
       (menuitem {:selected?
                  (or (and (not (nil? current-url))
-                          (re-find #"/login" current-url))
+                          (re-find #"^/login" current-url))
                      (= current-url "/auth/login")
                      (and (not (nil? current-url))
-                          (re-find #"/about" current-url)))
+                          (re-find #"^/about" current-url)))
                  :show? true
                  :current-url current-url 
                  :text "About" 
@@ -34,10 +34,10 @@
 
       (menuitem {:selected?
                  (or (and (not (nil? current-url))
-                          (re-find #"/cloud" current-url))
+                          (re-find #"^/cloud" current-url))
                      (= current-url "/cloud")
                      (and (not (nil? current-url))
-                          (re-find #"/cloud" current-url)))
+                          (re-find #"^/cloud" current-url)))
                  :show? false
                  :current-url current-url 
                  :text "Cloud Game" 
@@ -48,10 +48,10 @@
       ;; deprecated: remove: using /game instead.
       (menuitem {:selected?
                  (or (and (not (nil? current-url))
-                          (re-find #"/editor" current-url))
+                          (re-find #"^/editor" current-url))
                      (= current-url "/editor")
                      (and (not (nil? current-url))
-                          (re-find #"/editor" current-url)))
+                          (re-find #"^/editor" current-url)))
                  :show? (and false (or haz-admin? haz-teacher?))
                  :current-url current-url 
                  :text "Edit Games"
@@ -60,20 +60,20 @@
       (menuitem {:show? haz-authentication
                  :selected?
                  (or (and (not (nil? current-url))
-                          (re-find #"/game" current-url))
+                          (re-find #"^/game" current-url))
                      (= current-url "/game")
                      (and (not (nil? current-url))
-                          (re-find #"/game" current-url)))
+                          (re-find #"^/game" current-url)))
                  :current-url current-url 
                  :text "My Games"
                  :url-for-this-item "/game"})
 
       (menuitem {:selected?
                  (or (and (not (nil? current-url))
-                          (re-find #"/class" current-url))
+                          (re-find #"^/class" current-url))
                      (= current-url "/class")
                      (and (not (nil? current-url))
-                          (re-find #"/class" current-url)))
+                          (re-find #"^/class" current-url)))
                  :show? haz-authentication
                  :current-url current-url 
                  :text "My Classes"
@@ -81,10 +81,10 @@
 
       (menuitem {:selected?
                  (or (and (not (nil? current-url))
-                          (re-find #"/tour" current-url))
+                          (re-find #"^/tour" current-url))
                      (= current-url "/tour")
                      (and (not (nil? current-url))
-                          (re-find #"/tour" current-url)))
+                          (re-find #"^/tour" current-url)))
                  :show? false
                  :current-url current-url 
                  :text "Map Tour" 
@@ -94,7 +94,7 @@
 
       (menuitem {:selected?
                  (and (not (nil? current-url))
-                      (re-find #"/test" current-url))
+                      (re-find #"^/test" current-url))
                  :current-url current-url
                  :text "Tests"
                  :url-for-this-item "/test"
@@ -102,7 +102,7 @@
 
       (menuitem {:selected?
                  (and (not (nil? current-url))
-                      (re-find #"/me" current-url))
+                      (re-find #"^/me" current-url))
                  :current-url current-url
                  :text "My Profile"
                  :url-for-this-item "/me"
@@ -110,10 +110,10 @@
 
       (menuitem {:selected?
                  (or (and (not (nil? current-url))
-                          (re-find #"/student" current-url))
+                          (re-find #"^/student" current-url))
                      (= current-url "/student")
                      (and (not (nil? current-url))
-                          (re-find #"/student" current-url)))
+                          (re-find #"^/student" current-url)))
                  :show? (or haz-admin? haz-teacher?)
                  :current-url current-url
                  :text "My Students"
@@ -121,7 +121,7 @@
 
       (menuitem {:selected?
                  (and (not (nil? current-url))
-                      (re-find #"/admin" current-url))
+                      (re-find #"^/admin" current-url))
                  :current-url current-url
                  :text "Admin"
                  :requires-admin true
@@ -130,7 +130,7 @@
       
       (menuitem {:selected?
                  (and (not (nil? current-url))
-                      (re-find #"/class" current-url))
+                      (re-find #"^/class" current-url))
                  :current-url current-url
                  :text "My Classes"
                  :url-for-this-item (str "/class/my" (if (get suffixes :class)
