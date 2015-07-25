@@ -945,6 +945,7 @@
 
 (defn rows2table [rows & [{cols :cols
                            col-fns :col-fns
+                           td-styles :td-styles
                            th-styles :th-styles}]]
   "Take a vector of maps, each of which is a row from a db table, and render it 
 in HTML. If :cols is supplied, use it as the vector of column names as keywords.
@@ -975,6 +976,8 @@ in HTML. If :cols is supplied, use it as the vector of column names as keywords.
          [:tr
           (map (fn [col]
                  [:td
+                  (if (get td-styles col)
+                    {:style (get td-styles col)})
                   (if (get col-fns col)
                     ((get col-fns col) row)
                     (get row col))])
