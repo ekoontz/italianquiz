@@ -34,7 +34,6 @@
 (declare is-owner-of?)
 (declare show-students)
 (declare show-game)
-(declare show-game-table)
 (declare show-games)
 (declare source-to-target-mappings)
 (declare table)
@@ -77,6 +76,8 @@
                                     :col-fns
                                     {:game (fn [game-in-class]
                                              [:a {:href (str "/game/" (:game_id game-in-class))} (:game game-in-class)])
+                                     :class (fn [game-in-class]
+                                              [:a {:href (str "/class/" (:class_id game-in-class))} (:class game-in-class)])
                                      :language (fn [game-in-class]
                                                  (short-language-name-to-long (:language game-in-class)))
                                      :verbs
@@ -325,151 +326,6 @@ INSERT INTO game
     (log/debug (str "inserting new game with sql: " sql))
     ;; return the row ID of the game that has been inserted.
     (first (k/exec-raw [sql [name source target user-id]] :results))))
-
-;; TODO: remove
-(defn show-game-table [results & [{show-as-owner? :show-as-owner?}]]
-  (log/debug (str "showing as owner?: " show-as-owner?))
-  (html
-   (if (empty? results)
-     [:div [:i "None."]]
-     [:table {:class "striped padded"}
-      [:tr
-       [:th {:style "width:2em"} "Games"]
-       (if (not (= true show-as-owner?))
-         [:th "Owner"])
-       [:th {:style "white-space:nowrap"} "Created On"]
-       [:th {:style "width:15em"} "Name"]
-       [:th {:style "width:auto"} "Verbs"]
-       [:th {:style "width:auto"} "Tenses"]
-       ]
-
-      (map
-       (fn [result]
-         (let [debug (log/trace (str "result info: " result))
-               game-name-display
-               (let [game-name (string/trim (:name result))]
-                 (if (= game-name "")
-                   "(untitled)"
-                   game-name))
-               game-id (:id result)
-               language-short-name (:target result)
-               debug (log/debug (str "language-short-name:" language-short-name))
-               language-keyword-name
-               (str "" (sqlname-from-match (short-language-name-to-long language-short-name)) "")
-               language-keyword
-               (keyword language-keyword-name)
-               owner (:owner result)
-               email (:email result)
-               ]
-           [:tr
-            [:td
-             (if show-as-owner?
-               [:form {:method "post"
-                       :enctype "multipart/form-data"
-                       :action (str "/game/activate/" game-id)}
-                [:input {:name "language"
-                         :type "hidden"
-                         :value language-short-name}]
-                [:input (merge {:type "checkbox"
-                                :onclick "submit()"
-                                :name "active"}
-                               (if (:active result)
-                                 {:checked "on"}))]]
-               (if (:active result)
-                 "Active"
-                 ))]
-            
-            (if (not show-as-owner?)
-              [:td
-               (if (not (empty? owner))
-                 owner
-                 (if (not (empty? email))
-                   email
-                   [:i "no owner"]))])
-
-            [:td (:created_on result)]
-            
-            [:td
-             ;; show as link
-             [:a {:href (str "/game/" game-id)} game-name-display]]
-            [:td (string/join ", " (map #(html [:i %])
-                                        (map #(get-in % [:root language-keyword language-keyword])
-                                             (map json-read-str (.getArray (:target_lex result))))))]
-            [:td (string/join ", " (map #(html [:b (str %)])
-                                        (remove nil?
-                                                (map #(get tenses-human-readable %)
-                                                     (map json-read-str (.getArray (:target_grammar result)))))))]
-            ]
-           ))
-       results)])))
-
-(defn show-games [ & [ {language :language
-                        user-id :user-id
-                        }]]
-  (log/debug (str "GAME-CHOOSING LANGUAGE: " language))
-  (let [show-source-lists false
-        language (if language language "")]
-    (html
-     [:div {:style "margin-top:0.5em;"}
-
-      (let [sql "SELECT game.name AS name,game.id AS id,active,
-                        source,target,target_lex,target_grammar,
-                        to_char(game.created_on, ?) AS created_on
-                   FROM game
-                  WHERE ((game.target = ?) OR (? = ''))
-                    AND (game.created_by = ?)
-               ORDER BY game.name"
-            debug (log/debug (str "MY GAMES: GAME-CHOOSING SQL: " (string/replace sql "\n" " ")))
-            results (k/exec-raw [sql
-                                 [time-format language language user-id]]
-                                :results)
-            debug (log/debug (str "Number of results: " (.size results)))]
-        (show-game-table results {:show-as-owner? true}))
-
-      ;; TODO: 'new game' should be within the context of a class:
-      ;; /class/:id/game/new
-      [:div.new {:style "display:none"}
-       [:form {:method "post"
-               :enctype "multipart/form-data"
-               :action "/game/new"}
-        
-        ;; TODO: don't disable button unless and until input is something besides whitespace.
-        [:input {:onclick "submit_new_game.disabled = false;"
-                 :name "name" :size "50" :placeholder (str "Enter the name of a new game.")} ]
-        
-        [:input {:type "hidden" :name "language" :value language} ]
-
-        [:button {:name "submit_new_game" :disabled true :onclick "submit();"} "New Game"]
-        ]]
-      ]
-
-     (do-if-admin ;; only admins can see other teachers' games
-      [:div {:style "margin-top:0.5em;display:none"}
-       [:h3 "Other teachers' games"]
-
-       (let [sql "SELECT trim(vc_user.given_name || ' ' || vc_user.family_name) AS owner,
-                        game.name AS name,game.id AS id,active,
-                        source,target,target_lex,target_grammar,
-                        to_char(game.created_on, ?) AS created_on
-                   FROM game
-              LEFT JOIN vc_user
-                     ON (vc_user.id = game.created_by)
-                  WHERE ((game.target = ?) OR (? = ''))
-                    AND ((game.created_by IS NULL) OR
-                         (game.created_by != ?))
-               ORDER BY game.name"
-
-             debug (log/debug (str "OTHER'S GAMES: GAME-CHOOSING SQL: " (string/replace sql "\n" " ")))
-             results (k/exec-raw [sql
-                                 [time-format language language user-id]]
-                                 :results)
-             debug (log/debug (str "Number of results: " (.size results)))]
-         (show-game-table results {:show-as-owner? false}))
-       ])
-     )
-    )
-  )
-
 
 (defn is-owner-of? [game-id user]
   "return true iff user (identified by their email) is the owner of the game whose is game-id"
