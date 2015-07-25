@@ -995,6 +995,3 @@ ms: " params))))
                                          FROM games_to_use
                                    INNER JOIN games
                                            ON games_to_use.game = games.id")] :results))))
-
-
-
