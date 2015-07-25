@@ -65,14 +65,14 @@
                                     ["SELECT class.id AS class_id,class.name AS class, game.name AS game, 
                                              game.id AS game_id,class.language,
                                              game.target_grammar AS tenses,game.target_lex AS verbs,
-                                             trim(creator.given_name || ' ' || creator.family_name) AS owner
+                                             trim(creator.given_name || ' ' || creator.family_name) AS game_owner
                                         FROM game
                                   INNER JOIN game_in_class ON (game.id = game_in_class.game)
-                                  INNER JOIN class ON (class.id=game_in_class.class)
+                                  INNER JOIN class ON (class.id=game_in_class.class AND class.teacher = ?)
                                    LEFT JOIN vc_user AS creator ON (game.created_by = creator.id)"
-                                     []] :results)]
+                                     [user-id]] :results)]
                        (rows2table results
-                                   {:cols [:game :class :language :verbs :tenses :owner]
+                                   {:cols [:game :class :language :verbs :tenses :game_owner]
                                     :col-fns
                                     {:game (fn [game-in-class]
                                              [:a {:href (str "/game/" (:game_id game-in-class))} (:game game-in-class)])
@@ -127,21 +127,64 @@
 
                        ]]])
 
-                     [:div {:class "gamelist"}
-                     [:h3 "Games I'm playing"]
+
+                   (do-if-teacher
+
+                    [:div {:class "gamelist"}
+                     [:h3 "Games I created"]
                      (let [results (k/exec-raw
-                                    ["SELECT *
-                                        FROM student_in_game
-                                       WHERE student=?"
+                                    ["SELECT game.name AS game, game.target AS language,game.id AS game_id,
+                                             game.target_grammar AS tenses,game.target_lex AS verbs
+                                        FROM game WHERE created_by=?"
                                      [user-id]] :results)]
                        (rows2table results
-                                   {}
+                                   {:cols [:game :language :verbs :tenses]
+                                    :col-fns
+                                    {:game (fn [game-in-class]
+                                             [:a {:href (str "/game/" (:game_id game-in-class))} (:game game-in-class)])
+                                     :language (fn [game-in-class]
+                                                 (short-language-name-to-long (:language game-in-class)))
+                                     :verbs
+                                     (fn [game-in-class]
+                                       (let [language-short-name (:language game-in-class)
+                                             language-keyword-name
+                                             (sqlname-from-match (short-language-name-to-long language-short-name))
+                                             language-keyword (keyword language-keyword-name)
+                                             target-lex (:verbs game-in-class)]
+                                         (string/join ", "
+                                                      (map #(html [:i %])
+                                                           (map #(get-in % [:root language-keyword language-keyword])
+                                                                (map json-read-str
+                                                                     (.getArray target-lex)))))))
+                                     :tenses
+                                     (fn [game-in-class]
+                                       (let [target-grammar (:tenses game-in-class)]
+                                         (map #(html [:b (str %)])
+                                              (remove nil?
+                                                      (string/join ", "
+                                                      (map #(get tenses-human-readable %)
+                                                           (map json-read-str
+                                                                (.getArray target-grammar))))))))
+                                     }}
                                    ))
                      ]
+                    )
                    
                    [:div {:class "gamelist"}
-                    [:h3 "New Games Available"]
-
+                    [:h3 "Games I'm playing"]
+                    (let [results (k/exec-raw
+                                   ["SELECT *
+                                        FROM student_in_game
+                                       WHERE student=?"
+                                    [user-id]] :results)]
+                      (rows2table results
+                                  {}
+                                  ))
+                    ]
+                   
+                   [:div {:class "gamelist"}
+                    [:h3 "New games available for me to play"]
+                    
                      (let [results (k/exec-raw
                                     ["SELECT *
                                         FROM game_in_class"
