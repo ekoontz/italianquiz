@@ -60,6 +60,11 @@
         language-keyword (keyword language-keyword-name)]
     [:root language-keyword language-keyword]))
 
+(defn language-radio-buttons []
+  {:name :lang :label "Language" :type "radios"
+   :options [{:value "es" :label "Español"}
+             {:value "it" :label "Italiano"}]})
+
 (defn language-to-root-spec [short-language-name root]
   "Take a language name like 'it' and a verb root and turn it into a map like: {:root {:italiano {:italiano <root>}}}."
   (let [language-keyword-name (language-to-root-keyword short-language-name)
@@ -72,6 +77,21 @@
         (= lang "en") "English"
         (= lang "es") "Spanish"
         true "???"))
+
++;; TODO: throw exception rather than "(no shortname for language)"
+(defn short-language-name-from-match [match-string]
+   (cond (nil? match-string)
+         (str "(no shortname for language: (nil) detected).")
+         (re-find #"espanol" (string/lower-case match-string))
+         "es"
+         (re-find #"english" (string/lower-case match-string))
+         "en"
+         (re-find #"italiano" (string/lower-case match-string))
+         "it"
+         (re-find #"italian" (string/lower-case match-string))
+         "it"
+         :else
+         (str "(no shortname for language:" match-string " detected.")))
 
 (def tenses-human-readable
   {{:synsem {:sem {:tense :conditional}}} "conditional"

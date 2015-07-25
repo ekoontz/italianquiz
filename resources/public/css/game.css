@@ -329,3 +329,17 @@ span.left_context_of_answer {
 #left_context_italian {
     display:none;
 }
+
+div.language_radio {
+    float:left;
+    width:99%;
+    padding:0.5em;
+}
+
+div.language_radio > table {
+    border-collapse:collapse;
+    width:100%;
+}
+
+div.language_radio td,th,input {
+}

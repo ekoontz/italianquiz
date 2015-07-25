@@ -15,7 +15,7 @@
    [formative.core :as f]
    [hiccup.core :refer (html)]
    [italianverbs.authentication :as authentication]
-   [italianverbs.config :refer [short-language-name-to-long time-format]]
+   [italianverbs.config :refer [language-radio-buttons short-language-name-to-long time-format]]
    [italianverbs.html :as html :refer [banner page rows2table]]
    [italianverbs.korma :as db]
    [italianverbs.user :refer [do-if-authenticated do-if-teacher username2userid]]
@@ -63,10 +63,7 @@
                         :enctype "multipart/form-data"
                         :method "post"
                         :fields [{:name :name :size 50 :label "Name"}
-                                 ;; TODO: use (config/language-radio-buttons)
-                                 {:name :lang :label "Language" :type "radios"
-                                  :options [{:value "es" :label "Español"}
-                                            {:value "it" :label "Italiano"}]}]})
+                                 (language-radio-buttons)]})
                       ]]
 
                     )

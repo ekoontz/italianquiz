@@ -10,6 +10,7 @@
    [italianverbs.authentication :as authentication]
    [italianverbs.config :refer [describe-spec json-read-str
                                 language-dropdown
+                                language-radio-buttons
                                 language-to-spec-path
                                 short-language-name-from-match
                                 short-language-name-to-edn
@@ -58,18 +59,75 @@
                    [:h2 "My Games"]
 
                    (do-if-teacher
-                    [:div {:class "gamelist" :style "width:95%;float:left"}
-                     [:h3 "Games in classes I'm teaching"]
-
-                     ;; TODO: replace with JOIN ON games_in_class WHERE teacher=user-id
-                     (show-games
-                      (conj request
-                            {:user-id (username2userid (authentication/current request))}))
-
-                     ])
 
                     [:div {:class "gamelist"}
-                     [:h2 "Games I'm playing"]
+                     [:h3 "Games in classes I'm teaching"]
+                     (let [results (k/exec-raw
+                                    ["SELECT class.id AS class_id,class.name AS class, game.name AS game, 
+                                             game.id AS game_id,class.language,
+                                             game.target_grammar AS tenses,game.target_lex AS verbs,
+                                             trim(creator.given_name || ' ' || creator.family_name) AS owner
+                                        FROM game
+                                  INNER JOIN game_in_class ON (game.id = game_in_class.game)
+                                  INNER JOIN class ON (class.id=game_in_class.class)
+                                   LEFT JOIN vc_user AS creator ON (game.created_by = creator.id)"
+                                     []] :results)]
+                       (rows2table results
+                                   {:cols [:game :class :language :verbs :tenses :owner]
+                                    :col-fns
+                                    {:game (fn [game-in-class]
+                                             [:a {:href (str "/game/" (:game_id game-in-class))} (:game game-in-class)])
+                                     :language (fn [game-in-class]
+                                                 (short-language-name-to-long (:language game-in-class)))
+                                     :verbs
+                                     (fn [game-in-class]
+                                       (let [language-short-name (:language game-in-class)
+                                             language-keyword-name
+                                             (sqlname-from-match (short-language-name-to-long language-short-name))
+                                             language-keyword (keyword language-keyword-name)
+                                             target-lex (:verbs game-in-class)]
+                                         (string/join ", "
+                                                      (map #(html [:i %])
+                                                           (map #(get-in % [:root language-keyword language-keyword])
+                                                                (map json-read-str
+                                                                     (.getArray target-lex)))))))
+                                     :tenses
+                                     (fn [game-in-class]
+                                       (let [target-grammar (:tenses game-in-class)]
+                                         (map #(html [:b (str %)])
+                                              (remove nil?
+                                                      (string/join ", "
+                                                      (map #(get tenses-human-readable %)
+                                                           (map json-read-str
+                                                                (.getArray target-grammar))))))))
+                                     }}
+                                   ))
+                     [:h3 "Create a new game"]
+
+                     [:div.new {:style "display:block"}
+                      [:form {:method "post"
+                              :enctype "multipart/form-data"
+                              :action "/game/new"}
+        
+                       ;; TODO: don't disable button unless and until input is something besides whitespace.
+                       [:input {:onclick "submit_new_game.disabled = false;"
+                                :name "name" :size "50" :placeholder (str "Enter the name of a new game.")} ]
+
+                       [:div {:style "float:left;width:99%;padding:0.5em"}
+                        [:table.language_radio
+                         [:tr
+                          (map (fn [option]
+                                 [:td
+                                  [:input {:type "radio" :label (:label option) :name "language" :value (:value option)}
+                                   (:label option)]])
+                               (:options (language-radio-buttons)))]]]
+                       
+                       [:button {:name "submit_new_game" :disabled true :onclick "submit();"} "New Game"]
+
+                       ]]])
+
+                     [:div {:class "gamelist"}
+                     [:h3 "Games I'm playing"]
                      (let [results (k/exec-raw
                                     ["SELECT *
                                         FROM student_in_game
@@ -81,7 +139,7 @@
                      ]
                    
                    [:div {:class "gamelist"}
-                    [:h2 "New Games Available"]
+                    [:h3 "New Games Available"]
 
                      (let [results (k/exec-raw
                                     ["SELECT *
@@ -246,10 +304,29 @@ INSERT INTO game
                                   user-id)]
               {:status 302 :headers {"Location" 
                                      (str "/game/" (:id game)
-                                          "?message=Created game:" (:name game))}}
+                                          "?message=Created game.")}}
               )
           ))))
-   
+
+(defn insert-game [name source target source-set target-set user-id]
+  "Create a game with a name, a source and target language and two
+  arrays, one for the source language and one for the target
+  language. Each array is an integer which refers to a set of
+  'anyof-sets', each member of which is a possible specification in its
+  respective language. See example usage in test/editor.clj."
+  (log/debug (str "source-set: " source-set))
+  (log/debug (str "source-set with commas: " (str "ARRAY[" (string/join "," (map #(str "" (string/join "," %) "") source-set)) "]")))
+  (log/debug (str "target-set with commas: " (str "ARRAY[" (string/join "," (map #(str "" (string/join "," %) "") target-set)) "]")))
+
+  (let [source-grouping-str (str "ARRAY[" (string/join "," (map #(str "" (string/join "," %) "") source-set)) "]::integer[]")
+        target-grouping-str (str "ARRAY[" (string/join "," (map #(str "" (string/join "," %) "") target-set)) "]::integer[]")
+        sql (str "INSERT INTO game (name,source_groupings,target_groupings,source,target,created_by)
+                       SELECT ?, " source-grouping-str "," target-grouping-str ",?,?,? RETURNING id")]
+    (log/debug (str "inserting new game with sql: " sql))
+    ;; return the row ID of the game that has been inserted.
+    (first (k/exec-raw [sql [name source target user-id]] :results))))
+
+;; TODO: remove
 (defn show-game-table [results & [{show-as-owner? :show-as-owner?}]]
   (log/debug (str "showing as owner?: " show-as-owner?))
   (html
