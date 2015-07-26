@@ -53,7 +53,7 @@
                                         FROM class
                                        WHERE teacher=?"
                                      [time-format userid]] :results)]
-                       (show-classes results :cols [:name :language :created]))
+                       (rows2table results {:cols [:name :language :created]}))
 
                      [:div.new
                        [:h3 "Create a new class:"]
@@ -85,9 +85,10 @@
                        ]
                       (let [results (k/exec-raw
                                      ["SELECT *
-                                         FROM class"
+                                         FROM class
+LEFT JOIN game ON (game.class = class.id)"
                                       []] :results)]
-                        (show-classes results))]
+                        (rows2table results))]
                    ])
                 request
                 resources)}))
@@ -332,16 +333,3 @@ INSERT INTO class (name,teacher,language)
       )
   )
 
-(defn show-classes [results & {cols :cols}]
-  (html
-   [:div.rows2table
-    (rows2table results
-                {:cols cols
-                 :col-fns {:name (fn [result]
-                                   (html [:a {:href (str "/class/" (:id result))}
-                                          (:name result)]))
-                           :language (fn [result]
-                                       (short-language-name-to-long
-                                        (:language result)))
-                           }}
-                )]))
