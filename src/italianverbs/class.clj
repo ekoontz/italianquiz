@@ -90,7 +90,7 @@
                               :method "post"}
                        ]
                       (let [results (k/exec-raw
-                                     ["SELECT class.name AS class,
+                                     ["SELECT class.id AS class_id,'enroll',class.name AS class,
                                               trim(teacher.given_name || ' ' || teacher.family_name) AS teacher,
                                               class.language
                                          FROM class
@@ -98,7 +98,12 @@ LEFT JOIN vc_user AS teacher ON (teacher.id = class.teacher)
 "
                                       []] :results)]
                         (rows2table results
-                                    {:cols [:class :language :teacher]}))
+                                    {:cols [:enroll :class :language :teacher]
+                                     :th-styles {:enroll "text-align:center;width:3em"}
+                                     :col-fns {:enroll (fn [class]
+                                                         [:form {:action (str "/class/enroll/" (:class_id class))
+                                                                 :method "post"}
+                                                          [:button {:onclick "submit()"} "Enroll"]])}}))
 
                       ]])
                 request
@@ -270,7 +275,7 @@ INSERT INTO class (name,teacher,language)
 
                      [:h3 "Choose a game to add"]
 
-                     ;; TODO: show all games that are *not* in this game.
+                     ;; This query shows all games that are *not* in this game.
                      (let [games (k/exec-raw
                                   ["SELECT 'Add',game.id,game.name AS game,
                                            to_char(game.created_on,?) AS created,
@@ -331,6 +336,21 @@ INSERT INTO class (name,teacher,language)
                                            WHERE game = ? AND class=?)" [game class game class]])
                {:status 302
                 :headers {"Location" (str "/class/" class "?message=Added game.")}})))
+
+      (POST "/enroll/:class" request
+            ;; TODO: check if this user is the teacher of the game: add (is-teacher-of? <game> <user>)
+            (do-if-authenticated
+             (let [debug (log/debug (str "/enroll/:class with route params:" (:route-params request)))
+                   class (Integer. (:class (:route-params request)))
+                   student (username2userid (authentication/current request))]
+               (k/exec-raw ["INSERT INTO student_in_class (student,class) 
+                                  SELECT ?,?
+                                   WHERE 
+                              NOT EXISTS (SELECT student,class 
+                                            FROM student_in_class 
+                                           WHERE student = ? AND class=?)" [student class student class]])
+               {:status 302
+                :headers {"Location" (str "/class?message=Enrolled.")}})))
 
       (POST "/:class/game/:game/delete" request
             ;; TODO: check if this user is the teacher of the game: add (is-teacher-of? <game> <user>)
