@@ -45,7 +45,7 @@
 (defroutes main-routes
   ;; TODO: redirect to /games
   (GET "/" request
-       (resp/redirect "/about"))
+       (resp/redirect "/class"))
 
   (context "/admin" []
            admin/routes)
