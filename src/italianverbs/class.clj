@@ -189,13 +189,12 @@ INSERT INTO class (name,teacher,language)
                       ]
 
                      [:h3 "Students"]
-                     ;; TODO: change LEFT JOIN to INNER JOIN after development is done.
                      (let [students (k/exec-raw
                                      ["SELECT trim(given_name || ' ' || family_name) AS name,
                                               picture,teacher,email,
                                               to_char(student_in_class.enrolled,?) AS enrolled
                                          FROM vc_user
-                                    LEFT JOIN student_in_class
+                                   INNER JOIN student_in_class
                                            ON (student_in_class.student = vc_user.id)"
                                       [time-format]] :results)]
                        [:div.rows2table
