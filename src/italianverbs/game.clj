@@ -47,6 +47,26 @@
 (def resources {:onload "game_onload();"
                 :css ["/css/game.css"]
                 :jss ["/js/game/js"]})
+
+(defn tenses-of-game-as-human-readable [tenses]
+  (map #(html [:b (str %)])
+       (remove nil?
+               (string/join ", "
+                            (map #(get tenses-human-readable %)
+                                 (map json-read-str
+                                      (.getArray tenses)))))))
+
+(defn verbs-of-game-as-human-readable [verbs language]
+  "Convert JSON-formatted verbs in a human readable, non-JSON format"
+  (let [language-short-name language
+        language-keyword-name
+        (sqlname-from-match (short-language-name-to-long language-short-name))
+        language-keyword (keyword language-keyword-name)]
+    (string/join ", "
+                 (map #(html [:i %])
+                      (map #(get-in % [:root language-keyword language-keyword])
+                           (map json-read-str
+                                (.getArray verbs)))))))
 (def routes
   (compojure/routes
    (GET "/" request
@@ -80,27 +100,11 @@
                                               [:a {:href (str "/class/" (:class_id game-in-class))} (:class game-in-class)])
                                      :language (fn [game-in-class]
                                                  (short-language-name-to-long (:language game-in-class)))
-                                     :verbs
-                                     (fn [game-in-class]
-                                       (let [language-short-name (:language game-in-class)
-                                             language-keyword-name
-                                             (sqlname-from-match (short-language-name-to-long language-short-name))
-                                             language-keyword (keyword language-keyword-name)
-                                             target-lex (:verbs game-in-class)]
-                                         (string/join ", "
-                                                      (map #(html [:i %])
-                                                           (map #(get-in % [:root language-keyword language-keyword])
-                                                                (map json-read-str
-                                                                     (.getArray target-lex)))))))
-                                     :tenses
-                                     (fn [game-in-class]
-                                       (let [target-grammar (:tenses game-in-class)]
-                                         (map #(html [:b (str %)])
-                                              (remove nil?
-                                                      (string/join ", "
-                                                      (map #(get tenses-human-readable %)
-                                                           (map json-read-str
-                                                                (.getArray target-grammar))))))))
+                                     :verbs (fn [game-in-class]
+                                              (verbs-of-game-as-human-readable (:verbs game-in-class)
+                                                                               (:language game-in-class)))
+                                     :tenses (fn [game-in-class]
+                                               (tenses-of-game-as-human-readable (:tenses game-in-class)))
                                      }}
                                    ))])
                    (do-if-teacher
