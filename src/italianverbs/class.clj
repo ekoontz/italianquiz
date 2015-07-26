@@ -19,7 +19,7 @@
    [italianverbs.game :refer [tenses-of-game-as-human-readable verbs-of-game-as-human-readable]]
    [italianverbs.html :as html :refer [banner page rows2table]]
    [italianverbs.korma :as db]
-   [italianverbs.user :refer [do-if-authenticated do-if-teacher username2userid]]
+   [italianverbs.user :refer [do-if do-if-authenticated do-if-teacher username2userid]]
    [korma.core :as k]))
 
 (declare headers)
@@ -172,7 +172,8 @@ INSERT INTO class (name,teacher,language)
                                              class.language,
                                              to_char(class.created,?) AS created,
                                              trim(teacher.given_name || ' ' || teacher.family_name) AS teacher,
-                                             teacher.email AS teacher_email
+                                             teacher.email AS teacher_email,
+                                             teacher.id AS teacher_user_id
                                         FROM class
                                   INNER JOIN vc_user AS teacher
                                           ON teacher.id = class.teacher
@@ -197,26 +198,28 @@ INSERT INTO class (name,teacher,language)
                        ]
                       ]
 
-                     [:h3 "Students"]
-                     (let [students (k/exec-raw
-                                     ["SELECT trim(given_name || ' ' || family_name) AS name,
-                                              picture,teacher,email,
-                                              to_char(student_in_class.enrolled,?) AS enrolled
-                                         FROM vc_user
-                                   INNER JOIN student_in_class
-                                           ON (student_in_class.student = vc_user.id)"
-                                      [time-format]] :results)]
-                       [:div.rows2table
-                        (rows2table students
-                                    {:cols [:name :picture :email :enrolled]
-                                     :col-fns
-                                     {:picture (fn [picture] (html [:img {:width "50px" :src (:picture picture)}]))
-                                      :name (fn [student]
-                                              (html [:a {:href (str "/student/" (:id student))}
-                                                     (:name student)]))}})])
-                     [:div.add 
-                      [:a {:href (str "/class/" class "/student/add")}
-                       "Add a new student"]]
+                     (do-if (= userid (:teacher_user_id class-map))
+                            [:div
+                             [:h3 "Students"]
+                             (let [students (k/exec-raw
+                                             ["SELECT trim(given_name || ' ' || family_name) AS name,
+                                               picture,teacher,email,
+                                               to_char(student_in_class.enrolled,?) AS enrolled
+                                          FROM vc_user
+                                    INNER JOIN student_in_class
+                                            ON (student_in_class.student = vc_user.id)"
+                                              [time-format]] :results)]
+                               [:div.rows2table
+                                (rows2table students
+                                            {:cols [:name :picture :email :enrolled]
+                                             :col-fns
+                                             {:picture (fn [picture] (html [:img {:width "50px" :src (:picture picture)}]))
+                                              :name (fn [student]
+                                                      (html [:a {:href (str "/student/" (:id student))}
+                                                             (:name student)]))}})])
+                             [:div.add {:style "display:none"} ;; disabled: not implemented yet - students must self-enroll in classes.
+                              [:a {:href (str "/class/" class "/student/add")}
+                               "Add a new student"]]])
 
                      [:h3 "Games"]
                      (let [games (k/exec-raw
