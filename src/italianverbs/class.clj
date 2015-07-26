@@ -247,7 +247,7 @@ INSERT INTO class (name,teacher,language)
                                      )])
                      [:div.add 
                       [:a {:href (str "/class/" class "/game/add")}
-                       "Add a new game"]]
+                       "Add a game to this class"]]
 
                      ]])
                 request
@@ -260,7 +260,7 @@ INSERT INTO class (name,teacher,language)
          {:headers html-headers
           :body
           (let [class (Integer. (:class (:route-params request)))]
-            (page "Add a game"
+            (page "Add a game to this class"
                   (let [userid (username2userid (authentication/current request))
                         class-map (first
                                    (k/exec-raw
@@ -296,7 +296,7 @@ INSERT INTO class (name,teacher,language)
                        ]
                       ]
 
-                     [:h3 "Choose a game to add"]
+                     [:h3 "Choose a game to add to this class"]
 
                      ;; This query shows all games that are *not* in this game.
                      (let [games (k/exec-raw
