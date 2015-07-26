@@ -56,7 +56,9 @@
                                      [time-format userid]] :results)]
                        (rows2table results {:cols [:class :language :created]
                                             :col-fns
-                                            {:class (fn [game-in-class]
+                                            {:language (fn [class]
+                                                         (short-language-name-to-long (:language class)))
+                                             :class (fn [game-in-class]
                                                       [:a {:href (str "/class/" (:class_id game-in-class))}
                                                        (:class game-in-class)])}}))
 
