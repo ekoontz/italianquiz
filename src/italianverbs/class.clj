@@ -78,12 +78,30 @@
                     [:h3 "Classes I'm enrolled in"]
 
                     (let [results (k/exec-raw
-                                   ["SELECT *
-                                       FROM student_in_class"
-                                     []] :results)]
+                                   ["SELECT class.id AS class_id,'leave',class.name AS class,
+                                              trim(teacher.given_name || ' ' || teacher.family_name) AS teacher,
+                                              class.language
+                                         FROM class
+                                    LEFT JOIN vc_user AS teacher 
+                                           ON (teacher.id = class.teacher)
+                                        WHERE class.id 
+                                           IN (SELECT class 
+                                                 FROM student_in_class 
+                                                WHERE student=?)"
+                                    [userid]] :results)]
                       (rows2table results
-                                  {}))]
-
+                                  {:col-fns {:language (fn [class]
+                                                         (short-language-name-to-long (:language class)))
+                                             :class (fn [class]
+                                                      [:a {:href (str "/class/" (:class_id class))}
+                                                       (:class class)])
+                                             :leave (fn [class]
+                                                      [:form {:action (str "/class/disenroll/" (:class_id class))
+                                                              :method "post"}
+                                                       [:button {:onclick "submit()"} "Leave"]])}
+                                   :th-styles {:leave "text-align:center;width:3em"}
+                                   :cols [:leave :class :language :teacher]}))]
+                   
                      [:div.new
                       [:h3 "Enroll in a new class:"]
                       [:form {:action "/class/join"
@@ -94,13 +112,19 @@
                                               trim(teacher.given_name || ' ' || teacher.family_name) AS teacher,
                                               class.language
                                          FROM class
-LEFT JOIN vc_user AS teacher ON (teacher.id = class.teacher)
-"
-                                      []] :results)]
+                                    LEFT JOIN vc_user AS teacher 
+                                           ON (teacher.id = class.teacher)
+                                        WHERE class.id 
+                                       NOT IN (SELECT class 
+                                                 FROM student_in_class 
+                                                WHERE student=?)"
+                                      [userid]] :results)]
                         (rows2table results
                                     {:cols [:enroll :class :language :teacher]
                                      :th-styles {:enroll "text-align:center;width:3em"}
-                                     :col-fns {:enroll (fn [class]
+                                     :col-fns {:language (fn [class]
+                                                           (short-language-name-to-long (:language class)))
+                                               :enroll (fn [class]
                                                          [:form {:action (str "/class/enroll/" (:class_id class))
                                                                  :method "post"}
                                                           [:button {:onclick "submit()"} "Enroll"]])}}))
@@ -337,8 +361,17 @@ INSERT INTO class (name,teacher,language)
                {:status 302
                 :headers {"Location" (str "/class/" class "?message=Added game.")}})))
 
+      (POST "/disenroll/:class" request
+            (do-if-authenticated
+             (let [debug (log/debug (str "/disenroll/:class with route params:" (:route-params request)))
+                   class (Integer. (:class (:route-params request)))
+                   student (username2userid (authentication/current request))]
+               (k/exec-raw ["DELETE FROM student_in_class
+                                   WHERE student = ? AND class=?" [student class]])
+               {:status 302
+                :headers {"Location" (str "/class?message=Left.")}})))
+
       (POST "/enroll/:class" request
-            ;; TODO: check if this user is the teacher of the game: add (is-teacher-of? <game> <user>)
             (do-if-authenticated
              (let [debug (log/debug (str "/enroll/:class with route params:" (:route-params request)))
                    class (Integer. (:class (:route-params request)))
