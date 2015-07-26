@@ -105,8 +105,8 @@
                       (re-find #"^/me" current-url))
                  :current-url current-url
                  :text "My Profile"
-                 :url-for-this-item "/me"
-                 :show? true})
+                 :show? haz-authentication
+                 :url-for-this-item "/me"})
 
       (menuitem {:selected?
                  (or (and (not (nil? current-url))
