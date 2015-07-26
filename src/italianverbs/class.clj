@@ -16,6 +16,7 @@
    [hiccup.core :refer (html)]
    [italianverbs.authentication :as authentication]
    [italianverbs.config :refer [language-radio-buttons short-language-name-to-long time-format]]
+   [italianverbs.game :refer [tenses-of-game-as-human-readable verbs-of-game-as-human-readable]]
    [italianverbs.html :as html :refer [banner page rows2table]]
    [italianverbs.korma :as db]
    [italianverbs.user :refer [do-if-authenticated do-if-teacher username2userid]]
@@ -48,12 +49,17 @@
                      [:h3 "Classes I'm teaching"]
 
                      (let [results (k/exec-raw
-                                    ["SELECT id,name,language,
+                                    ["SELECT id AS class_id,class.name AS class,language,
                                              to_char(class.created,?) AS created
                                         FROM class
                                        WHERE teacher=?"
                                      [time-format userid]] :results)]
-                       (rows2table results {:cols [:name :language :created]}))
+                       (rows2table results {:cols [:class :language :created]
+                                            :col-fns
+                                            {:class (fn [game-in-class]
+                                                      [:a {:href (str "/class/" (:class_id game-in-class))}
+                                                       (:class game-in-class)])}}))
+
 
                      [:div.new
                        [:h3 "Create a new class:"]
@@ -79,17 +85,22 @@
                                   {}))]
 
                      [:div.new
-                      [:h3 "Join a new class:"]
+                      [:h3 "Enroll in a new class:"]
                       [:form {:action "/class/join"
                               :method "post"}
                        ]
                       (let [results (k/exec-raw
-                                     ["SELECT *
+                                     ["SELECT class.name AS class,
+                                              trim(teacher.given_name || ' ' || teacher.family_name) AS teacher,
+                                              class.language
                                          FROM class
-LEFT JOIN game ON (game.class = class.id)"
+LEFT JOIN vc_user AS teacher ON (teacher.id = class.teacher)
+"
                                       []] :results)]
-                        (rows2table results))]
-                   ])
+                        (rows2table results
+                                    {:cols [:class :language :teacher]}))
+
+                      ]])
                 request
                 resources)}))
 
