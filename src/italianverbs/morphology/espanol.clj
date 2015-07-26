@@ -11,7 +11,11 @@
 (declare get-string)
 
 ;; TODO: this is an overly huge method that needs to be rewritten to be easier to understand and maintain.
-(defn get-string-1 [word & [:usted usted :tú tu :vosotros vosotros :ustedes ustedes]]
+(defn get-string-1 [word & [ {usted :usted
+                              tú :tu
+                              vosotros :vosotros
+                              ustedes :ustedes
+                              }]]
   (cond (string? word)
         word
         (seq? word)

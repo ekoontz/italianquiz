@@ -89,7 +89,7 @@
          (cons :student (map keyword (.getArray db-result)))))))
 
 
-(defn get-new-question [game-id & [user-id :user-id]]
+(defn get-new-question [game-id & [{user-id :user-id}]]
   "Ask the expression database for a question for a given game 
    and user-id (if supplied). The question will be a map
    with the following fields:
