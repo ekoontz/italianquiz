@@ -238,11 +238,13 @@
          {:status 302
           :headers {"Location" "/?denied:+not+authenticated"}})))
 
-
-(defmacro do-if [auth-fn do-if-authorized do-if-not-authorized]
+(defmacro do-if [auth-fn do-if-authorized & [do-if-not-authorized]]
   `(if ~auth-fn
      ~do-if-authorized
-     ~do-if-not-authorized))
+     (if ~do-if-not-authorized
+       ~do-if-not-authorized
+       {:status 302
+        :headers {"Location" "/?denied:+not+authenticated"}})))
 
 (defn do-if-admin [what-to-do & [else]]
   (do-if (has-admin-role)
