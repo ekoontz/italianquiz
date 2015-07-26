@@ -133,7 +133,14 @@
 
                       ]])
                 request
-                resources)}))
+                resources)}
+         ;; else, not authenticated
+         (page "My Classes"
+               [:div.major
+                [:h2 "Welcome to verbcoach."]
+
+                [:div {:style "width:75%;margin-left:25%;float:left;margin:1em;"}
+                 [:p "Please log in to get started with your classes and games."]]])))
 
    (POST "/new" request
          (do-if-teacher
