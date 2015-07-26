@@ -8,7 +8,7 @@
    [formative.parse :as fp]
    [italianverbs.html :as html]
    [italianverbs.korma :as db]
-   [italianverbs.unify :as unify]))
+   [dag-unify.core :as unify]))
 
 (defn new [params]
   (log/info (str "Got here with request: " params))

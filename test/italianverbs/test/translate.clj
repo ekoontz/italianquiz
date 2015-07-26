@@ -8,7 +8,7 @@
 (require '[italianverbs.english :as en])
 (require '[italianverbs.italiano :as it])
 (require '[italianverbs.translate :refer :all])
-(require '[italianverbs.unify :refer [get-in strip-refs]])
+(require '[dag-unify.core :refer [get-in strip-refs]])
 
 (deftest translate-a-cat
   (let [un-gatto (translate-all "un gatto")]

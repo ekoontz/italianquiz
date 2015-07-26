@@ -22,7 +22,7 @@
    [italianverbs.html :as html :refer [banner page rows2table]]
    [italianverbs.korma :as db]
    [italianverbs.user :refer [do-if do-if-admin do-if-authenticated do-if-teacher username2userid]]
-   [italianverbs.unify :refer [unify]]
+   [dag-unify.core :refer [unify]]
    [korma.core :as k]))
 
 (declare body)

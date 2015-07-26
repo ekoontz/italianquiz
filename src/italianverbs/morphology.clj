@@ -8,7 +8,7 @@
 (require '[italianverbs.morphology.espanol :as espanol])
 (require '[italianverbs.morphology.italiano :as italiano])
 (require '[italianverbs.stringutils :refer :all])
-(require '[italianverbs.unify :refer :all])
+(require '[dag-unify.core :refer :all])
 
 (defn phrase-is-finished? [phrase]
   (cond

@@ -6,13 +6,13 @@
    [clojure.string :as string]
    [clojure.tools.logging :as log]
    [compojure.core :as compojure :refer [GET PUT POST DELETE ANY]]
+   [dag-unify.core :refer [fail? get-in merge strip-refs unify unifyc]]
    [hiccup.page :refer (html5)]
 
    [italianverbs.forest :as forest]
    [italianverbs.html :refer (tablize)]
    [italianverbs.morphology :refer [fo fo-ps remove-parens]]
-   [italianverbs.ug :refer (head-principle)]
-   [italianverbs.unify :refer [fail? get-in merge strip-refs unify unifyc]]))
+   [italianverbs.ug :refer (head-principle)]))
 
 (declare lookup)
 (declare generate-from-request)

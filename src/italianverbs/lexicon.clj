@@ -11,8 +11,8 @@
    ;; instead use i.l.italiano and i.l.english.
    [italianverbs.morphology :refer (fo)]
    [italianverbs.pos :refer :all]
-   [italianverbs.unify :as unify]
-   [italianverbs.unify :refer :all]))
+   [dag-unify.core :as unify]
+   [dag-unify.core :refer :all]))
 
 ;; stub that is redefined by interfaces to specific databases.
 (defn clear! [])

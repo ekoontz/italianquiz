@@ -7,7 +7,7 @@
 (require '[clojure.tools.logging :as log])
 (require '[italianverbs.pos :refer (noun)])
 (require '[italianverbs.stringutils :refer :all])
-(require '[italianverbs.unify :refer (copy dissoc-paths fail? get-in merge ref? unifyc)])
+(require '[dag-unify.core :refer (copy dissoc-paths fail? get-in merge ref? unifyc)])
 
 (defn phrase-is-finished? [phrase]
   (cond

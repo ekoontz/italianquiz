@@ -16,7 +16,7 @@
    [italianverbs.menubar :as menubar]
    [italianverbs.morphology :refer [fo]]
    [italianverbs.session :as session]
-   [italianverbs.unify :as fs]))
+   [dag-unify.core :as fs]))
 
 (def login-enabled true)
 (def menubar-enabled true)
@@ -672,7 +672,7 @@
 
          [:tr
           [:td {:colspan "3"}
-           (powered-by "unify" "https://github.com/ekoontz/italianquiz/tree/master/src/italianverbs/unify.clj")
+           (powered-by "dag-unify" "https://github.com/ekoontz/dag-unify")
            ]
           ]
 

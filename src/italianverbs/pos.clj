@@ -1,6 +1,6 @@
 (ns italianverbs.pos
   (:require
-   [italianverbs.unify :refer (unifyc)]))
+   [dag-unify.core :refer (unifyc)]))
 
 ;; TODO: this file has a lot of language-specific stuff that should be factored into pos/$language.
 ;; for example, english does not have gender agreement between articles, nouns and adjectives.

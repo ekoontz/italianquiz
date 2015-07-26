@@ -6,7 +6,7 @@
    [italianverbs.morphology :refer (fo fo-ps)]
    [italianverbs.parse :as parse]
    [italianverbs.ug :refer :all]
-   [italianverbs.unify :refer (get-in unifyc)]))
+   [dag-unify.core :refer (get-in unifyc)]))
 
 (def hc-agreement
   (let [agr (ref :top)]

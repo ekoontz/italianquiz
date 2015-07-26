@@ -15,8 +15,8 @@
    [italianverbs.italiano :as it]
    [italianverbs.morphology :refer (fo fo-ps)]
    [italianverbs.over :as over]
-   [italianverbs.unify :as unify]
-   [italianverbs.unify :refer (dissoc-paths get-in fail? lazy-shuffle remove-top-values-log show-spec unifyc)]))
+   [dag-unify.core :as unify]
+   [dag-unify.core :refer (dissoc-paths get-in fail? lazy-shuffle remove-top-values-log show-spec unifyc)]))
 
 ;; TODO: this test brings in extra stuff (namely italiano) that is built upon forest, not forest itself.
 ;; make more illustrative tests of core forest functionality (e.g. lighting-bolt)

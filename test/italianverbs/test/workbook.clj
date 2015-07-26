@@ -5,7 +5,7 @@
         [italianverbs.morphology]
         [italianverbs.ug]
         [italianverbs.workbook]
-        [italianverbs.unify :exclude [unify]]
+        [dag-unify.core :exclude [unify]]
         ))
 
 ;; TODO: add tests that reflect user activity within workbook..

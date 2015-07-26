@@ -15,7 +15,7 @@
    [italianverbs.lexiconfn :refer [infinitives]]
    [italianverbs.morphology :refer :all]
    [italianverbs.morphology.espanol :as esm]
-   [italianverbs.unify :refer [get-in serialize strip-refs unify]]
+   [dag-unify.core :refer [get-in serialize strip-refs unify]]
    ))
 
 (def spec {:synsem {:essere true}})

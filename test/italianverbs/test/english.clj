@@ -19,7 +19,7 @@
                                      pronoun-acc sentential-adverb
                                      verb verb-aux]]
    [italianverbs.pos.english :refer :all]
-   [italianverbs.unify :as unify :refer [dissoc-paths get-in strip-refs]]))
+   [dag-unify.core :as unify :refer [dissoc-paths get-in strip-refs]]))
 
 (def test-lexicon {"buy" {:synsem {:cat :verb
                                    :sem {:pred :comprare

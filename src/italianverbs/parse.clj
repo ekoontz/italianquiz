@@ -8,7 +8,7 @@
 (require '[italianverbs.morphology :refer (fo fo-ps)])
 
 (require '[italianverbs.over :as over])
-(require '[italianverbs.unify :refer (get-in strip-refs)])
+(require '[dag-unify.core :refer (get-in strip-refs)])
 
 ;; for now, using a language-independent tokenizer.
 (def tokenizer #"[ ']")

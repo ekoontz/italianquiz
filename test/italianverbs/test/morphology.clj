@@ -9,7 +9,7 @@
 (require '[italianverbs.morphology.english :as english])
 (require '[italianverbs.morphology.espanol :as espanol])
 (require '[italianverbs.morphology.italiano :as italiano])
-(require '[italianverbs.unify :refer :all])
+(require '[dag-unify.core :refer :all])
 
 (deftest phrase-finished-1
   (is (italiano/phrase-is-finished?

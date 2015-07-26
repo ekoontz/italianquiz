@@ -14,7 +14,7 @@
             [italianverbs.lexiconfn :as lexfn]
             [italianverbs.morphology :refer (finalize fo)]
             [italianverbs.session :as session]
-            [italianverbs.unify :refer (lazy-shuffle)]
+            [dag-unify.core :refer (lazy-shuffle)]
             [italianverbs.xml :as xml]
             [korma.core :as k]
             [italianverbs.korma :as db]

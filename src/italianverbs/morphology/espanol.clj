@@ -6,7 +6,7 @@
 (require '[clojure.string :refer (trim)])
 (require '[clojure.tools.logging :as log])
 (require '[italianverbs.stringutils :refer :all])
-(require '[italianverbs.unify :refer (copy dissoc-paths fail? get-in merge ref? strip-refs unifyc)])
+(require '[dag-unify.core :refer (copy dissoc-paths fail? get-in merge ref? strip-refs unifyc)])
 
 (declare get-string)
 

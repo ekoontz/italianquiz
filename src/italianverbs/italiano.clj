@@ -18,8 +18,8 @@
 (require '[italianverbs.parse :as parse])
 (require '[italianverbs.pos.italiano :refer [intransitivize transitivize]])
 (require '[italianverbs.ug :refer :all])
-(require '[italianverbs.unify :refer (fail? get-in strip-refs)])
-(require '[italianverbs.unify :as unify])
+(require '[dag-unify.core :refer (fail? get-in strip-refs)])
+(require '[dag-unify.core :as unify])
 (require '[italianverbs.user :refer [do-if-admin]])
 
 (def get-string morph/get-string)

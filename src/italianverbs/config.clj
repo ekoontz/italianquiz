@@ -3,7 +3,7 @@
    [clojure.data.json :as json]
    [clojure.string :as string]
    [hiccup.core :refer (html)]
-   [italianverbs.unify :refer [unify]]))
+   [dag-unify.core :refer [unify]]))
 
 (def time-format "Dy Month FMDD YYYY HH24:MI TZ")
 

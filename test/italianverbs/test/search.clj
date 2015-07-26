@@ -3,7 +3,7 @@
         [italianverbs.search]
         [clojure.set])
   (:require
-   [italianverbs.unify :as fs]
+   [dag-unify.core :as fs]
    [italianverbs.lexiconfn :as lexfn]))
 
 ;;The intersection of mutually-exclusive queries is the null set

@@ -12,8 +12,8 @@
 (require '[italianverbs.parse :as parse])
 (require '[italianverbs.pos.espanol :refer :all])
 (require '[italianverbs.ug :refer :all])
-(require '[italianverbs.unify :refer (fail? get-in strip-refs)])
-(require '[italianverbs.unify :as unify])
+(require '[dag-unify.core :refer (fail? get-in strip-refs)])
+(require '[dag-unify.core :as unify])
 (require '[italianverbs.user :refer [do-if-admin]])
 
 ;; TODO: refactor these to a common web interface

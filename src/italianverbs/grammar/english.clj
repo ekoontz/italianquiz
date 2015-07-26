@@ -7,7 +7,7 @@
    [italianverbs.morphology :refer (fo fo-ps)]
    [italianverbs.parse :as parse]
    [italianverbs.ug :refer :all]
-   [italianverbs.unify :refer (get-in unifyc)]))
+   [dag-unify.core :refer (get-in unifyc)]))
 
 (declare cache)
 (declare grammar)

@@ -3,7 +3,7 @@
         [clojure.test])
   (:require
    [italianverbs.italiano :as it]
-   [italianverbs.unify :as fs]
+   [dag-unify.core :as fs]
    [italianverbs.lexiconfn :as lexfn]
    [italianverbs.pos :refer :all]
    [italianverbs.search :as search]))

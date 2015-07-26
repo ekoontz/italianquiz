@@ -10,6 +10,7 @@
                   :exclusions [ring/ring-core]] ;; https://github.com/cemerick/drawbridge/issues/8
                  [com.cemerick/friend "0.2.1"]
                  [compojure "1.1.6"]
+                 [dag-unify "0.1.0-SNAPSHOT"]
                  [digest "1.4.4"]
                  [environ "1.0.0"]
                  [formative "0.8.8"]

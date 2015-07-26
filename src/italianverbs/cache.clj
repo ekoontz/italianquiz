@@ -16,7 +16,7 @@
    [italianverbs.morphology.italiano :as italiano]
    [italianverbs.over :exclude [overc overh]]
    [italianverbs.over :as over]
-   [italianverbs.unify :refer :all :exclude [unify]]))
+   [dag-unify.core :refer :all :exclude [unify]]))
 
 ;; For now, this cache is just a stub; no actual caching is done; it simply calls 
 ;; the over/ equivalents of each of the defined functions.

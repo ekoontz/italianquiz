@@ -26,7 +26,7 @@
    [italianverbs.parse :refer [parse]]
    [italianverbs.pos :as pos]
    [italianverbs.translate :refer [translate translate-all]]
-   [italianverbs.unify :refer [get-in remove-false strip-refs]]
+   [dag-unify.core :refer [get-in remove-false strip-refs]]
 ))
 
 ;; this does some sample runtime behavior (generates sentences)

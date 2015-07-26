@@ -6,7 +6,7 @@
 (require '[italianverbs.italiano :as it])
 (require '[italianverbs.morphology :refer (fo)])
 (require '[italianverbs.morphology.italiano :refer :all])
-(require '[italianverbs.unify :refer :all])
+(require '[dag-unify.core :refer :all])
 
 (deftest lookup-inflection
   (let [result (it/it "dorme")]

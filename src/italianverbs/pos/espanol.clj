@@ -1,7 +1,7 @@
 (ns italianverbs.pos.espanol)
 
 (require '[italianverbs.pos :as pos])
-(require '[italianverbs.unify :refer (unifyc)])
+(require '[dag-unify.core :refer (unifyc)])
 (require '[italianverbs.lexiconfn :as lexiconfn :refer (map-function-on-map-vals)])
 
 (def agreement-noun pos/agreement-noun)

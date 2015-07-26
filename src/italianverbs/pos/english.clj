@@ -4,7 +4,7 @@
 (require '[clojure.tools.logging :as log])
 (require '[italianverbs.morphology :refer (fo)])
 (require '[italianverbs.pos :as pos])
-(require '[italianverbs.unify :as unify :refer (dissoc-paths get-in serialize unifyc)])
+(require '[dag-unify.core :as unify :refer (dissoc-paths get-in serialize unifyc)])
 (require '[italianverbs.lexiconfn :as lexiconfn :refer (map-function-on-map-vals)])
 (def adjective pos/adjective)
 (def animal pos/common-noun)

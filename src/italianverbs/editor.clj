@@ -14,7 +14,7 @@
    [italianverbs.config :refer [language-dropdown sqlname-from-match
                                 time-format]]
    [italianverbs.html :as html :refer [banner page]]
-   [italianverbs.unify :refer [get-in strip-refs unify]]
+   [dag-unify.core :refer [get-in strip-refs unify]]
    [italianverbs.user :refer [do-if do-if-admin do-if-teacher
                               has-teacher-role username2userid]]
    [hiccup.core :refer (html)]

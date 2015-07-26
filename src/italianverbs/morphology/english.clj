@@ -6,7 +6,7 @@
 (require '[clojure.string :as string])
 (require '[clojure.tools.logging :as log])
 (require '[italianverbs.pos :refer (noun)])
-(require '[italianverbs.unify :refer :all])
+(require '[dag-unify.core :refer :all])
 
 (declare get-string)
 (declare plural-en)

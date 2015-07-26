@@ -10,7 +10,7 @@
    [italianverbs.borges.reader :refer [generate-using-db generate-question-and-correct-set]]
    [italianverbs.borges.writer :refer [fill populate]]
    [italianverbs.tour :refer :all]
-   [italianverbs.unify :refer (fail? get-in strip-refs unify)]
+   [dag-unify.core :refer (fail? get-in strip-refs unify)]
    [korma.core :as db]))
 
 ;; TODO: need a shim to return fixtures (simulated database results)

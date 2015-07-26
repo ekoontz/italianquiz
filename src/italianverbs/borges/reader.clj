@@ -5,7 +5,7 @@
    [clojure.tools.logging :as log]
    [korma.core :as db]
    [italianverbs.korma :as korma]
-   [italianverbs.unify :as unify :refer [deserialize get-in ref? strip-refs unify]]])
+   [dag-unify.core :as unify :refer [deserialize get-in ref? strip-refs unify]]])
 
 ;; Configure database's 'expression' table to find the expressions.
 ;; requires Postgres 9.4 or higher for JSONb operator '@>' support.

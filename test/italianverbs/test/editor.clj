@@ -14,7 +14,7 @@
    [italianverbs.italiano :as it]
    [italianverbs.morphology :refer (fo)]
    [italianverbs.korma :as db]
-   [italianverbs.unify :refer [get-in]]
+   [dag-unify.core :refer [get-in]]
    [italianverbs.verb :refer [generation-table predicates-from-lexicon]]
    [hiccup.core :refer (html)]
    [korma.core :as k]

@@ -12,8 +12,8 @@
                                                    overc overh)]
    [italianverbs.morphology :refer (fo fo-ps)]
    [italianverbs.over :as over]
-   [italianverbs.unify :refer (dissoc-paths get-in fail? fail-path-between lazy-shuffle ref? remove-false 
-                                            remove-top-values-log strip-refs show-spec unifyc)]))
+   [dag-unify.core :refer (dissoc-paths get-in fail? fail-path-between lazy-shuffle ref? remove-false 
+                                        remove-top-values-log strip-refs show-spec unifyc)]))
 
 (def concurrent false)
 (declare path-to-map)

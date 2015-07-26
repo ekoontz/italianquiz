@@ -10,7 +10,7 @@
 
    [italianverbs.lexiconfn :refer :all]
    [italianverbs.morphology :refer [finalize fo fo-ps]]
-   [italianverbs.unify :refer :all :exclude [unify]]))
+   [dag-unify.core :refer :all :exclude [unify]]))
 
 ;; TODO: need better debugging throughout this file to diagnose generation failures.
 

@@ -17,7 +17,7 @@
 (require '[italianverbs.parse :as parse])
 (require '[italianverbs.pos.english :as epos :refer (intransitivize transitive transitivize verb-subjective)])
 (require '[italianverbs.ug :refer :all])
-(require '[italianverbs.unify :as unify :refer (dissoc-paths get-in strip-refs)])
+(require '[dag-unify.core :as unify :refer (dissoc-paths get-in strip-refs)])
 (require '[italianverbs.user :refer [do-if-admin]])
 
 (def get-string morph/get-string)

@@ -11,7 +11,7 @@
    [italianverbs.english :as en]
    [italianverbs.italiano :as it]
    [italianverbs.morphology :refer (fo)]
-   [italianverbs.unify :refer [deserialize get-in strip-refs]]
+   [dag-unify.core :refer [deserialize get-in strip-refs]]
    [korma.core :as db]
    ))
 

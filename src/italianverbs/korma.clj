@@ -5,7 +5,7 @@
   (:require [clj-time.coerce :as c]
             [clojure.string :as string]
             [clojure.tools.logging :as log]
-            [italianverbs.unify :refer (unify fail?)]
+            [dag-unify.core :refer (unify fail?)]
             [korma.core :refer :all]
             [korma.db :refer [default-connection defdb postgres]]))
 

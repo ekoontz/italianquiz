@@ -3,7 +3,7 @@
   (:require [clojure.tools.logging :as log]
             [italianverbs.lexiconfn :refer (sem-impl)]
             [italianverbs.morphology :refer (fo fo-ps)]
-            [italianverbs.unify :refer (fail? get-in merge unifyc)]
+            [dag-unify.core :refer (fail? get-in merge unifyc)]
             [clojure.string :as string]))
 
 (def phrasal {:phrasal true})

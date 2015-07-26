@@ -2,7 +2,7 @@
 
 (require '[italianverbs.lexiconfn :as lexiconfn :refer (map-function-on-map-vals)])
 (require '[italianverbs.pos :as pos])
-(require '[italianverbs.unify :refer (unifyc)])
+(require '[dag-unify.core :refer (unifyc)])
 
 (def agreement-noun pos/agreement-noun)
 (def cat-of-pronoun pos/cat-of-pronoun)

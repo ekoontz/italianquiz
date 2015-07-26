@@ -14,7 +14,7 @@
    [italianverbs.over :refer (overc overh)]
    [italianverbs.parse :refer (toks)]
    [italianverbs.ug :refer :all]
-   [italianverbs.unify :refer :all]
+   [dag-unify.core :refer :all]
    ))
 
 (def test-grammar

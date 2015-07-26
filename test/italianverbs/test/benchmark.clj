@@ -15,8 +15,8 @@
    [italianverbs.morphology :refer (fo fo-ps)]
    [italianverbs.over :refer (overc overh)]
    [italianverbs.ug :refer (head-principle)]
-   [italianverbs.unify :as unify]
-   [italianverbs.unify :refer (fail? get-in lazy-shuffle unifyc)]))
+   [dag-unify.core :as unify]
+   [dag-unify.core :refer (fail? get-in lazy-shuffle unifyc)]))
 
 ;; test is busted.
 ;(deftest simple-sentence

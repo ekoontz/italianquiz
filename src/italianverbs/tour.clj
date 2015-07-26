@@ -10,7 +10,7 @@
    [italianverbs.editor :refer [json-read-str]]
    [italianverbs.html :refer [page]]
    [italianverbs.morphology :refer (fo remove-parens)]
-   [italianverbs.unify :refer (get-in unify)]
+   [dag-unify.core :refer (get-in unify)]
    [italianverbs.user :refer (username2userid)]
    [korma.core :as k]))
 

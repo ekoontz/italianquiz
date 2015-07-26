@@ -3,6 +3,7 @@
   (:use [clojure.test]
         [italianverbs.workbook]))
 
+;; TODO: why is this namespace here?
 (ns italianverbs.sandbox
   (:refer-clojure :exclude [get-in merge resolve find])
   (:use
@@ -17,7 +18,7 @@
    [clojail.testers])
   (:require
    [italianverbs.lexiconfn :as lexfn]
-   [italianverbs.unify :as fs]
+   [dag-unify.core :as fs]
    [italianverbs.html :as html]
    [clojure.set :as set]
 ;;   [italianverbs.test.generate :as tgen]

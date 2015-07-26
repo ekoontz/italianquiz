@@ -7,7 +7,7 @@
    [clojure.core :as core]
    [italianverbs.morphology :as morph :refer (fo fo-ps)]
    [italianverbs.pos :refer :all]
-   [italianverbs.unify :refer :all :exclude (unify)])) ;; exclude unify because we redefine it here using unifyc (copy each arg)
+   [dag-unify.core :refer :all :exclude (unify)])) ;; exclude unify because we redefine it here using unifyc (copy each arg)
 
 (declare listify)
 (declare map-function-on-map-vals)

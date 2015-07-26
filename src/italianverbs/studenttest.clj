@@ -15,7 +15,7 @@
    [italianverbs.korma :as db]
    [italianverbs.morphology :as morph]
    [italianverbs.question :as question]
-   [italianverbs.unify :as unify]
+   [dag-unify.core :as unify]
    [korma.core :as k]))
 
 ;; to evaluate a student's results:

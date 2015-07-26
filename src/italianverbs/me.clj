@@ -11,7 +11,7 @@
                                 language-to-root-spec
                                 language-to-root-keyword]]
    [italianverbs.html :refer [multipart-to-edn page]]
-   [italianverbs.unify :refer [unify]]
+   [dag-unify.core :refer [unify]]
    [italianverbs.user :refer [username2userid]]
    [korma.core :as k]))
 

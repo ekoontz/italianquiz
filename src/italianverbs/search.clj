@@ -5,7 +5,7 @@
    [clojure.tools.logging :as log]
    [clojure.string :as string]
    [italianverbs.korma :as db]
-   [italianverbs.unify :as fs]
+   [dag-unify.core :as fs]
    [italianverbs.html :as html]
    [italianverbs.lexiconfn :as lexfn]
    [italianverbs.lev :as lev]))

@@ -11,7 +11,7 @@
    [italianverbs.morphology :as morph]
    [italianverbs.morphology.espanol :as es-morph]
    [italianverbs.pos :refer :all]
-   [italianverbs.unify :refer :all :exclude (unify)]))
+   [dag-unify.core :refer :all :exclude (unify)]))
 
 (def listified-es (listify es/lexicon-source))
 (def listified-it (listify it/lexicon-source))

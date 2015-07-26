@@ -5,7 +5,7 @@
    [italianverbs.engine :as engine]
    [italianverbs.italiano :as it :refer :all]
    [italianverbs.morphology :refer :all]
-   [italianverbs.unify :refer :all]))
+   [dag-unify.core :refer :all]))
 
 (deftest enrich-should-return-map-or-list-of-maps
   (is (or (map? ((:enrich @it/small) {:synsem {:essere true}})))))

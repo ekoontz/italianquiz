@@ -9,7 +9,7 @@
                                     pronoun-acc sentential-adverb
                                     verb verb-aux]])
 (require '[italianverbs.pos.english :refer :all])
-(require '[italianverbs.unify :refer [dissoc-paths]])
+(require '[dag-unify.core :refer [dissoc-paths]])
 (require '[italianverbs.lexicon.english :refer :all])
 
 (def test-lexicon {"buy" {:synsem {:cat :verb

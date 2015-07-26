@@ -1,6 +1,6 @@
 (ns italianverbs.repair)
 
-(require '[italianverbs.unify :refer [unify]])
+(require '[dag-unify.core :refer [unify]])
 (require '[italianverbs.italiano :refer [fill-by-spec fill-verb]])
 (require '[italianverbs.english :refer :all])
 (require '[italianverbs.korma :refer :all])

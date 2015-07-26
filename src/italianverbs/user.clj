@@ -8,7 +8,7 @@
    [environ.core :refer [env]]
 
    [italianverbs.authentication :as authentication]
-   [italianverbs.unify :as unify :refer [deserialize get-in ref? strip-refs unify]]
+   [dag-unify.core :as unify :refer [deserialize get-in ref? strip-refs unify]]
 
    [korma.core :as k]))
 

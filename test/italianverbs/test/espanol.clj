@@ -11,7 +11,7 @@
    [italianverbs.morphology :refer (fo)]
    [italianverbs.over :refer (overc overh)]
    [italianverbs.ug :refer :all]
-   [italianverbs.unify :refer :all]
+   [dag-unify.core :refer :all]
    ))
 
 (def test-model

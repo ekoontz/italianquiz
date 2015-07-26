@@ -5,7 +5,7 @@
 (require '[italianverbs.english :as en])
 (require '[italianverbs.italiano :as it])
 (require '[italianverbs.morphology :refer [finalize fo fo-ps]])
-(require '[italianverbs.unify :refer [get-in]])
+(require '[dag-unify.core :refer [get-in]])
 
 (defn translate [input]
   "Return at most one possible translation for all possible parses of the input. Format translations as strings."

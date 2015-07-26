@@ -12,7 +12,7 @@
     [italianverbs.korma :as korma]
     [italianverbs.lexiconfn :refer [sem-impl]]
     [italianverbs.morphology :refer [fo]]
-    [italianverbs.unify :refer [get-in strip-refs serialize unify]]
+    [dag-unify.core :refer [get-in strip-refs serialize unify]]
 
     [korma.core :as k]
     ))
