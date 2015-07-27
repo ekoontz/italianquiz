@@ -275,20 +275,21 @@ INSERT INTO class (name,teacher,language)
                              [:h3 "Games you can play in this class"]
                              (let [games
                                    (k/exec-raw
-                                    ["SELECT game.id,game.name AS game,
-                                             trim(owner.given_name || ' ' || owner.family_name) AS created_by,
-                                             owner.id AS owner_id,
-                                             to_char(game_in_class.added,?) AS added
+                                    ["SELECT 'play',game.id,game.name AS game
                                         FROM game
                                   INNER JOIN game_in_class
                                           ON (game_in_class.game=game.id
-                                         AND  game_in_class.class=?)
-                                   LEFT JOIN vc_user AS owner 
-                                          ON (owner.id = game.created_by)
-                                    ORDER BY game_in_class.added DESC"
-                                     [time-format class]] :results)]
+                                         AND  game_in_class.class=?)"
+                                     [class]] :results)]
                                [:div.rows2table
-                                (rows2table games)])))
+                                (rows2table games
+                                            {:col-fns {:play (fn [game]
+                                                               (html [:button {:onclick (str "document.location='/tour?game="
+                                                                                             (:id game) "';")}
+                                                                      "Play"]))}
+                                             :th-styles
+                                             {:play "text-align:center;width:3em"}
+                                             :cols [:play :game]})])))
 
                      ]])
                 request
