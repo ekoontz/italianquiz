@@ -199,7 +199,7 @@ INSERT INTO class (name,teacher,language)
                       ]
 
                      (do-if (= userid (:teacher_user_id class-map))
-                            [:div
+                            (html
                              [:h3 "Students"]
                              (let [students (k/exec-raw
                                              ["SELECT trim(given_name || ' ' || family_name) AS name,
@@ -219,11 +219,13 @@ INSERT INTO class (name,teacher,language)
                                                              (:name student)]))}})])
                              [:div.add {:style "display:none"} ;; disabled: not implemented yet - students must self-enroll in classes.
                               [:a {:href (str "/class/" class "/student/add")}
-                               "Add a new student"]]])
+                               "Add a new student"]]))
 
-                     [:h3 "Games"]
-                     (let [games (k/exec-raw
-                                  ["SELECT 'remove',game.id,game.name AS game,
+                     (do-if (= userid (:teacher_user_id class-map))
+                            (html
+                             [:h3 "Games"]
+                             (let [games (k/exec-raw
+                                          ["SELECT 'remove',game.id,game.name AS game,
                                            trim(owner.given_name || ' ' || owner.family_name) AS created_by,
                                            owner.id AS owner_id,
                                            to_char(game_in_class.added,?) AS added
@@ -235,31 +237,32 @@ INSERT INTO class (name,teacher,language)
                                         ON (owner.id = game.created_by)
                                   ORDER BY game_in_class.added DESC"
                                    [time-format class]] :results)]
-                       [:div.rows2table
-                        (rows2table games
-                                    {:cols [:remove :game :created_by :added]
-                                     :td-styles
-                                     {:remove "text-align:center"}
-                                     :th-styles
-                                     {:remove "text-align:center;width:3em"}
-                                     :col-fns
-                                     ;; TODO: add some javascript confirmation "are you sure?" stuff rather
-                                     ;; than simply removing the game from the class.
-                                     {:remove (fn [game]
-                                                (html [:form {:action (str "/class/" class
-                                                                           "/game/" (:id game) "/delete")
-                                                              :method "post"}
-                                                       [:button {:onclick "submit()"} "Remove"]]))
-                                      :created_by (fn [game] (html [:a {:href (str "/teacher/" (:owner_id game))}
-                                                                    (:created_by game)]))
+                               [:div.rows2table
+                                (rows2table games
+                                            {:cols [:remove :game :created_by :added]
+                                             :td-styles
+                                             {:remove "text-align:center"}
+                                             :th-styles
+                                             {:remove "text-align:center;width:3em"}
+                                             :col-fns
+                                             ;; TODO: add some javascript confirmation "are you sure?" stuff rather
+                                             ;; than simply removing the game from the class.
+                                             {:remove (fn [game]
+                                                        (html [:form {:action (str "/class/" class
+                                                                                   "/game/" (:id game) "/delete")
+                                                                      :method "post"}
+                                                               [:button {:onclick "submit()"} "Remove"]]))
+                                              :created_by (fn [game] (html [:a {:href (str "/teacher/" (:owner_id game))}
+                                                                            (:created_by game)]))
                                       :game (fn [game] (html [:a {:href (str "/game/" (:id game))}
                                                               (if (or (nil? (:game game))
                                                                       (not (= "" (string/trim (:game game)))))
                                                                 (:game game) "(untitled)")]))}}
-                                     )])
-                     [:div.add 
-                      [:a {:href (str "/class/" class "/game/add")}
-                       "Add a game to this class"]]
+                                            )])
+                             [:div.add 
+                              [:a {:href (str "/class/" class "/game/add")}
+                               "Add a game to this class"]])
+                            )
 
                      ]])
                 request
