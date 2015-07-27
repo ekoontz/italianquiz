@@ -165,6 +165,13 @@ INSERT INTO class (name,teacher,language)
           (let [class (Integer. (:class (:route-params request)))]
             (page "Class"
                   (let [userid (username2userid (authentication/current request))
+                        student-of-class?
+                        (not (nil? (first
+                                    (k/exec-raw
+                                     ["SELECT 1 FROM student_in_class WHERE student=? and class=?"
+                                      [userid class]
+                                      ] :results))))
+
                         class-map (first
                                    (k/exec-raw
                                     ["SELECT class.id,
@@ -261,8 +268,27 @@ INSERT INTO class (name,teacher,language)
                                             )])
                              [:div.add 
                               [:a {:href (str "/class/" class "/game/add")}
-                               "Add a game to this class"]])
-                            )
+                               "Add a game to this class"]]))
+
+                     (do-if student-of-class?
+                            (html
+                             [:h3 "Games you can play in this class"]
+                             (let [games
+                                   (k/exec-raw
+                                    ["SELECT game.id,game.name AS game,
+                                             trim(owner.given_name || ' ' || owner.family_name) AS created_by,
+                                             owner.id AS owner_id,
+                                             to_char(game_in_class.added,?) AS added
+                                        FROM game
+                                  INNER JOIN game_in_class
+                                          ON (game_in_class.game=game.id
+                                         AND  game_in_class.class=?)
+                                   LEFT JOIN vc_user AS owner 
+                                          ON (owner.id = game.created_by)
+                                    ORDER BY game_in_class.added DESC"
+                                     [time-format class]] :results)]
+                               [:div.rows2table
+                                (rows2table games)])))
 
                      ]])
                 request
