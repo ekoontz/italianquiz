@@ -110,7 +110,9 @@ function get_heading(path,position_index) {
     return heading;
 }
 
+// TODO: remove target_language and locale: should only need game_id (which itself will refer to language and locale via server-side table relations)
 function start_tour(target_language,target_locale,game_id) {
+
     var position_info = get_position_from_profile(target_language,target_locale);
     step = position_info.position;
     direction = position_info.direction;
