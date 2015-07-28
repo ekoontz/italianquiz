@@ -20,6 +20,7 @@
 
 (declare game-chooser)
 (declare generate-q-and-a)
+(declare generate-q-and-a-from-game)
 (declare get-step-for-user)
 (declare tour)
 
@@ -119,6 +120,17 @@
      (GET "/es/generate-q-and-a" request
           (generate-q-and-a "es" "ES" request))
 
+
+     (GET "/:id" request
+          {:status 200
+           :headers headers
+           :body (page "You chose a moft awfeome game."
+                       "You chose a moft awfeome game."
+                       request)})
+
+     (GET "/:id/generate-q-and-a" request
+          (generate-q-and-a-from-game request))
+     
      ;; below URLs are for backwards-compatibility:
      (GET "/" request
           {:status 302
@@ -263,6 +275,12 @@
   (:id (first (k/exec-raw [(str "INSERT INTO question (game,source,session_id)
                                       VALUES (?,?,?::uuid) RETURNING id")
                            [game-id source-id session-id]] :results))))
+
+(defn generate-q-and-a-from-game [request]
+  (log/debug (str "generating q-and-a from request: " request))
+  ;; TODO: "it" and "IT" should be <language> and <locale> derived
+  ;; from game's id derived from request.
+  (get-step-for-user "it" "IT" request))
 
 (defn generate-q-and-a [target-language target-locale request]
   "generate a question in English and a set of possible correct answers in the target language, given parameters in request"
