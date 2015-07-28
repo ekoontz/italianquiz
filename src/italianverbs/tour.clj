@@ -121,12 +121,13 @@
           (generate-q-and-a "es" "ES" request))
 
 
-     (GET "/:id" request
-          {:status 200
-           :headers headers
-           :body (page "You chose a moft awfeome game."
-                       "You chose a moft awfeome game."
-                       request)})
+     (GET "/:game" request
+          (let [game (:game (:route-params request))]
+            {:status 200
+             :headers headers
+             :body (page (str "You chose a moft awfeome game: " game)
+                         (str "You chose a moft awfeome game: " game)
+                         request)}))
 
      (GET "/:id/generate-q-and-a" request
           (generate-q-and-a-from-game request))
