@@ -33,32 +33,23 @@
     [:div.flags
      [:div.flag
 
-      [:a {:href "/tour/it"}
-       [:img {:src "/png/Flag_of_Italy.svg.png" }]]
+       [:img {:src "/png/Flag_of_Italy.svg.png" }]
 
-      [:a {:href "/tour/it"}
        [:div.language "Italiano"]
-       ]
+      ]
+
+     [:div.flag
+       [:img {:src "/png/Flag_of_Mexico.svg.png" }]
+
+       [:div.language "Español"]
       ]
 
      [:div.flag
 
-      [:a {:href "/tour/es/MX"}
-       [:img {:src "/png/Flag_of_Mexico.svg.png" }]]
+       [:img {:src "/png/Flag_of_Spain.svg.png" }]
 
-      [:a {:href "/tour/es/MX"}
        [:div.language "Español"]
-       ]
-      ]
-
-     [:div.flag
-
-      [:a {:href "/tour/es/ES"}
-       [:img {:src "/png/Flag_of_Spain.svg.png" }]]
-
-      [:a {:href "/tour/es/ES"}
-       [:div.language "Español"]
-       ]
+       
       ]
      
 
@@ -69,47 +60,4 @@
 
       [:i {:style "text-align:center;color:#ccc"} "Coming soon" ]]
      ]
-
-    (do-if (not (or (has-teacher-role) (has-admin-role)))
-      [:div {:style "float:left;margin-left:25%;width:75%;margin-top:1em"}
-       [:p "Use the dropdown within the tour to choose a class/game."]
-       [:img {:width "350px" :src "/png/select_game.png"} ]]
-      "") ;; teachers and admins don't need to see this.
-    
-    (do-if-teacher
-     [:div {:class "rounded flags manage"}
-
-      [:h3 "Games"]
-
-      [:div {:class "flag smallflag"}
-       [:a {:href "/editor/it"}
-        [:img {:src "/png/Flag_of_Italy.svg.png" }]]
-       [:a {:href "/editor/it"}
-        [:div.language "Italiano"]
-        ]
-       ]
-
-      [:div {:class "flag smallflag"}
-       [:a {:href "/editor/es"}
-        [:img {:src "/png/Flag_of_Spain.svg.png" }]]
-       [:a {:href "/editor/es"}
-        [:div.language "Español"]
-        ]
-       ]
-       
-      [:div {:class "flag smallflag"}
-       [:img {:src "/png/Flag_of_France.svg.png" }]
-       [:div.language "Français"]
-       [:i {:style "text-align:center;color:#ccc"} "Coming soon"]]]
-
-     "" ;; else, don't show game editor.
-     
-     )
-    
     ])
-
-    
-
-
-
-
