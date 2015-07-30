@@ -63,8 +63,6 @@
                                              :class (fn [game-in-class]
                                                       [:a {:href (str "/class/" (:class_id game-in-class))}
                                                        (:class game-in-class)])}}))
-
-
                      [:div.new
                        [:h3 "Create a new class:"]
                       
@@ -114,6 +112,7 @@
                       (let [results (k/exec-raw
                                      ["SELECT class.id AS class_id,'enroll',class.name AS class,
                                               trim(teacher.given_name || ' ' || teacher.family_name) AS teacher,
+                                              teacher.email AS email,
                                               class.language
                                          FROM class
                                     LEFT JOIN vc_user AS teacher 
@@ -124,10 +123,21 @@
                                                 WHERE student=?)"
                                       [userid]] :results)]
                         (rows2table results
-                                    {:cols [:enroll :class :language :teacher]
+                                    {:cols [:enroll :class :language :teacher :email]
                                      :th-styles {:enroll "text-align:center;width:3em"}
                                      :col-fns {:language (fn [class]
                                                            (short-language-name-to-long (:language class)))
+                                               :class (fn [class]
+                                                        [:a {:href (str "/class/" (:class_id class))}
+                                                         (if (or (nil? (:class class))
+                                                                 (= "" (:class class)))
+                                                           "(unnamed class)"
+                                                           (:class class))])
+                                               :teacher (fn [class]
+                                                         (if (or (nil? (:teacher class))
+                                                                 (= "" (:teacher class)))
+                                                           "(unnamed teacher)"
+                                                           (:teacher class)))
                                                :enroll (fn [class]
                                                          [:form {:action (str "/class/enroll/" (:class_id class))
                                                                  :method "post"}
