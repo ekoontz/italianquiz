@@ -284,7 +284,7 @@ INSERT INTO class (name,teacher,language)
                                [:div.rows2table
                                 (rows2table games
                                             {:col-fns {:play (fn [game]
-                                                               (html [:button {:onclick (str "document.location='/tour?game="
+                                                               (html [:button {:onclick (str "document.location='/tour/"
                                                                                              (:id game) "';")}
                                                                       "Play"]))}
                                              :th-styles

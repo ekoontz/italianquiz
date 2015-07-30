@@ -110,10 +110,8 @@ function get_heading(path,position_index) {
     return heading;
 }
 
-// TODO: remove target_language and locale: should only need game_id (which itself will refer to language and locale via server-side table relations)
-function start_tour(target_language,target_locale,game_id) {
-
-    var position_info = get_position_from_profile(target_language,target_locale);
+function start_tour(game_id,target_language,target_locale) {
+    var position_info = get_position_from_profile(game_id);
     step = position_info.position;
     direction = position_info.direction;
 
@@ -184,18 +182,18 @@ function start_tour(target_language,target_locale,game_id) {
     // initialize streetview
     $("#streetviewiframe").attr("src","https://www.google.com/maps/embed/v1/streetview?key="+google_api_key+"&location="+current_lat+","+current_long+"&heading="+heading+"&pitch="+pitch+"&fov=35");
     
-    user_keypress(target_language,target_locale);
-    tour_loop(target_language,target_locale,game_id);
+    user_keypress(game_id,target_language,target_locale);
+    tour_loop(game_id,target_language,target_locale);
 }
 
-function get_position_from_profile(target_language,target_locale) {
+function get_position_from_profile(game_id) {
     /* determine where user is on map based on their profile. */
     var retval;
     $.ajax({
 	async: false,
 	cache: false,
         dataType: "json",
-        url: "/tour/" + target_language + "/" + target_locale + "/step",
+        url: "/tour/" + game_id + "/step",
         success: function (content) {
 	    retval = content;
 	}});
@@ -203,14 +201,13 @@ function get_position_from_profile(target_language,target_locale) {
 }
 
 // TODO: rename; not really a loop - no for() or while().
-function tour_loop(target_language,target_locale) {
-    var game_id = $("#chooserselect").val();
-    create_tour_question(target_language,target_locale,game_id);
+function tour_loop(game_id,target_language,target_locale) {
+    create_tour_question(game_id,target_language,target_locale);
     $("#gameinput").focus();
     $("#gameinput").val("");
 }
 
-function create_tour_question(target_language,target_locale,game_id) {
+function create_tour_question(game_id,target_language,target_locale) {
     $("#gameinput").css("background","white");
     $("#gameinput").css("color","black");
 
@@ -243,11 +240,11 @@ function create_tour_question(target_language,target_locale,game_id) {
 	question_id = q_and_a.question_id;
     }
 
-    // generate a question by calling /tour/<language>/generate-q-and-a on the server.
+    // generate a question by calling /tour/<game_id>/generate-q-and-a on the server.
     $.ajax({
 	cache: false,
         dataType: "html",
-        url: "/tour/" + target_language + "/generate-q-and-a?game=" + game_id,
+        url: "/tour/" + game_id + "/generate-q-and-a",
         success: update_tour_q_and_a
     });
 }
@@ -288,50 +285,50 @@ function increment_map_score() {
 
 // TODO: convert other similar functions to take a language as a param rather 
 // than in the function name.
-function add_a_acute(language,locale) {
+function add_a_acute(game_id,language,locale) {
     $("#gameinput").val($("#gameinput").val() + "á");
-    update_user_input(language,locale);
+    update_user_input(game_id,language,locale);
     $("#gameinput").focus();
 }
 
-function add_a_grave(language,locale) {
+function add_a_grave(game_id,language,locale) {
     $("#gameinput").val($("#gameinput").val() + "à");
-    update_user_input(language,locale);
+    update_user_input(game_id,language,locale);
     $("#gameinput").focus();
 }
 
-function add_e_acute(language,locale) {
+function add_e_acute(game_id,language,locale) {
     $("#gameinput").val($("#gameinput").val() + "é");
-    update_user_input(language,locale);
+    update_user_input(game_id,language,locale);
     $("#gameinput").focus();
 }
-function add_e_grave(language,locale) {
+function add_e_grave(game_id,language,locale) {
     $("#gameinput").val($("#gameinput").val() + "è");
-    update_user_input(language,locale);
+    update_user_input(game_id,language,locale);
     $("#gameinput").focus();
 }
-function add_i_acute(language,locale) {
+function add_i_acute(game_id,language,locale) {
     $("#gameinput").val($("#gameinput").val() + "í");
-    update_user_input(language,locale);
+    update_user_input(game_id,language,locale);
     $("#gameinput").focus();
 }
-function add_n_tilde(language,locale) {
+function add_n_tilde(game_id,language,locale) {
     $("#gameinput").val($("#gameinput").val() + "ñ");
-    update_user_input(language,locale);
+    update_user_input(game_id,language,locale);
     $("#gameinput").focus();
 }
-function add_o_grave(language,locale) {
+function add_o_grave(game_id,language,locale) {
     $("#gameinput").val($("#gameinput").val() + "ò");
-    update_user_input(language,locale);
+    update_user_input(game_id,language,locale);
     $("#gameinput").focus();
 }
-function add_u_acute(language,locale) {
+function add_u_acute(game_id,language,locale) {
     $("#gameinput").val($("#gameinput").val() + "ú");
-    update_user_input(language,locale);
+    update_user_input(game_id,language,locale);
     $("#gameinput").focus();
 }
 
-function update_user_input(target_language,target_locale) {
+function update_user_input(game_id,target_language,target_locale) {
     var user_input = $("#gameinput").val();
 
     // Find the longest common prefix of the user's guess and the set of possible answers.
@@ -410,15 +407,15 @@ function update_user_input(target_language,target_locale) {
 	$("#gameinput").focus();
 	// TODO: score should vary depending on the next 'leg' of the trip.
 	// go to next question.
-	return tour_loop(target_language,target_locale);
+	return tour_loop(game_id,target_language,target_locale);
     }
 }
 
 // http://stackoverflow.com/questions/155188/trigger-a-button-click-with-javascript-on-the-enter-key-in-a-text-box
-function user_keypress(target_language,target_locale) {
+function user_keypress(game_id,target_language,target_locale) {
     $("#gameinput").keyup(function(event){
 	log(DEBUG,"You hit the key: " + event.keyCode);
-	update_user_input(target_language,target_locale);
+	update_user_input(game_id,target_language,target_locale);
     });
 }
 

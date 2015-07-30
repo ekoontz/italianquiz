@@ -7,6 +7,7 @@
    [compojure.core :as compojure :refer [GET PUT POST DELETE ANY]]
    [italianverbs.authentication :as authentication]
    [italianverbs.borges.reader :refer [generate-question-and-correct-set]]
+   [italianverbs.config :refer [time-format]]
    [italianverbs.editor :refer [json-read-str]]
    [italianverbs.html :refer [page]]
    [italianverbs.morphology :refer (fo remove-parens)]
@@ -20,126 +21,62 @@
 
 (declare game-chooser)
 (declare generate-q-and-a)
-(declare generate-q-and-a-from-game)
 (declare get-step-for-user)
+(declare request-to-session)
 (declare tour)
 
 (def routes
   (let [headers {"Content-Type" "text/html;charset=utf-8"}]
     (compojure/routes
 
-     (GET "/it" request
-          {:headers headers
-           :status 200
-           :body
-           (let [chosen-game (get (:query-params request) "game")
-                 chosen-game (cond (= "" chosen-game)
-                                   nil
-                                   (nil? chosen-game)
-                                   nil
-                                   true
-                                   (Integer. chosen-game))]
-             (page "Map Tour" (tour "it" "IT"
-                                    chosen-game
-                                    (username2userid (authentication/current request)))
-                   request {:onload (str "start_tour('it','IT','" chosen-game "');")
-                            :css ["/css/tour.css"]
-                            :jss ["/js/cities.js"
-                                  "/js/gen.js"
-                                  "/js/leaflet.js"
-                                  "/js/it.js"
-                                  "/js/tour.js"]}))})
-     (GET "/es" request
-          {:status 302
-           :headers {"Location" "/tour/es/ES"}})
-
-     (GET "/es/ES" request
-          {:status 200
-           :headers headers
-           :body
-           (let [chosen-game (get (:query-params request) "game")
-                 chosen-game (cond (= "" chosen-game)
-                                   nil
-                                   (nil? chosen-game)
-                                   nil
-                                   true
-                                   (Integer. chosen-game))]
-             (page "Map Tour" (tour "es" "ES"
-                                    chosen-game
-                                    (username2userid (authentication/current request)))
-                   request {:onload "start_tour('es','ES');"
-                            :css ["/css/tour.css"]
-                            :jss ["/js/cities.js"
-                                  "/js/gen.js"
-                                  "/js/leaflet.js"
-                                  "/js/es.js"
-                                  "/js/tour.js"]}))})
-     (GET "/es/MX" request
-          {:status 200
-           :headers headers
-           :body
-           (let [chosen-game (get (:query-params request) "game")
-                 chosen-game (cond (= "" chosen-game)
-                                   nil
-                                   (nil? chosen-game)
-                                   nil
-                                   true
-                                   (Integer. chosen-game))]
-             (page "Map Tour" (tour "es" "MX"
-                                    chosen-game
-                                    (username2userid (authentication/current request)))
-                   request {:onload "start_tour('es','MX');"
-                            :css ["/css/tour.css"]
-                            :jss ["/js/cities.js"
-                                  "/js/gen.js"
-                                  "/js/leaflet.js"
-                                  "/js/es.js"
-                                  "/js/tour.js"]}))})
-
-     (GET "/it/generate-q-and-a" request
-          (generate-q-and-a "it" "IT" request))
-
-     (GET "/it/IT/generate-q-and-a" request
-          (generate-q-and-a "it" "IT" request))
-
-     (GET "/es/ES/step" request
-          (get-step-for-user "es" "ES" request))
-     (GET "/es/MX/step" request
-          (get-step-for-user "es" "MX" request))
-     (GET "/it/IT/step" request
-          (get-step-for-user "it" "IT" request))
-
-    (GET "/es/ES/generate-q-and-a" request
-         (generate-q-and-a "es" "ES" request))
-
-     (GET "/es/MX/generate-q-and-a" request
-          (generate-q-and-a "es" "MX" request))
-
-     ;; Default: no locale given.
-     ;; TODO: redirect to /tour/es/es/ES/generate-q-and-a
-     (GET "/es/generate-q-and-a" request
-          (generate-q-and-a "es" "ES" request))
-
+     (GET "/:game/step" request
+          (let [game-id (Integer. (:game (:route-params request)))
+                user-id (username2userid (authentication/current request))]
+            (get-step-for-user user-id game-id)))
 
      (GET "/:game" request
-          (let [game (:game (:route-params request))]
+          (let [game (Integer. (:game (:route-params request)))
+                game-result (first 
+                             (k/exec-raw
+                              [(str "SELECT name,source,target,created_by,
+                                            to_char(game.created_on, ?) AS created_on
+                                       FROM game 
+                                      WHERE id=? LIMIT 1")
+                               [time-format game]] :results))]
+            (page "Map Tour" (tour "it" "IT"
+                                   game
+                                   (username2userid (authentication/current request)))
+                  request {:onload (str "start_tour('" game "','" "it" "','" "IT" "');")
+                           :css ["/css/tour.css"]
+                           :jss ["/js/cities.js"
+                                 "/js/gen.js"
+                                 "/js/leaflet.js"
+                                 "/js/it.js"
+                                 "/js/tour.js"]})))
+     (GET "/:game/debug" request
+          (let [game (Integer. (:game (:route-params request)))
+                game-result (first 
+                             (k/exec-raw
+                              [(str "SELECT name,source,target,created_by,
+                                            to_char(game.created_on, ?) AS created_on
+                                       FROM game 
+                                      WHERE id=? LIMIT 1")
+                               [time-format game]] :results))]
             {:status 200
-             :headers headers
-             :body (page (str "You chose a moft awfeome game: " game)
-                         (str "You chose a moft awfeome game: " game)
-                         request)}))
+             :headers {"Content-Type" "application/json;charset=utf-8"}
+             :body (write-str {:comment (str "You chose a moft awfeome game: " game)
+                               :game-result game-result
+                               :game game})}))
 
-     (GET "/:id/generate-q-and-a" request
-          (generate-q-and-a-from-game request))
+     (GET "/:game/generate-q-and-a" request
+          (let [game (Integer. (:game (:route-params request)))
+                user-id (username2userid (authentication/current request))]
+            (log/debug (str "generating question for game: " game " for user id: " user-id))
+            (generate-q-and-a game (request-to-session request))))
      
-     ;; below URLs are for backwards-compatibility:
      (GET "/" request
           {:status 302
-           :headers {"Location" "/tour/it"}})
-
-     (GET "/generate-q-and-a" request
-          {:status 302
-           :headers {"Location" "/tour/it/generate-q-and-a"}})
+           :headers {"Location" "/class"}})
 
      ;; TODO: join against users to show usernames rather than just session id.
      (GET "/report" request
@@ -179,7 +116,6 @@
                                  []] :results))])
                        request
                        {})})
-
 
      (POST "/update-question" request
            (let [session (:value (get (:cookies request) "ring-session"))
@@ -252,7 +188,7 @@
                                AND target=?")
                [target-language]] :results))
 
-(defn get-step-for-user [target-language target-locale request]
+(defn get-step-for-user [user-id game-id]
   (let [headers {"Content-Type" "application/json;charset=utf-8"
                  "Cache-Control" "no-cache, no-store, must-revalidate"
                  "Pragma" "no-cache"
@@ -277,31 +213,33 @@
                                       VALUES (?,?,?::uuid) RETURNING id")
                            [game-id source-id session-id]] :results))))
 
-(defn generate-q-and-a-from-game [request]
-  (log/debug (str "generating q-and-a from request: " request))
-  ;; TODO: "it" and "IT" should be <language> and <locale> derived
-  ;; from game's id derived from request.
-  (get-step-for-user "it" "IT" request))
+(defn request-to-session [request]
+  (if (and request
+           (:cookies request)
+           (get (:cookies request) "ring-session"))
+    (:value (get (:cookies request) "ring-session"))))
 
-(defn generate-q-and-a [target-language target-locale request]
+(defn generate-q-and-a [game-id session-id]
   "generate a question in English and a set of possible correct answers in the target language, given parameters in request"
-  (log/info (str "generate-q-and-a: target=" target-language "; target-locale=" target-locale ""))
-  (log/debug (str "generate-q-and-a: request=" request))
-  (log/debug (str "generate-q-and-a: session-id(1): " (:cookies request)))
-  (log/debug (str "generate-q-and-a: session-id(2): " (get (:cookies request) "ring-session")))
-  (log/debug (str "generate-q-and-a: session-id(3): " (:value (get (:cookies request) "ring-session"))))
-  (let [session-id (if (and request
-                         (:cookies request)
-                         (get (:cookies request) "ring-session"))
-                     (:value (get (:cookies request) "ring-session")))
-        headers {"Content-Type" "application/json;charset=utf-8"
+  (let [headers {"Content-Type" "application/json;charset=utf-8"
                  "Cache-Control" "no-cache, no-store, must-revalidate"
                  "Pragma" "no-cache"
-                 "Expires" "0"}]
+                 "Expires" "0"}
+        game (first 
+              (k/exec-raw
+               [(str "SELECT name,source,target,created_by,
+                             to_char(game.created_on, ?) AS created_on
+                        FROM game 
+                       WHERE id=? LIMIT 1")
+                [time-format game-id]] :results))
+        target-language (:target game)
+        target-locale "IT" ;; TODO: game should have a locale
+        ]
+        
+    (log/info (str "generate-q-and-a: target=" target-language "; target-locale=" target-locale ""))
     (log/debug (str "generate-q-and-a: session-id: " session-id))
       
-    (try (let [game (get (:params request) :game :any)
-               debug (log/info (str "generate-q-and-a: chosen game=" game))
+    (try (let [debug (log/info (str "generate-q-and-a: chosen game=" game))
                game (cond (= "" game)
                           :any
                           (nil? game)
@@ -309,7 +247,6 @@
                           (string? game)
                           (Integer. game)
                           true game)
-               step (get (:params request) :step)
                game (if (= game :any)
                       (let [active (active-games target-language)]
                         (if (empty? active)
@@ -318,11 +255,13 @@
                                     (rand-int (.size active))))))
                       game)
                debug (log/debug (str "game:" game))
-               debug (log/debug (str "param keys:" (keys (:params request))))
-               game-spec (get-game-spec "en" target-language game)
+               game-spec (get-game-spec "en" target-language game-id)
                debug (log/debug (str "game-spec: " game-spec))
                debug (log/debug (str "target-spec: " (get game-spec :target_spec)))
                spec :top
+
+               debug (log/debug (str "game-spec:" game-spec))
+
                tuple 
                (generate-question-and-correct-set (:target_spec game-spec)
                                                   source-language source-locale
@@ -332,7 +271,7 @@
                
                question-id (sync-question-info {:source-id (:source-id tuple)
                                                 :session-id session-id
-                                                :game-id game})
+                                                :game-id game-id})
 
                ]
            {:status 200
@@ -436,10 +375,6 @@
       ]
      ]
 
-   
-    (game-chooser (if chosen-game (Integer. chosen-game) nil)
-                  language locale user-id)
-
     ]
 
    ]
@@ -476,35 +411,6 @@
        (k/exec-raw [(str "SELECT inflection
                             FROM inflections_per_game
                            WHERE game = ?") [game-id]] :results)))
-
-(defn game-chooser [current-game target-language locale user-id]
-  [:div#chooser
-
-   "Choose your class/game:"
-
-   [:select#chooserselect
-    {:style "display:block;"
-     :onchange
-     "document.location='?game='+this.options[this.selectedIndex].value;"}
-
-    [:option {:value ""} "All active games"]
-    
-    (map (fn [row]
-           (let [if-selected (if (= (:id row) current-game)
-                               {:selected true}
-                               {})]
-             [:option (merge if-selected {:value (:id row)}) (:name row)]))
-         (k/exec-raw [(str "SELECT name,game.id
-                              FROM game
-                        INNER JOIN vc_user AS teacher
-                                ON teacher.id = game.created_by
-                        INNER JOIN vc_user
-                                AS student
-                                ON student.teacher = teacher.id
-                             WHERE student.id = ?
-                               AND target=?
-                               AND active = true")
-                      [user-id target-language]] :results))]])
 
 (defn evaluate [user-response]
   (let [params (:form-params user-response)]
