@@ -188,15 +188,8 @@ function start_tour(game_id,target_language,target_locale) {
 
 function get_position_from_profile(game_id) {
     /* determine where user is on map based on their profile. */
-    var retval;
-    $.ajax({
-	async: false,
-	cache: false,
-        dataType: "json",
-        url: "/tour/" + game_id + "/step",
-        success: function (content) {
-	    retval = content;
-	}});
+    var retval = {"position": 0,
+		  "direction":1};
     return retval;
 }
 
