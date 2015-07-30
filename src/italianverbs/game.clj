@@ -46,7 +46,7 @@
 (def json-headers {"Content-type" "application/json;charset=utf-8"})
 (def resources {:onload "game_onload();"
                 :css ["/css/game.css"]
-                :jss ["/js/game/js"]})
+                :jss ["/js/game.js"]})
 
 (defn tenses-of-game-as-human-readable [tenses]
   (map #(html [:b (str %)])
