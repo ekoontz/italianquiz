@@ -26,6 +26,7 @@
 (declare headers)
 (declare table)
 (declare tr)
+(declare show-games)
 (declare show-students)
 (declare show-classes)
 
@@ -33,7 +34,7 @@
 (def json-headers {"Content-type" "application/json;charset=utf-8"})
 (def resources {:onload "class_onload();"
                 :css ["/css/class.css"]
-                :jss ["/js/class/js"]})
+                :jss ["/js/class/class.js"]})
 (def routes
   (compojure/routes
    (GET "/" request
@@ -183,7 +184,7 @@ INSERT INTO class (name,teacher,language)
                                           ON teacher.id = class.teacher
                                        WHERE class.id=?"
                                      [time-format class]] :results))]
-                   [:div#students {:class "major"}
+                   [:div {:class "major"}
                     [:h2 (banner [{:href "/class"
                                    :content "My Classes"}
                                   {:href nil
@@ -200,72 +201,13 @@ INSERT INTO class (name,teacher,language)
                        [:th "Email"]
                        [:td (:teacher_email class-map)]
                        ]
-                      ]
+                      ]]
 
-                     (do-if (= userid (:teacher_user_id class-map))
-                            (html
-                             [:h3 "Students"]
-                             (let [students (k/exec-raw
-                                             ["SELECT trim(given_name || ' ' || family_name) AS name,
-                                               picture,teacher,email,
-                                               to_char(student_in_class.enrolled,?) AS enrolled
-                                          FROM vc_user
-                                    INNER JOIN student_in_class
-                                            ON (student_in_class.student = vc_user.id)"
-                                              [time-format]] :results)]
-                               [:div.rows2table
-                                (rows2table students
-                                            {:cols [:name :picture :email :enrolled]
-                                             :col-fns
-                                             {:picture (fn [picture] (html [:img {:width "50px" :src (:picture picture)}]))
-                                              :name (fn [student]
-                                                      (html [:a {:href (str "/student/" (:id student))}
-                                                             (:name student)]))}})])
-                             [:div.add {:style "display:none"} ;; disabled: not implemented yet - students must self-enroll in classes.
-                              [:a {:href (str "/class/" class "/student/add")}
-                               "Add a new student"]]))
+                    (do-if (= userid (:teacher_user_id class-map))
+                           (show-students class))
 
-                     (do-if (= userid (:teacher_user_id class-map))
-                            (html
-                             [:h3 "Games"]
-                             (let [games (k/exec-raw
-                                          ["SELECT 'remove',game.id,game.name AS game,
-                                           trim(owner.given_name || ' ' || owner.family_name) AS created_by,
-                                           owner.id AS owner_id,
-                                           to_char(game_in_class.added,?) AS added
-                                      FROM game
-                                INNER JOIN game_in_class
-                                        ON (game_in_class.game=game.id
-                                       AND  game_in_class.class=?)
-                                 LEFT JOIN vc_user AS owner 
-                                        ON (owner.id = game.created_by)
-                                  ORDER BY game_in_class.added DESC"
-                                   [time-format class]] :results)]
-                               [:div.rows2table
-                                (rows2table games
-                                            {:cols [:remove :game :created_by :added]
-                                             :td-styles
-                                             {:remove "text-align:center"}
-                                             :th-styles
-                                             {:remove "text-align:center;width:3em"}
-                                             :col-fns
-                                             ;; TODO: add some javascript confirmation "are you sure?" stuff rather
-                                             ;; than simply removing the game from the class.
-                                             {:remove (fn [game]
-                                                        (html [:form {:action (str "/class/" class
-                                                                                   "/game/" (:id game) "/delete")
-                                                                      :method "post"}
-                                                               [:button {:onclick "submit()"} "Remove"]]))
-                                              :created_by (fn [game] (html [:a {:href (str "/teacher/" (:owner_id game))}
-                                                                            (:created_by game)]))
-                                      :game (fn [game] (html [:a {:href (str "/game/" (:id game))}
-                                                              (if (or (nil? (:game game))
-                                                                      (not (= "" (string/trim (:game game)))))
-                                                                (:game game) "(untitled)")]))}}
-                                            )])
-                             [:div.add 
-                              [:a {:href (str "/class/" class "/game/add")}
-                               "Add a game to this class"]]))
+                    (do-if (= userid (:teacher_user_id class-map))
+                           (show-games class))
 
                      (do-if student-of-class?
                             (html
@@ -286,11 +228,10 @@ INSERT INTO class (name,teacher,language)
                                                                       "Play"]))}
                                              :th-styles
                                              {:play "text-align:center;width:3em"}
-                                             :cols [:play :game]})])))
+                                             :cols [:play :game]})])))])
 
-                     ]])
-                request
-                resources))}))
+                  request
+                  resources))}))
 
    (GET "/:class/game/add"
         request
@@ -434,4 +375,70 @@ INSERT INTO class (name,teacher,language)
                 :headers {"Location" (str "/class/" class "?message=Removed game.")}})))
       )
   )
+
+
+(defn show-students [class]
+  (html
+   [:h3 "Students"]
+   (let [students (k/exec-raw
+                   ["SELECT trim(given_name || ' ' || family_name) AS name,
+                                               picture,teacher,email,
+                                               to_char(student_in_class.enrolled,?) AS enrolled
+                       FROM vc_user
+                 INNER JOIN student_in_class
+                         ON (student_in_class.student = vc_user.id)"
+                    [time-format]] :results)]
+     [:div.rows2table
+      (rows2table students
+                  {:cols [:name :picture :email :enrolled]
+                   :col-fns
+                   {:picture (fn [picture] (html [:img {:width "50px" :src (:picture picture)}]))
+                    :name (fn [student]
+                            (html [:a {:href (str "/student/" (:id student))}
+                                   (:name student)]))}})])
+   [:div.add {:style "display:none"} ;; disabled: not implemented yet - students must self-enroll in classes.
+    [:a {:href (str "/class/" class "/student/add")}
+     "Add a new student"]]))
+
+(defn show-games [class]
+  (html
+   [:h3 "Games"]
+   (let [games (k/exec-raw
+                ["SELECT 'remove',game.id,game.name AS game,
+                                           trim(owner.given_name || ' ' || owner.family_name) AS created_by,
+                                           owner.id AS owner_id,
+                                           to_char(game_in_class.added,?) AS added
+                                      FROM game
+                                INNER JOIN game_in_class
+                                        ON (game_in_class.game=game.id
+                                       AND  game_in_class.class=?)
+                                 LEFT JOIN vc_user AS owner 
+                                        ON (owner.id = game.created_by)
+                                  ORDER BY game_in_class.added DESC"
+                 [time-format class]] :results)]
+     [:div.rows2table
+      (rows2table games
+                  {:cols [:remove :game :created_by :added]
+                   :td-styles
+                   {:remove "text-align:center"}
+                   :th-styles
+                   {:remove "text-align:center;width:3em"}
+                   :col-fns
+                   ;; TODO: add some javascript confirmation "are you sure?" stuff rather
+                   ;; than simply removing the game from the class.
+                   {:remove (fn [game]
+                              (html [:form {:action (str "/class/" class
+                                                         "/game/" (:id game) "/delete")
+                                            :method "post"}
+                                     [:button {:onclick "submit()"} "Remove"]]))
+                    :created_by (fn [game] (html [:a {:href (str "/teacher/" (:owner_id game))}
+                                                  (:created_by game)]))
+                    :game (fn [game] (html [:a {:href (str "/game/" (:id game))}
+                                            (if (or (nil? (:game game))
+                                                    (not (= "" (string/trim (:game game)))))
+                                              (:game game) "(untitled)")]))}}
+                  )])
+   [:div.add 
+    [:a {:href (str "/class/" class "/game/add")}
+     "Add a game to this class"]]))
 
