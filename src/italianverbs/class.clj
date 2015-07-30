@@ -386,8 +386,8 @@ INSERT INTO class (name,teacher,language)
                                                to_char(student_in_class.enrolled,?) AS enrolled
                        FROM vc_user
                  INNER JOIN student_in_class
-                         ON (student_in_class.student = vc_user.id)"
-                    [time-format]] :results)]
+                         ON (student_in_class.student = vc_user.id) AND (class = ?)"
+                    [time-format class]] :results)]
      [:div.rows2table
       (rows2table students
                   {:cols [:name :picture :email :enrolled]
