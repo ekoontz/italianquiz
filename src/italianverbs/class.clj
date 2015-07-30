@@ -14,6 +14,7 @@
    [compojure.core :as compojure :refer [GET PUT POST DELETE ANY]]
    [formative.core :as f]
    [hiccup.core :refer (html)]
+   [italianverbs.about :as about]
    [italianverbs.authentication :as authentication]
    [italianverbs.config :refer [language-radio-buttons short-language-name-to-long time-format]]
    [italianverbs.game :refer [tenses-of-game-as-human-readable verbs-of-game-as-human-readable]]
@@ -136,11 +137,7 @@
                 resources)}
          ;; else, not authenticated
          (page "My Classes"
-               [:div.major
-                [:h2 "Welcome to verbcoach."]
-
-                [:div {:style "width:75%;margin-left:25%;float:left;margin:1em;"}
-                 [:p "Please log in to get started with your classes and games."]]])))
+               (about/about request))))
 
    (POST "/new" request
          (do-if-teacher
