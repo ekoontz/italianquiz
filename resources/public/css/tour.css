@@ -207,9 +207,9 @@ button.accented {
 div#menubar {
     z-index:5;
     position:absolute;
-    top:1%;
+    top:12%;
     font-size:smaller;
-    left:45%;
+    left:4%;
     padding:0;
     margin:0;
     opacity:0.85;
@@ -407,7 +407,7 @@ div.login {
     position:absolute;
     top:1%;
     font-size:smaller;
-    left:15%;
+    left:4%;
     padding:0;
     margin:0;
     opacity:0.85;
