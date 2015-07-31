@@ -174,36 +174,66 @@
                    [:div {:class "gamelist"}
                     [:h3 "Games I'm playing"]
                     (let [results (k/exec-raw
-                                   ["SELECT 'resume',game.id,game.name AS game
+                                   ["SELECT 'resume',game.id,game.name AS game,class.name AS class
                                        FROM game 
                                  INNER JOIN student_in_game 
                                          ON (student_in_game.game = game.id)
-                                      WHERE student=?"
+                                 INNER JOIN game_in_class
+                                         ON (game_in_class.game = game.id)
+                                  LEFT JOIN class
+                                         ON (class.id = game_in_class.class)
+                                  LEFT JOIN student_in_class
+                                         ON (student_in_class.class = game_in_class.class)
+                                      WHERE student_in_class.student = ?"
                                     [user-id]] :results)]
                       [:div.rows2table
                        (rows2table results
                                    {:col-fns {:game (fn [game]
                                                       (html [:a {:href (str "/game/" (:id game))}
                                                              (str (:game game))]))
+                                              :class (fn [game]
+                                                       (html [:a {:href (str "/game/" (:id game))}
+                                                              (str (:class game))]))
                                               :resume (fn [game]
                                                         (html [:button {:onclick (str "document.location='/tour/"
                                                                                       (:id game) "';")}
                                                                "Resume"]))}
-                                    :cols [:resume :game]}
+                                    :cols [:resume :game :class]}
                                    )])]
                    
                    [:div {:class "gamelist"}
-                    [:h3 "New games available for me to play"]
-                    
-                     (let [results (k/exec-raw
-                                    ["SELECT *
-                                        FROM game_in_class"
-                                     []] :results)]
-                       (rows2table results
-                                   {}))
+                    [:h3 "New games available in my classes"]
 
-                    ]
-                   ])
+
+                    (let [results (k/exec-raw
+                                   ["SELECT 'play',game.id,game.name AS game,class.name AS class
+                                       FROM game 
+                                  LEFT JOIN student_in_game 
+                                         ON (student_in_game.game = game.id)
+                                 INNER JOIN game_in_class
+                                         ON (game_in_class.game = game.id)
+                                  LEFT JOIN class
+                                         ON (class.id = game_in_class.class)
+                                  LEFT JOIN student_in_class
+                                         ON (student_in_class.class = game_in_class.class)
+                                      WHERE student_in_class.student = ? AND student_in_game.student=NULL"
+                                    [user-id]] :results)]
+                      [:div.rows2table
+                       (rows2table results
+                                   {:col-fns {:game (fn [game]
+                                                      (html [:a {:href (str "/game/" (:id game))}
+                                                             (str (:game game))]))
+                                              :play (fn [game]
+                                                        (html [:button {:onclick (str "document.location='/tour/"
+                                                                                      (:id game) "';")}
+                                                               "Play"]))
+                                              :class (fn [game]
+                                                       (html [:a {:href (str "/game/" (:id game))}
+                                                              (str (:class game))]))
+
+                                              }
+                                    :cols [:play :game :class]}
+                                   )])]])
                 request
                 resources)
           :status 200
