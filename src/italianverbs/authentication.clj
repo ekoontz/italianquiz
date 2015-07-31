@@ -42,6 +42,7 @@
       {:status 302
        :headers {"Location" "/game"}}))
 
+;; TODO: only supports google for now: add others
 (defn current [ & [request]]
   (let [current-authentication (friend/current-authentication)]
     (if current-authentication
