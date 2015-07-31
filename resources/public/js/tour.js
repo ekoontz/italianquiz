@@ -110,8 +110,7 @@ function get_heading(path,position_index) {
     return heading;
 }
 
-function start_tour(game_id,target_language,target_locale) {
-    var position_info = get_position_from_profile(game_id);
+function start_tour(game_id,target_language,target_locale,position_info) {
     step = position_info.position;
     direction = position_info.direction;
 

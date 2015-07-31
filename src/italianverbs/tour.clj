@@ -29,11 +29,6 @@
   (let [headers {"Content-Type" "text/html;charset=utf-8"}]
     (compojure/routes
 
-     (GET "/:game/step" request
-          (let [game-id (Integer. (:game (:route-params request)))
-                user-id (username2userid (authentication/current request))]
-            (get-step-for-user user-id game-id)))
-
      (GET "/:game" request
           (let [game (Integer. (:game (:route-params request)))
                 game-result (first 
@@ -46,7 +41,10 @@
             (page "Map Tour" (tour "it" "IT"
                                    game
                                    (username2userid (authentication/current request)))
-                  request {:onload (str "start_tour('" game "','" "it" "','" "IT" "');")
+                  request {:onload (str "start_tour('" game "','" "it" "','" "IT" "',"
+                                        (write-str (get-step-for-user (username2userid (authentication/current request))
+                                                                      game))
+                                        ");")
                            :css ["/css/tour.css"]
                            :jss ["/js/cities.js"
                                  "/js/gen.js"
@@ -189,15 +187,9 @@
                [target-language]] :results))
 
 (defn get-step-for-user [user-id game-id]
-  (let [headers {"Content-Type" "application/json;charset=utf-8"
-                 "Cache-Control" "no-cache, no-store, must-revalidate"
-                 "Pragma" "no-cache"
-                 "Expires" "0"}]
-    ;; TODO: just a stub now: should look in DB and find user's last position.
-    {:status 200
-     :headers headers
-     :body (write-str {:position 0
-                       :direction 1})}))
+  ;; TODO: just a stub now: should look in DB and find user's last position.
+  {:position 0
+   :direction 1})
 
 (defn sync-question-info [ & [{game-id :game-id
                                source-id :source-id
