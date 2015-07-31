@@ -12,7 +12,7 @@
    [italianverbs.html :refer [page]]
    [italianverbs.morphology :refer (fo remove-parens)]
    [dag-unify.core :refer (get-in unify)]
-   [italianverbs.user :refer (username2userid)]
+   [italianverbs.user :refer (username2userid session2userid)]
    [korma.core :as k]))
 
 ;; For now, source language and locale are constant.
@@ -131,6 +131,7 @@
                                    SET (time_to_correct_response,answer) = (?,?) 
                                  WHERE (id = ? AND session_id = ?::uuid)")
                           [ttcr answer question session]])
+
              {:status 200
               :headers {"Content-Type" "application/json;charset=utf-8"}
               :body (write-str (:status (str "updated question: " (:question (:form-params request)))))}))
@@ -188,8 +189,19 @@
 
 (defn get-step-for-user [user-id game-id]
   ;; TODO: just a stub now: should look in DB and find user's last position.
-  {:position 0
-   :direction 1})
+  (let [current-position
+        (first 
+         (k/exec-raw
+          [(str "SELECT last_move 
+                       FROM student_in_game
+                      WHERE game=? AND student=?")
+           [game-id user-id]] :results))]
+    (if (and current-position (:last_move current-position))
+      {:position (:last_move current-position)
+       :direction 1}
+      ;; no position yet.
+      {:position 0
+       :direction 1})))
 
 (defn sync-question-info [ & [{game-id :game-id
                                source-id :source-id
@@ -198,13 +210,40 @@
   ;; The answer is filled in later when the user POSTs to /tour/update-question,
   ;; where we add the user's correct answer and the TTCR (time-to-correct-response).
   "create a question. currently the answer is not tracked (but should be)."
-  (log/info (str "sync-question-info: game-id:" game-id))
-  (log/info (str "sync-question-info: expression source: " source-id))
-  (log/info (str "sync-question-info: session-id: " session-id))
+  (log/debug (str "sync-question-info: game-id:" game-id))
+  (log/debug (str "sync-question-info: expression source: " source-id))
+  (log/debug (str "sync-question-info: session-id: " session-id))
+
+  ;; update user's state in game:
+  (log/debug (str "sync-question-info: getting userid for session: " session-id))
+  (let [student-id (session2userid session-id)]
+    (log/debug (str "sync-question-info: student's user-id: " student-id))
+    (if student-id
+      (let [current-position
+            (first 
+             (k/exec-raw
+              [(str "SELECT last_move 
+                       FROM student_in_game
+                      WHERE game=? AND student=?")
+               [game-id student-id]] :results))]
+        (if (:last_move current-position)
+          ;; increment student's last_move for this game.
+          (do
+            (log/debug (str "found for student: " student-id " a current position: " current-position))
+            (k/exec-raw [(str "UPDATE student_in_game SET last_move=? WHERE game=? AND student=?")
+                         [(+ 1 (:last_move current-position))
+                          game-id student-id]]))
+          ;; else, no current position yet: initialize.
+          (do
+            (log/debug (str "no current position found for student: " student-id))
+            (k/exec-raw [(str "INSERT INTO student_in_game (game,student,last_move)
+                                   VALUES (?,?,0)")
+                         [game-id student-id]]))))))
   (:id (first (k/exec-raw [(str "INSERT INTO question (game,source,session_id)
                                       VALUES (?,?,?::uuid) RETURNING id")
                            [game-id source-id session-id]] :results))))
 
+;; TODO: move to session.clj
 (defn request-to-session [request]
   (if (and request
            (:cookies request)
@@ -232,6 +271,8 @@
     (log/debug (str "generate-q-and-a: session-id: " session-id))
       
     (try (let [debug (log/info (str "generate-q-and-a: chosen game=" game))
+               ;; TODO: do not allow failsafe "any" mode if no game chosen: some game should always be chosen if we got here;
+               ;; else return "404 Game not found."
                game (cond (= "" game)
                           :any
                           (nil? game)

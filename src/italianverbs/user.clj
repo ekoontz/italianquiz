@@ -186,11 +186,18 @@
    ]
   )
 
-
 (defn username2userid [username]
   (when username
     (:id (first (k/exec-raw [(str "SELECT id FROM vc_user WHERE email=?")
                              [username]] :results)))))
+
+(defn session2userid [session]
+  (when session
+    (:user_id (first (k/exec-raw [(str "SELECT user_id FROM session 
+                                    WHERE ring_session=?::uuid 
+                                      AND user_id IS NOT NULL")
+                             [session]] :results)))))
+
 
 (defn haz-admin? [ & [request]]
   (let [authentication (friend/current-authentication)]

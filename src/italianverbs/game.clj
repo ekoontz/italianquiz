@@ -174,14 +174,23 @@
                    [:div {:class "gamelist"}
                     [:h3 "Games I'm playing"]
                     (let [results (k/exec-raw
-                                   ["SELECT *
-                                        FROM student_in_game
-                                       WHERE student=?"
+                                   ["SELECT 'resume',game.id,game.name AS game
+                                       FROM game 
+                                 INNER JOIN student_in_game 
+                                         ON (student_in_game.game = game.id)
+                                      WHERE student=?"
                                     [user-id]] :results)]
-                      (rows2table results
-                                  {}
-                                  ))
-                    ]
+                      [:div.rows2table
+                       (rows2table results
+                                   {:col-fns {:game (fn [game]
+                                                      (html [:a {:href (str "/game/" (:id game))}
+                                                             (str (:game game))]))
+                                              :resume (fn [game]
+                                                        (html [:button {:onclick (str "document.location='/tour/"
+                                                                                      (:id game) "';")}
+                                                               "Resume"]))}
+                                    :cols [:resume :game]}
+                                   )])]
                    
                    [:div {:class "gamelist"}
                     [:h3 "New games available for me to play"]

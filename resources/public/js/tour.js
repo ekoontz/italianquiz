@@ -120,7 +120,7 @@ function start_tour(game_id,target_language,target_locale,position_info) {
     current_lat = path[step][0];
     current_long = path[step][1];
     quadrant = get_quadrant(path,step);
-    heading = get_heading(path,0);
+    heading = get_heading(path,step);
 
     map = L.map('map').setView([current_lat, current_long], current_zoom);
 
