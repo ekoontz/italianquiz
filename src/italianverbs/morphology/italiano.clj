@@ -606,6 +606,7 @@
         true
         (str "(regpast:TODO):" stem)))
 
+     ;; <irregular present tense>
      (and (= (get-in word '(:infl)) :present)
           (= person :1st) (= number :sing)
           (string? (get-in word '(:present :1sing))))
@@ -635,6 +636,7 @@
           (= person :3rd) (= number :plur)
           (string? (get-in word '(:present :3plur))))
      (get-in word '(:present :3plur))
+     ;; </irregular present tense>
 
      (and
       (= (get-in word '(:infl)) :present)
@@ -673,12 +675,12 @@
         ;; do not add 'i' at the end here to prevent double i:
         (str stem "")
 
-        (and (= person :2nd) (= number :sing))
-        (str stem "i")
-
         (and is-care-or-gare? 
              (= person :2nd) (= number :sing))
         (str stem "hi")
+
+        (and (= person :2nd) (= number :sing))
+        (str stem "i")
 
         (and (= person :3rd) (= number :sing) (or ire-type ere-type))
         (str stem "e")
