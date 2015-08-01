@@ -37,11 +37,12 @@
                                             to_char(game.created_on, ?) AS created_on
                                        FROM game 
                                       WHERE id=? LIMIT 1")
-                               [time-format game]] :results))]
-            (page "Map Tour" (tour "it" "IT"
+                               [time-format game]] :results))
+                game-target (:target game-result)]
+            (page "Map Tour" (tour game-target "IT"
                                    game
                                    (username2userid (authentication/current request)))
-                  request {:onload (str "start_tour('" game "','" "it" "','" "IT" "',"
+                  request {:onload (str "start_tour('" game "','" game-target "','" "IT" "',"
                                         (write-str (get-step-for-user (username2userid (authentication/current request))
                                                                       game))
                                         ");")
@@ -49,7 +50,7 @@
                            :jss ["/js/cities.js"
                                  "/js/gen.js"
                                  "/js/leaflet.js"
-                                 "/js/it.js"
+                                 (str "/js/" game-target ".js")
                                  "/js/tour.js"]})))
      (GET "/:game/debug" request
           (let [game (Integer. (:game (:route-params request)))
