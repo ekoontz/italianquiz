@@ -1,5 +1,3 @@
-;; You must define POSTGRES_ENV and (if needed) POSTGRES_SECRET
-;; in your environment so that 'lein ring server[-headless]' can work.
 (defproject italianverbs "1.0.0-SNAPSHOT"
   :description "Italian language learning app"
   :dependencies [[clj-time "0.7.0"]
