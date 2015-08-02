@@ -83,7 +83,7 @@
                      [:h3 "Games in classes I'm teaching"]
                      (let [results (k/exec-raw
                                     ["SELECT class.id AS class_id,class.name AS class, game.name AS game, 
-                                             game.id AS game_id,class.language,
+                                             game.id AS game_id,class.language,game.city,
                                              game.target_grammar AS tenses,game.target_lex AS verbs,
                                              trim(creator.given_name || ' ' || creator.family_name) AS game_owner
                                         FROM game
@@ -92,7 +92,7 @@
                                    LEFT JOIN vc_user AS creator ON (game.created_by = creator.id)"
                                      [user-id]] :results)]
                        (rows2table results
-                                   {:cols [:game :class :language :verbs :tenses :game_owner]
+                                   {:cols [:game :class :language :city :verbs :tenses :game_owner]
                                     :col-fns
                                     {:game (fn [game-in-class]
                                              [:a {:href (str "/game/" (:game_id game-in-class))} (:game game-in-class)])
@@ -111,12 +111,12 @@
                     [:div {:class "gamelist"}
                      [:h3 "Games I created"]
                      (let [results (k/exec-raw
-                                    ["SELECT game.name AS game, game.target AS language,game.id AS game_id,
+                                    ["SELECT game.name AS game, game.target AS language,city,game.id AS game_id,
                                              game.target_grammar AS tenses,game.target_lex AS verbs
                                         FROM game WHERE created_by=?"
                                      [user-id]] :results)]
                        (rows2table results
-                                   {:cols [:game :language :verbs :tenses]
+                                   {:cols [:game :language :city :verbs :tenses]
                                     :col-fns
                                     {:game (fn [game-in-class]
                                              [:a {:href (str "/game/" (:game_id game-in-class))} (:game game-in-class)])
@@ -174,7 +174,7 @@
                    [:div {:class "gamelist"}
                     [:h3 "Games I'm playing"]
                     (let [results (k/exec-raw
-                                   ["SELECT 'resume',game.id,game.name AS game,class.name AS class
+                                   ["SELECT 'resume',game.id,game.name AS game,game.target AS language,city,class.name AS class
                                        FROM game 
                                  INNER JOIN student_in_game 
                                          ON (student_in_game.game = game.id)
@@ -191,6 +191,8 @@
                                    {:col-fns {:game (fn [game]
                                                       (html [:a {:href (str "/game/" (:id game))}
                                                              (str (:game game))]))
+                                              :language (fn [game-in-class]
+                                                          (short-language-name-to-long (:language game-in-class)))
                                               :class (fn [game]
                                                        (html [:a {:href (str "/game/" (:id game))}
                                                               (str (:class game))]))
@@ -198,7 +200,7 @@
                                                         (html [:button {:onclick (str "document.location='/tour/"
                                                                                       (:id game) "';")}
                                                                "Resume"]))}
-                                    :cols [:resume :game :class]}
+                                    :cols [:resume :game :language :city :class]}
                                    )])]
                    
                    [:div {:class "gamelist"}
