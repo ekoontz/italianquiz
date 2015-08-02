@@ -172,11 +172,12 @@
 
                    
                    [:div {:class "gamelist"}
-                    [:h3 "Games I'm playing"]
+                    [:h3 "Games in my classes"]
                     (let [results (k/exec-raw
-                                   ["SELECT 'resume',game.id,game.name AS game,game.target AS language,city,class.name AS class
+                                   ["SELECT 'resume',game.id,game.name AS game,city,last_move AS position,
+                                            game.target AS language,class.name AS class
                                        FROM game 
-                                 INNER JOIN student_in_game 
+                                  LEFT JOIN student_in_game 
                                          ON (student_in_game.game = game.id)
                                  INNER JOIN game_in_class
                                          ON (game_in_class.game = game.id)
@@ -184,7 +185,8 @@
                                          ON (class.id = game_in_class.class)
                                   LEFT JOIN student_in_class
                                          ON (student_in_class.class = game_in_class.class)
-                                      WHERE student_in_class.student = ?"
+                                      WHERE student_in_class.student = ?
+                                         OR student_in_class IS NULL"
                                     [user-id]] :results)]
                       [:div.rows2table
                        (rows2table results
@@ -199,43 +201,12 @@
                                               :resume (fn [game]
                                                         (html [:button {:onclick (str "document.location='/tour/"
                                                                                       (:id game) "';")}
-                                                               "Resume"]))}
-                                    :cols [:resume :game :language :city :class]}
-                                   )])]
-                   
-                   [:div {:class "gamelist"}
-                    [:h3 "New games available in my classes"]
-
-
-                    (let [results (k/exec-raw
-                                   ["SELECT 'play',game.id,game.name AS game,class.name AS class
-                                       FROM game 
-                                  LEFT JOIN student_in_game 
-                                         ON (student_in_game.game = game.id)
-                                 INNER JOIN game_in_class
-                                         ON (game_in_class.game = game.id)
-                                  LEFT JOIN class
-                                         ON (class.id = game_in_class.class)
-                                  LEFT JOIN student_in_class
-                                         ON (student_in_class.class = game_in_class.class)
-                                      WHERE student_in_class.student = ? AND student_in_game.student=NULL"
-                                    [user-id]] :results)]
-                      [:div.rows2table
-                       (rows2table results
-                                   {:col-fns {:game (fn [game]
-                                                      (html [:a {:href (str "/game/" (:id game))}
-                                                             (str (:game game))]))
-                                              :play (fn [game]
-                                                        (html [:button {:onclick (str "document.location='/tour/"
-                                                                                      (:id game) "';")}
-                                                               "Play"]))
-                                              :class (fn [game]
-                                                       (html [:a {:href (str "/game/" (:id game))}
-                                                              (str (:class game))]))
-
-                                              }
-                                    :cols [:play :game :class]}
-                                   )])]])
+                                                               (if (nil? (:position game))
+                                                                 "Play"
+                                                                 "Resume")]))}
+                                    :th-styles {:resume "visibility:hidden"}
+                                    :cols [:resume :game :city :position :language :class]})])]])
+                                   
                 request
                 resources)
           :status 200
@@ -940,7 +911,7 @@ ms: " params))))
                                     (if (= (:city game) city)
                                       {:checked :checked}
                                       {})))
-                                 ["Firenze" "Roma"]))}]
+                                 ["Firenze"]))}]
 
                 [{:name :target_lex
                   :label "Verbs"
