@@ -219,12 +219,13 @@ INSERT INTO class (name,teacher,language)
                     (do-if (= userid (:teacher_user_id class-map))
                            (show-games class))
 
-                     (do-if student-of-class?
+                    ;; TODO: see games.clj for showing play vs. resume
+                    (do-if student-of-class?
                             (html
                              [:h3 "Games you can play in this class"]
                              (let [games
                                    (k/exec-raw
-                                    ["SELECT 'play',game.id,game.name AS game
+                                    ["SELECT 'play',game.id,game.name AS game, game.city
                                         FROM game
                                   INNER JOIN game_in_class
                                           ON (game_in_class.game=game.id
@@ -238,7 +239,7 @@ INSERT INTO class (name,teacher,language)
                                                                       "Play"]))}
                                              :th-styles
                                              {:play "text-align:center;width:3em"}
-                                             :cols [:play :game]})])))])
+                                             :cols [:play :game :city]})])))])
 
                   request
                   resources))}))
@@ -414,7 +415,7 @@ INSERT INTO class (name,teacher,language)
   (html
    [:h3 "Games"]
    (let [games (k/exec-raw
-                ["SELECT 'remove',game.id,game.name AS game,
+                ["SELECT 'remove',game.id,game.name AS game,game.city,
                                            trim(owner.given_name || ' ' || owner.family_name) AS created_by,
                                            owner.id AS owner_id,
                                            to_char(game_in_class.added,?) AS added
@@ -428,7 +429,7 @@ INSERT INTO class (name,teacher,language)
                  [time-format class]] :results)]
      [:div.rows2table
       (rows2table games
-                  {:cols [:remove :game :created_by :added]
+                  {:cols [:remove :game :city :created_by :added]
                    :td-styles
                    {:remove "text-align:center"}
                    :th-styles
