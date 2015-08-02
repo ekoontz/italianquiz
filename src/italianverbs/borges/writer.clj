@@ -50,7 +50,12 @@
    Thus the source expression's spec is not specified directly - rather it is derived from the 
    semantics of the target expression."
 
-  (let [target-language-sentence (engine/generate spec target-language-model :enrich true)
+  (let [no-source-language (if (nil? source-language-model)
+                             (throw (Exception. "No source language model was supplied.")))
+        no-target-language (if (nil? target-language-model)
+                             (throw (Exception. "No target language model was supplied.")))
+
+        target-language-sentence (engine/generate spec target-language-model :enrich true)
 
         target-language-sentence (let [subj (get-in target-language-sentence
                                                     [:synsem :sem :subj] :notfound)]
@@ -144,6 +149,8 @@
 (defn populate [num source-language-model target-language-model & [ spec table ]]
   (let [spec (if spec spec :top)
         debug (log/debug (str "populate spec(1): " spec))
+        debug (log/debug (str "type of source language model: " (type source-language-model)))
+        debug (log/debug (str "type of target language model: " (type target-language-model)))
         spec (cond
               (not (= :notfound (get-in spec [:synsem :sem :subj] :notfound)))
               (unify spec
@@ -199,6 +206,11 @@
     (populate 1 source-language-model target-language-model (unify lex-spec grammar-spec))))
 
 (defn fill-by-spec [spec count table source-model target-model]
+  (if (nil? source-model)
+    (throw (Exception. "No source language model was supplied.")))
+  (if (nil? target-model)
+    (throw (Exception. "No target language model was supplied.")))
+  
   (populate count
             source-model
             target-model
