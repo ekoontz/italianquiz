@@ -6,6 +6,7 @@
 (require '[dag-unify.core :refer [unify]])
 (require '[korma.core :refer :all])
 (require '[korma.db :refer :all])
+(require '[clojure.tools.logging :as log])
 
 (defn process [ & units]
   (do
@@ -19,13 +20,15 @@
                                (exec-raw (:sql member-of-unit))))
 
                            (if (:fill member-of-unit)
-                             (do
-                               (println (str "doing fill-by-spec: " (->> member-of-unit :fill :spec)))
-                               (fill-by-spec (->> member-of-unit :fill :spec)
-                                             "expression_import"
-                                             (:source-model member-of-unit)
-                                             (:target-model member-of-unit))))
-
+                             (let [count (or (->> member-of-unit :fill :count) 10)]
+                               (println (str "doing fill-by-spec: " (->> member-of-unit :fill :spec)
+                                             "; count=" count))
+                               (fill-by-spec
+                                (->> member-of-unit :fill :spec)
+                                count
+                                "expression_import"
+                                (->> member-of-unit :fill :source-model)
+                                (->> member-of-unit :fill :target-model))))
                            (if (:fill-verb member-of-unit)
                              (do
                                (println (str "doing fill-verb: " (:fill-verb member-of-unit)))
@@ -35,8 +38,8 @@
                                          (if (:count member-of-unit)
                                            (:count member-of-unit)
                                            1)
-                                         (:source-model member-of-unit)
-                                         (:target-model member-of-unit))))))))
+                                         (->> member-of-unit :fill-verb :source-model)
+                                         (->> member-of-unit :fill-verb :target-model))))))))
                        unit)))
          units))
     (exec-raw ["SELECT count(*) FROM expression_import"] :results)
