@@ -571,8 +571,8 @@ ms: " params))))
                "]::jsonb[]")
 
           sql (str "UPDATE game "
-                   "SET (name,source,target,target_lex,target_grammar) "
-                   "= (?,?,?," target-lex-as-specs "," target-tenses-as-specs ") WHERE id=?")]
+                   "SET (name,source,target,target_lex,target_grammar,city) "
+                   "= (?,?,?," target-lex-as-specs "," target-tenses-as-specs ",?) WHERE id=?")]
 
       (log/trace (str "UPDATE sql: " sql))
       (if dump-sql
@@ -588,6 +588,7 @@ ms: " params))))
                          [(:name params)
                           (:source params)
                           (:target params)
+                          (:city params)
                           (Integer. game-id)]]))))))
 
 (defn show-game [game-id & [ {refine :refine
@@ -606,7 +607,8 @@ ms: " params))))
                                          target,
                                          active,
                                          to_char(game.created_on, ?) AS created_on,
-                                         trim(vc_user.given_name || ' ' || vc_user.family_name) AS created_by
+                                         trim(vc_user.given_name || ' ' || vc_user.family_name) AS created_by,
+                                         city
                                     FROM game
                                LEFT JOIN vc_user
                                       ON (vc_user.id = game.created_by)
@@ -907,6 +909,37 @@ ms: " params))))
 
                 [{:name :name :size 50 :label "Name"}]
 
+                [{:name :city
+                  :label "City"
+                  :type :radio
+                  :options (cond
+                            (= language-short-name "es")
+                            (map (fn [city]
+                                   (merge
+                                    {:value city :label city}
+                                    (if (= (:city game) city)
+                                      {:checked :checked}
+                                      {})))
+                                 ["Barcelona" "México D.F."])
+
+                            (= language-short-name "fr")
+                            (map (fn [city]
+                                   (merge
+                                    {:value city :label city}
+                                    (if (= (:city game) city)
+                                      {:checked :checked}
+                                      {})))
+                                 ["Paris"])
+
+                            (= language-short-name "it")
+                            (map (fn [city]
+                                   (merge
+                                    {:value city :label city}
+                                    (if (= (:city game) city)
+                                      {:checked :checked}
+                                      {})))
+                                 ["Firenze" "Roma"]))}]
+
                 [{:name :target_lex
                   :label "Verbs"
                   :disabled "disabled"
@@ -953,6 +986,7 @@ ms: " params))))
        :values {:name (:name game)
                 :target (:target game)
                 :source (:source game)
+                :city (:city game)
                 :source_groupings source-groups
                 :target_groupings target-groups
 
