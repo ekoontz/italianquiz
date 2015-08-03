@@ -175,7 +175,7 @@
                     [:h3 "Games in my classes"]
                     (let [results (k/exec-raw
                                    ["SELECT 'resume',game.id,game.name AS game,city,last_move AS position,
-                                            game.target AS language,class.name AS class
+                                            game.target AS language,class.name AS class,class.id AS class_id
                                        FROM game 
                                   LEFT JOIN student_in_game 
                                          ON (student_in_game.game = game.id)
@@ -196,7 +196,7 @@
                                               :language (fn [game-in-class]
                                                           (short-language-name-to-long (:language game-in-class)))
                                               :class (fn [game]
-                                                       (html [:a {:href (str "/game/" (:id game))}
+                                                       (html [:a {:href (str "/class/" (:class_id game))}
                                                               (str (:class game))]))
                                               :resume (fn [game]
                                                         (html [:button {:onclick (str "document.location='/tour/"
