@@ -266,16 +266,17 @@ INSERT INTO class (name,teacher,language)
 
    (GET "/:class/game/add"
         request
-        ;; TODO: check if this user is the teacher of the game: add (is-teacher-of-class? <game> <user>)
-        (do-if-authenticated
-         {:headers html-headers
-          :body
-          (let [class (Integer. (:class (:route-params request)))]
-            (page "Add a game to this class"
-                  (let [userid (username2userid (authentication/current request))
-                        class-map (first
-                                   (k/exec-raw
-                                    ["SELECT class.id,
+        (let [class-id (Integer. (:class (:route-params request)))
+              user (username2userid (authentication/current request))]
+          (do-if (is-teacher-of-class? class-id user)
+                 {:headers html-headers
+                  :body
+                  (let [class (Integer. (:class (:route-params request)))]
+                    (page "Add a game to this class"
+                          (let [userid (username2userid (authentication/current request))
+                                class-map (first
+                                           (k/exec-raw
+                                            ["SELECT class.id,
                                              class.name,
                                              class.language,
                                              to_char(class.created,?) AS created,
@@ -285,33 +286,33 @@ INSERT INTO class (name,teacher,language)
                                   INNER JOIN vc_user AS teacher
                                           ON teacher.id = class.teacher
                                        WHERE class.id=?"
-                                     [time-format class]] :results))]
-                   [:div#students {:class "major"}
-                    [:h2 (banner [{:href "/class"
-                                   :content "My Classes"}
-                                  {:href (str "/class/" (:id class-map))
-                                   :content (:name class-map)}
-                                  {:href nil
-                                   :content "Add a game"}])]
-                    [:div
-                     [:table
-                      [:tr
-                       [:th "Language"]
-                       [:td (short-language-name-to-long (:language class-map))]
-                       [:th "Created"]
-                       [:td (:created class-map)]
-                       [:th "Teacher"]
-                       [:td (:teacher class-map)]
-                       [:th "Email"]
-                       [:td (:teacher_email class-map)]
-                       ]
-                      ]
+                                             [time-format class]] :results))]
+                            [:div#students {:class "major"}
+                             [:h2 (banner [{:href "/class"
+                                            :content "My Classes"}
+                                           {:href (str "/class/" (:id class-map))
+                                            :content (:name class-map)}
+                                           {:href nil
+                                            :content "Add a game"}])]
+                             [:div
+                              [:table
+                               [:tr
+                                [:th "Language"]
+                                [:td (short-language-name-to-long (:language class-map))]
+                                [:th "Created"]
+                                [:td (:created class-map)]
+                                [:th "Teacher"]
+                                [:td (:teacher class-map)]
+                                [:th "Email"]
+                                [:td (:teacher_email class-map)]
+                                ]
+                               ]
 
-                     [:h3 "Choose a game to add to this class"]
+                              [:h3 "Choose a game to add to this class"]
 
-                     ;; This query shows all games that are *not* in this game.
-                     (let [games (k/exec-raw
-                                  ["SELECT 'Add',game.id,game.name AS game,
+                              ;; This query shows all games that are *not* in this game.
+                              (let [games (k/exec-raw
+                                           ["SELECT 'Add',game.id,game.name AS game,
                                            to_char(game.created_on,?) AS created,
                                            trim(game_creator.given_name || ' ' || game_creator.family_name) AS creator,
                                            game_creator.email AS creator_email
@@ -323,53 +324,54 @@ INSERT INTO class (name,teacher,language)
                                     NOT IN (SELECT game
                                               FROM game_in_class
                                              WHERE class = ?)"
-                                   [time-format (:language class-map) class]] :results)]
-                       [:div.rows2table
-                        (rows2table games
-                                    {:cols [:add :game :created :creator :creator_email]
-                                     :td-styles
-                                     {:add "text-align:center"}
-                                     :th-styles
-                                     {:add "text-align:center;width:3em"}
-                                     :col-fns
-                                     {:add (fn [game] (html
+                                            [time-format (:language class-map) class]] :results)]
+                                [:div.rows2table
+                                 (rows2table games
+                                             {:cols [:add :game :created :creator :creator_email]
+                                              :td-styles
+                                              {:add "text-align:center"}
+                                              :th-styles
+                                              {:add "text-align:center;width:3em"}
+                                              :col-fns
+                                              {:add (fn [game] (html
                                                        [:form {:action (str "/class/" class
                                                                             "/game/" (:id game) "/add")
                                                                :method "post"}
                                                         [:button {:onclick "submit()"} "Add"]]))
-                                      :game (fn [game] (html [:a {:href (str "/game/" (:id game))}
-                                                              (if (or (nil? (:game game))
-                                                                      (not (= "" (string/trim (:game game)))))
-                                                                (:game game) "(untitled)")]))
-                                      :created (fn [game] (html [:a {:href (str "/game/" (:id game))}
-                                                                 (:created game)]))
-                                      }}
-                                     )])
+                                               :game (fn [game] (html [:a {:href (str "/game/" (:id game))}
+                                                                       (if (or (nil? (:game game))
+                                                                               (not (= "" (string/trim (:game game)))))
+                                                                         (:game game) "(untitled)")]))
+                                               :created (fn [game] (html [:a {:href (str "/game/" (:id game))}
+                                                                          (:created game)]))
+                                               }}
+                                             )])
 
-                     ]])
+                              ]])
 
-                request
-                resources
-
-                ))}
-
-         )
-        )
+                          request
+                          resources
+                          
+                          ))}
+                 
+                 )
+          ))
 
       (POST "/:class/game/:game/add" request
-            ;; TODO: check if this user is the teacher of the game: add (is-teacher-of-class? <game> <user>)
-            (do-if-teacher
-             (let [debug (log/debug (str "/:class/game/:game/add with route params:" (:route-params request)))
-                   class (Integer. (:class (:route-params request)))
-                   game (Integer. (:game (:route-params request)))]
-               (k/exec-raw ["INSERT INTO game_in_class (game,class) 
+            (let [class-id (Integer. (:class (:route-params request)))
+                  user (username2userid (authentication/current request))]
+              (do-if (is-teacher-of-class? class-id user)
+               (let [debug (log/debug (str "/:class/game/:game/add with route params:" (:route-params request)))
+                     class (Integer. (:class (:route-params request)))
+                     game (Integer. (:game (:route-params request)))]
+                 (k/exec-raw ["INSERT INTO game_in_class (game,class) 
                                   SELECT ?,?
                                    WHERE 
                               NOT EXISTS (SELECT game,class 
                                             FROM game_in_class 
                                            WHERE game = ? AND class=?)" [game class game class]])
-               {:status 302
-                :headers {"Location" (str "/class/" class "?message=Added game.")}})))
+                 {:status 302
+                  :headers {"Location" (str "/class/" class "?message=Added game.")}}))))
 
       (POST "/disenroll/:class" request
             (do-if-authenticated
@@ -396,15 +398,16 @@ INSERT INTO class (name,teacher,language)
                 :headers {"Location" (str "/class?message=Enrolled.")}})))
 
       (POST "/:class/game/:game/delete" request
-            ;; TODO: check if this user is the teacher of the game: add (is-teacher-of-class? <game> <user>)
-            (do-if-teacher
-             (let [debug (log/debug (str "/:class/game/:game/add with route params:" (:route-params request)))
-                   class (Integer. (:class (:route-params request)))
-                   game (Integer. (:game (:route-params request)))]
-               (k/exec-raw ["DELETE FROM game_in_class WHERE game=? AND class=?" [game class]])
-               {:status 302
-                :headers {"Location" (str "/class/" class "?message=Removed game.")}})))
-
+            (let [class-id (Integer. (:class (:route-params request)))
+                  user (username2userid (authentication/current request))]
+              (do-if (is-teacher-of-class? class-id user)
+                     (let [debug (log/debug (str "/:class/game/:game/add with route params:" (:route-params request)))
+                           class (Integer. (:class (:route-params request)))
+                           game (Integer. (:game (:route-params request)))]
+                       (k/exec-raw ["DELETE FROM game_in_class WHERE game=? AND class=?" [game class]])
+                       {:status 302
+                        :headers {"Location" (str "/class/" class "?message=Removed game.")}}))))
+      
       (POST "/:class-to-delete/delete" request
             (let [class-id (Integer. (:class-to-delete (:route-params request)))
                   user (username2userid (authentication/current request))]
