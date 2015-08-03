@@ -397,7 +397,6 @@ INSERT INTO game
                                   :results))]
     (not (nil? result))))
 
-
 (defn onload []
   (string/join " "
                (map (fn [game]
