@@ -84,6 +84,7 @@
                     (let [results (k/exec-raw
                                    ["SELECT class.id AS class_id,'leave',class.name AS class,
                                               trim(teacher.given_name || ' ' || teacher.family_name) AS teacher,
+                                              teacher.email AS email,
                                               class.language
                                          FROM class
                                     LEFT JOIN vc_user AS teacher 
@@ -99,12 +100,17 @@
                                              :class (fn [class]
                                                       [:a {:href (str "/class/" (:class_id class))}
                                                        (:class class)])
+                                             :teacher (fn [class]
+                                                        (if (or (nil? (:teacher class))
+                                                                (= "" (:teacher class)))
+                                                          "(unnamed teacher)"
+                                                          (:teacher class)))
                                              :leave (fn [class]
                                                       [:form {:action (str "/class/disenroll/" (:class_id class))
                                                               :method "post"}
                                                        [:button {:onclick "submit()"} "Leave"]])}
                                    :th-styles {:leave "text-align:center;width:3em"}
-                                   :cols [:leave :class :language :teacher]}))]
+                                   :cols [:leave :class :language :teacher :email]}))]
                    
                      [:div.new
                       [:h3 "Enroll in a new class:"]
