@@ -23,7 +23,9 @@
    [italianverbs.user :refer [do-if do-if-authenticated do-if-teacher username2userid]]
    [korma.core :as k]))
 
+(declare delete-class)
 (declare headers)
+(declare is-teacher-of-class?)
 (declare table)
 (declare tr)
 (declare show-games)
@@ -179,7 +181,6 @@ INSERT INTO class (name,teacher,language)
                                      ["SELECT 1 FROM student_in_class WHERE student=? and class=?"
                                       [userid class]
                                       ] :results))))
-
                         class-map (first
                                    (k/exec-raw
                                     ["SELECT class.id,
@@ -193,7 +194,8 @@ INSERT INTO class (name,teacher,language)
                                   INNER JOIN vc_user AS teacher
                                           ON teacher.id = class.teacher
                                        WHERE class.id=?"
-                                     [time-format class]] :results))]
+                                     [time-format class]] :results))
+                        teacher-of-class? (= userid (:teacher_user_id class-map))]
                    [:div {:class "major"}
                     [:h2 (banner [{:href "/class"
                                    :content "My Classes"}
@@ -213,40 +215,58 @@ INSERT INTO class (name,teacher,language)
                        ]
                       ]]
 
-                    (do-if (= userid (:teacher_user_id class-map))
-                           (show-students class))
+                    (do-if teacher-of-class?
+                           (show-students class)
+                           "")
 
-                    (do-if (= userid (:teacher_user_id class-map))
-                           (show-games class))
+                    (do-if teacher-of-class?
+                           (show-games class)
+                           "")
 
                     ;; TODO: see games.clj for showing play vs. resume
                     (do-if student-of-class?
-                            (html
-                             [:h3 "Games you can play in this class"]
-                             (let [games
-                                   (k/exec-raw
-                                    ["SELECT 'play',game.id,game.name AS game, game.city
-                                        FROM game
-                                  INNER JOIN game_in_class
-                                          ON (game_in_class.game=game.id
-                                         AND  game_in_class.class=?)"
-                                     [class]] :results)]
-                               [:div.rows2table
-                                (rows2table games
-                                            {:col-fns {:play (fn [game]
-                                                               (html [:button {:onclick (str "document.location='/tour/"
-                                                                                             (:id game) "';")}
-                                                                      "Play"]))}
-                                             :th-styles
-                                             {:play "text-align:center;width:3em"}
-                                             :cols [:play :game :city]})])))])
+                           (html
+                            [:h3 "Games you can play in this class"]
+                            (let [games
+                                  (k/exec-raw
+                                   ["SELECT 'play',game.id,game.name AS game, game.city
+                                       FROM game
+                                 INNER JOIN game_in_class
+                                         ON (game_in_class.game=game.id
+                                        AND  game_in_class.class=?)"
+                                    [class]] :results)]
+                              [:div.rows2table
+                               (rows2table games
+                                           {:col-fns {:play (fn [game]
+                                                              (html [:button {:onclick (str "document.location='/tour/"
+                                                                                            (:id game) "';")}
+                                                                     "Play"]))}
+                                            :th-styles
+                                            {:play "text-align:center;width:3em"}
+                                            :cols [:play :game :city]})]))
+                            "")
+
+                    (do-if teacher-of-class?
+                           (html
+                            [:div.dangerzone
+                             [:h4 "Delete class"]
+                             [:div {:style "float:right"}
+                              [:form
+                               {:method "post"
+                                :action (str class "/delete")}
+                               [:button.confirm_delete {:onclick (str "submit();")} "Delete Class"]]]
+                             ]
+                            )
+                           "")
+                    
+                    ])
 
                   request
                   resources))}))
 
    (GET "/:class/game/add"
         request
-        ;; TODO: check if this user is the teacher of the game: add (is-teacher-of? <game> <user>)
+        ;; TODO: check if this user is the teacher of the game: add (is-teacher-of-class? <game> <user>)
         (do-if-authenticated
          {:headers html-headers
           :body
@@ -337,7 +357,7 @@ INSERT INTO class (name,teacher,language)
         )
 
       (POST "/:class/game/:game/add" request
-            ;; TODO: check if this user is the teacher of the game: add (is-teacher-of? <game> <user>)
+            ;; TODO: check if this user is the teacher of the game: add (is-teacher-of-class? <game> <user>)
             (do-if-teacher
              (let [debug (log/debug (str "/:class/game/:game/add with route params:" (:route-params request)))
                    class (Integer. (:class (:route-params request)))
@@ -376,7 +396,7 @@ INSERT INTO class (name,teacher,language)
                 :headers {"Location" (str "/class?message=Enrolled.")}})))
 
       (POST "/:class/game/:game/delete" request
-            ;; TODO: check if this user is the teacher of the game: add (is-teacher-of? <game> <user>)
+            ;; TODO: check if this user is the teacher of the game: add (is-teacher-of-class? <game> <user>)
             (do-if-teacher
              (let [debug (log/debug (str "/:class/game/:game/add with route params:" (:route-params request)))
                    class (Integer. (:class (:route-params request)))
@@ -384,6 +404,22 @@ INSERT INTO class (name,teacher,language)
                (k/exec-raw ["DELETE FROM game_in_class WHERE game=? AND class=?" [game class]])
                {:status 302
                 :headers {"Location" (str "/class/" class "?message=Removed game.")}})))
+
+      (POST "/:class-to-delete/delete" request
+            (let [class-id (Integer. (:class-to-delete (:route-params request)))
+                  user (username2userid (authentication/current request))]
+              (do-if
+               (do
+                 (log/debug (str "Delete class: " class-id ": can user: '" user "' delete this class?"))
+                 (is-teacher-of-class? class-id user))
+               (do
+                 (let [message (delete-class (:class-to-delete (:route-params request)))]
+                   {:status 302
+                    :headers {"Location" (str "/class/" "?message=" message)}}))
+               (do
+                 (log/warn (str "User:" user " tried to delete class: " class-id " but was denied authorization to do so."))
+                 {:status 302
+                  :headers {"Location" (str "/class/" class-id "?message=Unauthorized+to+delete+class:" class-id)}}))))
       )
   )
 
@@ -453,3 +489,33 @@ INSERT INTO class (name,teacher,language)
     [:a {:href (str "/class/" class "/game/add")}
      "Add a game to this class"]]))
 
+(defn is-teacher-of-class? [class-id user]
+  "return true iff user (identified by their email) is the teacher of the class whose is class-id"
+  (log/debug (str "is-owner-of: class-id:" class-id))
+  (log/debug (str "is-owner-of: user:   " user))
+  (let [result (first (k/exec-raw ["SELECT 1
+                                      FROM class
+                                INNER JOIN vc_user
+                                        ON (vc_user.id = ?)
+                                     WHERE class.id=?
+                                       AND class.teacher = vc_user.id"
+                                   [user class-id]]
+                                  :results))]
+    (not (nil? result))))
+
+(defn delete-class [class-id]
+  (if class-id
+    (do
+      (log/debug (str "DELETING CLASS: " class-id))
+      (let [class-id (Integer. class-id)
+            class-row (first (k/exec-raw ["SELECT * FROM class WHERE id=?" [class-id]] :results))]
+        (log/debug (str "CLASS ROW: " class-row))
+        (k/exec-raw ["DELETE FROM game_in_class WHERE class=?" [class-id]])
+        (k/exec-raw ["DELETE FROM student_in_class WHERE class=?" [class-id]])
+        (k/exec-raw ["DELETE FROM class WHERE id=?" [class-id]])
+        (str "Deleted class: " (:name class-row))))
+
+    ;; class-id is null:
+    (let [error-message (str "Error: no class to delete: class-id was null.")]
+      (log/error error-message)
+      error-message)))
