@@ -312,7 +312,7 @@ INSERT INTO class (name,teacher,language)
 
                               ;; This query shows all games that are *not* in this game.
                               (let [games (k/exec-raw
-                                           ["SELECT 'Add',game.id,game.name AS game,
+                                           ["SELECT 'Add',game.id,game.name AS game,city,
                                            to_char(game.created_on,?) AS created,
                                            trim(game_creator.given_name || ' ' || game_creator.family_name) AS creator,
                                            game_creator.email AS creator_email
@@ -327,7 +327,7 @@ INSERT INTO class (name,teacher,language)
                                             [time-format (:language class-map) class]] :results)]
                                 [:div.rows2table
                                  (rows2table games
-                                             {:cols [:add :game :created :creator :creator_email]
+                                             {:cols [:add :game :city :created :creator :creator_email]
                                               :td-styles
                                               {:add "text-align:center"}
                                               :th-styles
