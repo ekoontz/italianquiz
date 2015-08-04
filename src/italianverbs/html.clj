@@ -64,8 +64,6 @@
      (h/include-css "resources/public/css/bootstrap.min.css")
      (h/include-css "resources/public/css/prettify.css")
 
-     (include-css "resources/public/css/style.css")
-
      (include-css "http://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css")
 
      ]
