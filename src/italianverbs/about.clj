@@ -17,7 +17,7 @@
 
 
 (defn about [request]
-   [:div {:style "width:100%; height: 500px;"   :class "major"} [:h2 "Welcome to Verbcoach."]
+   [:div.major {:style "height: 500px"} [:h2 "Welcome to Verbcoach."]
 
 ;   [:p 
 ;    "You can use this website just by clicking on the language you want to ;practice, or you can login using your existing Google account (enter your google username and password)."
