@@ -63,20 +63,18 @@
 ;;  :roles #{:friend-interactive-form.users/user}}
 
 (def login-form
-  [:div 
-   [:div {:class "login major"}
-
-    [:a {:href "/auth/google/login"} "Login with Google"]
-
-    (if (:allow-internal-admins env)
+  [:div {:class "login major"}
+   [:div [:a {:href "/auth/google/login"} "Login with Google"]]
+   (if (:allow-internal-authentication env)
+     [:div
       [:form {:method "POST" :action "/auth/internal/login"}
        [:table
         [:tr
-         [:th "User"][:td [:input {:type "text" :name "username" :size "10"}]]
+         [:th "Email"][:td [:input {:type "text" :name "username" :size "10"}]]
          [:th "Password"][:td [:input {:type "password" :name "password" :size "10"}]]
-         [:td [:input {:type "submit" :class "button" :value "Login"}]]]]])
-    ]])
-
+         [:td [:input {:type "submit" :class "button" :value "Login"}]]]]]])
+   [:div [:a {:href "/auth/internal/register"} "Register a new account"]]
+   ])
 
 (defn request2user [request]
   ;; For now, google functionality is the only way to resolve a username from a request.

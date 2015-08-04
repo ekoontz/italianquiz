@@ -203,7 +203,7 @@
   (let [authentication (friend/current-authentication)]
     (log/debug (str "haz-admin: current authentication:" (if (nil? authentication) " (none - authentication is null). " authentication)))
     (if (= (:allow-internal-authentication env) "true")
-      (log/warn (str "ALLOW_INTERNAL_ADMINS is enabled: allowing internally-authentication admins - should not be enabled in production")))
+      (log/warn (str "ALLOW_INTERNAL_AUTHENTICATION is enabled: allowing internally-authentication admins - should not be enabled in production")))
 
     (let [result
           (and (not (nil? authentication))

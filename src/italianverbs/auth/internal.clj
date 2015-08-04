@@ -31,11 +31,11 @@
 
 (def routes
   (compojure/routes
-   (GET "/login" request
-        (resp/redirect "/"))
-   (GET "/login/" request
-        (resp/redirect "/"))
+   (GET "/" request
+        (str "INTERNAL AUTHENTICATION: DEBUG."))
    (POST "/login" request
-         (resp/redirect "/"))))
+         (str "INTERNAL AUTHENTICATION: POST."))))
+
+
 
 
