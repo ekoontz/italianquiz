@@ -202,7 +202,7 @@
 (defn haz-admin? [ & [request]]
   (let [authentication (friend/current-authentication)]
     (log/debug (str "haz-admin: current authentication:" (if (nil? authentication) " (none - authentication is null). " authentication)))
-    (if (= (:allow-internal-admins env) "true")
+    (if (= (:allow-internal-authentication env) "true")
       (log/warn (str "ALLOW_INTERNAL_ADMINS is enabled: allowing internally-authentication admins - should not be enabled in production")))
 
     (let [result
@@ -217,8 +217,8 @@
 (defn has-admin-role [ & [request]]
   (let [authentication (friend/current-authentication)]
     (log/debug (str "haz-admin: current authentication:" (if (nil? authentication) " none " authentication)))
-    (if (= (:allow-internal-admins env) "true")
-      (log/warn (str "ALLOW_INTERNAL_ADMINS is enabled: allowing internally-authentication admins - should not be enabled in production")))
+    (if (= (:allow-internal-authentication env) "true")
+      (log/warn (str "ALLOW_INTERNAL_AUTHENTICATION is enabled: allowing internally-authentication admins - should not be enabled in production")))
 
     (and (not (nil? authentication))
          ;; Google-authenticated teachers - note that authorization is here, not within google/ - we make the decision about whether the user
@@ -229,8 +229,8 @@
 (defn has-teacher-role [ & [request]]
   (let [authentication (friend/current-authentication)]
     (log/debug (str "haz-admin: current authentication:" (if (nil? authentication) " none " authentication)))
-    (if (= (:allow-internal-admins env) "true")
-      (log/warn (str "ALLOW_INTERNAL_ADMINS is enabled: allowing internally-authentication admins - should not be enabled in production")))
+    (if (= (:allow-internal-authentication env) "true")
+      (log/warn (str "ALLOW_INTERNAL_AUTHENTICATION is enabled: allowing internally-authentication admins - should not be enabled in production without SSL.")))
 
     (and (not (nil? authentication))
          ;; Google-authenticated teachers - note that authorization is here, not within google/ - we make the decision about whether the user

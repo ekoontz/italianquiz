@@ -10,6 +10,7 @@
    [clojure.set :as set]
    [clojure.string :as string]
    [clojure.tools.logging :as log]
+   [environ.core :refer [env]]
    [hiccup.element :as e]
    [hiccup.page :as h]
    [italianverbs.authentication :as auth]
@@ -796,6 +797,10 @@
 (defn page-body [content req & [ title options]]
   (let [title (if title title "default page title")]
     (log/debug (str "page-body with options: " options))
+    (string/join (map (fn [key]
+                        (log/trace (str "env key: " key " => " (get env key))))
+                      (sort (keys env)))
+                 "")
     (h/html5
      (pretty-head title (:js options) (:jss options) (:css options))
      (pretty-body
@@ -844,7 +849,6 @@
 
 
       [:div#content content]
-
 
       )
 
