@@ -256,7 +256,4 @@
                (log/debug (str "Logging in user: " username " with access token: " 
                                (-> request :session :cemerick.friend/identity :current :access-token))))
              {:status 302
-              :headers {"Location" "/"}}))))
-        
-   (GET "/admin" request
-        (friend/authorize #{::admin} "Only admins can see this page."))))
+              :headers {"Location" "/"}}))))))
