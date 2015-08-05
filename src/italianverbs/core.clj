@@ -82,10 +82,6 @@
   (context "/user" []
            user/routes)
 
-  ;; TODO: uncomment and make dependent on a environment (i.e. non-production).
-;  (context "/workbook" []
-;           workbook/routes)
-
   (GET "/about" request
        about/routes)
 
