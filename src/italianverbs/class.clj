@@ -17,7 +17,8 @@
    [italianverbs.about :as about]
    [italianverbs.authentication :as authentication]
    [italianverbs.config :refer [language-radio-buttons short-language-name-to-long time-format]]
-   [italianverbs.game :refer [tenses-of-game-as-human-readable verbs-of-game-as-human-readable]]
+   [italianverbs.game :refer [games-per-class games-per-user tenses-of-game-as-human-readable
+                              verbs-of-game-as-human-readable]]
    [italianverbs.html :as html :refer [banner page rows2table]]
    [italianverbs.korma :as db]
    [italianverbs.user :refer [do-if do-if-authenticated do-if-teacher username2userid]]
@@ -233,23 +234,16 @@ INSERT INTO class (name,teacher,language)
                     (do-if student-of-class?
                            (html
                             [:h3 "Games you can play in this class"]
-                            (let [games
-                                  (k/exec-raw
-                                   ["SELECT 'play',game.id,game.name AS game, game.city
-                                       FROM game
-                                 INNER JOIN game_in_class
-                                         ON (game_in_class.game=game.id
-                                        AND  game_in_class.class=?)"
-                                    [class]] :results)]
+                            (let [games (games-per-class class)]
                               [:div.rows2table
                                (rows2table games
-                                           {:col-fns {:play (fn [game]
+                                           {:col-fns {:resume (fn [game]
                                                               (html [:button {:onclick (str "document.location='/tour/"
                                                                                             (:id game) "';")}
                                                                      "Play"]))}
                                             :th-styles
                                             {:play "text-align:center;width:3em"}
-                                            :cols [:play :game :city]})]))
+                                            :cols [:play :game :city :last_move :language :class]})]))
                             "")
 
                     (do-if teacher-of-class?
