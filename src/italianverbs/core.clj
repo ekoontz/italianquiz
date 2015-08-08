@@ -101,34 +101,23 @@
 
 ;; TODO: clear out cache of sentences-per-user session when starting up.
 (def app
-  (handler/site
-   (-> main-routes
-       (friend/authenticate
-        {:allow-anon? true
-         :login-uri "/auth/internal/login"
-         :default-landing-uri "/"
-         :unauthorized-handler #(-> 
-                                 (html/page "Unauthorized" (h/html5 
-                                                             [:div {:class "major tag"}
-                                                              [:h2 "Unauthorized"]
-                                                              [:p "You do not have sufficient privileges to access " (:uri %) "."]]) %)
-                                 resp/response
-                                 (resp/status 401))
-         :credential-fn #(auth/credential-fn %)
-         :workflows [
+  (handler/site 
+   (friend/authenticate
+    main-routes
+    {:allow-anon? true
+     :login-uri "/auth/internal/login"
+     :default-landing-uri "/"
+     :unauthorized-handler #(-> 
+                             (html/page "Unauthorized" (h/html5 
 
-                     ;; form-based auth (insecure unless using HTTPS to POST form data)
-                     (workflows/interactive-form)
-
-                     ;; Google OpenAuth (auth info protected by HTTPS)
-                     (oauth2/workflow google/auth-config)
-
-                     ;; Simply uses sets the user's ring-session as their authentication (if the client
-                     ;; does not yet have a ring-session - if they have one, use that).
-                     (auth/no-auth)
-
-                     ;; add additional authentication methods below, e.g. Facebook, Twitter, &c.
-                     ]}))))
+                                                        [:div {:class "major tag"}
+                                                         [:h2 "Unauthorized"]
+                                                         [:p "You do not have sufficient privileges to access " (:uri %) "."]]) %)
+                             resp/response
+                             (resp/status 401))
+     :credential-fn #(auth/credential-fn %)
+     :workflows [(workflows/interactive-form)
+                 (oauth2/workflow google/auth-config)]})))
 
 (defn wrap-error-page [handler]
   (fn [req]
@@ -139,12 +128,14 @@
             :body (slurp (io/resource "500.html"))}))))
 
 (defn -main [& [port]]
-  (let [port (Integer. (or port (env :port) 5000))]
+  (let [port (Integer. (or port (env :port) 5000))
+        ;; TODO: heroku config:add SESSION_SECRET=$RANDOM_16_CHARS
+        store (cookie/cookie-store {:key (env :session-secret)})]
     (jetty/run-jetty (-> #'app
                          ((if (env :production)
                             wrap-error-page
                             trace/wrap-stacktrace))
-                         (handler/site))
+                         (handler/site {:session {:store store}}))
                      {:port port :join? false})))
 
 ;; For interactive development:
