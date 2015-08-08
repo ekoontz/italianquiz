@@ -8,11 +8,7 @@
 (require '[environ.core :refer [env]])
 (require '[friend-oauth2.workflow :as oauth2])
 
-;; TODO: remove this reverse dependency
-;; (italianverbs.auth depends on italianverbs.auth.google)
-;; but until fixed, there is a dependence on a single authentication source (Google).
 (require '[italianverbs.auth.google :as google])
-
 (require '[italianverbs.auth.internal :as internal])
 (require '[italianverbs.session :as session])
 (require '[cemerick.friend :as friend])
