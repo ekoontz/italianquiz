@@ -38,12 +38,34 @@
       {:status 302
        :headers {"Location" "/game"}}))
 
-;; TODO: only supports google for now: add others
 (defn current [ & [request]]
   (let [current-authentication (friend/current-authentication)]
-    (if current-authentication
-      (google/token2username (get-in current-authentication [:identity :access-token])
-                             request))))
+    (log/debug (str "authentication/current: friend/current-authentication: " current-authentication))
+    ;; Try each supported authentication method. Currently 'google' and 'internal' are supported.
+    ;; 'internal' is insecure unless SSL is used. It must be explicitly enabled
+    ;; with ALLOW_INTERNAL_AUTHENTICATION.
+    (cond (and current-authentication
+               (map? current-authentication)
+               (contains? (:roles current-authentication)
+                          :italianverbs.auth.google/user))
+          (let [google-username
+                (google/token2username (get-in current-authentication [:identity :access-token])
+                                       request)]
+            (log/debug (str "returning google-username: " google-username))
+            google-username)
+
+          (and (= (:allow-internal-authentication env) "true")
+               current-authentication
+               (map? current-authentication)
+               (contains? (:roles current-authentication)
+                          :italianverbs.auth.internal/user))
+          (let [username (:username current-authentication)]
+            (log/debug "returning internal-username: " username)
+            username)
+
+          true (do (log/debug "no authentication found.")
+                   nil))))
+
 (defn credential-fn [arg]
   (log/debug (str "calling credential-fn with arg: " arg))
   (creds/bcrypt-credential-fn @internal/users arg))
