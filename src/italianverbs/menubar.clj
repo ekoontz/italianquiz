@@ -13,7 +13,8 @@
                 request :request
                 authenticated? :authenticated?
                 haz-admin? :haz-admin?
-                haz-teacher? :haz-teacher?}]
+                haz-teacher? :haz-teacher?
+                extra-menu-item :extra-menu-item}]
   (let [suffixes (if request (request-to-suffixes request))]
     (log/debug (str "Drawing menubar with current-url=" current-url))
     (log/debug (str "Drawing menubar with authenticated?=" authenticated?))
@@ -137,17 +138,19 @@
                  :text "My Classes"
                  :url-for-this-item (str "/class/my" (if (get suffixes :class)
                                                        (get suffixes :class)))
-                 :show? (and false authenticated? (not haz-admin?))})])))
+                 :show? (and false authenticated? (not haz-admin?))})
 
-(defn- menuitem [ {selected? :selected?
-                   show? :show?
-                   current-url :current-url
-                   text :text
-                   url-for-this-item :url-for-this-item
-                   requires-admin :requires-admin
-                   requires-authentication :requires-authentication
-                   haz-admin :haz-admin
-                   haz-authentication :haz-authentication}]
+      (if extra-menu-item extra-menu-item)])))
+
+(defn menuitem [ {selected? :selected?
+                  show? :show?
+                  current-url :current-url
+                  text :text
+                  url-for-this-item :url-for-this-item
+                  requires-admin :requires-admin
+                  requires-authentication :requires-authentication
+                  haz-admin :haz-admin
+                  haz-authentication :haz-authentication}]
   (if show?
     [:div
      (if (or selected?
