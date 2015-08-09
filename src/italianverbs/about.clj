@@ -5,6 +5,8 @@
    [cemerick.friend :as friend]
    [compojure.core :refer [GET]]
    [environ.core :refer [env]]
+   [italianverbs.menubar :as menubar]
+   [italianverbs.session :as session]
    [italianverbs.user :refer [do-if do-if-teacher haz-admin?
                               haz-auth? has-admin-role has-teacher-role
                               login-form]]
@@ -19,7 +21,17 @@
         :body (html/page "Welcome to Verbcoach"
                          (about request)
                          request
-                         {:show-login-form (login-form request)})}))
+                         {:show-login-form (login-form request)
+                          :menubar
+                          (menubar/menubar (session/request-to-session request)
+                                           (if request (get request :uri))
+                                           request
+                                           {:authenticated? (not (nil? (friend/current-authentication)))
+                                            :haz-admin? (haz-admin? request)
+                                            :haz-teacher? (has-teacher-role request)}
+                                           )
+
+                          })}))
 
 
 (defn about [request]
