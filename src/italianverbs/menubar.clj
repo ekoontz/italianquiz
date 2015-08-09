@@ -116,7 +116,7 @@
                      (= current-url "/student")
                      (and (not (nil? current-url))
                           (re-find #"^/student" current-url)))
-                 :show? (or haz-admin? haz-teacher?)
+                 :show? (and false (or haz-admin? haz-teacher?))
                  :current-url current-url
                  :text "My Students"
                  :url-for-this-item "/student"})
