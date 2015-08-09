@@ -47,7 +47,7 @@
                                                                 :show? true})})})))
    (POST "/register" request
          (do
-           (log/debug (str "request: " request))
+           (log/debug (str "handling registration request.."))
            {:status 302
             :headers {"Location"
                       (str "/auth/internal/register?thanks")}}))
@@ -73,16 +73,40 @@
                                                                 :show? true})})})))
    (POST "/forgotpassword" request
          (do
+           (log/debug (str "handling forgotpassword request.."))
            (log/debug (str "request: " request))
            {:status 302
             :headers {"Location"
                       (str "/auth/internal/forgot?mailsent")}}))
 
    (GET "/resetpassword" request
-         (str "INTERNAL AUTHENTICATION: GET /forgotpassword."))
+        (page "Reset Password"
+              [:div.major
+               [:h2 "Reset your Verbcoach password"]
+
+               (f/render-form
+                {:action "/auth/internal/resetpassword"
+                 :enctype "multipart/form-data"
+                 :method "post"
+                 :fields [{:name :password :type :password :label "Password"}
+                          {:name :confirm :type :password :label "Confirm"}]})
+               ]
+              request
+              (fn [request]
+                {:menubar (menubar {:extra-menu-item (menuitem {:selected? true
+                                                                :current-url "/"
+                                                                :text "Reset Password"
+                                                                :requires-admin false
+                                                                :url-for-this-item "/internal/resetpassword"
+                                                                :show? true})})})))
    (POST "/resetpassword" request
-         (str "INTERNAL AUTHENTICATION: POST /forgotpassword."))
-   ))
+         (do
+           (log/debug (str "handling forgotpassword request.."))
+           {:status 302
+            :headers {"Location"
+                      (str "/?password-was-reset")}}))
+         )
+   )
 
 (derive ::admin ::user)
 
