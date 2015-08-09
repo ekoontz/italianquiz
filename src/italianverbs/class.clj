@@ -444,7 +444,7 @@ INSERT INTO class (name,teacher,language)
    [:h3 "Students"]
    (let [students (k/exec-raw
                    ["SELECT trim(given_name || ' ' || family_name) AS name,
-                                               picture,teacher,email,
+                                               picture,email,
                                                to_char(student_in_class.enrolled,?) AS enrolled
                        FROM vc_user
                  INNER JOIN student_in_class
