@@ -8,11 +8,15 @@
 (require '[environ.core :refer [env]])
 (require '[italianverbs.html :refer [page]])
 (require '[italianverbs.korma :as db])
+(require '[italianverbs.menubar :refer [menubar]])
 (require '[cemerick.friend 
            [workflows :as workflows]
            [credentials :as creds]])
 (require '[cemerick.friend :as friend])
 (require '[ring.util.response :as resp])
+
+(defn resources [request]
+  {:menubar (menubar {})})
 
 (def routes
   (compojure/routes
@@ -25,7 +29,9 @@
    (GET "/register" request
         (do
           (log/debug (str "INTERNAL AUTHENTICATION: GET /register."))
-          (page "HI")))
+          (page "HI" "hello.."
+                request
+                resources)))
    
    (POST "/register" request
          (str "INTERNAL AUTHENTICATION: POST /register."))
