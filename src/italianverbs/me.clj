@@ -126,19 +126,10 @@
 (declare instructor-selector)
 
 (defn me [language request]
-  (let [user (username2userid (authentication/current request))
-        current-teacher
-        (:teacher
-         (first
-          (k/exec-raw
-           ["SELECT teacher FROM vc_user WHERE id=?"
-            [user]] :results)))]
-    (log/debug (str "(me): current teacher for user: " user " is: " current-teacher))
+  (let [user (username2userid (authentication/current request))]
     [:div#me   
      [:div#myprofile {:class "major"}
       [:h2 "Profile"]
-      [:h3 "Teacher"]
-      (instructor-selector current-teacher)
       [:h3 "Overall"]    
       (profile-table language)    
       ]
