@@ -1,44 +1,82 @@
 (ns italianverbs.auth.internal)
-
 ;; Internal authentication - not third-party (e.g. Google, Facebook, Twitter, LinkedIn etc...)
+
+(require '[cemerick.friend 
+           [workflows :as workflows]
+           [credentials :as creds]])
+(require '[cemerick.friend :as friend])
 (require '[clojure.tools.logging :as log])
 (require '[clojure.string :as str])
 (require '[compojure.core :as compojure :refer [context GET PUT POST DELETE ANY]])
 (require '[digest])
 (require '[environ.core :refer [env]])
+(require '[formative.core :as f])
+(require '[hiccup.core :refer (html)])
 (require '[italianverbs.html :refer [page]])
 (require '[italianverbs.korma :as db])
-(require '[italianverbs.menubar :refer [menubar]])
-(require '[cemerick.friend 
-           [workflows :as workflows]
-           [credentials :as creds]])
-(require '[cemerick.friend :as friend])
+(require '[italianverbs.menubar :refer [menubar menuitem]])
 (require '[ring.util.response :as resp])
-
-(defn resources [request]
-  {:menubar (menubar {})})
 
 (def routes
   (compojure/routes
    (GET "/" request
         (do
-          (log/debug (str "INTERNAL AUTHENTICATION: DEBUG."))
           {:status 302
            :headers {"Location" "/"}}))
 
    (GET "/register" request
-        (do
-          (log/debug (str "INTERNAL AUTHENTICATION: GET /register."))
-          (page "HI" "hello.."
-                request
-                resources)))
-   
+        (page "Register"
+              [:div.major
+               [:h2 "Register with Verbcoach"]
+
+               (f/render-form
+                {:action "/auth/internal/register"
+                 :enctype "multipart/form-data"
+                 :method "post"
+                 :fields [{:name :email :size 50 :label "Email"}
+                          {:name :password :type :password :label "Password"}
+                          {:name :confirm :type :password :label "Confirm"}]})
+               ]
+              request
+              (fn [request]
+                {:menubar (menubar {:extra-menu-item (menuitem {:selected? true
+                                                                :current-url "/"
+                                                                :text "Register"
+                                                                :requires-admin false
+                                                                :url-for-this-item "/internal/register"
+                                                                :show? true})})})))
    (POST "/register" request
-         (str "INTERNAL AUTHENTICATION: POST /register."))
+         (do
+           (log/debug (str "request: " request))
+           {:status 302
+            :headers {"Location"
+                      (str "/auth/internal/register?thanks")}}))
+   
    (GET "/forgotpassword" request
-         (str "INTERNAL AUTHENTICATION: GET /forgotpassword."))
+        (page "Send password reset mail"
+              [:div.major
+               [:h2 "Send password reset mail"]
+
+               (f/render-form
+                {:action "/auth/internal/forgotpassword"
+                 :enctype "multipart/form-data"
+                 :method "post"
+                 :fields [{:name :email :size 50 :label "Email"}]})
+               ]
+              request
+              (fn [request]
+                {:menubar (menubar {:extra-menu-item (menuitem {:selected? true
+                                                                :current-url "/"
+                                                                :text "Forgot Password"
+                                                                :requires-admin false
+                                                                :url-for-this-item "/internal/forgotpassword"
+                                                                :show? true})})})))
    (POST "/forgotpassword" request
-         (str "INTERNAL AUTHENTICATION: POST /forgotpassword."))
+         (do
+           (log/debug (str "request: " request))
+           {:status 302
+            :headers {"Location"
+                      (str "/auth/internal/forgot?mailsent")}}))
 
    (GET "/resetpassword" request
          (str "INTERNAL AUTHENTICATION: GET /forgotpassword."))
