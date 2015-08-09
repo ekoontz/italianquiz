@@ -1,4 +1,4 @@
-// Begin configurable section.
+// Begin global constants.
 
 var google_api_key = "AIzaSyD0tmoXx3oJAPITndZR4f3I5GcnV-Jram4";
 var pitch = 0; // In streetview, angle with respect to the horizon.
@@ -7,7 +7,7 @@ var pitch = 0; // In streetview, angle with respect to the horizon.
 var score_increment = 10; 
 var useProfilePicAsMarker = true;
 
-// End Configurable section.
+// End global constants.
 
 // Begin global variables.
 // TODO: some global variables might not be included in this section as they should be.
@@ -25,6 +25,10 @@ var map;
 var marker;
 var current_zoom = 17;
 
+var city;
+var g_target_language;
+var g_target_locale;
+
 var current_lat;
 var current_long;
 
@@ -38,6 +42,18 @@ var tour_paths = {
 	"ES": Barcelona,
 	"MX": Mexico_DF
     }
+};
+
+var cities = {
+    "Barcelona": {
+	"locale": "ES",
+	"language": "es"},
+    "Firenze": {
+	"locale": "IT",
+	"language": "it"},
+    "Mexico DF": {
+	"locale": "MX",
+	"language": "es"}
 };
 
 var iconMarker;
@@ -110,12 +126,14 @@ function get_heading(path,position_index) {
     return heading;
 }
 
-function start_tour(game_id,target_language,target_locale,position_info) {
+function start_tour(game_id,target_language,city,position_info) {
     step = position_info.position;
     direction = position_info.direction;
-
+    target_locale = cities[city].locale;
+    g_target_locale = target_locale;
+    g_target_language = target_language;
     // TODO: tour_paths is a global variable, defined in it.js, es.js, and other places.
-    path = tour_paths[target_language][target_locale];
+    path = tour_paths[g_target_language][g_target_locale];
 
     current_lat = path[step][0];
     current_long = path[step][1];
@@ -182,7 +200,7 @@ function start_tour(game_id,target_language,target_locale,position_info) {
     $("#streetviewiframe").attr("src","https://www.google.com/maps/embed/v1/streetview?key="+google_api_key+"&location="+current_lat+","+current_long+"&heading="+heading+"&pitch="+pitch+"&fov=35");
     
     user_keypress(game_id,target_language,target_locale);
-    tour_loop(game_id,target_language,target_locale);
+    tour_loop(game_id);
 }
 
 function get_position_from_profile(game_id) {
@@ -193,13 +211,13 @@ function get_position_from_profile(game_id) {
 }
 
 // TODO: rename; not really a loop - no for() or while().
-function tour_loop(game_id,target_language,target_locale) {
-    create_tour_question(game_id,target_language,target_locale);
+function tour_loop(game_id) {
+    create_tour_question(game_id);
     $("#gameinput").focus();
     $("#gameinput").val("");
 }
 
-function create_tour_question(game_id,target_language,target_locale) {
+function create_tour_question(game_id) {
     $("#gameinput").css("background","white");
     $("#gameinput").css("color","black");
 
@@ -279,50 +297,52 @@ function increment_map_score() {
 // than in the function name.
 function add_a_acute(game_id,language,locale) {
     $("#gameinput").val($("#gameinput").val() + "á");
-    update_user_input(game_id,language,locale);
+    update_user_input(game_id);
     $("#gameinput").focus();
 }
 
 function add_a_grave(game_id,language,locale) {
     $("#gameinput").val($("#gameinput").val() + "à");
-    update_user_input(game_id,language,locale);
+    update_user_input(game_id);
     $("#gameinput").focus();
 }
 
 function add_e_acute(game_id,language,locale) {
     $("#gameinput").val($("#gameinput").val() + "é");
-    update_user_input(game_id,language,locale);
+    update_user_input(game_id);
     $("#gameinput").focus();
 }
 function add_e_grave(game_id,language,locale) {
     $("#gameinput").val($("#gameinput").val() + "è");
-    update_user_input(game_id,language,locale);
+    update_user_input(game_id);
     $("#gameinput").focus();
 }
 function add_i_acute(game_id,language,locale) {
     $("#gameinput").val($("#gameinput").val() + "í");
-    update_user_input(game_id,language,locale);
+    update_user_input(game_id);
     $("#gameinput").focus();
 }
 function add_n_tilde(game_id,language,locale) {
     $("#gameinput").val($("#gameinput").val() + "ñ");
-    update_user_input(game_id,language,locale);
+    update_user_input(game_id);
     $("#gameinput").focus();
 }
 function add_o_grave(game_id,language,locale) {
     $("#gameinput").val($("#gameinput").val() + "ò");
-    update_user_input(game_id,language,locale);
+    update_user_input(game_id);
     $("#gameinput").focus();
 }
 function add_u_acute(game_id,language,locale) {
     $("#gameinput").val($("#gameinput").val() + "ú");
-    update_user_input(game_id,language,locale);
+    update_user_input(game_id);
     $("#gameinput").focus();
 }
 
-function update_user_input(game_id,target_language,target_locale) {
+function update_user_input(game_id) {
     var user_input = $("#gameinput").val();
-
+    var target_language = g_target_language;
+    var target_locale = g_target_locale;
+    
     // Find the longest common prefix of the user's guess and the set of possible answers.
     // The common prefix might be an empty string (e.g. if user_input is empty before user starts answering).
     var prefix_and_correct_answer = longest_prefix_and_correct_answer(user_input,correct_answers);
@@ -399,7 +419,7 @@ function update_user_input(game_id,target_language,target_locale) {
 	$("#gameinput").focus();
 	// TODO: score should vary depending on the next 'leg' of the trip.
 	// go to next question.
-	return tour_loop(game_id,target_language,target_locale);
+	return tour_loop(game_id);
     }
 }
 
