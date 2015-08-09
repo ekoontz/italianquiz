@@ -13,14 +13,11 @@
    [environ.core :refer [env]]
    [hiccup.element :as e]
    [hiccup.page :as h]
-   [italianverbs.authentication :as auth]
-   [italianverbs.auth.internal :as internal]
    [italianverbs.menubar :as menubar]
    [italianverbs.morphology :refer [fo]]
    [italianverbs.session :as session]
    [dag-unify.core :as fs]))
 
-(def login-enabled true)
 (def menubar-enabled true)
 
 (defn verb-row [italian]
@@ -795,7 +792,7 @@
    {:onload (if (:onload options) (:onload options) "")}
    (into [:div {:class "columns small-12"}] content)])
 
-(defn page-body [content req & [ title options]]
+(defn page-body [content req & [title options]]
   (let [title (if title title "default page title")]
     (log/debug (str "page-body with options: " options))
     (string/join (map (fn [key]
@@ -806,54 +803,25 @@
      (pretty-head title (:js options) (:jss options) (:css options))
      (pretty-body
       options
-      (if login-enabled
-        (let [debug (log/debug (str "user's current authentication is: "
-                                    (if (auth/current)
-                                      (auth/current)
-                                      "(none)")))
-              debug (log/debug (str "user's current friend/identity is: "
-                                    (if (friend/identity req)
-                                      (friend/identity req)
-                                      "(none)")))]
-          (if-let [haz-admin (auth/current req)]
-            (auth/logged-in-content req)
-            internal/login-form)))
-      content))))
-
-;      [:div {:style "float:left;width:95%;border:1px dashed blue;"}
-;       [:ul 
-;        [:li (e/link-to (str "/" "role-user") "Requires the `user` role")]
-;        [:li (e/link-to (str "/" "role-admin") "Requires the `admin` role")]
-;        [:li (e/link-to (str "/" "requires-authentication")
-;                        "Requires any authentication, no specific role requirement")]]]))))
-
+      (:show-login-form options)
+      content
+      ))))
 
 (defn page [title & [content request options]]
-  (let [haz-admin (not (nil? (:italianverbs.core/admin (:roles (friend/current-authentication)))))]
-    (page-body 
-     (html
+  (page-body 
+   (html
+    (if (and request (:query-params request) (get (:query-params request) "result"))
+      [:div {:class "fadeout"}
+       (get (:query-params request) "result")])
 
-;      [:div {:style "width:auto;margin-left:3em;padding:0.25em;float:left;background:#ccc"}
-;       (str "can-haz admin:" haz-admin)]
-
-      (if (and request (:query-params request) (get (:query-params request) "result"))
-        [:div {:class "fadeout"}
-         (get (:query-params request) "result")])
-
-      (if menubar-enabled
-
-        (menubar/menubar (session/request-to-session request)
-                         (if request (get request :uri))
-                         (friend/current-authentication)
-                         (request-to-suffixes request)))
-      
-
-
-      [:div#content content]
-
-      )
-
-     request title options)))
+    (if menubar-enabled
+      (menubar/menubar (session/request-to-session request)
+                       (if request (get request :uri))
+                       (friend/current-authentication)
+                       (request-to-suffixes request)))
+    [:div#content content]
+    )
+   request title options))
 
 (declare tr)
 (def short-format
