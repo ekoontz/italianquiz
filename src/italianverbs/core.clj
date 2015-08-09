@@ -32,9 +32,7 @@
    [ring.middleware.session.cookie :as cookie]
    [ring.middleware.stacktrace :as trace]
    [ring.util.codec :as codec]
-   [ring.util.response :as resp]
-
-))
+   [ring.util.response :as resp]))
 
 ;; TODO: add service env to just redirect temporarily (302) to
 ;;  /undergoing-maintenance"undergoing maintenance" and 
