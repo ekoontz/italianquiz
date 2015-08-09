@@ -13,29 +13,41 @@
 (require '[cemerick.friend :as friend])
 (require '[ring.util.response :as resp])
 
+(def routes
+  (compojure/routes
+   (GET "/" request
+        (do
+          (log/debug (str "INTERNAL AUTHENTICATION: DEBUG."))
+          {:status 302
+           :headers {"Location" "/"}}))
+
+   (GET "/register" request
+         (str "INTERNAL AUTHENTICATION: GET /register."))
+   (POST "/register" request
+         (str "INTERNAL AUTHENTICATION: POST /register."))
+   (GET "/forgotpassword" request
+         (str "INTERNAL AUTHENTICATION: GET /forgotpassword."))
+   (POST "/forgotpassword" request
+         (str "INTERNAL AUTHENTICATION: POST /forgotpassword."))
+
+   (GET "/resetpassword" request
+         (str "INTERNAL AUTHENTICATION: GET /forgotpassword."))
+   (POST "/resetpassword" request
+         (str "INTERNAL AUTHENTICATION: POST /forgotpassword."))
+   ))
+
 (derive ::admin ::user)
 
 ;; internal authentication database - for testing only; not production, 
 ;; as passwords are plaintext. TODO: keep passwords elsewhere.
-(def users (atom {"franco" {:username "franco"
-                            :password (creds/hash-bcrypt "franco")
-                            :roles #{::user ::admin}}
+(def users (atom {;"franco" {:username "franco"
+                  ;          :password (creds/hash-bcrypt "franco")
+                  ;          :roles #{::user ::admin}}
 
                   "michael" {:username "michael"
                              :password (creds/hash-bcrypt "marcheschi")
                              :roles #{::user ::admin}}
-                  
+
                   "gino" {:username "gino"
                           :password (creds/hash-bcrypt "gino")
                           :roles #{::user}}}))
-
-(def routes
-  (compojure/routes
-   (GET "/" request
-        (str "INTERNAL AUTHENTICATION: DEBUG."))
-   (POST "/login" request
-         (str "INTERNAL AUTHENTICATION: POST."))))
-
-
-
-
