@@ -25,6 +25,19 @@
 (declare request-to-session)
 (declare tour)
 
+(defn resources [request game game-target]
+  (fn [request]
+    {:onload (str "start_tour('" game "','" game-target "','" "IT" "',"
+                  (write-str (get-step-for-user (username2userid (authentication/current request))
+                                                game))
+                  ");")
+     :css ["/css/tour.css"]
+     :jss ["/js/cities.js"
+           "/js/gen.js"
+           "/js/leaflet.js"
+           (str "/js/" game-target ".js")
+           "/js/tour.js"]}))
+
 (def routes
   (let [headers {"Content-Type" "text/html;charset=utf-8"}]
     (compojure/routes
@@ -42,16 +55,8 @@
             (page "Map Tour" (tour game-target "IT"
                                    game
                                    (username2userid (authentication/current request)))
-                  request {:onload (str "start_tour('" game "','" game-target "','" "IT" "',"
-                                        (write-str (get-step-for-user (username2userid (authentication/current request))
-                                                                      game))
-                                        ");")
-                           :css ["/css/tour.css"]
-                           :jss ["/js/cities.js"
-                                 "/js/gen.js"
-                                 "/js/leaflet.js"
-                                 (str "/js/" game-target ".js")
-                                 "/js/tour.js"]})))
+                  request
+                  (resources request game game-target))))
      (GET "/:game/debug" request
           (let [game (Integer. (:game (:route-params request)))
                 game-result (first 
