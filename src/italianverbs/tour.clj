@@ -25,9 +25,9 @@
 (declare request-to-session)
 (declare tour)
 
-(defn resources [request game game-target]
+(defn resources [request game game-target game-city] 
   (fn [request]
-    {:onload (str "start_tour('" game "','" game-target "','" "IT" "',"
+    {:onload (str "start_tour('" game "','" game-target "','" game-city "',"
                   (write-str (get-step-for-user (username2userid (authentication/current request))
                                                 game))
                   ");")
@@ -46,17 +46,18 @@
           (let [game (Integer. (:game (:route-params request)))
                 game-result (first 
                              (k/exec-raw
-                              [(str "SELECT name,source,target,created_by,
+                              [(str "SELECT name,source,target,city,created_by,
                                             to_char(game.created_on, ?) AS created_on
                                        FROM game 
                                       WHERE id=? LIMIT 1")
                                [time-format game]] :results))
-                game-target (:target game-result)]
-            (page "Map Tour" (tour game-target "IT"
+                target (:target game-result)
+                city (:city game-result)]
+            (page "Map Tour" (tour target "IT"
                                    game
                                    (username2userid (authentication/current request)))
                   request
-                  (resources request game game-target))))
+                  (resources request game target city))))
      (GET "/:game/debug" request
           (let [game (Integer. (:game (:route-params request)))
                 game-result (first 
