@@ -212,7 +212,7 @@
                                     :th-styles {:resume "visibility:hidden"}
                                     :cols [:resume :game :city :position :language :class]})])]])
                 request
-                (resources request))
+                resources)
           :status 200
           :headers html-headers}))
 

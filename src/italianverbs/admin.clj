@@ -3,10 +3,18 @@
    [italianverbs.config :refer [time-format]]
    [compojure.core :as compojure :refer [GET PUT POST DELETE ANY]]
    [italianverbs.html :refer [page rows2table]]
-   [italianverbs.user :refer [do-if-admin]]
+   [italianverbs.menubar :refer [menubar]]
+   [italianverbs.user :refer [do-if-admin login-form menubar-info-for-user]]
    [korma.core :as k]))
 
 (declare admin)
+
+(defn resources [request]
+  {:onload "admin_onload();"
+   :css ["/css/admin.css"]
+   :jss ["/js/admin.js"]
+   :show-login-form (login-form request)
+   :menubar (menubar (menubar-info-for-user request))})
 
 (def routes
   (let [headers {"Content-Type" "text/html;charset=utf-8"}]
@@ -20,10 +28,7 @@
             (page "Admin page"
                   (admin)
                   request
-                  {:onload "admin_onload();"
-                   :css ["/css/admin.css"]
-                   :jss ["/js/admin.js"]
-                   })})))))
+                  resources)})))))
 
 (defn admin []
   [:div#admin {:class "major"}

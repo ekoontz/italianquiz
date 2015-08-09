@@ -11,8 +11,9 @@
                                 language-to-root-spec
                                 language-to-root-keyword]]
    [italianverbs.html :refer [multipart-to-edn page]]
+   [italianverbs.menubar :refer [menubar]]
    [dag-unify.core :refer [unify]]
-   [italianverbs.user :refer [username2userid]]
+   [italianverbs.user :refer [login-form menubar-info-for-user username2userid]]
    [korma.core :as k]))
 
 ;; TODO: language-specific
@@ -23,6 +24,13 @@
 (declare me)
 (declare profile-table)
 (declare set-teacher-of-student)
+
+(defn resources [request]
+  {:onload "me_onload();"
+   :css ["/css/me.css"]
+   :jss ["/js/me.js"]
+   :show-login-form (login-form request)
+   :menubar (menubar (menubar-info-for-user request))})
 
 (def routes
   (let [headers {"Content-Type" "text/html;charset=utf-8"}]
@@ -35,10 +43,7 @@
            (page "My page"
                  (me "it" request)
                  request
-                 {:onload "me_onload();"
-                  :css ["/css/me.css"]
-                  :jss ["/js/me.js"]
-                  })})
+                 resources)})
 
      (POST "/teacher" request
              (set-teacher-of-student request)

@@ -159,7 +159,7 @@
 
                       ]])
                 request
-                (resources request))}
+                resources)}
          ;; else, not authenticated
          (page "My Classes"
                (about/about request))))

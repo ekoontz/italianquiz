@@ -16,6 +16,10 @@
 
 (declare about)
 
+(defn resources [request]
+  {:show-login-form (login-form request)
+   :menubar (menubar (menubar-info-for-user request))})
+
 (def routes 
   (GET "/about" request
        {:status 200
@@ -23,8 +27,7 @@
         :body (html/page "Welcome to Verbcoach"
                          (about request)
                          request
-                         {:show-login-form (login-form request)
-                          :menubar (menubar (menubar-info-for-user request))})}))
+                         resources)}))
 (defn about [request]
    [:div.major {:style "height: 500px"} [:h2 "Welcome to Verbcoach."]
 
