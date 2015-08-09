@@ -4,355 +4,262 @@
    [italianverbs.pos.français :refer :all]))
 
 (def lexicon-source 
-  {"abandonar" {:synsem {:cat :verb
-                         :sem {:pred :abandon}}}
-   
-   "acabar" {:synsem {:cat :verb
-                      :sem {:pred :finish}}}
-   "aceptar" {:synsem {:cat :verb
+  {
+  "abandoner" {:synsem {:cat :verb
+                        :sem {:pred :abandon}}}
+  "terminer" {:synsem {:cat :verb
+                       :sem {:pred :finish}}}
+  "accepter" {:synsem {:cat :verb
                        :sem {:pred :accept}}}
-   "acompañar" {:synsem {:cat :verb
-                         :sem {:pred :accompany}}}
-   "anunciar" {:synsem {:cat :verb
-                        :sem {:pred :announce}}}
-   "apoyar" {:synsem {:cat :verb
-                      :sem {:pred :support}}}
-   "aprender" {:synsem {:cat :verb
+  "accompagner" {:synsem {:cat :verb
+                          :sem {:pred :accompany}}}
+  "anoncier" {:synsem {:cat :verb
+                       :sem {:pred :announce}}}
+  "soutenir" {:synsem {:cat :verb
+                       :sem {:pred :support}}}
+;;  CONJUGATES LIKE TENIR
+  "apprendre" {:synsem {:cat :verb
                         :sem {:pred :imparare}}}
-   
-   "aprovechar" [
-                 {:synsem {:cat :verb
-                           :sem {:pred :take-advantage-of}}}
-                 {:synsem {:cat :verb
-                           :sem {:pred :enjoy}}}]
-   
-   "asegurar" [{:synsem {:cat :verb
-                         :sem {:pred :assure}}}
-               {:synsem {:cat :verb
-                         :sem {:pred :insure}}}]
-   
-   "aumentar" {:synsem {:cat :verb
+  
+  "profiter (de)" {:synsem {:cat :verb
+                            :sem {:pred :take-advantage-of}}}
+  
+  "assurer" [{:synsem {:cat :verb
+                       :sem {:pred :assure}}}
+             {:synsem {:cat :verb
+                       :sem {:pred :insure}}}]
+
+  "augmenter" {:synsem {:cat :verb
                         :sem {:pred :increase}}}
-   
-   "ayudar" {:synsem {:cat :verb
-                      :sem {:pred :aiutare
-                            :obj {:human true}}}}
-   
-   "bajar" {:synsem {:cat :verb
-                     :sem {:pred :lower}}}
-   
-   "cambiar" {:synsem {:cat :verb
-                       :sem {:pred :cambiare}}}
-   
-   "comentar" {:synsem {:cat :verb
+
+  "aider" {:synsem {:cat :verb
+                    :sem {:pred :aiutare}}}
+  
+  "baisser" {:synsem {:cat :verb
+                      :sem {:pred :lower}}}
+  
+  "changer" {:synsem {:cat :verb
+                      :sem {:pred :cambiare}}}
+  
+  "commenter" {:synsem {:cat :verb
                         :sem {:pred :comment}}}
-   
-   "comer" [{:synsem {:cat :verb
-                      :subcat {:2 {:cat :noun}}
-                      :sem {:pred :mangiare
-                            :obj {:edible true}}}}
-            {:synsem {:cat :verb
-                      :sem {:pred :mangiare}}}]
-   
-   "compartir" {:synsem {:cat :verb
-                         :sem {:pred :share}}}
-   
-   "comprar" {:synsem {:cat :verb
-                       :sem {:pred :comprare
-                             :subj {:human true}
-                             :obj {:buyable true}}}}
-   
-   "comprender" {:synsem {:cat :verb
-                          :sem {:pred :understand}}}
-   
-   "conservar" [{:synsem {:cat :verb
-                          :sem {:pred :conserve}}}
-                {:synsem {:cat :verb
-                          :sem {:pred :preserve}}}]
-   
-   "considerar" {:synsem {:cat :verb
-                          :sem {:pred :consider}}}
-   
-   "contestar" {:synsem {:cat :verb
-                         :sem {:pred :answer}}}
-   
-   "correr" {:synsem {:cat :verb
-                      :sem {:pred :run}}}
-   
-   "corresponder" {:synsem {:cat :verb
-                            :sem {:pred :correspond}}}
-   
-   "cortar" {:synsem {:cat :verb
-                      :sem {:pred :cut}}}
-   
-   "crear" {:synsem {:cat :verb
-                     :sem {:pred :create}}}
-   
-   ;; TODO: clarify semantics of this in English 
-   ;;                     "cumplir" {:synsem {:cat :verb
-   ;;                                         :sem {:pred :turn-years}}}
-   
-   "deber" {:synsem {:cat :verb
+  
+  "manger" {:synsem {:cat :verb
+                     :sem {:pred :mangiare}}}
+  
+  "partager" {:synsem {:cat :verb
+                       :sem {:pred :share}}}
+  
+  "acheter" {:synsem {:cat :verb
+                      :sem {:pred :comprare}}}
+  
+  ;;CONJUGATES LIKE PRENDRE
+  "comprendre" {:synsem {:cat :verb
+                         :sem {:pred :understand}}}
+
+  "conserver" [{:synsem {:cat :verb
+                         :sem {:pred :conserve}}}
+               {:synsem {:cat :verb
+                         :sem {:pred :preserve}}}]
+  
+  "considérer" {:synsem {:cat :verb
+                         :sem {:pred :consider}}}
+  
+  ;;SIMILAR TO PRENDRE
+  "répondre" {:synsem {:cat :verb
+                       :sem {:pred :answer}}}
+  
+  
+  "corrir" {:synsem {:cat :verb
+                     :sem {:pred :run}}}
+  
+  ;;  LIKE PRENDRE
+  "correspondre" {:synsem {:cat :verb
+                           :sem {:pred :correspond}}}
+  
+  "couper" {:synsem {:cat :verb
+                     :sem {:pred :cut}}}
+  
+  "créer" {:synsem {:cat :verb
+                    :sem {:pred :create}}}
+  
+  ;; TODO: clarify semantics of this in English 
+  "cumplir" {:synsem {:cat :verb
+                      :sem {:pred :turn-years}}}
+                     
+  "devoir" {:synsem {:cat :verb
                      :sem {:pred :have-to}}}
-   
-   "decidir" {:synsem {:cat :verb
-                       :sem {:pred :decide}}}
-   
-   "dejar" {:synsem {:cat :verb
-                     :sem {:pred :leave-behind}}}
-   
-   "desarrollar" {:synsem {:cat :verb
-                           :sem {:pred :develop}}}
-   
-   "desear" {:synsem {:cat :verb
+  ;; IRREGOLARE
+  "decider" {:synsem {:cat :verb
+                      :sem {:pred :decide}}}
+  
+  "laisser" {:synsem {:cat :verb
+                      :sem {:pred :leave-behind}}}
+  
+  "developer" {:synsem {:cat :verb
+                        :sem {:pred :develop}}}
+  
+  "désirer" {:synsem {:cat :verb
                       :sem {:pred :desire}}}
-   
-   "dormir" {:français {:boot-stem1 "duerm"
-                       :boot-stem2 "dorm"}
-             :synsem {:cat :verb
-                      :sem {:pred :dormire}}}
-   
-   "echar" {:synsem {:cat :verb
-                     :sem {:pred :throw-out}}}
-   
-   "el"
-   (unify determiner
-          {:synsem {:cat :det
-                    :def :def
-                    :gender :masc
-                    :number :sing}})
-   
-   "él" [{:synsem {:cat cat-of-pronoun
-                   :pronoun true
-                   :case :nom
-                   :agr {:person :3rd
-                         :gender :masc
-                         :number :sing}
-                   :sem {:human true
-                         :gender :masc
-                         :pred :lui}
-                   :subcat '()}}
-         {:synsem {:cat cat-of-pronoun
-                   :pronoun true
-                   :case :nom
-                   :agr {:person :3rd
-                         :gender :masc
-                         :number :sing}
-                   :sem {:human false
-                         :gender :masc
-                         :pred :lui}
-                   :subcat '()}}]
-   
-   "ella"
-   {:synsem {:cat cat-of-pronoun
-             :pronoun true
-             :case :nom
-             :agr {:person :3rd
-                   :gender :fem
-                   :number :sing}
-             :sem {:human true
-                   :gender :fem
-                   :pred :lei}
-             :subcat '()}}
-   
-   "ellos"
-   {:synsem {:cat cat-of-pronoun
-             :pronoun true
-             :case :nom
-             :agr {:person :3rd
-                   :gender :masc
-                   :number :plur}
-             :sem {:human true
-                   :gender :masc
-                   :pred :loro}
-             :subcat '()}}
-   
-   "ellas"
-   {:synsem {:cat cat-of-pronoun
-             :pronoun true
-             :case :nom
-             :agr {:person :3rd
-                   :gender :fem
-                   :number :plur}
-             :sem {:human true
-                   :gender :fem
-                   :pred :loro}
-             :subcat '()}}
-   
-   "enseñar" [{:synsem {:cat :verb
-                        :sem {:pred :show}}}
-              {:synsem {:cat :verb
-                        :sem {:pred :teach}}}]
-   
-   "entrar" {:synsem {:cat :verb
-                      :sem {:pred :enter}}}
-   
-   "escapar" {:synsem {:cat :verb
+  
+  "expulser" {:synsem {:cat :verb
+                       :sem {:pred :throw-out}}}
+  
+  "enseigner" [{:synsem {:cat :verb
+                         :sem {:pred :show}}}
+               {:synsem {:cat :verb
+                         :sem {:pred :teach}}}]
+
+  "entrer" {:synsem {:cat :verb
+                     :sem {:pred :enter}}}
+  
+  "echapper" {:synsem {:cat :verb
                        :sem {:pred :escape}}}
-   
-   "escuchar" {:synsem {:cat :verb
-                        :sem {:pred :listen-to}}}
-   
-   "esperar" [{:synsem {:cat :verb
+
+  "écouter" {:synsem {:cat :verb
+                      :sem {:pred :listen-to}}}
+  
+  "attendre" [{:synsem {:cat :verb
                         :sem {:pred :wait-for}}}
               {:synsem {:cat :verb
                         :sem {:pred :hope}}}]
-   
-   "estudiar" {:synsem {:cat :verb
-                        :sem {:pred :study}}}
-   
-   "evitar" {:synsem {:cat :verb
-                      :sem {:pred :avoid}}}
-   
-   "existir" {:synsem {:cat :verb
-                       :sem {:pred :exist}}}
-   
-   "expresar" {:synsem {:cat :verb
-                        :sem {:pred :express}}}
-   
-   "faltar" {:synsem {:cat :verb
+  
+  "étudier" {:synsem {:cat :verb
+                      :sem {:pred :study}}}
+  
+  "éviter" {:synsem {:cat :verb
+                     :sem {:pred :avoid}}}
+  
+  "exister" {:synsem {:cat :verb
+                      :sem {:pred :exist}}}
+  
+  "exprimer" {:synsem {:cat :verb
+                       :sem {:pred :express}}}
+  
+  "manquer" {:synsem {:cat :verb
                       :sem {:pred :to-be-missing}}}
-   
-   "formar" {:synsem {:cat :verb
-                      :sem {:pred :form}}}
-   
-   "funcionar" {:synsem {:cat :verb
-                         :sem {:subj {:human false}
-                               :pred :work-nonhuman}}}
-   
-   "ganar" [{:synsem {:cat :verb
-                      :sem {:pred :earn
-                            :subj {:human true}
-                            :obj {:human false}}}}
+  
+  "former" {:synsem {:cat :verb
+                     :sem {:pred :form}}}
+  
+  "marcher" {:synsem {:cat :verb
+                      :sem {:pred :work-nonhuman}}}
+  
+  "gagner" [{:synsem {:cat :verb
+                      :sem {:pred :earn}}}
             {:synsem {:cat :verb
-                      :sem {:pred :win
-                            :subj {:human true}
-                            :obj {:human false}}}}]
-   
-   ;; TODO: handle syntax/semantics mismatch between Italian/Spanish and English.
-                                        ;                     "gustar" {:synsem {:cat :verb
-                                        ;                                         :sem {:pred :??}}}
-   
-   "hablar" [{:synsem {:cat :verb
-                       :sem {:pred :speak
-                             :subj {:human true}}}}
-             {:synsem {:cat :verb
-                       :sem {:pred :talk
-                             :subj {:human true}}}}]
-   
-   "la"
-   (unify determiner
-          {:synsem {:cat :det
-                    :def :def
-                    :gender :fem
-                    :number :sing}})
-   
-   "mujer"
-   (unify agreement-noun
-          common-noun
-          feminine-noun
-          {:synsem {:sem {:pred :donna
-                          :human true}
-                    :subcat {:1 {:cat :det
-                                 :number :sing
-                                 :def :def}}}})
-   
-   "nosotras"
-   {:synsem {:cat cat-of-pronoun
-             :pronoun true
-             :case :nom
-             :agr {:person :1st
-                   :gender :fem
-                   :number :plur}
-             :sem {:human true
-                   :gender :fem
-                   :pred :noi}
-             :subcat '()}}
-   
-   "nosotros"
-   {:synsem {:cat cat-of-pronoun
-             :pronoun true
-             :case :nom
-             :agr {:person :1st
-                   :gender :masc
-                   :number :plur}
-             :sem {:human true
-                   :gender :masc
-                   :pred :noi}
-             :subcat '()}}
-   
-   "pan"
-   (unify agreement-noun
-          common-noun
-          masculine-noun
-          {:synsem {:sem {:pred :pane
-                          :edible true
-                          :artifact true}
-                    :subcat {:1 {:cat :det
-                                 :number :sing
-                                 :def :def}}}})
-   
-   "tirar" [{:synsem {:cat :verb
-                      :sem {:pred :throw-out}}}
+                      :sem {:pred :win}}}]
+  
+  "parler" [{:synsem {:cat :verb
+                      :sem {:pred :speak}}}
             {:synsem {:cat :verb
-                      :sem {:pred :throw}}}]
-   
-   "tú" {:synsem {:cat :noun
-                  :pronoun true
-                  :case :nom
-                  :agr {:person :2nd
-                        :number :sing}
-                  :sem {:human true
-                        :pred :tu}
-                  :subcat '()}}
-   
-   "ustedes"
-   {:synsem {:cat cat-of-pronoun
-             :pronoun true
-             :case :nom
-             :agr {:person :3rd
-                   :number :plur}
-             :sem {:human true
-                   :pred :voi}
-             :subcat '()}}
-   
-   
-   "vosotras"
-   {:synsem {:cat cat-of-pronoun
-             :pronoun true
-             :case :nom
-             :agr {:person :2nd
-                   :gender :fem
-                   :number :plur}
-             :sem {:human true
-                   :gender :fem
-                   :pred :voi}
-             :subcat '()}}
+                      :sem {:pred :talk}}}]
 
-   "vosotros"
-   {:synsem {:cat cat-of-pronoun
-             :pronoun true
-             :case :nom
-             :agr {:person :2nd
-                   :gender :masc
-                   :number :plur}
-             :sem {:human true
-                   :gender :masc
-                   :pred :voi}
-             :subcat '()}}
-   
-   
-   "yo"       {:synsem {:cat :noun
-                        :pronoun true
-                        :case :nom
-                        :agr {:gender :fem
-                              :person :1st
-                              :number :sing}
-                        :sem {:human true
-                              :pred :io}
-                        :subcat '()}}
-   
-   })
+  "imaginer" {:synsem {:cat :verb
+                       :sem {:pred :imagine??}}}
+  "importer" {:synsem {:cat :verb
+                       :sem {:pred :import??}}}
+  "commencer" {:synsem {:cat :verb
+                        :sem {:pred :begin??}}}
+  "insister" {:synsem {:cat :verb
+                       :sem {:pred :insist??}}}
+  "essayer" {:synsem {:cat :verb
+                      :sem {:pred :try??}}}
+  "interessér" {:synsem {:cat :verb
+                         :sem {:pred :interest??}}}
+  "soulever" {:synsem {:cat :verb
+                       :sem {:pred :lift??}}}
+  "appeler" {:synsem {:cat :verb
+                      :sem {:pred :call??}}}
+  "apporter" {:synsem {:cat :verb
+                       :sem {:pred :take/carry??}}}
+  "gérer" {:synsem {:cat :verb
+                    :sem {:pred :manage??}}}
+  "envoyer" {:synsem {:cat :verb
+                      :sem {:pred :send??}}}
+  "touer" {:synsem {:cat :verb
+                    :sem {:pred :??}}}
+  "mettre" {:synsem {:cat :verb
+                     :sem {:pred :??}}}
+  "regarder" {:synsem {:cat :verb
+                       :sem {:pred :look/watch??}}}
+  
+  ;;ELIMINATE NECESITAR BECAUSE AVOIR BESOIN DE IS A SPECIAL EXPRESSION
+  "necesitar" {:synsem {:cat :verb
+                        :sem {:pred :??}}}
+  "remarquer" {:synsem {:cat :verb
+                                       :sem {:pred :note??}}}
+  "observer" {:synsem {:cat :verb
+                       :sem {:pred :observe??}}}
+  
+  
+  "oublier" {:synsem {:cat :verb
+                      :sem {:pred :forget??}}}
+  "participer" {:synsem {:cat :verb
+                         :sem {:pred :participate??}}}
+  "diviser" {:synsem {:cat :verb
+                      :sem {:pred :divide??}}}
+  ;;  ON JULY 19 I WORKED THIS FAR
+  "pasar" {:synsem {:cat :verb
+                    :sem {:pred :??}}}
+  "permitir" {:synsem {:cat :verb
+                       :sem {:pred :??}}}
+  "preguntar" {:synsem {:cat :verb
+                        :sem {:pred :??}}}
+  "preocupar" {:synsem {:cat :verb
+                        :sem {:pred :??}}}
+  "preparar" {:synsem {:cat :verb
+                       :sem {:pred :??}}}
+  "presentar" {:synsem {:cat :verb
+                        :sem {:pred :??}}}
+  "prestar" {:synsem {:cat :verb
+                      :sem {:pred :??}}}
+  "pretender" {:synsem {:cat :verb
+                        :sem {:pred :??}}}
+  "quedar" {:synsem {:cat :verb
+                     :sem {:pred :??}}}
+  "quitar" {:synsem {:cat :verb
+                     :sem {:pred :??}}}
+  "recibir" {:synsem {:cat :verb
+                      :sem {:pred :??}}}
+  "representar" {:synsem {:cat :verb
+                          :sem {:pred :??}}}
+  "responder" {:synsem {:cat :verb
+                        :sem {:pred :??}}}
+  "resultar" {:synsem {:cat :verb
+                       :sem {:pred :??}}}
+  "salvar" {:synsem {:cat :verb
+                     :sem {:pred :??}}}
+  "señalar" {:synsem {:cat :verb
+                      :sem {:pred :??}}}
+  "subir" {:synsem {:cat :verb
+                    :sem {:pred :??}}}
+  "suceder" {:synsem {:cat :verb
+                      :sem {:pred :??}}}
+  "sufrir" {:synsem {:cat :verb
+                     :sem {:pred :??}}}
+  "terminar" {:synsem {:cat :verb
+                       :sem {:pred :??}}}
+  
+  "tirar" [{:synsem {:cat :verb
+                     :sem {:pred :throw-out}}}
+           {:synsem {:cat :verb
+                     :sem {:pred :throw}}}]
+  
+  "tomar" {:synsem {:cat :verb
+                    :sem {:pred :??}}}
+  "trabajar" {:synsem {:cat :verb
+                       :sem {:pred :??}}}
+  "tratar" {:synsem {:cat :verb
+                     :sem {:pred :??}}}
+  "usar" {:synsem {:cat :verb
+                   :sem {:pred :??}}}
+  "vender" {:synsem {:cat :verb
+                     :sem {:pred :??}}}
+  "vivir" {:synsem {:cat :verb
+                    :sem {:pred :??}}}})
+
+
 
 
 
