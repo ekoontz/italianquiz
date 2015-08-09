@@ -66,6 +66,7 @@
           true (do (log/debug "no authentication found.")
                    nil))))
 
+;; TODO: move to auth/internal.clj
 (defn credential-fn [arg]
   (log/debug (str "calling credential-fn with arg: " arg))
   (creds/bcrypt-credential-fn @internal/users arg))
@@ -80,18 +81,23 @@
 ;;  :password "$2a$10$48TyZw9Ii6bpc.uwJtoXuuMHiRtwNPgC3yczPcpTLao0m0kaIVo02", 
 ;;  :roles #{:friend-interactive-form.users/user}}
 
+;; TODO: move to auth/internal.clj
 (def login-form
   [:div {:class "login major"}
-   [:div [:a {:href "/auth/google/login"} "Login with Google"]]
+   [:div {:style "float:left; width:55%"}
+    [:a {:href "/auth/google/login"} "Login with Google"]]
    (if (:allow-internal-authentication env)
      [:div
-      [:form {:method "POST" :action "/auth/internal/login"}
+      ;; the :action below must be the same as given in
+      ;; core/app/:login-uri. The actual value is arbitrary and is
+      ;; not defined by any route (it is friend-internal).
+      [:form {:method "POST" :action "/login"}
        [:table
         [:tr
          [:th "Email"][:td [:input {:type "text" :name "username" :size "10"}]]
          [:th "Password"][:td [:input {:type "password" :name "password" :size "10"}]]
          [:td [:input {:type "submit" :class "button" :value "Login"}]]]]]])
-   [:div [:a {:href "/auth/internal/register"} "Register a new account"]]
+   [:div {:style "float:right;text-align:right;width:45%;border:0px dashed blue"} [:a {:href "/auth/internal/register"} "Register a new account"]]
    ])
 
 (defn request2user [request]
@@ -154,4 +160,3 @@
        (do (log/trace "Unauthenticated user has an existing session: " ring-session)
            (google/insert-session-if-none ring-session)
            nil)))))
-

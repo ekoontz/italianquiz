@@ -104,8 +104,10 @@
   (handler/site 
    (friend/authenticate
     main-routes
+
+    ;; <TODO: move this route to auth/internal.clj>
     {:allow-anon? true
-     :login-uri "/auth/internal/login"
+     :login-uri "/login"
      :default-landing-uri "/"
      :unauthorized-handler #(-> 
                              (html/page "Unauthorized" (h/html5 
@@ -116,6 +118,8 @@
                              resp/response
                              (resp/status 401))
      :credential-fn #(auth/credential-fn %)
+     ;; </TODO: move this route to auth/internal.clj>
+
      :workflows [(workflows/interactive-form)
                  (oauth2/workflow google/auth-config)]})))
 
