@@ -51,7 +51,7 @@ var cities = {
     "Firenze": {
 	"locale": "IT",
 	"language": "it"},
-    "Mexico DF": {
+    "México D.F.": {
 	"locale": "MX",
 	"language": "es"}
 };
@@ -444,7 +444,7 @@ function update_map(question,correct_answer,target_language,target_locale) {
     navigate_to(step,path,true);
 }
 
-function non_lo_so(target_language,target_locale) {
+function non_lo_so() {
     $("#correctanswer").css("display","block");
     $("#correctanswer").fadeOut(3000,function () {$("#correctanswer").css("display","none");});
     if ((direction == 1) && (step > 1)) {
@@ -453,7 +453,7 @@ function non_lo_so(target_language,target_locale) {
     if (direction == -1) {
 	step = step + 1;
     }
-    var path = tour_paths[target_language][target_locale];
+    var path = tour_paths[g_target_language][g_target_locale];
     navigate_to(step,path,false);
     $("#scorevalue").html(parseInt($("#scorevalue").html()) - score_increment);
     $("#gameinput").focus();

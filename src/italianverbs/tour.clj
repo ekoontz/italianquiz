@@ -354,15 +354,7 @@
 
 (defn dont-know [language locale]
   (let [non_lo_so
-        (cond (= language "it")
-              (str "non_lo_so('it','IT');")
-              (and (= language "es")
-                   (= locale "MX"))
-              (str "non_lo_so('es','MX');")
-              (= language "es")
-              (str "non_lo_so('es','ES');")
-              :else
-              (str "non_lo_so('it','IT');"))]
+        "non_lo_so();"]
     [:button#non_lo_so {:onclick non_lo_so}
      (cond (= language "it")
            "Non lo so"
