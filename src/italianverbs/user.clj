@@ -198,6 +198,8 @@
                                       AND user_id IS NOT NULL")
                              [session]] :results)))))
 
+(defn haz-auth? [request]
+  (friend/current-authentication))
 
 (defn haz-admin? [ & [request]]
   (let [authentication (friend/current-authentication)]
