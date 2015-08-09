@@ -51,7 +51,7 @@
   "return the subset of lexemes that match this token from the lexicon."
   (morph/analyze token #(get @lexicon %)))
 
-(def es lookup) ;; abbreviation for the above
+(def fr lookup) ;; abbreviation for the above
 
 (defn parse [string]
   (parse/parse string lexicon lookup grammar))
@@ -230,7 +230,7 @@
 (declare headers)
 
 (def headers {"Content-Type" "text/html;charset=utf-8"})
-(def language-name "Español")
+(def language-name "Français")
 
 (def routes
   (compojure/routes
