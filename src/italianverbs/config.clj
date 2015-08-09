@@ -63,6 +63,7 @@
 (defn language-radio-buttons []
   {:name :lang :label "Language" :type "radios"
    :options [{:value "es" :label "Español"}
+             {:value "fr" :label "Français"}
              {:value "it" :label "Italiano"}]})
 
 (defn language-to-root-spec [short-language-name root]
@@ -76,7 +77,8 @@
   (cond (= lang "it") "Italian"
         (= lang "en") "English"
         (= lang "es") "Spanish"
-        true "???"))
+        (= lang "fr") "French"
+        true (str "unknown:" lang)))
 
 +;; TODO: throw exception rather than "(no shortname for language)"
 (defn short-language-name-from-match [match-string]
