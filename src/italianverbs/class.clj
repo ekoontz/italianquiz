@@ -19,8 +19,10 @@
    [italianverbs.config :refer [language-radio-buttons short-language-name-to-long time-format]]
    [italianverbs.game :refer [tenses-of-game-as-human-readable verbs-of-game-as-human-readable]]
    [italianverbs.html :as html :refer [banner page rows2table]]
+   [italianverbs.menubar :refer [menubar]]
    [italianverbs.korma :as db]
-   [italianverbs.user :refer [do-if do-if-authenticated do-if-teacher username2userid]]
+   [italianverbs.user :refer [do-if do-if-authenticated do-if-teacher login-form menubar-info-for-user
+                              username2userid]]
    [korma.core :as k]))
 
 (declare delete-class)
@@ -34,9 +36,13 @@
 
 (def html-headers {"Content-Type" "text/html;charset=utf-8"})
 (def json-headers {"Content-type" "application/json;charset=utf-8"})
-(def resources {:onload "class_onload();"
-                :css ["/css/class.css"]
-                :jss ["/js/class/class.js"]})
+(defn resources [request]
+  {:onload "class_onload();"
+   :css ["/css/class.css"]
+   :jss ["/js/class/class.js"]
+   :show-login-form (login-form request)
+   :menubar (menubar (menubar-info-for-user request))})
+   
 (def routes
   (compojure/routes
    (GET "/" request
@@ -153,7 +159,7 @@
 
                       ]])
                 request
-                resources)}
+                (resources request))}
          ;; else, not authenticated
          (page "My Classes"
                (about/about request))))

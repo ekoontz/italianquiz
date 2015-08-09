@@ -46,9 +46,12 @@
 
 (def html-headers {"Content-Type" "text/html;charset=utf-8"})
 (def json-headers {"Content-type" "application/json;charset=utf-8"})
-(def resources {:onload "game_onload();"
-                :css ["/css/game.css"]
-                :jss ["/js/game.js"]})
+(defn resources [request]
+  {:onload "game_onload();"
+   :css ["/css/game.css"]
+   :jss ["/js/game.js"]
+   :show-login-form (login-form request)
+   :menubar (menubar (menubar-info-for-user request))})
 
 (defn tenses-of-game-as-human-readable [tenses]
   (map #(html [:b (str %)])
@@ -208,11 +211,8 @@
                                                                  "Resume")]))}
                                     :th-styles {:resume "visibility:hidden"}
                                     :cols [:resume :game :city :position :language :class]})])]])
-                                   
                 request
-                (merge resources
-                       {:show-login-form (login-form request)
-                        :menubar (menubar (menubar-info-for-user request))}))
+                (resources request))
           :status 200
           :headers html-headers}))
 
