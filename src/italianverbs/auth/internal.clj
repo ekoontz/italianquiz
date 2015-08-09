@@ -6,6 +6,7 @@
 (require '[compojure.core :as compojure :refer [context GET PUT POST DELETE ANY]])
 (require '[digest])
 (require '[environ.core :refer [env]])
+(require '[italianverbs.html :refer [page]])
 (require '[italianverbs.korma :as db])
 (require '[cemerick.friend 
            [workflows :as workflows]
@@ -22,7 +23,10 @@
            :headers {"Location" "/"}}))
 
    (GET "/register" request
-         (str "INTERNAL AUTHENTICATION: GET /register."))
+        (do
+          (log/debug (str "INTERNAL AUTHENTICATION: GET /register."))
+          (page "HI")))
+   
    (POST "/register" request
          (str "INTERNAL AUTHENTICATION: POST /register."))
    (GET "/forgotpassword" request
@@ -65,7 +69,6 @@
 ;; {:username "tom", 
 ;;  :password "$2a$10$48TyZw9Ii6bpc.uwJtoXuuMHiRtwNPgC3yczPcpTLao0m0kaIVo02", 
 ;;  :roles #{:friend-interactive-form.users/user}}
-
 (def login-form
   [:div {:class "login major"}
    [:div {:style "float:left; width:55%"}
@@ -83,4 +86,3 @@
          [:td [:input {:type "submit" :class "button" :value "Login"}]]]]]])
    [:div {:style "float:right;text-align:right;width:45%;border:0px dashed blue"} [:a {:href "/auth/internal/register"} "Register a new account"]]
    ])
-
