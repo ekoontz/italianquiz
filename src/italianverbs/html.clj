@@ -797,16 +797,17 @@
       content
       ))))
 
-(defn page [title & [content request options]]
-  (page-body 
-   (html
-    (if (and request (:query-params request) (get (:query-params request) "result"))
-      [:div {:class "fadeout"}
-       (get (:query-params request) "result")])
-    (if menubar-enabled (:menubar options))
-    [:div#content content]
-    )
-   request title options))
+(defn page [title & [content request resources]]
+  (let [resources (resources request)]
+    (page-body 
+     (html
+      (if (and request (:query-params request) (get (:query-params request) "result"))
+        [:div {:class "fadeout"}
+         (get (:query-params request) "result")])
+      (if menubar-enabled (:menubar resources))
+      [:div#content content]
+      )
+     request title resources)))
 
 (declare tr)
 (def short-format
