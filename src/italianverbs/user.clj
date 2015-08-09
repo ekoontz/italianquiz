@@ -57,10 +57,11 @@
 
       (html
        [:div {:class "login major"}
-        [:div {:style "float:left; width:55%"}
+        [:div {:style "float:left; width:100%;padding-bottom:0.5em;border-bottom:1px solid #ccc"}
          [:a {:href "/auth/google/login"} "Login with Google"]]
         (if (:allow-internal-authentication env)
           [:div
+           "Or login via verbcoach:"
            ;; the :action below must be the same as given in
            ;; core/app/:login-uri. The actual value is arbitrary and is
            ;; not defined by any route (it is friend-internal).
@@ -70,7 +71,8 @@
               [:th "Email"][:td [:input {:type "text" :name "username" :size "10"}]]
               [:th "Password"][:td [:input {:type "password" :name "password" :size "10"}]]
               [:td [:input {:type "submit" :class "button" :value "Login"}]]]]]])
-        [:div {:style "float:right;text-align:right;width:45%;border:0px dashed blue"} [:a {:href "/auth/internal/register"} "Register a new account"]]
+        [:div {:style "float:left;text-align:left;width:45%;border:0px dashed blue"} [:a {:href "/auth/internal/register"} "Register a new account"]]
+        [:div {:style "float:right;text-align:right;width:45%;border:0px dashed blue"} [:a {:href "/auth/internal/forgotpassword"} "Forgot your password?"]]
         ]))))
 
 (defn add-role-to-user [user-id role]
