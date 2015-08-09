@@ -49,7 +49,7 @@
 (defn resources [request]
   {:onload "game_onload();"
    :css ["/css/game.css"]
-   :jss ["/js/game.js"]
+   :jss ["/js/editor.js" "/js/game.js" "/js/gen.js"]
    :show-login-form (login-form request)
    :menubar (menubar (menubar-info-for-user request))})
 
@@ -334,12 +334,15 @@ INSERT INTO game
         (do-if-teacher
          (let [game-id (Integer. (:game (:route-params request)))
                game (first (k/exec-raw ["SELECT * FROM game WHERE id=?" [(Integer. game-id)]] :results))]
-           {:body (body (:name game) (show-game (:game (:route-params request))
+           {:body
+            (page (str "Game: " (:name game))
+                  (body (:name game) (show-game (:game (:route-params request))
                                                 {:show-as-owner? (is-owner-of?
                                                                   (Integer. game-id)
                                                                   (authentication/current request))
                                                  :refine (:refine (:params request))})
                         request)
+                  request resources)
             :status 200
             :headers html-headers})))
    
