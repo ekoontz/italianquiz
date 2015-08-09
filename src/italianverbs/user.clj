@@ -72,7 +72,7 @@
               [:th "Password"][:td [:input {:type "password" :name "password" :size "10"}]]
               [:td [:input {:type "submit" :class "button" :value "Login"}]]]]]])
         [:div {:style "float:left;text-align:left;width:45%;border:0px dashed blue"} [:a {:href "/auth/internal/register"} "Register a new account"]]
-        [:div {:style "float:right;text-align:right;width:45%;border:0px dashed blue"} [:a {:href "/auth/internal/forgotpassword"} "Forgot your password?"]]
+        [:div {:style "float:right;text-align:right;width:45%;border:0px dashed blue"} [:a {:href "/auth/internal/forgotpassword"} "Forgot password?"]]
         ]))))
 
 (defn add-role-to-user [user-id role]
