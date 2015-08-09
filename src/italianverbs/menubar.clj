@@ -3,15 +3,17 @@
    [hiccup core page]
    [ring.util.codec :as codec])
   (:require
-   [clojure.tools.logging :as log]
-   [italianverbs.user :as user]))
+   [clojure.tools.logging :as log]))
 
 (declare menuitem)
 
+;; TODO: fix haz-admin? and haz-teacher? are disabled for now.
+;; menubar should not refer to user/haz-admin? or user/has-teacher role directly.
+;; they should be parameters, just as haz-authentication is.
 (defn menubar [session-row current-url haz-authentication & [suffixes]]
   (let [roles (:roles haz-authentication)
-        haz-admin? (user/haz-admin?)
-        haz-teacher? (user/has-teacher-role)
+        haz-admin? false ;(user/haz-admin?)
+        haz-teacher? false; (user/has-teacher-role)
         ]
 
     (log/debug (str "Drawing menubar with current-url=" current-url))
