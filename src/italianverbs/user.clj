@@ -10,8 +10,8 @@
    [environ.core :refer [env]]
 
    [italianverbs.authentication :as authentication]
+   [italianverbs.session :as session]
    [dag-unify.core :as unify :refer [deserialize get-in ref? strip-refs unify]]
-
    [korma.core :as k]))
 
 (declare add-role-to-user)
@@ -302,5 +302,10 @@
                  {:status 302
                   :headers {"Location" "/?message=Unauthorized: you+are+not+a+teacher"}}))))
 
-
-
+(defn menubar-info-for-user [request]
+  {:session (session/request-to-session request)
+   :uri (if request (get request :uri))
+   :request request
+   :authenticated? (not (nil? (friend/current-authentication)))
+   :haz-admin? (haz-admin? request)
+   :haz-teacher? (has-teacher-role request)})

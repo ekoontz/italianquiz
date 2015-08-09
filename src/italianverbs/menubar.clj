@@ -8,14 +8,12 @@
 (declare menuitem)
 (declare request-to-suffixes)
 
-;; TODO: fix haz-admin? and haz-teacher? are disabled for now.
-;; menubar should not refer to user/haz-admin? or user/has-teacher role directly.
-;; they should be parameters, just as haz-authentication is.
-(defn menubar [session-row current-url request & [
-                                                  {authenticated? :authenticated?
-                                                   haz-admin? :haz-admin?
-                                                   haz-teacher? :haz-teacher?
-                                                   }]]
+(defn menubar [{session-row :session-row
+                current-url :uri
+                request :request
+                authenticated? :authenticated?
+                haz-admin? :haz-admin?
+                haz-teacher? :haz-teacher?}]
   (let [suffixes (if request (request-to-suffixes request))]
     (log/debug (str "Drawing menubar with current-url=" current-url))
     (log/debug (str "Drawing menubar with authenticated?=" authenticated?))
