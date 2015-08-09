@@ -330,25 +330,25 @@
 (defn accent-characters [language locale]
   (cond (= language "it")
         [:div.accents
-         [:button.accented {:onclick (str "add_a_grave('it','IT');")} "&agrave;"]
-         [:button.accented {:onclick (str "add_e_grave('it','IT');")} "&egrave;"]
-         [:button.accented {:onclick (str "add_o_grave('it','IT');")} "&ograve;"]
+         [:button.accented {:onclick (str "add_a_grave();")} "&agrave;"]
+         [:button.accented {:onclick (str "add_e_grave();")} "&egrave;"]
+         [:button.accented {:onclick (str "add_o_grave();")} "&ograve;"]
          ]
         (= language "es")
         (cond (= locale "MX")
               [:div.accents
-               [:button.accented {:onclick (str "add_a_acute('es','MX');")} "&aacute;"]
-               [:button.accented {:onclick (str "add_e_acute('es','MX');")} "&eacute;"]
-               [:button.accented {:onclick (str "add_i_acute('es','MX');")} "&iacute;"]
-               [:button.accented {:onclick (str "add_n_tilde('es','MX');")} "&ntilde;"]
-               [:button.accented {:onclick (str "add_u_acute('es','MX');")} "&uacute;"]]
+               [:button.accented {:onclick (str "add_a_acute();")} "&aacute;"]
+               [:button.accented {:onclick (str "add_e_acute();")} "&eacute;"]
+               [:button.accented {:onclick (str "add_i_acute();")} "&iacute;"]
+               [:button.accented {:onclick (str "add_n_tilde();")} "&ntilde;"]
+               [:button.accented {:onclick (str "add_u_acute();")} "&uacute;"]]
               :else
               [:div.accents
-               [:button.accented {:onclick (str "add_a_acute('es','ES');")} "&aacute;"]
-               [:button.accented {:onclick (str "add_e_acute('es','ES');")} "&eacute;"]
-               [:button.accented {:onclick (str "add_i_acute('es','ES');")} "&iacute;"]
-               [:button.accented {:onclick (str "add_n_tilde('es','ES');")} "&ntilde;"]
-               [:button.accented {:onclick (str "add_u_acute('es','ES');")} "&uacute;"]])
+               [:button.accented {:onclick (str "add_a_acute();")} "&aacute;"]
+               [:button.accented {:onclick (str "add_e_acute();")} "&eacute;"]
+               [:button.accented {:onclick (str "add_i_acute();")} "&iacute;"]
+               [:button.accented {:onclick (str "add_n_tilde();")} "&ntilde;"]
+               [:button.accented {:onclick (str "add_u_acute();")} "&uacute;"]])
         true
         ""))
 

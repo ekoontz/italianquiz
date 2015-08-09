@@ -295,44 +295,44 @@ function increment_map_score() {
 
 // TODO: convert other similar functions to take a language as a param rather 
 // than in the function name.
-function add_a_acute(game_id,language,locale) {
+function add_a_acute(game_id) {
     $("#gameinput").val($("#gameinput").val() + "á");
     update_user_input(game_id);
     $("#gameinput").focus();
 }
 
-function add_a_grave(game_id,language,locale) {
+function add_a_grave(game_id) {
     $("#gameinput").val($("#gameinput").val() + "à");
     update_user_input(game_id);
     $("#gameinput").focus();
 }
 
-function add_e_acute(game_id,language,locale) {
+function add_e_acute(game_id) {
     $("#gameinput").val($("#gameinput").val() + "é");
     update_user_input(game_id);
     $("#gameinput").focus();
 }
-function add_e_grave(game_id,language,locale) {
+function add_e_grave(game_id) {
     $("#gameinput").val($("#gameinput").val() + "è");
     update_user_input(game_id);
     $("#gameinput").focus();
 }
-function add_i_acute(game_id,language,locale) {
+function add_i_acute(game_id) {
     $("#gameinput").val($("#gameinput").val() + "í");
     update_user_input(game_id);
     $("#gameinput").focus();
 }
-function add_n_tilde(game_id,language,locale) {
+function add_n_tilde(game_id) {
     $("#gameinput").val($("#gameinput").val() + "ñ");
     update_user_input(game_id);
     $("#gameinput").focus();
 }
-function add_o_grave(game_id,language,locale) {
+function add_o_grave(game_id) {
     $("#gameinput").val($("#gameinput").val() + "ò");
     update_user_input(game_id);
     $("#gameinput").focus();
 }
-function add_u_acute(game_id,language,locale) {
+function add_u_acute(game_id) {
     $("#gameinput").val($("#gameinput").val() + "ú");
     update_user_input(game_id);
     $("#gameinput").focus();
