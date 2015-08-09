@@ -6,17 +6,19 @@
    [clojure.tools.logging :as log]))
 
 (declare menuitem)
+(declare request-to-suffixes)
 
 ;; TODO: fix haz-admin? and haz-teacher? are disabled for now.
 ;; menubar should not refer to user/haz-admin? or user/has-teacher role directly.
 ;; they should be parameters, just as haz-authentication is.
-(defn menubar [session-row current-url haz-authentication & [suffixes]]
-  (let [roles (:roles haz-authentication)
-        haz-admin? false ;(user/haz-admin?)
-        haz-teacher? false; (user/has-teacher-role)
-        ]
-
+(defn menubar [session-row current-url request & [
+                                                  {authenticated? :authenticated?
+                                                   haz-admin? :haz-admin?
+                                                   haz-teacher? :haz-teacher?
+                                                   }]]
+  (let [suffixes (if request (request-to-suffixes request))]
     (log/debug (str "Drawing menubar with current-url=" current-url))
+    (log/debug (str "Drawing menubar with authenticated?=" authenticated?))
     (log/debug (str "Menubar with suffixes: " suffixes))
     (html
      [:div#menubar
@@ -59,7 +61,7 @@
                  :text "Edit Games"
                  :url-for-this-item "/editor"})
 
-      (menuitem {:show? haz-authentication
+      (menuitem {:show? authenticated?
                  :selected?
                  (or (and (not (nil? current-url))
                           (re-find #"^/game" current-url))
@@ -76,7 +78,7 @@
                      (= current-url "/class")
                      (and (not (nil? current-url))
                           (re-find #"^/class" current-url)))
-                 :show? haz-authentication
+                 :show? authenticated?
                  :current-url current-url 
                  :text "My Classes"
                  :url-for-this-item "/class"})
@@ -107,7 +109,7 @@
                       (re-find #"^/me" current-url))
                  :current-url current-url
                  :text "My Profile"
-                 :show? haz-authentication
+                 :show? authenticated?
                  :url-for-this-item "/me"})
 
       (menuitem {:selected?
@@ -137,7 +139,7 @@
                  :text "My Classes"
                  :url-for-this-item (str "/class/my" (if (get suffixes :class)
                                                        (get suffixes :class)))
-                 :show? (and false haz-authentication (not haz-admin?))})])))
+                 :show? (and false authenticated? (not haz-admin?))})])))
 
 (defn- menuitem [ {selected? :selected?
                    show? :show?
@@ -155,5 +157,14 @@
        {:class "selected"})
      [:a {:href url-for-this-item} text]]))
 
+(defn request-to-suffixes [request]
+  "menubar uses this to make the menubar links context-specific.."
+  ;; ...e.g. if you are looking at a particular group, 
+  ;; the 'generate' link should have that group id so that if you
+  ;;  click the link, you will generate with that group"
+  (let [route-params (:route-params request)]
+    (log/debug (str "req-to-suff params: " route-params))
+    {:generate (if (and route-params (:tag route-params))
+                 (str (:tag route-params) "/"))}))
 
 

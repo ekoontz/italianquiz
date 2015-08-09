@@ -611,16 +611,6 @@
       [:a {:href "/session/set/"} "Login"]
       )]))
 
-(defn request-to-suffixes [request]
-  "menubar uses this to make the menubar links context-specific.."
-  ;; ...e.g. if you are looking at a particular group, 
-  ;; the 'generate' link should have that group id so that if you
-  ;;  click the link, you will generate with that group"
-  (let [route-params (:route-params request)]
-    (log/debug (str "req-to-suff params: " route-params))
-    {:generate (if (and route-params (:tag route-params))
-                 (str (:tag route-params) "/"))}))
-
 (defn powered-by [name link]
   (html
    [:div {:class "poweredby"}
@@ -813,12 +803,7 @@
     (if (and request (:query-params request) (get (:query-params request) "result"))
       [:div {:class "fadeout"}
        (get (:query-params request) "result")])
-
-    (if menubar-enabled
-      (menubar/menubar (session/request-to-session request)
-                       (if request (get request :uri))
-                       (friend/current-authentication)
-                       (request-to-suffixes request)))
+    (if menubar-enabled (:menubar options))
     [:div#content content]
     )
    request title options))
