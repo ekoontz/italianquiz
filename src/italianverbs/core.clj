@@ -13,7 +13,8 @@
    [italianverbs.about :as about]
    [italianverbs.admin :as admin]
    [italianverbs.authentication :as auth]
-   [italianverbs.auth.google :as google]
+   [italianverbs.auth.google :as google-auth]
+   [italianverbs.auth.internal :as internal-auth]
    [italianverbs.class :as class]
    [italianverbs.editor :as editor]
    [italianverbs.game :as game]
@@ -117,11 +118,11 @@
                                                          [:p "You do not have sufficient privileges to access " (:uri %) "."]]) %)
                              resp/response
                              (resp/status 401))
-     :credential-fn #(auth/credential-fn %)
+     :credential-fn #(internal-auth/credential-fn %)
      ;; </TODO: move this route to auth/internal.clj>
 
      :workflows [(workflows/interactive-form)
-                 (oauth2/workflow google/auth-config)]})))
+                 (oauth2/workflow google-auth/auth-config)]})))
 
 (defn wrap-error-page [handler]
   (fn [req]

@@ -14,6 +14,7 @@
    [hiccup.element :as e]
    [hiccup.page :as h]
    [italianverbs.authentication :as auth]
+   [italianverbs.auth.internal :as internal]
    [italianverbs.menubar :as menubar]
    [italianverbs.morphology :refer [fo]]
    [italianverbs.session :as session]
@@ -816,7 +817,7 @@
                                       "(none)")))]
           (if-let [haz-admin (auth/current req)]
             (auth/logged-in-content req)
-            auth/login-form)))
+            internal/login-form)))
       content))))
 
 ;      [:div {:style "float:left;width:95%;border:1px dashed blue;"}
