@@ -10,9 +10,10 @@
    [italianverbs.config :refer [time-format]]
    [italianverbs.editor :refer [json-read-str]]
    [italianverbs.html :refer [page]]
+   [italianverbs.menubar :refer [menubar]]
    [italianverbs.morphology :refer (fo remove-parens)]
    [dag-unify.core :refer (get-in unify)]
-   [italianverbs.user :refer (username2userid session2userid)]
+   [italianverbs.user :refer [menubar-info-for-user session2userid username2userid]]
    [korma.core :as k]))
 
 ;; For now, source language and locale are constant.
@@ -31,6 +32,7 @@
                   (write-str (get-step-for-user (username2userid (authentication/current request))
                                                 game))
                   ");")
+     :menubar (menubar (menubar-info-for-user request))
      :css ["/css/tour.css"]
      :jss ["/js/cities.js"
            "/js/gen.js"
