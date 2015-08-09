@@ -53,25 +53,9 @@
    :show-login-form (login-form request)
    :menubar (menubar (menubar-info-for-user request))})
 
-(defn tenses-of-game-as-human-readable [tenses]
-  (map #(html [:b (str %)])
-       (remove nil?
-               (string/join ", "
-                            (map #(get tenses-human-readable %)
-                                 (map json-read-str
-                                      (.getArray tenses)))))))
+(declare tenses-of-game-as-human-readable)
+(declare verbs-of-game-as-human-readable)
 
-(defn verbs-of-game-as-human-readable [verbs language]
-  "Convert JSON-formatted verbs in a human readable, non-JSON format"
-  (let [language-short-name language
-        language-keyword-name
-        (sqlname-from-match (short-language-name-to-long language-short-name))
-        language-keyword (keyword language-keyword-name)]
-    (string/join ", "
-                 (map #(html [:i %])
-                      (map #(get-in % [:root language-keyword language-keyword])
-                           (map json-read-str
-                                (.getArray verbs)))))))
 (def routes
   (compojure/routes
    (GET "/" request
@@ -570,6 +554,27 @@ ms: " params))))
                           (:city params)
                           (Integer. game-id)]]))))))
 
+(defn game-id-to-game [game-id]
+  (first (k/exec-raw ["SELECT game.id AS game_id,
+                                         source_groupings,
+                                         target_groupings,
+                                         source_lex,
+                                         source_grammar,
+                                         target_lex,
+                                         target_grammar,
+                                         name,
+                                         source,
+                                         target,
+                                         active,
+                                         to_char(game.created_on, ?) AS created_on,
+                                         trim(vc_user.given_name || ' ' || vc_user.family_name) AS created_by,
+                                         city
+                                    FROM game
+                               LEFT JOIN vc_user
+                                      ON (vc_user.id = game.created_by)
+                                   WHERE game.id=?"
+                                 [time-format game-id]] :results)))
+
 (defn show-game [game-id & [ {refine :refine
                               show-as-owner? :show-as-owner?} ]]
   (let [game-id (Integer. game-id)
@@ -1060,5 +1065,22 @@ ms: " params))))
                   [user-id]] :results)]
     results))
 
+(defn tenses-of-game-as-human-readable [tenses]
+  (map #(html [:b (str %)])
+       (remove nil?
+               (string/join ", "
+                            (map #(get tenses-human-readable %)
+                                 (map json-read-str
+                                      (.getArray tenses)))))))
 
-
+(defn verbs-of-game-as-human-readable [verbs language]
+  "Convert JSON-formatted verbs in a human readable, non-JSON format"
+  (let [language-short-name language
+        language-keyword-name
+        (sqlname-from-match (short-language-name-to-long language-short-name))
+        language-keyword (keyword language-keyword-name)]
+    (string/join ", "
+                 (map #(html [:i %])
+                      (map #(get-in % [:root language-keyword language-keyword])
+                           (map json-read-str
+                                (.getArray verbs)))))))
