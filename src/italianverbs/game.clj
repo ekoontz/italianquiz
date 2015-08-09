@@ -21,7 +21,9 @@
                                 time-format]]
    [italianverbs.html :as html :refer [banner page rows2table]]
    [italianverbs.korma :as db]
-   [italianverbs.user :refer [do-if do-if-admin do-if-authenticated do-if-teacher username2userid]]
+   [italianverbs.menubar :refer [menubar]]
+   [italianverbs.user :refer [do-if do-if-admin do-if-authenticated do-if-teacher
+                              login-form menubar-info-for-user username2userid]]
    [dag-unify.core :refer [unify]]
    [korma.core :as k]))
 
@@ -208,7 +210,9 @@
                                     :cols [:resume :game :city :position :language :class]})])]])
                                    
                 request
-                resources)
+                (merge resources
+                       {:show-login-form (login-form request)
+                        :menubar (menubar (menubar-info-for-user request))}))
           :status 200
           :headers html-headers}))
 
@@ -437,10 +441,10 @@ INSERT INTO game
                  ) ;; concat
                 ) ;; banner
         ] ;; :h2
-
       content])
      request
      {:css "/css/game.css"
+
       :jss [ "/js/editor.js" "/js/game.js" "/js/gen.js"]
       :onload (onload)})))
 
