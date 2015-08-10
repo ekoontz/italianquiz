@@ -107,7 +107,7 @@
                                     FROM vc_user 
                               INNER JOIN session
                                       ON (vc_user.id = session.user_id) 
-                                     AND access_token=?")
+                                     AND session.access_token=?")
                              [access-token]] :results))]
      (if user-by-access-token
        (let [email (:email user-by-access-token)
@@ -214,7 +214,7 @@
                               FROM vc_user
                         INNER JOIN session
                                 ON (vc_user.id = session.user_id)
-                             WHERE access_token=?")
+                             WHERE session.access_token=?")
                       [access-token]]
                      :results)))
 
