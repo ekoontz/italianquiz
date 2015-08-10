@@ -5,13 +5,15 @@
                  [clojure.jdbc "0.4.0"]
                  [clojurewerkz/mailer "1.2.0"]
                  [com.cemerick/drawbridge "0.0.6"
-                  :exclusions [ring/ring-core]] ;; https://github.com/cemerick/drawbridge/issues/8
+                  ;; https://github.com/cemerick/drawbridge/issues/8
+                  :exclusions [ring/ring-core]]
                  [com.cemerick/friend "0.2.1"]
                  [compojure "1.1.6"]
                  [dag-unify "0.1.0-SNAPSHOT"]
                  [digest "1.4.4"]
                  [environ "1.0.0"]
                  [formative "0.8.8"]
+                 [friend-oauth2 "0.1.3"]
                  [hiccup "1.0.5"]
                  [javax.servlet/servlet-api "2.5"]
                  [korma "0.4.1"]
@@ -19,7 +21,6 @@
                                                     javax.jms/jms
                                                     com.sun.jdmk/jmxtools
                                                     com.sun.jmx/jmxri]]
-                 [friend-oauth2 "0.1.3"]
                  [http-kit "2.1.16"]
                  [org.clojure/clojure "1.6.0"]
                  [org.clojure/core.async "0.1.278.0-76b25b-alpha"] 
@@ -32,7 +33,6 @@
                  [ring/ring-jetty-adapter "1.1.0"]
                  [ring/ring-devel "1.1.0"]
                  [ring-basic-authentication "1.0.1"]]
-
   :min-lein-version "2.0.0"
   :plugins [
             [lein-environ "1.0.0"]
