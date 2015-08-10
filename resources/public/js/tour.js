@@ -41,6 +41,9 @@ var tour_paths = {
     "es": {
 	"ES": Barcelona,
 	"MX": Mexico_DF
+    },
+    "fr": {
+	"FR": Paris
     }
 };
 
@@ -53,7 +56,10 @@ var cities = {
 	"language": "it"},
     "México D.F.": {
 	"locale": "MX",
-	"language": "es"}
+	"language": "es"},
+    "Paris": {
+	"locale": "FR",
+	"language": "fr"}
 };
 
 var iconMarker;
