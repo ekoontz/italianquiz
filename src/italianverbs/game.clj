@@ -95,7 +95,8 @@
                                      :tenses (fn [game-in-class]
                                                (tenses-of-game-as-human-readable (:tenses game-in-class)))
                                      }}
-                                   ))])
+                                   ))]
+                    "")
                    (do-if-teacher
                     [:div {:class "gamelist"}
                      [:h3 "Games I created"]
@@ -135,8 +136,8 @@
                                      }}
                                    ))
                      ]
+                    ""
                     )
-
 
                    (do-if-teacher
                     [:div {:class "gamelist"}
@@ -157,7 +158,7 @@
                                    (:label option)]])
                                (:options (language-radio-buttons)))]]]
                        [:button {:name "submit_new_game" :disabled true :onclick "submit();"} "New Game"]
-                       ]]])
+                       ]]] "")
 
                    
                    [:div {:class "gamelist"}
@@ -877,6 +878,9 @@ ms: " params))))
 
      [:div {:style "float:left;width:100%"}
       [:table
+       [:tr
+        [:th "Language"]
+        [:td (string/capitalize language-keyword-name)]]
        [:tr
         [:th "Created"]
         [:td (:created_on game)]
