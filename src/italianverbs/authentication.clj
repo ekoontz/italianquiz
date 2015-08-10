@@ -88,13 +88,13 @@
       [:div {:class "login major" :style "display:block"}
        [:table {:style "border:0px"}
         [:tr
-         [:td
-          username]
+         [:td {:style "text-align:left"}
+          username
+          [:div {:style "text-align:left;white-space:nowrap"}
+           [:a {:href "/auth/logout"} "Log out"]]]
          (if picture
            [:td
-            [:img#profile {:src picture}]])
-         [:td {:style "float:right;white-space:nowrap"}
-          [:a {:href "/auth/logout"} "Log out"]]]]])))
+            [:img#profile {:src picture}]])]]])))
 
 (defn no-auth [& {:keys [login-uri credential-fn login-failure-handler redirect-on-auth?]
                   :as form-config
