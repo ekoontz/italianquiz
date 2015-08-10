@@ -161,8 +161,8 @@
                 request
                 resources)}
          ;; else, not authenticated
-         (page "My Classes"
-               (about/about request))))
+         {:status 302 :headers {"Location"
+                                "/?message=please login to view classes"}}))
 
    (POST "/new" request
          (do-if-teacher
