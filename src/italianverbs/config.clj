@@ -74,7 +74,8 @@
 (defn language-radio-buttons []
   {:name :lang :label "Language" :type "radios"
    :options [{:value "es" :label "Español"}
-             {:value "fr" :label "Français"}
+             ;; French not supported yet, so commented out.
+;             {:value "fr" :label "Français"}
              {:value "it" :label "Italiano"}]})
 
 (defn language-to-root-spec [short-language-name root]
