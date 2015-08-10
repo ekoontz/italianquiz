@@ -81,7 +81,7 @@
                         :fields [{:name :name :size 50 :label "Name"}
                                  (language-radio-buttons)]})
                       ]]
-
+                    ""
                     )
 
                    [:div {:class "classlist"}
