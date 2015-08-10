@@ -1,16 +1,19 @@
-(ns italianverbs.français
+(ns italianverbs.francais
   (:refer-clojure :exclude [get-in]))
 
 (require '[clojure.string :as string])
 (require '[clojure.tools.logging :as log])
+;; to write lexicon to lexicon table from this package:
+;; (write-lexicon "fr" @lexicon)
+(require '[italianverbs.borges.writer :as writer])
 (require '[italianverbs.cache :refer (build-lex-sch-cache create-index over spec-to-phrases)])
 (require '[italianverbs.forest :as forest])
-(require '[italianverbs.grammar.français :as gram])
-(require '[italianverbs.lexicon.français :as lex])
+(require '[italianverbs.grammar.francais :as gram])
+(require '[italianverbs.lexicon.francais :as lex])
 (require '[italianverbs.lexiconfn :refer (compile-lex map-function-on-map-vals unify)])
-(require '[italianverbs.morphology.français :as morph])
+(require '[italianverbs.morphology.francais :as morph])
 (require '[italianverbs.parse :as parse])
-(require '[italianverbs.pos.français :refer :all])
+(require '[italianverbs.pos.francais :refer :all])
 (require '[italianverbs.ug :refer :all])
 (require '[dag-unify.core :refer (fail? get-in strip-refs)])
 (require '[dag-unify.core :as unify])
@@ -251,4 +254,7 @@
       ]
      ])
    request))
+
+(defn write-lexicon []
+  (writer/write-lexicon "fr" @lexicon))
 

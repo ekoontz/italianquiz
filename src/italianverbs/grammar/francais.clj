@@ -1,4 +1,4 @@
-(ns italianverbs.grammar.français
+(ns italianverbs.grammar.francais
   (:refer-clojure :exclude [get-in merge resolve])
   (:require 
    [clojure.tools.logging :as log]

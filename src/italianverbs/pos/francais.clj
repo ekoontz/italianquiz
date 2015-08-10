@@ -1,4 +1,4 @@
-(ns italianverbs.pos.français)
+(ns italianverbs.pos.francais)
 
 (require '[italianverbs.pos :as pos])
 (require '[dag-unify.core :refer (unifyc)])

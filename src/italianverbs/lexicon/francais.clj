@@ -1,7 +1,7 @@
-(ns italianverbs.lexicon.français
+(ns italianverbs.lexicon.francais
   (:require
    [italianverbs.lexiconfn :refer (unify)]
-   [italianverbs.pos.français :refer :all]))
+   [italianverbs.pos.francais :refer :all]))
 
 (def lexicon-source 
   {
