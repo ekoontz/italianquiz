@@ -108,7 +108,7 @@
                       (re-find #"^/me" current-url))
                  :current-url current-url
                  :text "My Profile"
-                 :show? authenticated?
+                 :show? (and false authenticated?)
                  :url-for-this-item "/me"})
 
       (menuitem {:selected?
