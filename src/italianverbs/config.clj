@@ -36,18 +36,29 @@
 (defn sqlname-from-match [match-string]
   (cond (nil? match-string)
         (str "(no sqlname for language: (nil) detected).")
+
         (re-find #"espanol" (string/lower-case match-string))
         "espanol"
         (re-find #"español" (string/lower-case match-string))
         "espanol"
+        (re-find #"spanish" (string/lower-case match-string))
+        "espanol"
+
         (re-find #"english" (string/lower-case match-string))
         "english"
+
+        (re-find #"french" (string/lower-case match-string))
+        "français"
+        (re-find #"français" (string/lower-case match-string))
+        "français"
+        (re-find #"francais" (string/lower-case match-string))
+        "français"
+
         (re-find #"italiano" (string/lower-case match-string))
         "italiano"
         (re-find #"italian" (string/lower-case match-string))
         "italiano"
-        (re-find #"spanish" (string/lower-case match-string))
-        "espanol"
+
         :else
         (str "(no sqlname for language:" match-string " detected.")))
 
@@ -72,7 +83,7 @@
         language-keyword (keyword language-keyword-name)]
     {:root {language-keyword {language-keyword root}}}))
 
-;; TODO: throw exception rather than "???" for unknown languages.
+;; TODO: throw exception rather than 'unknown for unknown languages.
 (defn short-language-name-to-long [lang]
   (cond (= lang "it") "Italian"
         (= lang "en") "English"
@@ -84,14 +95,27 @@
 (defn short-language-name-from-match [match-string]
    (cond (nil? match-string)
          (str "(no shortname for language: (nil) detected).")
+
          (re-find #"espanol" (string/lower-case match-string))
          "es"
+         (re-find #"español" (string/lower-case match-string))
+         "es"
+
          (re-find #"english" (string/lower-case match-string))
          "en"
+
+         (re-find #"french" (string/lower-case match-string))
+         "fr"
+         (re-find #"français" (string/lower-case match-string))
+         "fr"
+         (re-find #"francais" (string/lower-case match-string))
+         "fr"
+
          (re-find #"italiano" (string/lower-case match-string))
          "it"
          (re-find #"italian" (string/lower-case match-string))
          "it"
+
          :else
          (str "(no shortname for language:" match-string " detected.")))
 
@@ -179,7 +203,8 @@
 
 ;; TODO: throw exception rather than "unknown language"
 (defn short-language-name-to-edn [lang]
-  (cond (= lang "it") :italiano
-        (= lang "en") :english
+  (cond (= lang "en") :english
         (= lang "es") :espanol
+        (= lang "fr") :français
+        (= lang "it") :italiano
         true (str "unknown lang: " lang)))
