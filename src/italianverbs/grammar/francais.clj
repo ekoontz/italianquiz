@@ -343,4 +343,4 @@
           (aux-is-head-feature phrase)))
        grammar))
 
-(log/info "Español grammar defined.")
+(log/info "Français grammar defined.")
