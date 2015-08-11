@@ -7,10 +7,12 @@
 ;; (write-lexicon "fr" @lexicon)
 (require '[italianverbs.borges.writer :as writer])
 (require '[italianverbs.cache :refer (build-lex-sch-cache create-index over spec-to-phrases)])
+(require '[italianverbs.engine :as engine])
 (require '[italianverbs.forest :as forest])
 (require '[italianverbs.grammar.francais :as gram])
 (require '[italianverbs.lexicon.francais :as lex])
 (require '[italianverbs.lexiconfn :refer (compile-lex map-function-on-map-vals unify)])
+(require '[italianverbs.morphology :refer [fo]])
 (require '[italianverbs.morphology.francais :as morph])
 (require '[italianverbs.parse :as parse])
 (require '[italianverbs.pos.francais :refer :all])
@@ -145,7 +147,7 @@
                     (if (not (empty? filtered-v))
                       [k filtered-v]))))]
       {:name "small"
-       :language "es"
+       :language "fr"
        :language-keyword :français
        :enrich enrich
        :grammar grammar
