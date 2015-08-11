@@ -119,7 +119,9 @@
                  last-stem-char-is-e (re-find #"er$" infinitive)
                  is-care-or-gare? (re-find #"[cg]ar$" infinitive)
                  person (get-in word '(:agr :person))
-                 number (get-in word '(:agr :number))]
+                 number (get-in word '(:agr :number))
+                 g-stem (re-find #"[g]er$" infinitive)
+                 ]
              ;;QUI COMINCIANO I VERBI FRANCESI REGOLARI
              (cond
 
@@ -146,6 +148,8 @@
               (and (= person :3rd) (= number :sing) (ir-type))
               (str stem "it")
 
+              (and (= person :1st) (= number :plur) er-type g-stem)
+              (str stem "eons")
 
               (and (= person :1st) (= number :plur) er-type)
               (str stem "ons")
