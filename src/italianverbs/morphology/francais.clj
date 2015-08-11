@@ -19,760 +19,502 @@
         (map (string/join " " #(get-string-1 %))
              word)
         true
-  (let [person (get-in word '(:agr :person))
-        number (get-in word '(:agr :number))
-        info (log/debug "get-string-1: input word: " word)
-        vosotros (if vosotros vosotros true)
-        ustedes (if ustedes ustedes false)
-        tú (if tú tú false)
-        usted (if usted usted false)]
+        (let [person (get-in word '(:agr :person))
+              number (get-in word '(:agr :number))
+              info (log/debug "get-string-1: input word: " word)
+              vosotros (if vosotros vosotros true)
+              ustedes (if ustedes ustedes false)
+              tú (if tú tú false)
+              usted (if usted usted false)]
+          
+          (log/debug (str "get-string-1: word: " word))
+          (log/debug (str "get-string-1: word (stripped-refs): " (strip-refs word)))
+          (log/debug (str "word's a is a string? " (get-in word '(:a)) " => " (string? (get-in word '(:a)))))
+          (log/debug (str "word's b is a map? " (get-in word '(:b)) " => " (map? (get-in word '(:b)))))
+          
+          (log/debug (str "word's a french is a string? " (get-in word '(:a :français)) " => " (string? (get-in word '(:a :français)))))
 
-    (log/debug (str "get-string-1: word: " word))
-    (log/debug (str "get-string-1: word (stripped-refs): " (strip-refs word)))
-    (log/debug (str "word's a is a string? " (get-in word '(:a)) " => " (string? (get-in word '(:a)))))
-    (log/debug (str "word's b is a map? " (get-in word '(:b)) " => " (map? (get-in word '(:b)))))
+          (cond
 
-    (log/debug (str "word's a french is a string? " (get-in word '(:a :french)) " => " (string? (get-in word '(:a :french)))))
-
-    (cond
-
-     (= word :top) ".."
-
-     (ref? word)
-     (get-string-1 @word)
-
-     ;; TODO: this is a special case that should be handled below instead
-     ;; of forcing every input to go through this check.
-     (= word {:initial false})
-     ".."
-     (= word {:initial true})
-     ".."
-
-     (and (string? (get-in word '(:a)))
-          (string? (get-in word '(:b))))
-     (get-string (get-in word '(:a))
-                 (get-in word '(:b)))
-
-     (and (string? (get-in word '(:a)))
-          (map? (get-in word '(:b))))
-     (get-string (get-in word '(:a))
-                 (get-in word '(:b)))
-
-     (and (map? (get-in word '(:a)))
-          (map? (get-in word '(:b))))
-     (get-string
-      (get-in word '(:a))
-      (get-in word '(:b)))
-
-     ;; TODO: this rule is pre-empting all of the following rules
-     ;; that look in :a and :b. Either remove those following rules
-     ;; if they are redundant and not needed, or move this general rule
-     ;; below the following rules.
-     (and (not (= :none (get-in word '(:a) :none)))
-          (not (= :none (get-in word '(:b) :none))))
-     (get-string (get-in word '(:a))
-                 (get-in word '(:b)))
-
-     (and
-      (string? (get-in word '(:a :french)))
-      (string? (get-in word '(:b :french)))
-      (or (= :none (get-in word '(:b :agr :number) :none))
-          (= :top (get-in word '(:b :agr :number) :none)))
-      )
-     (str (string/trim (get-in word '(:a :french)))
-          " "
-          (string/trim (get-in word '(:b :french))))
-
-     (and
-      (string? (get-in word '(:a)))
-      (string? (get-in word '(:b :french)))
-      (or (= :none (get-in word '(:b :agr :number) :none))
-          (= :top (get-in word '(:b :agr :number) :none)))
-      )
-     (str (string/trim (get-in word '(:a)))
-          " "
-          (string/trim (get-in word '(:b :french))))
-
-     (and
-      (string? (get-in word '(:a :french)))
-      (get-in word '(:a :french))
-      (or (= :none (get-in word '(:b :agr :number) :none))
-          (= :top (get-in word '(:b :agr :number) :none)))
-      (= (get-in word '(:a :infl)) :top))
-     (string/trim (str (get-in word '(:a :french))
-                 " " (get-string-1 (get-in word '(:b)))))
-
-     (= true (get-in word [:exception]))
-     (get-in word [:french])
-
-     (and
-      (= (get-in word '(:infl)) :present)
-      (string? (get-in word '(:french))))
-     (let [infinitive (get-in word '(:french))
-           ar-type (try (re-find #"ar$" infinitive)
-                         (catch Exception e
-                           (throw (Exception. (str "Can't regex-find on non-string: " infinitive " from word: " word)))))
-           er-type (re-find #"er$" infinitive)
-           ir-type (re-find #"ir$" infinitive)
-           stem (string/replace infinitive #"[iae]r$" "")
-           last-stem-char-is-i (re-find #"ir$" infinitive)
-           last-stem-char-is-e (re-find #"er$" infinitive)
-           is-care-or-gare? (re-find #"[cg]ar$" infinitive)
-           person (get-in word '(:agr :person))
-           number (get-in word '(:agr :number))]
-       ;;QUI COMINCIANO I VERBI FRANCESI REGOLARI
-       (cond
-
-        (and (= person :1st) (= number :sing) er-type)
-        (str stem "e")
-
-        (and (= person :1st) (= number :sing) ir-type)
-        (str stem "is")
-        
-        (and (= person :2nd) (= number :sing) er-type)
-        (str stem "es")
-        
-        (and (= person :2nd) (= number :sing) ir-type)
-        (str stem "is")
-
-        (and (= person :2nd) (= number :sing) er-type)
-        (str stem "ez")
-       
-        (and (= person :2nd) (= number :sing) ir-type)
-        (str stem "issez")
-
-        (and (= person :3rd) (= number :sing) er-type)
-        (str stem "e")
-        (and (= person :3rd) (= number :sing) (ir-type))
-        (str stem "it")
-
-
-        (and (= person :1st) (= number :plur) er-type)
-        (str stem "ons")
-       
-        (and (= person :1st) (= number :plur) ir-type)
-        (str stem "issons")
-       
-        ;; <second person plural present>
-
-        (and (= person :2nd) (= number :plur) er-type)
-        (str stem "ez")
-
-         (and (= person :2nd) (= number :plur) ir-type)
-        (str stem "issez")  
-       
-      
-        ;; </second person plural present>
-
-        ;; <third person plural present>
-        (and (= person :3rd) (= number :plur)
-             er-type)
-        (str stem "ent")
-               (and (= person :3rd) (= number :plur)
-             ir-type)
-        (str stem "issent")
-
-        ;; </third person plural present>
-        
-        ;; agreement is underspecified, but an infinitive form (the :french key) exists, so just return that infinitive form.
-        (and (= (get-in word [:agr]) :top)
-             (string? (get-in word [:french])))
-        (get-in word [:french])
-
-        :else
-        (throw (Exception. (str "get-string-1: present regular inflection: don't know what to do with input argument: " (strip-refs word))))))
-
-     (and
-      (= (get-in word '(:infl)) :imperfetto)
-      (string? (get-in word '(:french))))
-     (let [infinitive (get-in word '(:french))
-           ar-type (try (re-find #"ar$" infinitive)
-                         (catch Exception e
-                           (throw (Exception. (str "Can't regex-find on non-string: " infinitive " from word: " word)))))
-           er-type (re-find #"er$" infinitive)
-           ir-type (re-find #"ir$" infinitive)
-           stem (string/replace infinitive #"[iae]r$" "")
-           last-stem-char-is-i (re-find #"ir$" infinitive)
-           last-stem-char-is-e (re-find #"er$" infinitive)
-           is-care-or-gare? (re-find #"[cg]ar$" infinitive)
-           vosotros (if vosotros vosotros true)
-           ustedes (if ustedes ustedes false)
-           person (get-in word '(:agr :person))
-           number (get-in word '(:agr :number))]
-;;QUI COMINCIA L’ IMPERFETTO
-
-
-       (cond
-        (and (= person :1st) (= number :sing) er-type)
-        (str stem "ais")
-
-        (and (= person :1st) (= number :sing) ir-type)
-        (str stem "íssais")
-
-        (and (= person :2nd) (= number :sing) er-type)
-        (str stem "ais")
-
-        (and (= person :2nd) (= number :sing) ir-type)
-        (str stem "íssais")
-
-        
-        (and (= person :3rd) (= number :sing) er-type)
-        (str stem "ait")
-
-        (and (= person :3rd) (= number :sing) ir-type)
-        (str stem "íssait")
-
-        (and (= person :1st) (= number :plur) er-type)
-        (str stem "ions")
-        
-        (and (= person :1st) (= number :plur) ir-type)
-        (str stem "íssions")
-
-        ;; <second person plural imperfecto>
-
-        (and (= person :2nd) (= number :plur) er-type)
-        (str stem "iez")
-
-        (and (= person :2nd) (= number :plur) ir-type)
-        (str stem "íssiez")
-
-   
-        ;; </second person plural imperfecto>
-
-        ;; <third person plural imperfecto>
-        (and (= person :3rd) (= number :plur)
-             er-type)
-        (str stem "aient")
-
-       
-        (and (= person :3rd) (= number :plur)
-             ir-type)
-        (str stem "íssaient")
-
-        ;; </third person plural imperfecto>
-
-        :else
-        (throw (Exception. (str "get-string-1: imperfecto regular inflection: don't know what to do with input argument: " (strip-refs word))))))
-
-     (and
-      (= (get-in word '(:infl)) :futuro)
-      (string? (get-in word '(:french))))
-     (let [infinitive (get-in word '(:french))
-           ar-type (try (re-find #"ar$" infinitive)
-                         (catch Exception e
-                           (throw (Exception. (str "Can't regex-find on non-string: " infinitive " from word: " word)))))
-           er-type (re-find #"er$" infinitive)
-           ir-type (re-find #"ir$" infinitive)
-           stem (string/replace infinitive #"[iae]r$" "")
-           last-stem-char-is-i (re-find #"ir$" infinitive)
-           last-stem-char-is-e (re-find #"er$" infinitive)
+           (= word :top) ".."
            
-           vosotros (if vosotros vosotros true)
-           ustedes (if ustedes ustedes false)
-           person (get-in word '(:agr :person))
-           number (get-in word '(:agr :number))]
-;; QUI COMINCIA IL FUTURO FRANCESE
-       (cond
+           (ref? word)
+           (get-string-1 @word)
+           
+           ;; TODO: this is a special case that should be handled below instead
+           ;; of forcing every input to go through this check.
+           (= word {:initial false})
+           ".."
+           (= word {:initial true})
+           ".."
+           
+           (and (string? (get-in word '(:a)))
+                (string? (get-in word '(:b))))
+           (get-string (get-in word '(:a))
+                       (get-in word '(:b)))
+           
+           (and (string? (get-in word '(:a)))
+                (map? (get-in word '(:b))))
+           (get-string (get-in word '(:a))
+                       (get-in word '(:b)))
+           
+           (and (map? (get-in word '(:a)))
+                (map? (get-in word '(:b))))
+           (get-string
+            (get-in word '(:a))
+            (get-in word '(:b)))
+           
+           ;; TODO: this rule is pre-empting all of the following rules
+           ;; that look in :a and :b. Either remove those following rules
+           ;; if they are redundant and not needed, or move this general rule
+           ;; below the following rules.
+           (and (not (= :none (get-in word '(:a) :none)))
+                (not (= :none (get-in word '(:b) :none))))
+           (get-string (get-in word '(:a))
+                       (get-in word '(:b)))
+           
+           (and
+            (string? (get-in word '(:a :français)))
+            (string? (get-in word '(:b :français)))
+            (or (= :none (get-in word '(:b :agr :number) :none))
+                (= :top (get-in word '(:b :agr :number) :none)))
+            )
+           (str (string/trim (get-in word '(:a :français)))
+                " "
+                (string/trim (get-in word '(:b :français))))
+           
+           (and
+            (string? (get-in word '(:a)))
+            (string? (get-in word '(:b :français)))
+            (or (= :none (get-in word '(:b :agr :number) :none))
+                (= :top (get-in word '(:b :agr :number) :none)))
+            )
+           (str (string/trim (get-in word '(:a)))
+                " "
+                (string/trim (get-in word '(:b :français))))
+           
+           (and
+            (string? (get-in word '(:a :français)))
+            (get-in word '(:a :français))
+            (or (= :none (get-in word '(:b :agr :number) :none))
+                (= :top (get-in word '(:b :agr :number) :none)))
+            (= (get-in word '(:a :infl)) :top))
+           (string/trim (str (get-in word '(:a :français))
+                             " " (get-string-1 (get-in word '(:b)))))
 
-        (and (= person :1st) (= number :sing) er-type)
-        (str stem "erai")
+           (= true (get-in word [:exception]))
+           (get-in word [:français])
+           
+           (and
+            (= (get-in word '(:infl)) :present)
+            (string? (get-in word '(:français))))
+           (let [infinitive (get-in word '(:français))
+                 ar-type (try (re-find #"ar$" infinitive)
+                              (catch Exception e
+                                (throw (Exception. (str "Can't regex-find on non-string: " infinitive " from word: " word)))))
+                 er-type (re-find #"er$" infinitive)
+                 ir-type (re-find #"ir$" infinitive)
+                 stem (string/replace infinitive #"[iae]r$" "")
+                 last-stem-char-is-i (re-find #"ir$" infinitive)
+                 last-stem-char-is-e (re-find #"er$" infinitive)
+                 is-care-or-gare? (re-find #"[cg]ar$" infinitive)
+                 person (get-in word '(:agr :person))
+                 number (get-in word '(:agr :number))]
+             ;;QUI COMINCIANO I VERBI FRANCESI REGOLARI
+             (cond
 
-        (and (= person :1st) (= number :sing) ir-type)
-        (str stem "iré")
-
-        (and (= person :2nd) (= number :sing) ir-type)
-        (str stem "iras")
-        (and (= person :2nd) (= number :sing) er-type)
-        (str stem "eras")
+              (and (= person :1st) (= number :sing) er-type)
+              (str stem "e")
+              
+              (and (= person :1st) (= number :sing) ir-type)
+              (str stem "is")
+              
+              (and (= person :2nd) (= number :sing) er-type)
+              (str stem "es")
         
-        (and (= person :2nd) (= number :sing) ir-type)
-        (str stem "irez")
-        (and (= person :2nd) (= number :sing) er-type)
-        (str stem "erez")
-
-        
-        (and (= person :3rd) (= number :sing) ir-type)
-        (str stem "ira")
-        (and (= person :3rd) (= number :sing) er-type)
-        (str stem "era")
-
-        
-
-        (and (= person :1st) (= number :plur) er-type)
-        (str stem "erons")
-
-        (and (= person :1st) (= number :plur) ir-type)
-        (str stem "irons")
-
-        ;; <second person plural future>
-
-        
-        (and (= person :2nd) (= number :plur) er-type vosotros)
-        (str stem "erez")
-
-        (and (= person :2nd) (= number :plur) ir-type vosotros)
-        (str stem "irez")
+              (and (= person :2nd) (= number :sing) ir-type)
+              (str stem "is")
+              
+              (and (= person :2nd) (= number :sing) er-type)
+              (str stem "ez")
+              
+              (and (= person :2nd) (= number :sing) ir-type)
+              (str stem "issez")
+              
+              (and (= person :3rd) (= number :sing) er-type)
+              (str stem "e")
+              (and (= person :3rd) (= number :sing) (ir-type))
+              (str stem "it")
 
 
-        ;; </second person plural future>
-
-        ;; <third person plural future>
-        
-
-        (and (= person :3rd) (= number :plur)
-             er-type)
-        (str stem "eront")
-
-        (and (= person :3rd) (= number :plur)
-             ir-type)
-        (str stem "iront")
-
-        ;; </third person plural future>
-
-        :else
-        (throw (Exception. (str "get-string-1: futuro regular inflection: don't know what to do with input argument: " (strip-refs word))))))
-
-     (and
-      (= (get-in word '(:infl)) :conditional)
-      (string? (get-in word '(:french))))
-     (let [infinitive (get-in word '(:french))
-           ar-type (try (re-find #"ar$" infinitive)
-                         (catch Exception e
-                           (throw (Exception. (str "Can't regex-find on non-string: " infinitive " from word: " word)))))
-           er-type (re-find #"er$" infinitive)
-           ir-type (re-find #"ir$" infinitive)
-           stem (string/replace infinitive #"[iae]r$" "")
-           last-stem-char-is-i (re-find #"ir$" infinitive)
-           last-stem-char-is-e (re-find #"er$" infinitive)
-           is-care-or-gare? (re-find #"[cg]ar$" infinitive)
-           vosotros (if vosotros vosotros true)
-           ustedes (if ustedes ustedes false)
-           person (get-in word '(:agr :person))
-           number (get-in word '(:agr :number))]
-
-;;QUI COMINCIA IL CONDIZIONALE FRANCESE
-       (cond
-        
-        (and (= person :1st) (= number :sing) er-type)
-        (str stem "erais")
-        (and (= person :1st) (= number :sing) ir-type)
-        (str stem "irais")
-
-        
-        (and (= person :2nd) (= number :sing) ir-type)
-        (str stem "erais")
-        (and (= person :2nd) (= number :sing) er-type)
-        (str stem "irais")
-
-        
-        (and (= person :2nd) (= number :sing) ir-type)
-        (str stem "eriez")
-        (and (= person :2nd) (= number :sing) er-type)
-        (str stem "iriez")
-        
-        (and (= person :3rd) (= number :sing) ir-type)
-        (str stem "erait")
-        (and (= person :3rd) (= number :sing) er-type)
-        (str stem "irait")
-
-        
-
-        (and (= person :1st) (= number :plur) er-type)
-        (str stem "erions")
-
-        (and (= person :1st) (= number :plur) ir-type)
-        (str stem "irions")
-
-        ;; <second person plural conditional>
-
-        
-
-        (and (= person :2nd) (= number :plur) er-type vosotros)
-        (str stem "eriez")
-
-        (and (= person :2nd) (= number :plur) ir-type vosotros)
-        (str stem "iriez")
-
+              (and (= person :1st) (= number :plur) er-type)
+              (str stem "ons")
+              
+              (and (= person :1st) (= number :plur) ir-type)
+              (str stem "issons")
        
+              ;; <second person plural present>
 
-       )
+              (and (= person :2nd) (= number :plur) er-type)
+              (str stem "ez")
 
-        ;; </second person plural conditional>
+              (and (= person :2nd) (= number :plur) ir-type)
+              (str stem "issez")  
+       
+      
+              ;; </second person plural present>
 
-        ;; <third person plural conditional>
+              ;; <third person plural present>
+              (and (= person :3rd) (= number :plur)
+                   er-type)
+              (str stem "ent")
+              (and (= person :3rd) (= number :plur)
+                   ir-type)
+              (str stem "issent")
+              
+              ;; </third person plural present>
+              
+              ;; agreement is underspecified, but an infinitive form (the :français key) exists, so just return that infinitive form.
+              (and (= (get-in word [:agr]) :top)
+                   (string? (get-in word [:français])))
+              (get-in word [:français])
+              
+              :else
+              (throw (Exception. (str "get-string-1: present regular inflection: don't know what to do with input argument: " (strip-refs word))))))))
+           
+        (and
+         (= (get-in word '(:infl)) :imperfetto)
+         (string? (get-in word '(:français))))
+        (let [infinitive (get-in word '(:français))
+              ar-type (try (re-find #"ar$" infinitive)
+                           (catch Exception e
+                             (throw (Exception. (str "Can't regex-find on non-string: " infinitive " from word: " word)))))
+              er-type (re-find #"er$" infinitive)
+              ir-type (re-find #"ir$" infinitive)
+              stem (string/replace infinitive #"[iae]r$" "")
+              last-stem-char-is-i (re-find #"ir$" infinitive)
+              last-stem-char-is-e (re-find #"er$" infinitive)
+              is-care-or-gare? (re-find #"[cg]ar$" infinitive)
+              vosotros (if vosotros vosotros true)
+              ustedes (if ustedes ustedes false)
+           person (get-in word '(:agr :person))
+              number (get-in word '(:agr :number))]
+          ;;QUI COMINCIA L’ IMPERFETTO
+          
+
+          (cond
+           (and (= person :1st) (= number :sing) er-type)
+           (str stem "ais")
+           
+           (and (= person :1st) (= number :sing) ir-type)
+           (str stem "íssais")
+           
+           (and (= person :2nd) (= number :sing) er-type)
+           (str stem "ais")
+           
+           (and (= person :2nd) (= number :sing) ir-type)
+           (str stem "íssais")
+           
+           (and (= person :3rd) (= number :sing) er-type)
+           (str stem "ait")
+           
+           (and (= person :3rd) (= number :sing) ir-type)
+           (str stem "íssait")
+           
+           (and (= person :1st) (= number :plur) er-type)
+           (str stem "ions")
+           
+           (and (= person :1st) (= number :plur) ir-type)
+           (str stem "íssions")
+           
+           ;; <second person plural imperfecto>
+           
+           (and (= person :2nd) (= number :plur) er-type)
+           (str stem "iez")
+           
+           (and (= person :2nd) (= number :plur) ir-type)
+           (str stem "íssiez")
+           
+           
+           ;; </second person plural imperfecto>
+           
+           ;; <third person plural imperfecto>
+           (and (= person :3rd) (= number :plur)
+                er-type)
+           (str stem "aient")
+           
+       
+           (and (= person :3rd) (= number :plur)
+                ir-type)
+           (str stem "íssaient")
+           
+           ;; </third person plural imperfecto>
+           
+           :else
+           (throw (Exception. (str "get-string-1: imperfecto regular inflection: don't know what to do with input argument: " (strip-refs word))))))
+
+        (and
+         (= (get-in word '(:infl)) :futuro)
+         (string? (get-in word '(:français))))
+        (let [infinitive (get-in word '(:français))
+              ar-type (try (re-find #"ar$" infinitive)
+                           (catch Exception e
+                             (throw (Exception. (str "Can't regex-find on non-string: " infinitive " from word: " word)))))
+              er-type (re-find #"er$" infinitive)
+              ir-type (re-find #"ir$" infinitive)
+              stem (string/replace infinitive #"[iae]r$" "")
+              last-stem-char-is-i (re-find #"ir$" infinitive)
+              last-stem-char-is-e (re-find #"er$" infinitive)
+              
+              vosotros (if vosotros vosotros true)
+              ustedes (if ustedes ustedes false)
+              person (get-in word '(:agr :person))
+              number (get-in word '(:agr :number))]
+          ;; QUI COMINCIA IL FUTURO FRANCESE
+          (cond
+           
+           (and (= person :1st) (= number :sing) er-type)
+           (str stem "erai")
+           
+           (and (= person :1st) (= number :sing) ir-type)
+           (str stem "iré")
+           
+           (and (= person :2nd) (= number :sing) ir-type)
+           (str stem "iras")
+           (and (= person :2nd) (= number :sing) er-type)
+           (str stem "eras")
+           
+           (and (= person :2nd) (= number :sing) ir-type)
+           (str stem "irez")
+           (and (= person :2nd) (= number :sing) er-type)
+           (str stem "erez")
+           
+        
+           (and (= person :3rd) (= number :sing) ir-type)
+           (str stem "ira")
+           (and (= person :3rd) (= number :sing) er-type)
+           (str stem "era")
+        
         
 
-        (and (= person :3rd) (= number :plur)
-             er-type)
-        (str stem "eraient")
+           (and (= person :1st) (= number :plur) er-type)
+           (str stem "erons")
+           
+           (and (= person :1st) (= number :plur) ir-type)
+           (str stem "irons")
+           
+           ;; <second person plural future>
+           
+        
+           (and (= person :2nd) (= number :plur) er-type vosotros)
+           (str stem "erez")
+           
+           (and (= person :2nd) (= number :plur) ir-type vosotros)
+           (str stem "irez")
 
-        (and (= person :3rd) (= number :plur)
-             ir-type)
-        (str stem "iraient")
 
-        ;; </third person plural conditional>
+           ;; </second person plural future>
+           
+           ;; <third person plural future>
+        
+           
+           (and (= person :3rd) (= number :plur)
+                er-type)
+           (str stem "eront")
+           
+           (and (= person :3rd) (= number :plur)
+                ir-type)
+           (str stem "iront")
 
-        :else
-        (throw (Exception. (str "get-string-1: conditional regular inflection: don't know what to do with input argument: " (strip-refs word))))))
+           ;; </third person plural future>
+
+           :else
+           (throw (Exception. (str "get-string-1: futuro regular inflection: don't know what to do with input argument: " (strip-refs word))))))
+
+        (and
+         (= (get-in word '(:infl)) :conditional)
+         (string? (get-in word '(:français))))
+        (let [infinitive (get-in word '(:français))
+              ar-type (try (re-find #"ar$" infinitive)
+                           (catch Exception e
+                             (throw (Exception. (str "Can't regex-find on non-string: " infinitive " from word: " word)))))
+              er-type (re-find #"er$" infinitive)
+              ir-type (re-find #"ir$" infinitive)
+              stem (string/replace infinitive #"[iae]r$" "")
+              last-stem-char-is-i (re-find #"ir$" infinitive)
+              last-stem-char-is-e (re-find #"er$" infinitive)
+              is-care-or-gare? (re-find #"[cg]ar$" infinitive)
+              vosotros (if vosotros vosotros true)
+              ustedes (if ustedes ustedes false)
+              person (get-in word '(:agr :person))
+              number (get-in word '(:agr :number))]
+
+          ;;QUI COMINCIA IL CONDIZIONALE FRANCESE
+          (cond
+           
+           (and (= person :1st) (= number :sing) er-type)
+           (str stem "erais")
+           (and (= person :1st) (= number :sing) ir-type)
+           (str stem "irais")
+           
+           
+           (and (= person :2nd) (= number :sing) ir-type)
+           (str stem "erais")
+           (and (= person :2nd) (= number :sing) er-type)
+           (str stem "irais")
+           
+        
+           (and (= person :2nd) (= number :sing) ir-type)
+           (str stem "eriez")
+           (and (= person :2nd) (= number :sing) er-type)
+           (str stem "iriez")
+           
+           (and (= person :3rd) (= number :sing) ir-type)
+           (str stem "erait")
+           (and (= person :3rd) (= number :sing) er-type)
+           (str stem "irait")
+
+        
+           
+           (and (= person :1st) (= number :plur) er-type)
+           (str stem "erions")
+           
+           (and (= person :1st) (= number :plur) ir-type)
+           (str stem "irions")
+
+           ;; <second person plural conditional>
+
+           (and (= person :2nd) (= number :plur) er-type vosotros)
+           (str stem "eriez")
+           
+           (and (= person :2nd) (= number :plur) ir-type vosotros)
+           (str stem "iriez")
+
+           ;; </second person plural conditional>
+
+           ;; <third person plural conditional>
+           (and (= person :3rd) (= number :plur)
+                er-type)
+           (str stem "eraient")
+           
+           (and (= person :3rd) (= number :plur)
+                ir-type)
+           (str stem "iraient")
+
+           ;; </third person plural conditional>
+           
+           :else
+           (throw (Exception. (str "get-string-1: conditional regular inflection: don't know what to do with input argument: " (strip-refs word))))))
+
+        (and
+         (= (get-in word '(:infl)) :preterito)
+         (string? (get-in word '(:français))))
+        (let [infinitive (get-in word '(:français))
+              ar-type (try (re-find #"ar$" infinitive)
+                           (catch Exception e
+                             (throw (Exception. (str "Can't regex-find on non-string: " infinitive " from word: " word)))))
+              er-type (re-find #"er$" infinitive)
+              ir-type (re-find #"ir$" infinitive)
+              stem (string/replace infinitive #"[iae]r$" "")
+              last-stem-char-is-i (re-find #"ir$" infinitive)
+              last-stem-char-is-e (re-find #"er$" infinitive)
+              is-care-or-gare? (re-find #"[cg]ar$" infinitive)
+              vosotros (if vosotros vosotros true)
+              ustedes (if ustedes ustedes false)
+              person (get-in word '(:agr :person))
+              number (get-in word '(:agr :number))]
+          
+          ;;ON JULY 7 2015 I HAVE WORKED THIS FAR
+          
+          ;;HERE THE PASSE SIMPLE BEGINS
+          (cond
+           (and (= person :1st) (= number :sing) er-type)
+           (str stem "ai")
+           
+           (and (= person :1st) (= number :sing) (or ir-type))
+           (str stem "is")
+           
+           (and (= person :2nd) (= number :sing) er-type)
+           (str stem "as")
+           
+           (and (= person :2nd) (= number :sing) (or ir-type))
+           (str stem "is")
+           
+           (and (= person :2nd) (= number :sing) er-type)
+           (str stem "âtes")
+           
+           (and (= person :2nd) (= number :sing) (or ir-type))
+           (str stem "îtes")
+           
+           (and (= person :3rd) (= number :sing) er-type)
+           (str stem "a")
+           
+           (and (= person :3rd) (= number :sing) (or ir-type))
+           (str stem "it")
+
+           (and (= person :1st) (= number :plur) er-type)
+           (str stem "âmes")
+
+           (and (= person :1st) (= number :plur) ir-type)
+           (str stem "îmes")
+           
+           ;; <second person plural passé simple>
+           
+           (and (= person :2nd) (= number :plur) er-type)
+           (str stem "âtes")
+           
+           (and (= person :2nd) (= number :plur) ir-type)
+           (str stem "îtes")
+
+           ;; </second person plural passé simple>
+           
+           ;; <third person plural preterite>
+           (and (= person :3rd) (= number :plur)
+                er-type)
+           (str stem "érent")
+           
+           (and (= person :3rd) (= number :plur)
+                ir-type)
+           (str stem "irent")
+           
+           ;; </third person plural preterite>
+           
+           :else
+           ;;ON JULY 19 I HAVE GOT THIS FAR
+           
+           ;;JULY 21ST ATTEMPT TO PASSE COMPOSE
+           "passe simple: else case."))
 
      (and
-      (= (get-in word '(:infl)) :preterito)
-      (string? (get-in word '(:french))))
-     (let [infinitive (get-in word '(:french))
-           ar-type (try (re-find #"ar$" infinitive)
-                         (catch Exception e
-                           (throw (Exception. (str "Can't regex-find on non-string: " infinitive " from word: " word)))))
-           er-type (re-find #"er$" infinitive)
-           ir-type (re-find #"ir$" infinitive)
-           stem (string/replace infinitive #"[iae]r$" "")
-           last-stem-char-is-i (re-find #"ir$" infinitive)
-           last-stem-char-is-e (re-find #"er$" infinitive)
-           is-care-or-gare? (re-find #"[cg]ar$" infinitive)
-           vosotros (if vosotros vosotros true)
-           ustedes (if ustedes ustedes false)
-           person (get-in word '(:agr :person))
-           number (get-in word '(:agr :number))]
-
-;;ON JULY 7 2015 I HAVE WORKED THIS FAR
-
-;;HERE THE PASSE SIMPLE BEGINS
-       (cond
-        (and (= person :1st) (= number :sing) er-type)
-        (str stem "ai")
-
-        (and (= person :1st) (= number :sing) (or ir-type))
-        (str stem "is")
-
-        (and (= person :2nd) (= number :sing) er-type)
-        (str stem "as")
-
-        (and (= person :2nd) (= number :sing) (or ir-type))
-        (str stem "is")
-
-        (and (= person :2nd) (= number :sing) er-type)
-        (str stem "âtes")
-
-        (and (= person :2nd) (= number :sing) (or ir-type))
-        (str stem "îtes")
-
-        (and (= person :3rd) (= number :sing) er-type)
-        (str stem "a")
-
-        (and (= person :3rd) (= number :sing) (or ir-type))
-        (str stem "it")
-
-        (and (= person :1st) (= number :plur) er-type)
-        (str stem "âmes")
-
-        (and (= person :1st) (= number :plur) ir-type)
-        (str stem "îmes")
-
-        ;; <second person plural passé simple>
-
-        (and (= person :2nd) (= number :plur) er-type)
-        (str stem "âtes")
-
-        (and (= person :2nd) (= number :plur) ir-type)
-        (str stem "îtes")
-
-      
-
-        ;; </second person plural passé simple>
-
-        ;; <third person plural preterite>
-        (and (= person :3rd) (= number :plur)
-             er-type)
-        (str stem "érent")
-      
-        (and (= person :3rd) (= number :plur)
-             ir-type)
-        (str stem "irent")
-
-        ;; </third person plural preterite>
-
-        :else
-;;ON JULY 19 I HAVE GOT THIS FAR
-
-;;JULY 21ST ATTEMPT TO PASSE COMPOSE
-
-
-  (and (= :past (get-in word '(:infl)))
-
-
-          (string? (get-in word '(:french))))
-
-
-     (let [infinitive (get-in word '(:french))
-
-
-           ;; e.g.: se laver => laver
-
-
-           infinitive (if (re-find #"[aei]rsi$" infinitive)
-
-
-                        (string/replace infinitive #"si$" "e")
-
-
-                        infinitive)
-
-
-
-
-
-
-
-           er-type (try (re-find #"er$" infinitive)
-
-
-                         (catch Exception e
-
-
-                           (throw (Exception. (str "Can't regex-find on non-string: " infinitive)))))
-
-
-       
-
-
-           ir-type (re-find #"ire$" infinitive)
-
-
-           stem (string/replace infinitive #"[iae]re$" "")
-
-
-           last-stem-char-is-i (re-find #"i$" stem)
-
-
-
-
-
-
-
-           ;; for passato prossimo, the last char depends on gender and number, if an être-verb.
-
-
-           suffix (suffix-of word)
-
-
-
-           ]
-
-
-
-
-
-
-
-       (cond
-
-;;; TODO: re-type is not defined: typo?
-;;;        re-type
-;;;        (str stem "ut" suffix) ;; "u","us","ue" or "ue"
-
-        er-type
-        (str stem "at" suffix) ;; "ato","ati","ata", or "ate"
-
-
-        ir-type
-        (str stem "it" suffix) ;; "i","is","ie", or "ies"
-
-        true
-        (str "(regpast:TODO):" stem)))
-
-
-
-
-
-
-
-     (and (= (get-in word '(:infl)) :present)
-
-
-          (= person :1st) (= number :sing)
-
-
-          (string? (get-in word '(:present :1sing))))
-
-
-     (get-in word '(:present :1sing))
-
-
-
-
-
-
-
-     (and (= (get-in word '(:infl)) :present)
-
-
-          (= person :2nd) (= number :sing)
-
-
-          (string? (get-in word '(:present :2sing))))
-
-
-     (get-in word '(:present :2sing))
-
-
-
-
-
-
-
-     (and (= (get-in word '(:infl)) :present)
-
-
-          (= person :3rd) (= number :sing)
-
-
-          (string? (get-in word '(:present :3sing))))
-
-
-     (get-in word '(:present :3sing))
-
-
-
-
-
-
-
-     (and (= (get-in word '(:infl)) :present)
-
-
-          (= person :1st) (= number :plur)
-
-
-          (string? (get-in word '(:present :1plur))))
-
-
-     (get-in word '(:present :1plur))
-
-
-
-
-
-
-
-     (and (= (get-in word '(:infl)) :present)
-
-
-          (= person :2nd) (= number :plur)
-
-
-          (string? (get-in word '(:present :2plur))))
-
-
-     (get-in word '(:present :2plur))
-
-
-
-
-
-
-
-     (and (= (get-in word '(:infl)) :present)
-
-
-          (= person :3rd) (= number :plur)
-
-
-          (string? (get-in word '(:present :3plur))))
-
-
-     (get-in word '(:present :3plur))
-
-
-
-
-
-
-
-     (and
-
-
       (= (get-in word '(:infl)) :present)
-
-
-      (string? (get-in word '(:french))))
-
-
-     (let [infinitive (get-in word '(:french))
-
-
+      (string? (get-in word '(:français))))
+     (let [infinitive (get-in word '(:français))
            ;; e.g.: se laver => laver
-
-
            infinitive (if (re-find #"[aei]rsi$" infinitive)
-
-
                         (string/replace infinitive #"si$" "e")
-
-
                         infinitive)
-
-
            er-type (try (re-find #"er$" infinitive)
-
-
-                         (catch Exception e
-
-
-                           (throw (Exception. (str "Can't regex-find on non-string: " infinitive " from word: " word)))))
-
-
+                        (catch Exception e
+                          (throw (Exception. (str "Can't regex-find on non-string: " infinitive " from word: " word)))))
            re-type (re-find #"re$" infinitive)
-
-
            ir-type (re-find #"ir$" infinitive)
-
-
            stem (cond (and (get-in word [:boot-stem1])
-
-
                            (or (= (get-in word [:agr :number])
-
-
                                   :sing)
-
-
                                (and (= (get-in word [:agr :person])
-
-
                                        :3rd)
-
-
                                     (= (get-in word [:agr :number])
-
-
                                        :plur))))
-
-
                       (get-in word [:boot-stem1])
-
 ;;THE FOLLOWING TWO LINES NEED TO BE CHANGED
-
                       true
                       (string/replace infinitive #"[iae]re$" ""))
-
-
            last-stem-char-is-i (re-find #"i[iae]re$" infinitive)
-
-
            last-stem-char-is-e (re-find #"e[iae]re$" infinitive)
-
-
            is-care-or-gare? (re-find #"[cg]are$" infinitive)
-
-
            person (get-in word '(:agr :person))
-
-
            number (get-in word '(:agr :number))]
-
-
        (cond
-
-
         (and (= person :1st) (= number :sing))
         (str stem "o")
 
@@ -781,7 +523,6 @@
              last-stem-char-is-i)
         ;; do not add 'i' at the end here to prevent double i:
         (str stem "")
-
 
         (and (= person :2nd) (= number :sing))
         (str stem "i")
@@ -801,18 +542,8 @@
         (str stem "amo")
 
         (and is-care-or-gare?
-
-
-             (= person :1st) (= number :plur))
-
-
+             (= person :1st) (= number :plur))a
         (str stem "hiamo")
-
-
-
-
-
-
 
         (and (= person :1st) (= number :plur))
         (str stem "iamo")
@@ -848,10 +579,10 @@
      ;; TODO: possibly remove this: not sure it's doing anything.
      (= true (get-in word [:exception]))
      (get-in word [:italiano])
-
+     
      (= (get-in word '(:infl)) :top)
      (str (get-in word '(:italiano)))
-
+     
      (and
       (get-in word '(:a))
       (get-in word '(:b)))
@@ -861,7 +592,6 @@
 
      (= (get-in word '(:a)) :top)
      (str
-
       ".." " " (get-string-1 (get-in word '(:b))))
 
      (and
@@ -880,170 +610,61 @@
       " " "..")
 
      (and
-
-
       (= (get-in word '(:agr :gender)) :fem)
-
-
       (= (get-in word '(:agr :number)) :sing)
-
-
       (= (get-in word '(:cat)) :noun))
-
-
      (get-in word '(:italiano))
 
-
-
-
-
-
-
      (and
-
-
       (= (get-in word '(:agr :gender)) :masc)
-
-
       (= (get-in word '(:agr :number)) :sing)
-
-
       (= (get-in word '(:cat) :adjective)))
-
-
      (get-in word '(:italiano)) ;; nero
 
-
-
-
-
-
-
      (and
-
-
       (= (get-in word '(:agr :gender)) :masc)
-
-
       (= (get-in word '(:agr :number)) :plur)
-
-
       (= (get-in word '(:cat)) :adjective)
 
-
       ;; handle lexical exceptions.
-
-
       (string? (get-in word '(:masc :plur))))
 
-
      (get-in word '(:masc :plur))
-
-
-
-
-
-
-
      (and
-
-
       (= (get-in word '(:agr :gender)) :fem)
-
-
       (= (get-in word '(:agr :number)) :plur)
-
-
       (= (get-in word '(:cat)) :adjective)
-
-
       ;; handle lexical exceptions.
-
-
       (string? (get-in word '(:fem :plur))))
-
-
      (get-in word '(:fem :plur))
 
-
-     
-
-
      (string? (get-in word '(:italiano)))
-
-
      (get-in word '(:italiano))
 
-
-
-
-
-
-
      (or
-
-
       (not (= :none (get-in word '(:a) :none)))
-
-
       (not (= :none (get-in word '(:b) :none))))
-
-
      (get-string (get-in word '(:a))
-
-
                  (get-in word '(:b)))
 
-
-
-
-
-
-
      (and (map? word)
-
-
           (nil? (:italiano word)))
-
-
      ".."
-
-
-
-
-
-
 
      (or
-
-
       (= (get-in word '(:case)) {:not :acc})
-
-
       (= (get-in word '(:agr)) :top))
-
-
      ".."
 
+     (throw (Exception. (str "get-string-1: conditional regular inflection: don't know what to do with input argument: " (strip-refs word))))
 
-
-
-
-
-
-
-
-
-
-
-
-        (throw (Exception. (str "get-string-1: conditional regular inflection: don't know what to do with input argument: " (strip-refs word))))))
-
-     (string? (get-in word [:french]))
-     (get-in word [:french])
+     (string? (get-in word [:français]))
+     (get-in word [:français])
 
      true
-     (throw (Exception. (str "get-string-1: don't know what to do with input argument: " word))))))
+     (throw (Exception. (str "get-string-1: don't know what to do with input argument " word ";français="
+                             (get-in word [:français]) "; stringness: "
+                             (string? (get-in word [:français])))))))
 
 (defn get-string [a & [ b ]]
   (cond (and (nil? b)
@@ -1087,13 +708,13 @@
           expr)
 
      (and (map? expr)
-          (:french expr))
-     (fo-ps-it (:french expr))
+          (:français expr))
+     (fo-ps-it (:français expr))
 
      (and (map? expr)
           (:rule expr)
-          (= (get-in expr '(:french :a))
-             (get-in expr '(:comp :french))))
+          (= (get-in expr '(:français :a))
+             (get-in expr '(:comp :français))))
      ;; complement first
      (str "[" (:rule expr) " "
           (fo-ps (get-in expr '(:comp)))
@@ -1112,8 +733,8 @@
 
      (and (map? expr)
           (:comment expr)
-          (= (get-in expr '(:french :a))
-             (get-in expr '(:comp :french))))
+          (= (get-in expr '(:français :a))
+             (get-in expr '(:comp :français))))
      ;; complement first
      (str "[" (:comment expr) " "
           (fo-ps (get-in expr '(:comp)))
@@ -1132,8 +753,8 @@
 
      (and
       (map? expr)
-      (:french expr))
-     (get-string-1 (get-in expr '(:french)))
+      (:français expr))
+     (get-string-1 (get-in expr '(:français)))
 
      true
      expr)))
@@ -1151,32 +772,32 @@
    ;; future
    #"ò$" 
    {:replace-with "e"
-    :unify-with {:french {:infl :futuro
+    :unify-with {:français {:infl :futuro
                             :agr {:number :sing
                                   :person :1st}}}}
    #"ai$" 
    {:replace-with "e"
-    :unify-with {:french {:infl :futuro
+    :unify-with {:français {:infl :futuro
                             :agr {:number :sing
                                   :person :2nd}}}}
    #"à$" 
    {:replace-with "e"
-    :unify-with {:french {:infl :futuro
+    :unify-with {:français {:infl :futuro
                             :agr {:number :sing
                                   :person :3rd}}}}
    #"emo$" 
    {:replace-with "e"
-    :unify-with {:french {:infl :futuro
+    :unify-with {:français {:infl :futuro
                             :agr {:number :plur
                                   :person :1st}}}}
    #"ete$" 
    {:replace-with "e"
-    :unify-with {:french {:infl :futuro
+    :unify-with {:français {:infl :futuro
                             :agr {:number :plur
                                   :person :2nd}}}}
    #"anno$" 
    {:replace-with "e"
-    :unify-with {:french {:infl :futuro
+    :unify-with {:français {:infl :futuro
                             :agr {:number :plur
                                   :person :3rd}}}}})
 
@@ -1185,37 +806,37 @@
    ;; present -ire
    #"o$"
    {:replace-with "ire"
-    :unify-with {:french {:infl :present
+    :unify-with {:français {:infl :present
                             :agr {:number :sing
                                   :person :1st}}}}
    
    #"i$"
    {:replace-with "ire"
-    :unify-with {:french {:infl :present
+    :unify-with {:français {:infl :present
                             :agr {:number :sing
                                   :person :2nd}}}}
 
    #"e$"
    {:replace-with "ire"
-    :unify-with {:french {:infl :present
+    :unify-with {:français {:infl :present
                             :agr {:number :sing
                                   :person :3rd}}}}
 
    #"iamo$"
    {:replace-with "ire"
-    :unify-with {:french {:infl :present
+    :unify-with {:français {:infl :present
                             :agr {:number :plur
                                   :person :1st}}}}
 
    #"ete$"
    {:replace-with "ire"
-    :unify-with {:french {:infl :present
+    :unify-with {:français {:infl :present
                             :agr {:number :plur
                                   :person :2nd}}}}
    
    #"ono$"
    {:replace-with "ire"
-    :unify-with {:french {:infl :present
+    :unify-with {:français {:infl :present
                             :agr {:number :plur
                                   :person :3rd}}}}})
 
@@ -1224,37 +845,37 @@
   {;; present -ere
    #"o$"
    {:replace-with "ere"
-    :unify-with {:french {:infl :present
+    :unify-with {:français {:infl :present
                             :agr {:number :sing
                                   :person :1st}}}}
 
    #"i$"
    {:replace-with "ere"
-    :unify-with {:french {:infl :present
+    :unify-with {:français {:infl :present
                             :agr {:number :sing
                                   :person :2nd}}}}
    
    #"e$"
    {:replace-with "ere"
-    :unify-with {:french {:infl :present
+    :unify-with {:français {:infl :present
                             :agr {:number :sing
                                   :person :3rd}}}}
    
    #"iamo$"
    {:replace-with "ere"
-    :unify-with {:french {:infl :present
+    :unify-with {:français {:infl :present
                             :agr {:number :plur
                                   :person :1st}}}}
 
    #"ete$"
    {:replace-with "ere"
-    :unify-with {:french {:infl :present
+    :unify-with {:français {:infl :present
                             :agr {:number :plur
                                   :person :2nd}}}}
    
    #"ano$"
    {:replace-with "ere"
-    :unify-with {:french {:infl :present
+    :unify-with {:français {:infl :present
                             :agr {:number :plur
                                   :person :3rd}}}}})
 
@@ -1263,37 +884,37 @@
    ;; present -are
    #"o$"
    {:replace-with "are"
-    :unify-with {:french {:infl :present
+    :unify-with {:français {:infl :present
                             :agr {:number :sing
                                   :person :1st}}}}
 
    #"i$"
    {:replace-with "are"
-    :unify-with {:french {:infl :present
+    :unify-with {:français {:infl :present
                             :agr {:number :sing
                                   :person :2nd}}}}
 
    #"e$"
    {:replace-with "are"
-    :unify-with {:french {:infl :present
+    :unify-with {:français {:infl :present
                             :agr {:number :sing
                                   :person :3rd}}}}
    
    #"iamo$"
    {:replace-with "are"
-    :unify-with {:french {:infl :present
+    :unify-with {:français {:infl :present
                             :agr {:number :plur
                                   :person :1st}}}}
 
    #"ete$"
    {:replace-with "are"
-    :unify-with {:french {:infl :present
+    :unify-with {:français {:infl :present
                             :agr {:number :plur
                                   :person :2nd}}}}
 
    #"ano$"
    {:replace-with "are"
-    :unify-with {:french {:infl :present
+    :unify-with {:français {:infl :present
                             :agr {:number :plur
                                   :person :3rd}}}}})
 
@@ -1302,19 +923,19 @@
    ;; e.g.: "bevevo/bevevi/..etc" => "bere"
    #"vevo$"
    {:replace-with "re"
-    :unify-with {:french {:infl :imperfetto
+    :unify-with {:français {:infl :imperfetto
                             :agr {:number :sing
                                   :person :1st}}}}
 
    #"vevi$"
    {:replace-with "re"
-    :unify-with {:french {:infl :imperfetto
+    :unify-with {:français {:infl :imperfetto
                             :agr {:number :sing
                                   :person :2nd}}}}
 
    #"veva$"
    {:replace-with "re"
-    :unify-with {:french {:infl :imperfetto
+    :unify-with {:français {:infl :imperfetto
                             :agr {:number :sing
                                   :person :3rd}}}}
    })
@@ -1322,15 +943,15 @@
 (def past-to-infinitive
   {#"ato$"
    {:replace-with "are"
-    :unify-with {:french {:infl :past}}}
+    :unify-with {:français {:infl :past}}}
 
    #"ito$"
    {:replace-with "ire"
-    :unify-with {:french {:infl :past}}}
+    :unify-with {:français {:infl :past}}}
 
    #"uto$"
    {:replace-with "ere"
-    :unify-with {:french {:infl :past}}}})
+    :unify-with {:français {:infl :past}}}})
 
 (def plural-to-singular-noun-fem-1
   {#"e$"
@@ -1475,75 +1096,75 @@
                                                     (merge
                                                      lexeme
                                                      (unifyc (apply merge-fn (list lexeme))
-                                                             {:french {:exception true}}))}))))
+                                                             {:français {:exception true}}))}))))
                                        lexemes)))
                            [
                             ;; 1. past-tense exceptions
-                            {:path [:french :passato]
+                            {:path [:français :passato]
                              :merge-fn
                              (fn [val]
-                               {:french {:infl :past
-                                           :french (get-in val [:french :passato] :nothing)}})}
+                               {:français {:infl :past
+                                           :français (get-in val [:français :passato] :nothing)}})}
 
                             ;; 2. present-tense exceptions
-                            {:path [:french :present :1sing]
+                            {:path [:français :present :1sing]
                              :merge-fn
                              (fn [val]
-                               {:french {:infl :present
-                                           :french (get-in val [:french :present :1sing] :nothing)
+                               {:français {:infl :present
+                                           :français (get-in val [:français :present :1sing] :nothing)
                                            :agr {:number :sing
                                                  :person :1st}}})}
-                            {:path [:french :present :2sing]
+                            {:path [:français :present :2sing]
                              :merge-fn
                              (fn [val]
-                               {:french {:infl :present
-                                           :french (get-in val [:french :present :2sing] :nothing)
+                               {:français {:infl :present
+                                           :français (get-in val [:français :present :2sing] :nothing)
                                            :agr {:number :sing
                                                  :person :2nd}}})}
 
-                            {:path [:french :present :3sing]
+                            {:path [:français :present :3sing]
                              :merge-fn
                              (fn [val]
-                               {:french {:infl :present
-                                           :french (get-in val [:french :present :3sing] :nothing)
+                               {:français {:infl :present
+                                           :français (get-in val [:français :present :3sing] :nothing)
                                            :agr {:number :sing
                                                  :person :3rd}}})}
 
-                            {:path [:french :present :1plur]
+                            {:path [:français :present :1plur]
                              :merge-fn
                              (fn [val]
-                               {:french {:infl :present
-                                           :french (get-in val [:french :present :1plur] :nothing)
+                               {:français {:infl :present
+                                           :français (get-in val [:français :present :1plur] :nothing)
                                            :agr {:number :plur
                                                  :person :1st}}})}
 
-                            {:path [:french :present :2plur]
+                            {:path [:français :present :2plur]
                              :merge-fn
                              (fn [val]
-                               {:french {:infl :present
-                                           :french (get-in val [:french :present :2plur] :nothing)
+                               {:français {:infl :present
+                                           :français (get-in val [:français :present :2plur] :nothing)
                                            :agr {:number :plur
                                                  :person :2nd}}})}
 
-                            {:path [:french :present :3plur]
+                            {:path [:français :present :3plur]
                              :merge-fn
                              (fn [val]
-                               {:french {:infl :present
-                                           :french (get-in val [:french :present :3plur] :nothing)
+                               {:français {:infl :present
+                                           :français (get-in val [:français :present :3plur] :nothing)
                                            :agr {:number :plur
                                                  :person :3rd}}})}
 
                             ;; adjectives
-                            {:path [:french :masc :plur]
+                            {:path [:français :masc :plur]
                              :merge-fn
                              (fn [val]
-                               {:french {:agr {:gender :masc
+                               {:français {:agr {:gender :masc
                                                  :number :plur}}})}
 
-                            {:path [:french :fem :plur]
+                            {:path [:français :fem :plur]
                              :merge-fn
                              (fn [val]
-                               {:french {:agr {:gender :fem
+                               {:français {:agr {:gender :fem
                                                  :number :plur}}})}
                             ])]
         (if (not (empty? result))
@@ -1558,14 +1179,14 @@
                a-map)
 
           (and (map? a-map)
-               (not (= :no-french (get-in a-map [:french] :no-french))))
-          (unifyc {:french {:french a-string}}
+               (not (= :no-français (get-in a-map [:français] :no-français))))
+          (unifyc {:français {:français a-string}}
                   common
                   a-map)
 
         true
         (unifyc a-map
-                {:french {:french a-string}}
+                {:français {:français a-string}}
                 common))))
 
 (defn agreement [lexical-entry]
@@ -1574,7 +1195,7 @@
    (let [cat (ref :top)
          infl (ref :top)]
      (unifyc lexical-entry
-             {:french {:cat cat
+             {:français {:cat cat
                          :infl infl}
               :synsem {:cat cat
                        :infl infl}}))
@@ -1583,7 +1204,7 @@
    (let [agr (ref :top)
          cat (ref :top)]
      (unifyc lexical-entry
-             {:french {:agr agr
+             {:français {:agr agr
                         :cat cat}
               :synsem {:agr agr
                        :cat cat}}))
