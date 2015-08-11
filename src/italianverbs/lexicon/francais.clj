@@ -5,7 +5,17 @@
 
 (def lexicon-source 
   {
-  "abandoner" {:synsem {:cat :verb
+   "je"
+   {:synsem {:cat :noun
+             :pronoun true
+             :case :nom
+             :agr {:person :1st
+                   :number :sing}
+              :sem {:human true
+                    :pred :io}
+             :subcat '()}}
+   
+    "abandoner" {:synsem {:cat :verb
                         :sem {:pred :abandon}}}
   "terminer" {:synsem {:cat :verb
                        :sem {:pred :finish}}}
