@@ -1,12 +1,17 @@
 // Begin global constants.
 
 var google_api_key = "AIzaSyD0tmoXx3oJAPITndZR4f3I5GcnV-Jram4";
+var mapbox_api_key = "pk.eyJ1IjoiZWtvb250eiIsImEiOiJpSkF1VU84In0.fYYjf551Wds8jyrYV5MFwg";
+
 var pitch = 0; // In streetview, angle with respect to the horizon.
 // How much to increment the score for a correct answer 
 // or decrement for a "I don't know".
 var score_increment = 10; 
 var useProfilePicAsMarker = true;
+//var tileSet = 'examples.map-i875mjb7';
+var tileSet = 'ekoontz.n53388kj';
 
+var mapboxVersion = 'v4';
 // End global constants.
 
 // Begin global variables.
@@ -148,12 +153,14 @@ function start_tour(game_id,target_language,city,position_info) {
 
     map = L.map('map').setView([current_lat, current_long], current_zoom);
 
-    L.tileLayer('https://{s}.tiles.mapbox.com/v3/{id}/{z}/{x}/{y}.png', {
+    L.tileLayer('https://{s}.tiles.mapbox.com/{version}/{id}/{z}/{x}/{y}.png?access_token={k}', {
 	maxZoom: 18,
 	attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
 	    '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
 	    'Imagery © <a href="http://mapbox.com">Mapbox</a>',
-	id: 'examples.map-i875mjb7'
+	version: mapboxVersion,
+	id: tileSet,
+	k: mapbox_api_key
     }).addTo(map);
     
     if ((useProfilePicAsMarker == true) && ($("#profile").attr("src") != null)) {
