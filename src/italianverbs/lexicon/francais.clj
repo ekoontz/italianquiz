@@ -14,8 +14,78 @@
               :sem {:human true
                     :pred :io}
              :subcat '()}}
+   "tu"
+   {:synsem {:cat :noun
+             :pronoun true
+             :case :nom
+             :agr {:person :2nd
+                   :number :sing}
+              :sem {:human true
+                    :pred :tu}
+             :subcat '()}}
+   "il"
+   {:synsem {:cat :noun
+             :pronoun true
+             :case :nom
+             :agr {:person :3rd
+                   :number :sing
+                   :gender :masc}
+              :sem {:human true
+                    :pred :lui}
+             :subcat '()}}
+   "elle"
+   {:synsem {:cat :noun
+             :pronoun true
+             :case :nom
+             :agr {:person :3rd
+                   :number :sing
+                   :gender :fem}
+              :sem {:human true
+                    :pred :lei}
+             :subcat '()}}
+
+   "nous"
+   {:synsem {:cat :noun
+             :pronoun true
+             :case :nom
+             :agr {:person :1st
+                   :number :plur}
+              :sem {:human true
+                    :pred :noi}
+             :subcat '()}}
+   "vous"
+   {:synsem {:cat :noun
+             :pronoun true
+             :case :nom
+             :agr {:person :2nd
+                   :number :plur}
+              :sem {:human true
+                    :pred :voi}
+             :subcat '()}}
+   "ils"
+   {:synsem {:cat :noun
+             :pronoun true
+             :case :nom
+             :agr {:person :3rd
+                   :number :plur
+                   :gender :masc}
+              :sem {:human true
+                    :pred :loro}
+             :subcat '()}}
+   "elles"
+   {:synsem {:cat :noun
+             :pronoun true
+             :case :nom
+             :agr {:person :3rd
+                   :number :sing
+                   :gender :plur}
+              :sem {:human true
+                    :pred :loro}
+             :subcat '()}}
+
+
    
-    "abandoner" {:synsem {:cat :verb
+   "abandoner" {:synsem {:cat :verb
                         :sem {:pred :abandon}}}
   "terminer" {:synsem {:cat :verb
                        :sem {:pred :finish}}}
