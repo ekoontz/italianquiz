@@ -75,7 +75,7 @@
   {:name :lang :label "Language" :type "radios"
    :options [{:value "es" :label "Español"}
              ;; French not supported yet, so commented out.
-;             {:value "fr" :label "Français"}
+             {:value "fr" :label "Français"}
              {:value "it" :label "Italiano"}]})
 
 (defn language-to-root-spec [short-language-name root]
@@ -144,6 +144,9 @@
          (string? (get-in refine [:root :espanol :espanol]))
          (get-in refine [:root :espanol :espanol])
 
+         (string? (get-in refine [:root :français :français]))
+         (get-in refine [:root :français :français])
+
          true (type refine))
         
         aspect (get-in refine [:synsem :sem :aspect] :top)
@@ -166,6 +169,7 @@
                              (cond
                               (and (or (= k :english)
                                        (= k :espanol)
+                                       (= k :français)
                                        (= k :italiano))
                                    (not (map? v)))
                               (str v)
