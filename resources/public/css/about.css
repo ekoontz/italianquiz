@@ -5,6 +5,7 @@
 }
 
 .flag {
+    font-weight:normal;
     margin:1em;
     border:0px solid black;
     width:auto;
@@ -20,4 +21,17 @@
 .smallflag img {
     width:75px;
     height:49.500px;
+}
+
+.flags td {
+    text-align:center;
+}
+
+.flags ul {
+    list-style-type: square;
+}
+
+.flags li {
+    whitespace:no-wrap;
+    text-align:left;
 }
