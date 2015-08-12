@@ -38,32 +38,24 @@
     [:div.intro "The best place on the web to learn how to conjugate verbs."]
     [:div.flags
      [:div.flag
-
        [:img {:src "/png/Flag_of_Italy.svg.png" }]
-
        [:div.language "Italiano"]
       ]
 
      [:div.flag
        [:img {:src "/png/Flag_of_Mexico.svg.png" }]
-
        [:div.language "Español"]
       ]
 
      [:div.flag
-
        [:img {:src "/png/Flag_of_Spain.svg.png" }]
-
        [:div.language "Español"]
-       
       ]
      
 
      [:div.flag
-
       [:img {:src "/png/Flag_of_France.svg.png" }]
       [:div.language "Français"]
-
-      [:i {:style "text-align:center;color:#ccc"} "Coming soon" ]]
+      ]
      ]
     ])
