@@ -17,8 +17,9 @@
 (declare about)
 
 (defn resources [request]
-  {:show-login-form (login-form request)
-   :menubar (menubar (menubar-info-for-user request))})
+  {:css ["/css/about.css"]
+   :menubar (menubar (menubar-info-for-user request))
+   :show-login-form (login-form request)})
 
 (def routes 
   (GET "/about" request

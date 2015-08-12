@@ -1,0 +1,23 @@
+.flags {
+    float:left;
+    margin-left:20%;
+    width:60%;
+}
+
+.flag {
+    margin:1em;
+    border:0px solid black;
+    width:auto;
+    height:auto;
+    float:left;
+}
+
+.flag img {
+    width:100px;
+    height:66px;
+}
+
+.smallflag img {
+    width:75px;
+    height:49.500px;
+}
