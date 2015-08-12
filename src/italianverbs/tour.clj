@@ -360,6 +360,8 @@
            "Non lo so"
            (= language "es")
            "No sé"
+           (= language "fr")
+           "Je ne sais pas"
            true
            "")]))
 

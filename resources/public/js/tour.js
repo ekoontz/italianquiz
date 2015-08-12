@@ -181,6 +181,10 @@ function start_tour(game_id,target_language,city,position_info) {
 	    marker = L.marker([current_lat, current_long]).addTo(map)
 		.bindPopup("<b>Bienvenidos!</b>").openPopup();
 	}
+	if (target_language == "fr") {
+	    marker = L.marker([current_lat, current_long]).addTo(map)
+		.bindPopup("<b>Bienvenue!</b>").openPopup();
+	}
     } else {
 	if (target_language == "it") {
 	    marker = L.marker([current_lat, current_long]).addTo(map)
@@ -189,6 +193,10 @@ function start_tour(game_id,target_language,city,position_info) {
 	if (target_language == "es") {
 	    marker = L.marker([current_lat, current_long]).addTo(map)
 		.bindPopup("<b>Bienvenidos!</b>").openPopup();
+	}
+	if (target_language == "fr") {
+	    marker = L.marker([current_lat, current_long]).addTo(map)
+		.bindPopup("<b>Bienvenue!</b>").openPopup();
 	}
     }
     
