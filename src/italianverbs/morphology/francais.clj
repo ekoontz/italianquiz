@@ -117,7 +117,6 @@
                  stem (string/replace infinitive #"[iae]r$" "")
                  last-stem-char-is-i (re-find #"ir$" infinitive)
                  last-stem-char-is-e (re-find #"er$" infinitive)
-                 is-care-or-gare? (re-find #"[cg]ar$" infinitive)
                  person (get-in word '(:agr :person))
                  number (get-in word '(:agr :number))
                  g-stem (re-find #"[g]er$" infinitive)
