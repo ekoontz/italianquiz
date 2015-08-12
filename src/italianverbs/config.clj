@@ -205,6 +205,10 @@
    {:label "present"
     :value (json/write-str {:synsem {:sem {:tense :present}}})}])
 
+;; TODO: remove need for this
+(def tenses-as-editables-french
+  [{:label "present"
+    :value (json/write-str {:synsem {:sem {:tense :present}}})}])
 
 ;; TODO: throw exception rather than "unknown language"
 (defn short-language-name-to-edn [lang]

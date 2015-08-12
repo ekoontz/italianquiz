@@ -17,6 +17,7 @@
                                 short-language-name-to-long
                                 sqlname-from-match
                                 tenses-as-editables
+                                tenses-as-editables-french
                                 tenses-human-readable
                                 time-format]]
    [italianverbs.html :as html :refer [banner page rows2table]]
@@ -946,7 +947,6 @@ ms: " params))))
                                                       ORDER BY surface ASC")
                                                   [language-short-name]]
                                                   :results)))}]
-
                 [{:name :target_tenses
                   :label "Tenses"
                   :type :checkboxes
@@ -954,7 +954,10 @@ ms: " params))))
                   :options (map (fn [row]
                                   {:label (:label row)
                                    :value (:value row)})
-                                tenses-as-editables)}]
+                                (cond (= language-short-name "fr")
+                                      tenses-as-editables-french
+                                      true
+                                      tenses-as-editables))}]
 
                 [{:name :source :type :hidden
                   :label "Source Language"
