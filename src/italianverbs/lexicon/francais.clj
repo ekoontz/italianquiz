@@ -20,10 +20,11 @@
              :pronoun true
              :case :nom
              :agr {:person :3rd
-                   :number :sing
-                   :gender :plur}
-              :sem {:human true
-                    :pred :loro}
+                   :number :plur
+                   :gender :fem}
+             :sem {:human true
+                   :gender :fem
+                   :pred :loro}
              :subcat '()}}
    "il"
    {:synsem {:cat :noun
@@ -42,8 +43,9 @@
              :agr {:person :3rd
                    :number :plur
                    :gender :masc}
-              :sem {:human true
-                    :pred :loro}
+             :sem {:human true
+                   :gender :masc
+                   :pred :loro}
              :subcat '()}}
    "je"
    {:synsem {:cat :noun
