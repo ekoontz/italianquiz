@@ -256,6 +256,7 @@
          (let [username (authentication/current request)]
            (some #(= % :admin) (roles-of-email username))))))
 
+;; TODO: rename to has-teacher-role?
 (defn has-teacher-role [ & [request]]
   (let [authentication (friend/current-authentication)]
     (log/debug (str "haz-admin: current authentication:" (if (nil? authentication) " none " authentication)))
