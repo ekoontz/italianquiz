@@ -66,7 +66,32 @@
                 (let [user-id (username2userid (authentication/current request))]
                   [:div {:class "major"}
                    [:h2 "My Games"]
-
+                   
+                   ;; move to bottom if user is a teacher.
+                   [:div {:class "gamelist"}
+                    [:h3 "Games I'm playing"]
+                    (let [results (k/exec-raw
+                                   ["SELECT 'resume' AS resume,game.id AS id,game.name AS game,city,
+                                           last_move AS position,game.target AS language
+                                      FROM student_in_game
+                                INNER JOIN game
+                                        ON (game.id = student_in_game.game)
+                                     WHERE student=?"
+                                    [user-id]] :results)]
+                      [:div.rows2table
+                       (rows2table results
+                                   {:col-fns {:game (fn [game]
+                                                      (html [:a {:href (str "/game/" (:id game))}
+                                                             (str (:game game))]))
+                                              :language (fn [game-in-class]
+                                                          (short-language-name-to-long (:language game-in-class)))
+                                              :resume (fn [game]
+                                                        (html [:button {:onclick (str "document.location='/tour/"
+                                                                                      (:id game) "';")}
+                                                               "Resume"]))}
+                                    :th-styles {:resume "visibility:hidden"}
+                                    :cols [:resume :game :city :position :language]})])]
+                   
                    (do-if-teacher
 
                     [:div {:class "gamelist"}
@@ -161,36 +186,7 @@
                        [:button {:name "submit_new_game" :disabled true :onclick "submit();"} "New Game"]
                        ]]] "")
 
-                   
-                   [:div {:class "gamelist"}
-                    [:h3 "Games I'm playing"]
-                    (let [results (k/exec-raw
-                                   ["SELECT 'resume' AS resume,game.id AS id,game.name AS game,city,last_move AS position,game.target AS language
-                                      FROM student_in_game
-                                INNER JOIN game
-                                        ON (game.id = student_in_game.game)
-                                     WHERE student=?"
-                                    [user-id]] :results)]
-                      [:div.rows2table
-                       (rows2table results
-                                   {:col-fns {:game (fn [game]
-                                                      (html [:a {:href (str "/game/" (:id game))}
-                                                             (str (:game game))]))
-                                              :language (fn [game-in-class]
-                                                          (short-language-name-to-long (:language game-in-class)))
-                                              :resume (fn [game]
-                                                        (html [:button {:onclick (str "document.location='/tour/"
-                                                                                      (:id game) "';")}
-                                                               "Resume"]))}
-                                    :th-styles {:resume "visibility:hidden"}
-                                    :cols [:resume :game :city :position :language]})])]
-
-
-
-
-                   
                    ]
-
                   )
                 request
                 resources)
