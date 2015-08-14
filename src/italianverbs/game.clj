@@ -23,7 +23,7 @@
    [italianverbs.html :as html :refer [banner page rows2table]]
    [italianverbs.korma :as db]
    [italianverbs.menubar :refer [menubar]]
-   [italianverbs.user :refer [do-if do-if-admin do-if-authenticated do-if-teacher
+   [italianverbs.user :refer [do-if do-if-admin do-if-authenticated do-if-teacher has-teacher-role
                               login-form menubar-info-for-user username2userid]]
    [dag-unify.core :refer [unify]]
    [korma.core :as k]))
@@ -312,20 +312,20 @@ INSERT INTO game
             :headers json-headers})))
 
    (GET "/:game" request
-        (do-if-teacher
-         (let [game-id (Integer. (:game (:route-params request)))
-               game (first (k/exec-raw ["SELECT * FROM game WHERE id=?" [(Integer. game-id)]] :results))]
-           {:body
-            (page (str "Game: " (:name game))
-                  (body (:name game) (show-game (:game (:route-params request))
-                                                {:show-as-owner? (is-owner-of?
-                                                                  (Integer. game-id)
-                                                                  (authentication/current request))
-                                                 :refine (:refine (:params request))})
-                        request)
-                  request resources)
-            :status 200
-            :headers html-headers})))
+        (let [game-id (Integer. (:game (:route-params request)))
+              game (first (k/exec-raw ["SELECT * FROM game WHERE id=?" [(Integer. game-id)]] :results))]
+          {:body
+           (page (str "Game: " (:name game))
+                 (body (:name game) (show-game (:game (:route-params request))
+                                               {:show-as-owner? (or false (is-owner-of?
+                                                                          (Integer. game-id)
+                                                                          (authentication/current request)))
+                                                :show-as-teacher? (has-teacher-role)
+                                                :refine (:refine (:params request))})
+                       request)
+                 request resources)
+           :status 200
+           :headers html-headers}))
    
    (POST "/new" request
          (do-if-teacher
@@ -573,6 +573,7 @@ ms: " params))))
                                  [time-format game-id]] :results)))
 
 (defn show-game [game-id & [ {refine :refine
+                              show-as-teacher? :show-as-teacher?
                               show-as-owner? :show-as-owner?} ]]
   (let [game-id (Integer. game-id)
         ;; get game and user info
@@ -637,15 +638,20 @@ ms: " params))))
                ]
               ]
            
-             [:div {:style "width:100%;float:left;margin-top:1em"}
-              [:p
-               "You can copy this game to edit a copy of it:"]
+             (if show-as-teacher?
+               [:div {:style "width:100%;float:left;margin-top:1em"}
+                [:p
+                 "You can copy this game to edit a copy of it:"]
+                [:form {:method "post"
+                        :action (str "/game/clone/" game-id)}
+                 [:button {:onclick "submit();"}
+                  "Copy"
+                  ]]
+                ])
              
-              [:form {:method "post"
-                      :action (str "/game/clone/" game-id)}
-               [:button {:onclick "submit();"}
-                "Copy"
-                ]]]]))]
+             ]
+
+            ))]
             
 
         [:div {:style "border:0px dashed green;float:left;width:50%"}
