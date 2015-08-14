@@ -5,6 +5,17 @@
 
 (def lexicon-source 
   {
+   "abandoner" {:synsem {:cat :verb
+                         :sem {:pred :abandon}}}
+
+   "accepter" {:synsem {:cat :verb
+                        :sem {:pred :accept}}}
+
+   "accompagner" {:synsem {:cat :verb
+                           :sem {:pred :accompany}}}
+
+   "anoncier" {:synsem {:cat :verb
+                        :sem {:pred :announce}}}
    "elle"
    {:synsem {:cat :noun
              :pronoun true
@@ -73,6 +84,12 @@
               :sem {:pred :speak}}}
     {:synsem {:cat :verb
               :sem {:pred :talk}}}]
+
+  "soutenir" {:synsem {:cat :verb
+                       :sem {:pred :support}}}
+
+  "terminer" {:synsem {:cat :verb
+                       :sem {:pred :finish}}}
    "tu"
    {:synsem {:cat :noun
              :pronoun true
