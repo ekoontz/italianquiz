@@ -163,21 +163,13 @@
 
                    
                    [:div {:class "gamelist"}
-                    [:h3 "Games in my classes"]
+                    [:h3 "Games I'm playing"]
                     (let [results (k/exec-raw
-                                   ["SELECT 'resume',game.id,game.name AS game,city,last_move AS position,
-                                            game.target AS language,class.name AS class,class.id AS class_id
-                                       FROM game 
-                                 INNER JOIN student_in_game
-                                         ON (student_in_game.game = game.id)
-                                 INNER JOIN game_in_class
-                                         ON (game_in_class.game = game.id)
-                                 INNER JOIN class
-                                         ON (class.id = game_in_class.class)
-                                 INNER JOIN student_in_class
-                                         ON (student_in_class.class = game_in_class.class)
-                                      WHERE student_in_class.student = ?
-                                         OR student_in_class IS NULL"
+                                   ["SELECT 'resume' AS resume,game.id AS id,game.name AS game,city,last_move AS position,game.target AS language
+                                      FROM student_in_game
+                                INNER JOIN game
+                                        ON (game.id = student_in_game.game)
+                                     WHERE student=?"
                                     [user-id]] :results)]
                       [:div.rows2table
                        (rows2table results
@@ -186,17 +178,20 @@
                                                              (str (:game game))]))
                                               :language (fn [game-in-class]
                                                           (short-language-name-to-long (:language game-in-class)))
-                                              :class (fn [game]
-                                                       (html [:a {:href (str "/class/" (:class_id game))}
-                                                              (str (:class game))]))
                                               :resume (fn [game]
                                                         (html [:button {:onclick (str "document.location='/tour/"
                                                                                       (:id game) "';")}
-                                                               (if (nil? (:position game))
-                                                                 "Play"
-                                                                 "Resume")]))}
+                                                               "Resume"]))}
                                     :th-styles {:resume "visibility:hidden"}
-                                    :cols [:resume :game :city :position :language :class]})])]])
+                                    :cols [:resume :game :city :position :language]})])]
+
+
+
+
+                   
+                   ]
+
+                  )
                 request
                 resources)
           :status 200
