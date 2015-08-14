@@ -168,13 +168,13 @@
                                    ["SELECT 'resume',game.id,game.name AS game,city,last_move AS position,
                                             game.target AS language,class.name AS class,class.id AS class_id
                                        FROM game 
-                                  LEFT JOIN student_in_game 
+                                 INNER JOIN student_in_game
                                          ON (student_in_game.game = game.id)
                                  INNER JOIN game_in_class
                                          ON (game_in_class.game = game.id)
-                                  LEFT JOIN class
+                                 INNER JOIN class
                                          ON (class.id = game_in_class.class)
-                                  LEFT JOIN student_in_class
+                                 INNER JOIN student_in_class
                                          ON (student_in_class.class = game_in_class.class)
                                       WHERE student_in_class.student = ?
                                          OR student_in_class IS NULL"
