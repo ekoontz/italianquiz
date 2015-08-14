@@ -144,7 +144,8 @@
               
               (and (= person :3rd) (= number :sing) er-type)
               (str stem "e")
-              (and (= person :3rd) (= number :sing) (ir-type))
+
+              (and (= person :3rd) (= number :sing) ir-type)
               (str stem "it")
 
               (and (= person :1st) (= number :plur) er-type g-stem)
