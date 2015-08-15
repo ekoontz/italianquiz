@@ -5,7 +5,6 @@
 (require '[clojure.tools.logging :as log])
 ;; to write lexicon to lexicon table from this package:
 ;; (write-lexicon "fr" @lexicon)
-(require '[italianverbs.borges.writer :as writer])
 (require '[italianverbs.cache :refer (build-lex-sch-cache create-index over spec-to-phrases)])
 (require '[italianverbs.engine :as engine])
 (require '[italianverbs.forest :as forest])
@@ -20,13 +19,6 @@
 (require '[dag-unify.core :refer (fail? get-in strip-refs)])
 (require '[dag-unify.core :as unify])
 (require '[italianverbs.user :refer [do-if-admin]])
-
-;; TODO: refactor these to a common web interface
-(require '[compojure.core :as compojure :refer [GET PUT POST DELETE ANY]])
-(require '[hiccup.core :refer (html)])
-(require '[italianverbs.cache :refer (build-lex-sch-cache create-index over spec-to-phrases)])
-(require '[italianverbs.forest :as forest])
-(require '[italianverbs.html :as html])
 
 (def get-string morph/get-string)
 (def grammar gram/grammar)
@@ -102,29 +94,7 @@
                            (flatten (vals @use-lexicon))
                            use-index))))
 
-;; TODO: move the following 2 to lexicon.clj:
-(def lookup-in
-  "find all members of the collection that matches with query successfully."
-  (fn [query collection]
-    (loop [coll collection matches nil]
-      (if (not (empty? coll))
-        (let [first-val (first coll)
-              result (unify/match (unify/copy query) (unify/copy first-val))]
-          (if (not (unify/fail? result))
-            (recur (rest coll)
-                   (cons first-val matches))
-            (recur (rest coll)
-                   matches)))
-        matches))))
-
-(defn choose-lexeme [spec]
-  (first (unify/lazy-shuffle (lookup-in spec (vals lexicon)))))
-
 (declare enrich)
-(declare against-pred)
-(declare against-comp)
-(declare matching-head-lexemes)
-(declare matching-comp-lexemes)
 
 (def small
   (future
@@ -168,6 +138,11 @@
        :lexicon lexicon
        :index (create-index grammar (flatten (vals lexicon)) head-principle)
        })))
+
+(declare against-comp)
+(declare against-pred)
+(declare matching-comp-lexemes)
+(declare matching-head-lexemes)
 
 (defn enrich [spec]
   (let [against-pred (against-pred spec)]
@@ -231,32 +206,5 @@
                         lexemes))
               (vals @lexicon)))))
 
-(declare body)
-(declare headers)
-
-(def headers {"Content-Type" "text/html;charset=utf-8"})
-(def language-name "Français")
-
-(def routes
-  (compojure/routes
-   (GET "/" request
-        (do-if-admin {:body (body language-name language-name request)
-                      :status 200
-                      :headers headers}))))
-
-(defn body [title content request]
-  (html/page
-   title
-   (html
-    [:div.major
-     [:h2 title]
-
-     [:div.content
-      content
-      ]
-     ])
-   request))
-
-(defn write-lexicon []
-  (writer/write-lexicon "fr" @lexicon))
-
+(defn + [& args]
+  (parse (string/join " " args)))
