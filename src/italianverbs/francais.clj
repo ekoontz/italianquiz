@@ -3,30 +3,22 @@
 
 (require '[clojure.string :as string])
 (require '[clojure.tools.logging :as log])
-;; to write lexicon to lexicon table from this package:
-;; (write-lexicon "fr" @lexicon)
-(require '[italianverbs.cache :refer (build-lex-sch-cache create-index over spec-to-phrases)])
-(require '[italianverbs.engine :as engine])
-(require '[italianverbs.forest :as forest])
-(require '[italianverbs.grammar.francais :as gram])
-(require '[italianverbs.lexicon.francais :as lex])
-(require '[italianverbs.lexiconfn :refer (compile-lex map-function-on-map-vals unify)])
-(require '[italianverbs.morphology :refer [fo]])
-(require '[italianverbs.morphology.francais :as morph])
-(require '[italianverbs.parse :as parse])
-(require '[italianverbs.pos.francais :refer :all])
-(require '[italianverbs.ug :refer :all])
-(require '[dag-unify.core :refer (fail? get-in strip-refs)])
-(require '[dag-unify.core :as unify])
-(require '[italianverbs.user :refer [do-if-admin]])
 
-(def get-string morph/get-string)
-(def grammar gram/grammar)
-(def lexicon-source lex/lexicon-source)
+(require '[dag-unify.core :refer (fail? get-in strip-refs)])
+
+(require '[italianverbs.cache :refer [create-index]])
+(require '[italianverbs.forest :as forest])
+(require '[italianverbs.grammar.francais :refer [grammar]])
+(require '[italianverbs.lexicon.francais :refer [lexicon-source]])
+(require '[italianverbs.lexiconfn :refer (compile-lex map-function-on-map-vals unify)])
+(require '[italianverbs.morphology.francais :refer [analyze exception-generator fo get-string phonize]])
+(require '[italianverbs.parse :as parse])
+(require '[italianverbs.pos.francais :refer [intransitivize transitivize]])
+(require '[italianverbs.ug :refer [head-principle]])
 
 ;; see TODOs in lexiconfn/compile-lex (should be more of a pipeline as opposed to a argument-position-sensitive function.
 (def lexicon
-  (future (-> (compile-lex lex/lexicon-source morph/exception-generator morph/phonize)
+  (future (-> (compile-lex lexicon-source exception-generator phonize)
 
               ;; make an intransitive version of every verb which has an
               ;; [:sem :obj] path.
@@ -46,7 +38,7 @@
 
 (defn lookup [token]
   "return the subset of lexemes that match this token from the lexicon."
-  (morph/analyze token #(get @lexicon %)))
+  (analyze token #(get @lexicon %)))
 
 (def fr lookup) ;; abbreviation for the above
 
