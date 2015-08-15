@@ -12,21 +12,19 @@
 (declare suffix-of)
 
 ;; TODO: this is an overly huge method that needs to be rewritten to be easier to understand and maintain.
-(defn get-string-1 [word & [:usted usted :tú tu :vosotros vosotros :ustedes ustedes]]
+(defn get-string-1 [word]
   (cond (string? word)
         word
+        (nil? word)
+        nil
         (seq? word)
         (map (string/join " " #(get-string-1 %))
              word)
         true
         (let [person (get-in word '(:agr :person))
               number (get-in word '(:agr :number))
-              info (log/debug "get-string-1: input word: " word)
-              vosotros (if vosotros vosotros true)
-              ustedes (if ustedes ustedes false)
-              tú (if tú tú false)
-              usted (if usted usted false)]
-          
+              info (log/debug "get-string-1: input word: " word)]
+
           (log/debug (str "get-string-1: word: " word))
           (log/debug (str "get-string-1: word (stripped-refs): " (strip-refs word)))
           (log/debug (str "word's a is a string? " (get-in word '(:a)) " => " (string? (get-in word '(:a)))))
@@ -198,8 +196,6 @@
               stem (string/replace infinitive #"[iae]r$" "")
               last-stem-char-is-i (re-find #"ir$" infinitive)
               last-stem-char-is-e (re-find #"er$" infinitive)
-              vosotros (if vosotros vosotros true)
-              ustedes (if ustedes ustedes false)
               person (get-in word '(:agr :person))
               number (get-in word '(:agr :number))]
           ;; QUI COMINCIA IL FUTURO FRANCESE
@@ -233,10 +229,10 @@
            (str stem "irons")
 
            ;; <second person plural future>
-           (and (= person :2nd) (= number :plur) er-type vosotros)
+           (and (= person :2nd) (= number :plur) er-type)
            (str stem "erez")
 
-           (and (= person :2nd) (= number :plur) ir-type vosotros)
+           (and (= person :2nd) (= number :plur) ir-type)
            (str stem "irez")
            ;; </second person plural future>
 
