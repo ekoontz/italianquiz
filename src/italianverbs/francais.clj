@@ -50,12 +50,6 @@
 ;; figure out how to change printable version to (keys index).
 (def index (future (create-index grammar (flatten (vals @lexicon)) head-principle)))
 
-(defn sentence [ & [spec]]
-  (let [spec (unify (if spec spec :top)
-                    {:synsem {:subcat '()
-                              :cat :verb}})]
-    (forest/generate spec grammar (flatten (vals @lexicon)) index)))
-
 (defn generate [ & [spec {use-grammar :grammar
                           use-index :index
                           use-lexicon :lexicon}]]
@@ -69,6 +63,14 @@
       (forest/generate spec use-grammar
                        (flatten (vals @use-lexicon))
                        use-index))))
+
+(defn sentence [ & [spec]]
+  (let [spec (unify (if spec spec :top)
+                    {:synsem {:subcat '()
+                              :cat :verb}})]
+    (generate spec {:use-grammar grammar
+                    :use-index index
+                    :use-lexicon (flatten (vals @lexicon))})))
 
 ;; TODO: factor out to forest/.
 (defn generate-all [ & [spec {use-grammar :grammar
@@ -85,7 +87,6 @@
       (forest/generate-all spec use-grammar
                            (flatten (vals @use-lexicon))
                            use-index))))
-
 (declare enrich)
 
 (def small
