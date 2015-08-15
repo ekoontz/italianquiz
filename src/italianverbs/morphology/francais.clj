@@ -12,32 +12,56 @@
 (declare suffix-of)
 
 ;; TODO: this is an overly huge method that needs to be rewritten to be easier to understand and maintain.
-(defn get-string-1 [word]
-  (cond (string? word)
+;; TODO: lots of redundant code with other languages than French: refactor.
+(defn get-string [word & [b]]
+  (cond (and (nil? b)
+             (seq? word))
+        (let [result (get-string word)]
+          (if (string? result)
+            (trim result)
+            result))
+
+        ;; je + aime = j'aime
+        (and (not (nil? b))
+             (let [a (get-string word)
+                   b (get-string b)]
+               (and (= a "je")
+                    (re-find #"^[aeiou]" b))))
+        (str "j'" (get-string b))
+
+        (and (not (nil? word))
+             (not (nil? b)))
+        (trim (string/join " "
+                           (list (get-string word)
+                                 (if b (get-string b)
+                                     ""))))
+        (string? word)
         word
+        
         (nil? word)
         nil
+        
         (seq? word)
-        (map (string/join " " #(get-string-1 %))
+        (map (string/join " " #(get-string %))
              word)
+        
         true
         (let [person (get-in word '(:agr :person))
               number (get-in word '(:agr :number))
-              info (log/debug "get-string-1: input word: " word)]
+              info (log/debug "get-string: input word: " word)]
 
-          (log/debug (str "get-string-1: word: " word))
-          (log/debug (str "get-string-1: word (stripped-refs): " (strip-refs word)))
+          (log/debug (str "get-string: word: " word))
+          (log/debug (str "get-string: word (stripped-refs): " (strip-refs word)))
           (log/debug (str "word's a is a string? " (get-in word '(:a)) " => " (string? (get-in word '(:a)))))
           (log/debug (str "word's b is a map? " (get-in word '(:b)) " => " (map? (get-in word '(:b)))))
           
           (log/debug (str "word's a french is a string? " (get-in word '(:a :français)) " => " (string? (get-in word '(:a :français)))))
 
           (cond
-
            (= word :top) ".."
            
            (ref? word)
-           (get-string-1 @word)
+           (get-string @word)
            
            ;; TODO: this is a special case that should be handled below instead
            ;; of forcing every input to go through this check.
@@ -98,7 +122,7 @@
                 (= :top (get-in word '(:b :agr :number) :none)))
             (= (get-in word '(:a :infl)) :top))
            (string/trim (str (get-in word '(:a :français))
-                             " " (get-string-1 (get-in word '(:b)))))
+                             " " (get-string (get-in word '(:b)))))
 
            (= true (get-in word [:exception]))
            (get-in word [:français])
@@ -182,114 +206,100 @@
               (get-in word [:français])
               
               :else
-              (throw (Exception. (str "get-string-1: present regular inflection: don't know what to do with input argument: " (strip-refs word))))))
-
-        (and
-         (= (get-in word '(:infl)) :futuro)
-         (string? (get-in word '(:français))))
-        (let [infinitive (get-in word '(:français))
-              ar-type (try (re-find #"ar$" infinitive)
-                           (catch Exception e
-                             (throw (Exception. (str "Can't regex-find on non-string: " infinitive " from word: " word)))))
-              er-type (re-find #"er$" infinitive)
+              (throw (Exception. (str "get-string: present regular inflection: don't know what to do with input argument: " (strip-refs word))))))
+           
+           (and
+            (= (get-in word '(:infl)) :futuro)
+            (string? (get-in word '(:français))))
+           (let [infinitive (get-in word '(:français))
+                 ar-type (try (re-find #"ar$" infinitive)
+                              (catch Exception e
+                                (throw (Exception. (str "Can't regex-find on non-string: " infinitive " from word: " word)))))
+                 er-type (re-find #"er$" infinitive)
               ir-type (re-find #"ir$" infinitive)
-              stem (string/replace infinitive #"[iae]r$" "")
-              last-stem-char-is-i (re-find #"ir$" infinitive)
-              last-stem-char-is-e (re-find #"er$" infinitive)
-              person (get-in word '(:agr :person))
-              number (get-in word '(:agr :number))]
-          ;; QUI COMINCIA IL FUTURO FRANCESE
-          (cond
-
-           (and (= person :1st) (= number :sing) er-type)
-           (str stem "erai")
-
-           (and (= person :1st) (= number :sing) ir-type)
-           (str stem "iré")
-
-           (and (= person :2nd) (= number :sing) ir-type)
-           (str stem "iras")
-           (and (= person :2nd) (= number :sing) er-type)
-           (str stem "eras")
-
-           (and (= person :2nd) (= number :sing) ir-type)
-           (str stem "irez")
-           (and (= person :2nd) (= number :sing) er-type)
-           (str stem "erez")
-
-           (and (= person :3rd) (= number :sing) ir-type)
-           (str stem "ira")
-           (and (= person :3rd) (= number :sing) er-type)
-           (str stem "era")
-
-           (and (= person :1st) (= number :plur) er-type)
-           (str stem "erons")
-
-           (and (= person :1st) (= number :plur) ir-type)
-           (str stem "irons")
-
-           ;; <second person plural future>
-           (and (= person :2nd) (= number :plur) er-type)
-           (str stem "erez")
-
-           (and (= person :2nd) (= number :plur) ir-type)
-           (str stem "irez")
-           ;; </second person plural future>
-
-           ;; <third person plural future>
-           (and (= person :3rd) (= number :plur)
-                er-type)
-           (str stem "eront")
-
-           (and (= person :3rd) (= number :plur)
-                ir-type)
-           (str stem "iront")
-
-           ;; </third person plural future>
-
-           :else
-           (throw (Exception. (str "get-string-1: futuro regular inflection: don't know what to do with input argument: " (strip-refs word))))))
-
+                 stem (string/replace infinitive #"[iae]r$" "")
+                 last-stem-char-is-i (re-find #"ir$" infinitive)
+                 last-stem-char-is-e (re-find #"er$" infinitive)
+                 person (get-in word '(:agr :person))
+                 number (get-in word '(:agr :number))]
+             ;; QUI COMINCIA IL FUTURO FRANCESE
+             (cond
+              
+              (and (= person :1st) (= number :sing) er-type)
+              (str stem "erai")
+              
+              (and (= person :1st) (= number :sing) ir-type)
+              (str stem "iré")
+              
+              (and (= person :2nd) (= number :sing) ir-type)
+              (str stem "iras")
+              (and (= person :2nd) (= number :sing) er-type)
+              (str stem "eras")
+              
+              (and (= person :2nd) (= number :sing) ir-type)
+              (str stem "irez")
+              (and (= person :2nd) (= number :sing) er-type)
+              (str stem "erez")
+              
+              (and (= person :3rd) (= number :sing) ir-type)
+              (str stem "ira")
+              (and (= person :3rd) (= number :sing) er-type)
+              (str stem "era")
+              
+              (and (= person :1st) (= number :plur) er-type)
+              (str stem "erons")
+              
+              (and (= person :1st) (= number :plur) ir-type)
+              (str stem "irons")
+              
+              ;; <second person plural future>
+              (and (= person :2nd) (= number :plur) er-type)
+              (str stem "erez")
+              
+              (and (= person :2nd) (= number :plur) ir-type)
+              (str stem "irez")
+              ;; </second person plural future>
+              
+              ;; <third person plural future>
+              (and (= person :3rd) (= number :plur)
+                   er-type)
+              (str stem "eront")
+              
+              (and (= person :3rd) (= number :plur)
+                   ir-type)
+              (str stem "iront")
+              
+              ;; </third person plural future>
+              
+              :else
+              (throw (Exception. (str "get-string: futuro regular inflection: don't know what to do with input argument: " (strip-refs word))))))
+           
            (and
             (get-in word '(:a))
             (get-in word '(:b)))
            (get-string
             (get-in word '(:a))
             (get-in word '(:b)))
-
+           
            (= (get-in word '(:a)) :top)
            (str
-            ".." " " (get-string-1 (get-in word '(:b))))
-
+            ".." " " (get-string (get-in word '(:b))))
+           
            (and
             (= (get-in word '(:b)) :top)
-            (string? (get-string-1 (get-in word '(:a)))))
+            (string? (get-string (get-in word '(:a)))))
            (str
-            (get-string-1 (get-in word '(:a)))
+            (get-string (get-in word '(:a)))
             " " "..")
-
+           
            (string? (get-in word [:français]))
            (get-in word [:français])
-
+           
            true
-           (throw (Exception. (str "get-string-1: don't know what to do with input argument " word ";français="
+           (throw (Exception. (str "get-string: don't know what to do with input argument " word ";français="
                                    (get-in word [:français]) "; stringness: "
                                    (string? (get-in word [:français])))))))))
-
-(defn get-string [a & [ b ]]
-  (cond (and (nil? b)
-             (seq? a))
-        (let [result (get-string-1 a)]
-          (if (string? result)
-            (trim result)
-            result))
-
-        true
-        (trim (string/join " "
-                           (list (get-string-1 a)
-                                 (if b (get-string-1 b)
-                                     ""))))))
-
+  
 (declare fo-ps-it)
 
 (defn fo-ps [expr]
@@ -364,7 +374,7 @@
      (and
       (map? expr)
       (:français expr))
-     (get-string-1 (get-in expr '(:français)))
+     (get-string (get-in expr '(:français)))
 
      true
      expr)))
