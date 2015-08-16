@@ -6,6 +6,7 @@
 (require '[compojure.core :as compojure :refer [GET PUT POST DELETE ANY]])
 (require '[dag-unify.core :refer (fail? get-in strip-refs)])
 (require '[dag-unify.core :as unify])
+
 (require '[italiano.grammar :as gram])
 (require '[italiano.lexicon :as lex])
 (require '[italiano.morphology :as morph :refer [fo]])
@@ -16,7 +17,7 @@
 (require '[italianverbs.forest :as forest])
 (require '[italianverbs.lexiconfn :refer (compile-lex infinitives map-function-on-map-vals unify)])
 (require '[italianverbs.parse :as parse])
-(require '[italianverbs.ug :refer :all])
+(require '[italianverbs.ug :refer [head-principle]])
 
 (def grammar gram/grammar)
 (def lexicon-source lex/lexicon-source)
