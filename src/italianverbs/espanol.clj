@@ -161,6 +161,7 @@
                       [k filtered-v]))))]
       {:name "medium"
        :enrich enrich
+       :morph fo
        :grammar grammar
        :lexicon lexicon
        :index (create-index grammar (flatten (vals lexicon)) head-principle)

@@ -176,6 +176,7 @@
       {:name "small-plus-vp-pronoun"
        :language "it"
        :language-keyword :italiano
+       :morph fo
        :enrich enrich
        :grammar grammar
        :lexicon lexicon
@@ -192,6 +193,7 @@
       {:name "medium"
        :language "it"
        :language-keyword :italiano
+       :morph fo
        :enrich enrich
        :grammar grammar
        :lexicon lexicon

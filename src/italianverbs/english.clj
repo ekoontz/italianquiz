@@ -161,6 +161,7 @@
           ]
       {:name "small-plus-vp-pronoun"
        :language "en"
+       :morph morph/fo
        :grammar grammar
        :lexicon lexicon
        :for {:es ;; a lexicon specific to when we want to use Español as a target.
@@ -194,6 +195,7 @@
                       [k filtered-v]))))]
       {:name "medium"
        :grammar grammar
+       :morph morph/fo
        :lexicon lexicon
        :index (create-index grammar (flatten (vals lexicon)) head-principle)})))
 
