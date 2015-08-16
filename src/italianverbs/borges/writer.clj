@@ -4,11 +4,10 @@
     [clojure.data.json :as json]
     [clojure.string :as string]
     [clojure.tools.logging :as log]
-    [dag-unify.core :refer [get-in strip-refs serialize unify]]
+    [dag-unify.core :refer [get-in strip-refs serialize unify ref?]]
     [italianverbs.engine :as engine]
     [italianverbs.korma :as korma]
     [italianverbs.lexiconfn :refer [sem-impl]]
-    [italianverbs.morphology :refer [fo]]
     [korma.core :as k]
     ))
 
@@ -49,6 +48,8 @@
                                                   {:synsem {:sem {:subj subj}}}))
                                          true
                                          target-language-sentence))
+        source-fo (:morph @source-language-model)
+        target-fo (:morph @target-language-model)
 
         ;; TODO: add warning if semantics of target-expression is merely :top - it's
         ;; probably not what the caller expected. Rather it should be something more
@@ -59,7 +60,7 @@
         semantics (strip-refs (get-in target-language-sentence [:synsem :sem] :top))
         debug (log/debug (str "semantics: " semantics))
 
-        target-language-surface (fo target-language-sentence)
+        target-language-surface "wtf??" ;;(target-fo target-language-sentence)
         debug (log/debug (str "target surface: " target-language-surface))
 
         source-language (:language (if (future? source-language-model)
@@ -80,14 +81,14 @@
                                                             :subcat '()}}
                                                   source-language-model
                                                   :enrich true)
-        source-language-surface (fo source-language-sentence)
+        source-language-surface (source-fo source-language-sentence)
         debug (log/debug (str "source surface: " source-language-surface))
 
         error (if (or (nil? source-language-surface)
                       (= source-language-surface ""))
                 (let [message (str "Could not generate a sentence in source language '" source-language 
                                    "' for this semantics: " semantics "; target language was: " target-language 
-                                   "; target expression was: '" (fo target-language-sentence) "'")]
+                                   "; target expression was: '" ((:morph  @target-language-model) target-language-sentence) "'")]
                   (if (= true mask-populate-errors)
                     (log/warn message)
                     ;; else
@@ -95,7 +96,7 @@
     {:source source-language-sentence
      :target target-language-sentence}))
 
-(defn insert-expression [expression table language model-name]
+(defn insert-expression [expression surface table language model-name]
   "Insert an expression into the given table. The information to be added will be:
    1. the surface form of the expression
    2. The JSON representation of the expression (the structure)
@@ -115,7 +116,7 @@
                     "'" (str (serialize expression)) "'"
                     ","
                     "?,?)")
-               [(fo expression)
+               [surface
                 language
                 model-name]]))
 
@@ -141,40 +142,50 @@
               true
               spec)
 
-        debug (log/debug (str "populate spec(2): " spec))
+        debug (log/error (str "populate spec(2): " spec))
 
         ;; subcat is empty, so that this is a complete expression with no missing arguments.
         ;; e.g. "she sleeps" rather than "sleeps".
         spec (unify spec {:synsem {:subcat '()}}) 
 
-        debug (log/debug (str "populate spec(3): " spec))
+        debug (log/error (str "populate spec(3): " spec))
 
         table (if table table "expression")]
     (dotimes [n num]
       (let [sentence-pair (expression-pair source-language-model target-language-model spec)
             target-sentence (:target sentence-pair)
             source-sentence (:source sentence-pair)
+            source-language-model (if (ref? source-language-model) @source-language-model source-language-model)
+            target-language-model (if (ref? target-language-model) @target-language-model target-language-model)
 
-            source-sentence-surface (fo source-sentence)
-            target-sentence-surface (fo target-sentence)
+            target-morphology (:morph @target-language-model)
+            source-morphology (:morph @source-language-model)
 
-            source-language (:language (if (future? source-language-model)
-                                         @source-language-model
-                                         source-language-model))
-            target-language (:language (if (future? target-language-model)
-                                         @target-language-model
-                                         target-language-model))
+            source-sentence-surface (source-morphology source-sentence)
+            target-sentence-surface (target-morphology target-sentence)
+
+            source-language (:language @source-language-model)
+            target-language (:language @target-language-model)
+
             ]
 
-        (log/debug (str "inserting into table: " table " the target expression: '"
+        (log/info (str table " => '"
                         target-sentence-surface
                         "'"))
-        (insert-expression target-sentence "expression" target-language (:name target-language-model))
+        (insert-expression target-sentence ;; underlying structure
+                           target-sentence-surface ; surface string
+                           "expression" ;; table
+                           target-language
+                           (:name target-language-model)) ;; name, like 'small','medium', etc.
         
-        (log/debug (str "inserting into table '" table "' the source expression: '"
-                        source-sentence-surface
+        (log/info (str table " => '"
+                       source-sentence-surface
                         "'"))
-        (insert-expression source-sentence "expression" source-language (:name source-language-model))))))
+        (insert-expression source-sentence
+                           source-sentence-surface
+                           "expression"
+                           source-language
+                           (:name source-language-model))))))
 
 (defn fill [num source-lm target-lm & [spec]]
   "wipe out current table and replace with (populate num spec)"
