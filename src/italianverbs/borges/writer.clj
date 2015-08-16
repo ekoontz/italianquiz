@@ -132,9 +132,9 @@
 ;; TODO: use named optional parameters.
 (defn populate [num source-language-model target-language-model & [ spec table ]]
   (let [spec (if spec spec :top)
-        debug (log/error (str "populate spec(1): " spec))
-        debug (log/error (str "type of source language model: " (type source-language-model)))
-        debug (log/error (str "type of target language model: " (type target-language-model)))
+        debug (log/debug (str "populate spec(1): " spec))
+        debug (log/debug (str "type of source language model: " (type source-language-model)))
+        debug (log/debug (str "type of target language model: " (type target-language-model)))
         spec (cond
               (not (= :notfound (get-in spec [:synsem :sem :subj] :notfound)))
               (unify spec
