@@ -1,7 +1,6 @@
 (ns italianverbs.ug
   (:refer-clojure :exclude [get-in merge resolve])
   (:require [clojure.tools.logging :as log]
-            [italianverbs.lexiconfn :refer (sem-impl)]
             [dag-unify.core :refer (fail? get-in merge unifyc)]
             [clojure.string :as string]))
 
@@ -171,31 +170,6 @@
      :comp {:synsem subcat-3}
      :synsem {:subcat {:1 subcat-1
                        :2 subcat-2}}}))
-
-(def standard-filter-fn
-  (fn [additional-phrase-with-head]
-    (fn [phrase-with-head]
-      (let [phrase-with-head (unifyc additional-phrase-with-head
-                                    phrase-with-head)]
-        (do
-          (if (fail? phrase-with-head)
-            (throw (Exception. (str "phrase-with-head is fail: " phrase-with-head))))
-          (fn [comp]
-            (let [result
-                  {:essere
-                   (unifyc (get-in phrase-with-head '(:comp :synsem :essere) :top)
-                           (get-in comp '(:synsem :essere) :top))
-                   :agr
-                   (unifyc (get-in phrase-with-head '(:comp :synsem :agr) :top)
-                           (get-in comp '(:synsem :agr) :top))
-                   :sem
-                   (unifyc (sem-impl (get-in phrase-with-head '(:comp :synsem :sem) :top))
-                           (sem-impl (get-in comp '(:synsem :sem) :top)))}]
-              (if (not (fail? result))
-                ;; complement was compatible with the filter: not filtered out.
-                true
-                ;; complement was incompatible with the filter and thus filtered out:
-                false))))))))
 
 (def comp-modifies-head
   (let [human (ref :top)
