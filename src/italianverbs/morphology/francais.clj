@@ -157,13 +157,7 @@
         
               (and (= person :2nd) (= number :sing) ir-type)
               (str stem "is")
-              
-              (and (= person :2nd) (= number :sing) er-type)
-              (str stem "ez")
-              
-              (and (= person :2nd) (= number :sing) ir-type)
-              (str stem "issez")
-              
+                            
               (and (= person :3rd) (= number :sing) er-type)
               (str stem "e")
 
@@ -216,7 +210,7 @@
                               (catch Exception e
                                 (throw (Exception. (str "Can't regex-find on non-string: " infinitive " from word: " word)))))
                  er-type (re-find #"er$" infinitive)
-              ir-type (re-find #"ir$" infinitive)
+                 ir-type (re-find #"ir$" infinitive)
                  stem (string/replace infinitive #"[iae]r$" "")
                  last-stem-char-is-i (re-find #"ir$" infinitive)
                  last-stem-char-is-e (re-find #"er$" infinitive)
@@ -235,12 +229,7 @@
               (str stem "iras")
               (and (= person :2nd) (= number :sing) er-type)
               (str stem "eras")
-              
-              (and (= person :2nd) (= number :sing) ir-type)
-              (str stem "irez")
-              (and (= person :2nd) (= number :sing) er-type)
-              (str stem "erez")
-              
+                            
               (and (= person :3rd) (= number :sing) ir-type)
               (str stem "ira")
               (and (= person :3rd) (= number :sing) er-type)
@@ -273,6 +262,131 @@
               
               :else
               (throw (Exception. (str "get-string: futuro regular inflection: don't know what to do with input argument: " (strip-refs word))))))
+
+           ;;QUI COMINCIA IL CONDIZIONALE FRANCESE
+           (and
+            (= (get-in word '(:infl)) :conditional)
+            (string? (get-in word '(:français))))
+           (let [infinitive (get-in word '(:français))
+                 ar-type (try (re-find #"ar$" infinitive)
+                              (catch Exception e
+                                (throw (Exception. (str "Can't regex-find on non-string: " infinitive " from word: " word)))))
+                 er-type (re-find #"er$" infinitive)
+                 ir-type (re-find #"ir$" infinitive)
+                 stem (string/replace infinitive #"[iae]r$" "")
+                 last-stem-char-is-i (re-find #"ir$" infinitive)
+                 last-stem-char-is-e (re-find #"er$" infinitive)
+                 is-care-or-gare? (re-find #"[cg]ar$" infinitive)
+                 person (get-in word '(:agr :person))
+                 number (get-in word '(:agr :number))]
+             
+             (cond
+              
+              (and (= person :1st) (= number :sing) er-type)
+              (str stem "erais")
+              (and (= person :1st) (= number :sing) ir-type)
+              (str stem "irais")
+           
+              (and (= person :2nd) (= number :sing) ir-type)
+              (str stem "erais")
+              (and (= person :2nd) (= number :sing) er-type)
+              (str stem "irais")
+           
+              (and (= person :3rd) (= number :sing) ir-type)
+              (str stem "erait")
+              (and (= person :3rd) (= number :sing) er-type)
+              (str stem "irait")
+
+              (and (= person :1st) (= number :plur) er-type)
+              (str stem "erions")
+              (and (= person :1st) (= number :plur) ir-type)
+              (str stem "irions")
+ 
+              (and (= person :2nd) (= number :plur) er-type)
+              (str stem "eriez")
+              
+              (and (= person :2nd) (= number :plur) ir-type)
+              (str stem "iriez")
+
+              ;; </second person plural conditional>
+
+              ;; <third person plural conditional>
+              (and (= person :3rd) (= number :plur)
+                   er-type)
+              (str stem "eraient")
+           
+              (and (= person :3rd) (= number :plur)
+                   ir-type)
+              (str stem "iraient")
+
+              ;; </third person plural conditional>
+              :else
+              (throw (Exception. (str "get-string-1: conditional regular inflection: don't know what to do with input argument: " (strip-refs word))))))
+
+              
+           ;;QUI COMINCIA L’ IMPERFETTO
+           (and
+            (= (get-in word '(:infl)) :imperfetto)
+            (string? (get-in word '(:français))))
+           (let [infinitive (get-in word '(:français))
+                 ar-type (try (re-find #"ar$" infinitive)
+                              (catch Exception e
+                                (throw (Exception. (str "Can't regex-find on non-string: " infinitive " from word: " word)))))
+                 er-type (re-find #"er$" infinitive)
+                 ir-type (re-find #"ir$" infinitive)
+                 stem (string/replace infinitive #"[iae]r$" "")
+                 last-stem-char-is-i (re-find #"ir$" infinitive)
+                 last-stem-char-is-e (re-find #"er$" infinitive)
+                 person (get-in word '(:agr :person))
+                 number (get-in word '(:agr :number))]
+             (cond
+              (and (= person :1st) (= number :sing) er-type)
+              (str stem "ais")
+              
+              (and (= person :1st) (= number :sing) ir-type)
+              (str stem "íssais")
+           
+              (and (= person :2nd) (= number :sing) er-type)
+              (str stem "ais")
+           
+              (and (= person :2nd) (= number :sing) ir-type)
+              (str stem "íssais")
+              
+              (and (= person :3rd) (= number :sing) er-type)
+              (str stem "ait")
+           
+              (and (= person :3rd) (= number :sing) ir-type)
+              (str stem "íssait")
+           
+              (and (= person :1st) (= number :plur) er-type)
+              (str stem "ions")
+           
+              (and (= person :1st) (= number :plur) ir-type)
+              (str stem "íssions")
+           
+              ;; <second person plural imperfecto>
+           
+              (and (= person :2nd) (= number :plur) er-type)
+              (str stem "iez")
+           
+              (and (= person :2nd) (= number :plur) ir-type)
+              (str stem "íssiez")
+           
+           
+              ;; </second person plural imperfecto>
+           
+              ;; <third person plural imperfecto>
+              (and (= person :3rd) (= number :plur)
+                   er-type)
+              (str stem "aient")
+       
+              (and (= person :3rd) (= number :plur)
+                   ir-type)
+              (str stem "íssaient")
+              ;; </third person plural imperfecto>
+           
+              :else
+              (throw (Exception. (str "get-string-1: imperfecto regular inflection: don't know what to do with input argument: " (strip-refs word))))))
            
            (and
             (get-in word '(:a))
