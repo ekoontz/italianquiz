@@ -13,8 +13,7 @@
 (require '[italianverbs.html :as html])
 (require '[italianverbs.lexicon.italiano :as lex])
 (require '[italianverbs.lexiconfn :refer (compile-lex infinitives map-function-on-map-vals unify)])
-(require '[italianverbs.morphology :refer (fo)])
-(require '[italianverbs.morphology.italiano :as morph])
+(require '[italianverbs.morphology.italiano :as morph :refer [fo]])
 (require '[italianverbs.parse :as parse])
 (require '[italianverbs.pos.italiano :refer [intransitivize transitivize]])
 (require '[italianverbs.ug :refer :all])
@@ -141,6 +140,7 @@
       {:name "small"
        :language-keyword :italiano
        :language "it"
+       :morph fo
        :enrich enrich
        :grammar grammar
        :lexicon lexicon

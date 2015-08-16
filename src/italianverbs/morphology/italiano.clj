@@ -1053,6 +1053,40 @@
 
 (declare fo-ps-it)
 
+(defn fo [input]
+  (cond 
+
+   (= input :fail)
+   (str input)
+
+   (= (type input) clojure.lang.LazySeq)
+   (str "['" (string/join "','" (map fo input)) "']")
+
+
+   (string? input)
+   input
+
+   (:italiano input)
+   ;; get-string should always return a string, but sometimes it (incorrectly) does not (FIXME)
+   (string/trim (str (get-string (:italiano input))))
+   
+   (and (map? input)
+        (get-in input [:a])
+        (get-in input [:b]))
+   (str (string/join " " 
+                     (list (fo (get-in input [:a]))
+                           (fo (get-in input [:b])))))
+                     
+   (or (seq? input)
+       (vector? input))
+   (str "(" (string/join " , " 
+                         (remove #(= % "")
+                                 (map #(let [f (fo %)] (if (= f "") "" (str "" f ""))) input)))
+        ")")
+
+   true
+   ""))
+
 (defn fo-ps [expr]
   "show the phrase-structure of a phrase structure tree, e.g [hh21 'mangiare (to eat)' [cc10 'il (the)' 'pane(bread)']]"
   ;; [:first = {:head,:comp}] will not yet be found in expr, so this head-first? will always be false.
