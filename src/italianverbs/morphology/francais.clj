@@ -26,7 +26,7 @@
              (let [a (get-string word)
                    b (get-string b)]
                (and (= a "je")
-                    (re-find #"^[aeiou]" b))))
+                    (re-find #"^[aeéiou]" b))))
         (str "j'" (get-string b))
 
         (and (not (nil? word))
