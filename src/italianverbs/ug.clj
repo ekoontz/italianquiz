@@ -2,7 +2,6 @@
   (:refer-clojure :exclude [get-in merge resolve])
   (:require [clojure.tools.logging :as log]
             [italianverbs.lexiconfn :refer (sem-impl)]
-            [italianverbs.morphology :refer (fo fo-ps)]
             [dag-unify.core :refer (fail? get-in merge unifyc)]
             [clojure.string :as string]))
 
@@ -218,10 +217,6 @@
   "do things necessary before something can be a sentence. e.g. if infl is still :top, set to
 :present (later, set to a randomly selected member of {:finite, :futuro, ..}."
   (do
-    (if (not (fail? input))
-      (do
-        (log/debug (str "grammar: sentence-impl input: " (fo input)))
-        (log/debug (str "grammar: sentence-impl type: " (type input)))))
     (cond
      (seq? input)
      (map (fn [each]
@@ -252,8 +247,6 @@
              (if (= input :fail) :fail
                  (merge input finitize))]
          (do
-           (if (not (fail? merged))
-             (log/debug (str "sentence-impl: merged result IS:::" (fo merged))))
            merged)))))) ;; for now, no recursive call.
 
 (defn sent-impl [input]

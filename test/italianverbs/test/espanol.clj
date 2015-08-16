@@ -8,7 +8,7 @@
    [italianverbs.espanol :as es]
    [italianverbs.grammar.espanol :as gram]
    [italianverbs.lexicon.espanol :as lex]
-   [italianverbs.morphology :refer (fo)]
+   [italianverbs.morphology.espanol :refer [fo]]
    [italianverbs.over :refer (overc overh)]
    [italianverbs.ug :refer :all]
    [dag-unify.core :refer :all]

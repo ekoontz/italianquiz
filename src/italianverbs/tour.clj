@@ -11,7 +11,7 @@
    [italianverbs.editor :refer [json-read-str]]
    [italianverbs.html :refer [page]]
    [italianverbs.menubar :refer [menubar]]
-   [italianverbs.morphology :refer (fo remove-parens)]
+   [italianverbs.morphology :refer (remove-parens)]
    [dag-unify.core :refer (get-in unify)]
    [italianverbs.user :refer [menubar-info-for-user session2userid username2userid]]
    [korma.core :as k]))
@@ -462,9 +462,9 @@
 
 (defn html-form [question]
   (do
-    (log/info (str "html-form: question: " (fo question)))
-    {:left_context_source (remove-parens (fo (get-in question [:comp])))
-     :head_of_source (remove-parens (fo (get-in question [:head])))
+    (log/info (str "html-form: question: " question))
+    {:left_context_source (remove-parens (get-in question [:comp]))
+     :head_of_source (remove-parens (get-in question [:head]))
      :right_context_source ""
      :right_context_destination ""}))
 

@@ -14,7 +14,6 @@
    [hiccup.element :as e]
    [hiccup.page :as h]
    [italianverbs.menubar :as menubar]
-   [italianverbs.morphology :refer [fo]]
    [italianverbs.session :as session]
    [dag-unify.core :as fs]))
 
@@ -390,17 +389,6 @@
       "    </tr>"
       "  </table>"
       "</div>")
-
-
-     (and (map? arg)
-          (= (last path) :english))
-     (tablize {:exterior (str "<i>" (fo {:english arg}) "</i>")
-               :interior arg})
-
-     (and (map? arg)
-          (= (last path) :italiano))
-     (tablize {:exterior (str "<i>" (fo {:italiano arg}) "</i>")
-               :interior arg})
 
      ;; displaying a feature structure.
      (map? arg)

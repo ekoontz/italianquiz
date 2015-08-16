@@ -6,7 +6,6 @@
    [italianverbs.engine :refer [generate]]
    [italianverbs.english :as en]
    [italianverbs.italiano :as it]
-   [italianverbs.morphology :refer [fo]]
    [italianverbs.borges.reader :refer [generate-using-db generate-question-and-correct-set]]
    [italianverbs.borges.writer :refer [fill populate]]
    [italianverbs.tour :refer :all]
@@ -44,4 +43,4 @@
             :cat :verb}})
 
 (deftest enrich-test
-  (let [took-time (time (fo (generate (it/enrich killer-spec) it/small)))]))
+  (let [took-time (time (generate (it/enrich killer-spec) it/small))]))

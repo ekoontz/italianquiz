@@ -10,7 +10,6 @@
    [italianverbs.forest :as forest] ;; this allows us to use newly-defined functions from the forest namespace.
    [italianverbs.english :as en]
    [italianverbs.italiano :as it]
-   [italianverbs.morphology :refer (fo fo-ps)]
    [italianverbs.over :refer (overc overh)]
    [italianverbs.parse :refer (parse)]
    [italianverbs.ug :refer (head-principle)]
@@ -96,29 +95,29 @@
 
 (defn past-perfect [trials]
   (run-benchmark
-   #(fo-ps (it/sentence {:synsem {:sem {:aspect :perfect 
-                                        :tense :past 
-                                        :pred :perdere
-                                        :subj {:pred :io}
-                                        :obj {:pred :roma}}}}))
+   #(it/sentence {:synsem {:sem {:aspect :perfect 
+                                 :tense :past 
+                                 :pred :perdere
+                                 :subj {:pred :io}
+                                 :obj {:pred :roma}}}})
    trials
    "past-perfect-tense generation is needful of optimization."))
 
 (defn sentence-subject-verb [trials]
   (run-benchmark
-   #(fo (it/generate {:comp {:phrasal false}
-                      :head {:phrasal false}}))
+   #(it/generate {:comp {:phrasal false}
+                  :head {:phrasal false}})
    trials
    "sentence which is simply a subject plus a verb"))
 
 (defn saux [trials]
   (run-benchmark 
-   #(fo (it/generate
-         {:synsem {:subcat '()}}))))
+   #(it/generate
+     {:synsem {:subcat '()}})))
 
 (defn run-sentence [trials]
   (run-benchmark
-   #(fo (it/sentence {:synsem {:sem {:pred :impazzire}}}))
+   #(it/sentence {:synsem {:sem {:pred :impazzire}}})
    trials
    "sentence with 'impazzire'"))
 
@@ -196,7 +195,7 @@
 
 (defn run-gatto [trials]
   (run-benchmark
-   #(fo-ps (first (take 1 (catlove))))
+   #(first (take 1 (catlove)))
    trials))
 
 ;; the {:subj {:animate true}} is a workaround for rathole prevention - 
@@ -211,7 +210,7 @@
                       :aux false
                       :sem {:subj {:animate true}}
                       :subcat '()}})]
-    (run-benchmark #(fo (it/generate spec))
+    (run-benchmark #(it/generate spec)
                    trials
                    name)))
 
@@ -226,7 +225,7 @@
                                                   :subj {:animate true}}};; TODO: why :animate:true? - consider eliminating this.
                           spec (if spec spec :top)
                           unified-spec (unifyc sentence-spec spec)]
-                      (fo (en/generate unified-spec)))
+                      (en/generate unified-spec))
                    trials
                    "italian2english")))
 
@@ -271,26 +270,26 @@
 
 (defn word-speaker [trials]
   (run-benchmark
-   #(fo (it/sentence {:synsem {:subcat '() :cat :verb
-                            :sem {:pred :parlare
-                                  :subj {:pred :lei}
-                                  :obj {:pred :parola}}}}))
+   #(it/sentence {:synsem {:subcat '() :cat :verb
+                           :sem {:pred :parlare
+                                 :subj {:pred :lei}
+                                 :obj {:pred :parola}}}})
    trials))
 
 (defn word-spoken [trials]
   (run-benchmark
-   #(fo-ps (take 1 (it/generate)))
+   #(take 1 (it/generate))
    trials))
 
 (defn word-spoken2 [trials]
   ;; TODO: allow it/generate to accept a lexicon as a parameter to (generate)
   (let [lexicon (seq (union (set (it/lookup "parola")) (set (it/lookup "bianco")) (set (it/lookup "la"))))]
     (run-benchmark
-     #(fo-ps (take 1 (it/generate)))
+     #(take 1 (it/generate))
      trials)))
 
 (defn parsing [trials]
   (run-benchmark
-   #(time (fo-ps (take 1 (parse "il gatto nero dorme"))))
+   #(time (take 1 (parse "il gatto nero dorme")))
    trials))
 

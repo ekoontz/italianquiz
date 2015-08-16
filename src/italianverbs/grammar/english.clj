@@ -4,7 +4,7 @@
    [clojure.tools.logging :as log]
    [italianverbs.cache :refer (build-lex-sch-cache create-index over spec-to-phrases)]
    [italianverbs.lexicon.english :as en-lex]
-   [italianverbs.morphology :refer (fo fo-ps)]
+   [italianverbs.morphology.english :refer (fo)]
    [italianverbs.parse :as parse]
    [italianverbs.ug :refer :all]
    [dag-unify.core :refer (get-in unifyc)]))

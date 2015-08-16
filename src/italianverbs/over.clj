@@ -9,7 +9,6 @@
    [clojure.tools.logging :as log]
 
    [italianverbs.lexiconfn :refer :all]
-   [italianverbs.morphology :refer [finalize fo fo-ps]]
    [dag-unify.core :refer :all :exclude [unify]]))
 
 ;; TODO: need better debugging throughout this file to diagnose generation failures.
@@ -93,10 +92,8 @@
 
 (defn moreover-head [parent child lexfn-sem-impl]
   (do
-    (log/debug (str "moreover-head (candidate) parent: " (fo parent)))
     (log/debug (str "moreover-head (candidate) parent sem: " (get-in parent '(:synsem :sem) :no-semantics)))
     (log/debug (str "moreover-head (candidate) head child sem:" (get-in child '(:synsem :sem) :top)))
-    (log/debug (str "moreover-head (candidate) head:" (fo child)))
     (let [result
           (unifyc parent
                   (unifyc {:head child}
@@ -111,13 +108,11 @@
         ;; TODO: make (fail-path) call part of each log/debug message to avoid computing it if log/debug is not enabled.
         (let [debug (log/debug (str "unifyc arg1(head): " (strip-refs child)))
               debug (log/debug (str "unifyc arg2(head): " (strip-refs {:synsem {:sem (lexfn-sem-impl (get-in child '(:synsem :sem) :top))}})))
-              debug (log/debug (str "moreover-head failed: child:" (fo child) "/parent comment=" (get-in parent '(:comment)) "/child phrase:" (get-in child '(:comment))))
               debug (log/debug (str "(strip-refs result):" (strip-refs result)))
               debug (log/debug (str "(strip-refs result italiano):" (get-in (strip-refs result) [:italiano])))
               fail-path (fail-path result)
               debug (log/debug (str " fail-path: " fail-path))
               debug (log/debug (str " path to head-value-at-fail:" (rest fail-path)))
-              debug (log/debug (str " head: " (fo child)))
               debug (log/debug (str " head-value-at-fail: " (strip-refs (get-in child (rest fail-path)))))
               debug (log/debug (str " parent-value-at-fail: " (strip-refs (get-in parent fail-path))))]
           (do
@@ -131,8 +126,6 @@
 (def ^:dynamic *throw-exception-if-failed-to-add-complement* false)
 
 (defn moreover-comp [parent child lexfn-sem-impl]
-  (log/debug (str "moreover-comp parent: " (fo parent)))
-  (log/debug (str "moreover-comp comp:" (fo child)))
   (log/debug (str "moreover-comp type parent: " (type parent)))
   (log/debug (str "moreover-comp type comp:" (type child)))
 
@@ -146,14 +139,13 @@
         (let [result
               (merge {:comp-filled true}
                      result)]
-          (log/debug (str "moreover-comp (SUCCESS) merged result:(fo) " (fo result))))
-        result)
+          result))
       (do
         (log/debug "moreover-comp: fail at: " (fail-path result))
         (if (and
              *throw-exception-if-failed-to-add-complement*
              (get-in child '(:head)))
-          (throw (Exception. (str "failed to add complement: " (fo child) "  to: phrase: " (fo parent)
+          (throw (Exception. (str "failed to add complement: " child "  to: phrase: " parent
                                   ". Failed path was: " (fail-path result)
                                   ". Value of parent at path is: "
                                   (get-in parent (fail-path result))
@@ -178,12 +170,6 @@
       (log/debug (str "overh: parent:" (get-in parent '(:aliases))))
       (if (get-in parent '(:comment))
         (log/debug (str "overh: parent:" (get-in parent '(:comment)))))))
-  (if (map? head)
-    (if (get-in parent '(:aliases))
-      (log/debug (str "overh: parent:" (get-in parent '(:aliases))))
-      (if (get-in head '(:comment))
-        (log/debug (str "overh: head: " (get-in head '(:comment))))
-        (log/debug (str "overh: head: " (fo head))))))
 
   (cond
 
@@ -221,13 +207,6 @@
      (log/trace (str "overh italian value: " (if (map? result) (get-in result '(:italiano)) "(not a map)")))
      (log/trace (str "overh italian :a value: " (if (map? result) (get-in result '(:italiano :a)) "(not a map)")))
      (log/trace (str "overh italian :b value: " (if (map? result) (get-in result '(:italiano :b)) "(not a map)")))
-     (if is-fail?
-       (log/debug (str "overh: parent=" label "; head=[" (fo head) "]=> :fail")))
-
-     (if (not is-fail?)
-       (log/debug (str "overh: parent=" label "; head=[" (fo head) "]=> " (if is-fail?
-                                                                                       ":fail"
-                                                                                       (fo result)))))
      (if (not is-fail?)
        (list result)))))
 
@@ -237,19 +216,10 @@
 ;; is still true.
 (defn overc [parent comp]
   "add given child as the comp child of the phrase: parent."
-  (log/debug (str "overc parent : " (fo-ps parent)))
-  (log/debug (str "overc comp : " (fo comp)))
 
   (log/debug (str "set? parent:" (set? parent)))
   (log/debug (str "seq? parent:" (seq? parent)))
   (log/debug (str "seq? comp:" (seq? comp)))
-
-  (if (map? parent)
-    (if (get-in parent '(:comment))
-      (log/debug (str "parent:" (get-in parent '(:comment)))))
-    (log/debug (str "parent:" (fo parent))))
-  (if (map? comp)
-    (log/debug (str "comp: " (fo comp))))
 
   (log/debug (str "type of parent: " (type parent)))
   (log/debug (str "type of comp  : " (type comp)))
@@ -285,16 +255,6 @@
    true
    (let [result (moreover-comp parent comp sem-impl)
          is-fail? (fail? result)]
-     (if is-fail?
-       (log/debug (str "overc: parent=" (label-of parent)
-                       "; head=[" (fo (get-in parent '(:head)))
-                       "]; comp=[" (fo comp) "]=> :fail")))
-
-     (if (not is-fail?)
-       (log/debug (str "overc: parent=" (label-of parent)
-                      "; head=[" (fo (get-in parent '(:head)))
-                      "]; comp=[" (fo comp) "]=> " (fo result))))
-
      (if (not is-fail?)
        (list result)))))
 

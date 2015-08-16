@@ -3,7 +3,7 @@
   (:require 
    [clojure.tools.logging :as log]
    [italianverbs.cache :refer (build-lex-sch-cache create-index over spec-to-phrases)]
-   [italianverbs.morphology :refer (fo fo-ps)]
+   [italianverbs.morphology.italiano :refer (fo fo-ps)]
    [italianverbs.parse :as parse]
    [italianverbs.ug :refer :all]
    [dag-unify.core :refer (fail? get-in merge unifyc)]))

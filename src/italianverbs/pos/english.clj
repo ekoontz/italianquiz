@@ -2,7 +2,7 @@
   (:refer-clojure :exclude [get-in]))
 
 (require '[clojure.tools.logging :as log])
-(require '[italianverbs.morphology :refer (fo)])
+(require '[italianverbs.morphology.english :refer (fo)])
 (require '[italianverbs.pos :as pos])
 (require '[dag-unify.core :as unify :refer (dissoc-paths get-in serialize unifyc)])
 (require '[italianverbs.lexiconfn :as lexiconfn :refer (map-function-on-map-vals)])

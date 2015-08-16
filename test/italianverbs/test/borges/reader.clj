@@ -10,7 +10,6 @@
    [italianverbs.engine]
    [italianverbs.english :as en]
    [italianverbs.italiano :as it]
-   [italianverbs.morphology :refer (fo)]
    [dag-unify.core :refer [deserialize get-in strip-refs]]
    [korma.core :as db]
    ))

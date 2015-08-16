@@ -1,3 +1,4 @@
+;; TODO: remove all dependencies on particular languages (english,espanol,etc)
 (ns italianverbs.morphology
   (:refer-clojure :exclude [get get-in merge resolve]))
 
@@ -35,98 +36,5 @@
     (log/warn (str "fix this stubbed out function."))
     input))
 
-(defn fo [input]
-  (cond 
-
-   (= input :fail)
-   (str input)
-
-   (= (type input) clojure.lang.LazySeq)
-   (str "['" (string/join "','" (map fo input)) "']")
-
-
-   (string? input)
-   input
-
-   (:italiano input)
-   ;; get-string should always return a string, but sometimes it (incorrectly) does not (FIXME)
-   (string/trim (str (italiano/get-string (:italiano input))))
-
-   (:english input)
-   (string/trim (str (english/get-string (:english input))))
-
-   (:espanol input)
-   (string/trim (str (espanol/get-string (:espanol input))))
-   
-   (and (map? input)
-        (get-in input [:a])
-        (get-in input [:b]))
-   (str (string/join " " 
-                     (list (fo (get-in input [:a]))
-                           (fo (get-in input [:b])))))
-                     
-   (or (seq? input)
-       (vector? input))
-   (str "(" (string/join " , " 
-                         (remove #(= % "")
-                                 (map #(let [f (fo %)] (if (= f "") "" (str "" f ""))) input)))
-        ")")
-
-   true
-   ""))
-
-(defn fo-ps [input]
-  (cond (seq? input)
-        (map fo-ps input)
-
-        (:italiano input)
-        {:italiano (fo input)
-         :semantics (remove-matching-values (get-in input [:synsem :sem])
-                                            (fn [k v] (or (= v :top)
-                                                          (= v '())
-                                                          (= v false))))
-         :rule (:rule input)
-         :head (fo (:head input))
-         :comp (fo (:comp input))}
-
-        (:english input)
-        {:english (fo input)
-         :rule (:rule input)
-         :head (fo (:head input))
-         :comp (fo (:comp input))}
-
-        true
-        ""))
-
 (defn remove-parens [str]
   (string/replace str #"\(.*\)" ""))
-
-(defn finalize [expr]
-  (cond
-
-   ;; This is the case where we've generated totally separate english and italian phrase structure trees,
-   ;; in which case we need to extract the english and italian strings from their respective trees.
-   (and (map? expr)
-        (= (.size (keys expr)) 2)
-        (= (set (keys expr))
-           #{:italiano :english}))
-   (let [english
-         (english/get-string (get-in expr '(:english :english)))
-         italian
-         (italiano/get-string (get-in expr '(:italiano :italiano)))
-         espanol
-         (espanol/get-string (get-in expr '(:espanol :espanol)))]
-         
-     (log/debug (str "input expr: " (fo expr)))
-     (log/debug (str "finalized english: " english))
-     (log/debug (str "finalized italian: " italian))
-     {:italiano italian
-      :english english
-      :english-tree (get-in expr [:english])
-      :italian-tree (get-in expr [:italiano])})
-
-   (= :fail expr)
-   :fail
-
-   true
-   "TODO: fix."))

@@ -13,7 +13,6 @@
                                                    overc overh)]
    [italianverbs.forest :refer :all]
    [italianverbs.italiano :as it]
-   [italianverbs.morphology :refer (fo fo-ps)]
    [italianverbs.over :as over]
    [dag-unify.core :as unify]
    [dag-unify.core :refer (dissoc-paths get-in fail? lazy-shuffle remove-top-values-log show-spec unifyc)]))

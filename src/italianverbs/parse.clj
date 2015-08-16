@@ -4,9 +4,6 @@
 (require '[clojure.string :as str])
 (require '[clojure.tools.logging :as log])
 
-;; the following require is language-specific, but useful for debugging.
-(require '[italianverbs.morphology :refer (fo fo-ps)])
-
 (require '[italianverbs.over :as over])
 (require '[dag-unify.core :refer (get-in strip-refs)])
 
@@ -61,8 +58,6 @@
 (defn create-trigram-map [args index grammar bigrams]
   (if (< (+ 2 index) (.size args))
     (do
-      (log/debug (str "over(left): " (fo (get bigrams index))))
-      (log/debug (str "over(right): " (fo (get bigrams (+ 1 index)))))
       (merge
        {[index (+ 3 index)]
         (lazy-cat
@@ -84,7 +79,6 @@
 
 (defn over [grammar left right]
   "opportunity for additional logging before calling the real (over)"
-  (log/debug (str "over with: left:'" (fo left)) "' ; right: " (fo right))
   (over/over grammar left right))
 
 (defn create-ngram-map [args left ngrams grammar split-at x]
@@ -146,6 +140,6 @@
         true
         :error))
 
-;(log/info (str "parse: " (fo (parse "il gatto ha dormito" it/lexicon it-g/grammar))))
+;(log/info (str "parse: " (it/fo (parse "il gatto ha dormito" it/lexicon it-g/grammar))))
 
 

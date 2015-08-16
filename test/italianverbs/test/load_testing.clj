@@ -5,7 +5,6 @@
    [italianverbs.engine :refer [get-meaning]]
    [italianverbs.english :as en]
    [italianverbs.italiano :as it]
-   [italianverbs.morphology :refer (fo)]
    [italianverbs.ug :refer (head-principle)]))
 
 ;; <begin linguistic setup>
@@ -61,7 +60,7 @@
                   )
            {:grammar (:grammar target)
             :index (:index target)})]
-      {:question (fo question)
-       :answer (fo answer)})))
+      {:question question
+       :answer answer})))
 
 

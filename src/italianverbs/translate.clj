@@ -4,16 +4,14 @@
 (require '[italianverbs.engine :refer (get-meaning)])
 (require '[italianverbs.english :as en])
 (require '[italianverbs.italiano :as it])
-(require '[italianverbs.morphology :refer [finalize fo fo-ps]])
 (require '[dag-unify.core :refer [get-in]])
 
 (defn translate [input]
   "Return at most one possible translation for all possible parses of the input. Format translations as strings."
   (let [return-val
-        (map fo
-             (lazy-cat
-              (en/generate (get-meaning (it/parse input)))
-              (it/generate (get-meaning (en/parse input)))))]
+        (lazy-cat
+         (en/generate (get-meaning (it/parse input)))
+         (it/generate (get-meaning (en/parse input))))]
     (if (= 1 (.size return-val))
       (first return-val))))
 
@@ -23,7 +21,7 @@
         (lazy-cat
          (en/generate-all (get-meaning (it/parse input)))
          (it/generate-all (get-meaning (en/parse input))))]
-    (map fo return-val)))
+    return-val))
 
 (defn parse [input]
   (lazy-cat (it/parse input)

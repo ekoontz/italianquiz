@@ -12,7 +12,6 @@
    [italianverbs.english :as en]
    [italianverbs.espanol :as es]
    [italianverbs.italiano :as it]
-   [italianverbs.morphology :refer (fo)]
    [italianverbs.korma :as db]
    [dag-unify.core :refer [get-in]]
    [italianverbs.verb :refer [generation-table predicates-from-lexicon]]

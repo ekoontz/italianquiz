@@ -104,15 +104,11 @@
 (defn overh [parent head]
   (if (seq? parent)
     (mapcat (fn [each-parent]
-              (log/debug (str "overh: each-parent: " (fo-ps each-parent)))
               (overh each-parent head))
             parent)
     (do
       (log/trace (str "overh head: " (show-spec (get-in parent '(:head :synsem)))))
-      (log/trace (str "overh head fo: " (fo-ps parent)))
       (log/trace (str "overh size of head candidates: " (.size head)))
-      (if (not (nil? head))
-        (log/debug (str "overh first head: " (fo (first head)) " for parent: " (fo-ps parent))))
 
       (let [result (over/overh parent head)]
         (log/trace (str "survivor type is: " result))
@@ -132,8 +128,6 @@
       (log/trace (str "overc comp: " (show-spec (get-in parent '(:comp :synsem)))))
       (if (not (nil? comp))
         (log/trace (str "overc size of comp: " (.size comp))))
-      (if (not (nil? comp))
-        (log/debug (str "overc first comp: " (fo (first comp)) " for parent: " (fo-ps parent))))
       (let [result (over/overc parent comp)]
         (if (not (nil? result))
           (log/trace (str "overc size of result: " (.size result))))
@@ -147,7 +141,7 @@
     (do
       (log/debug (str "get-lex: " (:rule schema) " ; " head-or-comp))
       (if (not (map? schema))
-        (throw (Exception. (str "first arguments should have been a map, but instead was of type: " (type schema) "; fo: " (fo schema)))))
+        (throw (Exception. (str "first arguments should have been a map, but instead was of type: " (type schema) "; schema: " schema))))
       (log/trace (str "get-lex schema: " (:rule schema) " for: " head-or-comp))
       (if (nil? (:rule schema))
         (throw (Exception. (str "no schema for: " schema))))
@@ -211,8 +205,6 @@
 (defn overc-with-cache-1 [parent lex]
   (if (not (empty? lex))
     (do
-      (log/trace (str "overc-with-cache-1 with parent: " (fo-ps parent) 
-                      " and lex: " (fo (first lex))))
       (lazy-cat (overc parent (first lex))
                 (overc-with-cache-1 parent (rest lex))))))
 

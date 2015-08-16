@@ -8,8 +8,7 @@
    [italianverbs.engine :as engine]
    [italianverbs.lexicon.english :as lex]
    [italianverbs.lexiconfn :as lexiconfn :refer (compile-lex)]
-   [italianverbs.morphology :refer (fo)]
-   [italianverbs.morphology.english :as morph]
+   [italianverbs.morphology.english :as morph :refer [fo]]
    [italianverbs.over :refer :all]
    [italianverbs.parse :as parse]
    [italianverbs.pos :as pos :refer [cat-of-pronoun
@@ -68,8 +67,8 @@
   (let [retval (generate (engine/get-meaning (parse "she sleeps")))]
     (is (seq? retval))
     (is (> (.size retval) 0))
-    (is (string? (fo (first retval))))
-    (is (= "she sleeps" (fo (first retval))))))
+    (is (string? (morph/fo (first retval))))
+    (is (= "she sleeps" (morph/fo (first retval))))))
 
 (deftest generate-with-spec
   (let [retval (generate {:synsem {:sem {:tense :past, 
@@ -81,7 +80,7 @@
 
 
 (deftest antonio-speaks
-  (let [antonio-speaks (fo (engine/generate {:synsem {:infl :present :sem {:subj {:pred :antonio} :pred :speak}}} small :enrich true))]
+  (let [antonio-speaks (morph/fo (engine/generate {:synsem {:infl :present :sem {:subj {:pred :antonio} :pred :speak}}} small :enrich true))]
     (is (= "Antonio speaks" antonio-speaks))))
 
 (deftest antonia-plays

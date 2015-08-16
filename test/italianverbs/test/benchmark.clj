@@ -12,7 +12,6 @@
    [italianverbs.benchmark :refer :all]
    [italianverbs.cache :refer (build-lex-sch-cache over spec-to-phrases get-comp-phrases-of)]
    [italianverbs.forest :as forest]
-   [italianverbs.morphology :refer (fo fo-ps)]
    [italianverbs.over :refer (overc overh)]
    [italianverbs.ug :refer (head-principle)]
    [dag-unify.core :as unify]

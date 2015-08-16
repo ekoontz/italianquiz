@@ -5,7 +5,6 @@
    [clojure.set :as set]
    [clojure.tools.logging :as log]
    [clojure.core :as core]
-   [italianverbs.morphology :as morph :refer (fo fo-ps)]
    [italianverbs.pos :refer :all]
    [dag-unify.core :refer :all :exclude (unify)])) ;; exclude unify because we redefine it here using unifyc (copy each arg)
 
@@ -81,7 +80,6 @@ storing a deserialized form of each lexical entry avoids the need to serialize e
     (log/warn (str "Ignoring this lexeme because (fail?=true): " entry))
     ;; else, not fail, so add to lexicon.
     (do
-      (log/trace (str "Adding entry: " (morph/fo entry)))
       ;; TODO: should not make reference to particular languages here
       (let [italian (get-in entry '(:italiano) :none)
             english (get-in entry '(:english) :none)
@@ -726,7 +724,6 @@ storing a deserialized form of each lexical entry avoids the need to serialize e
 
         true
         (do
-          (log/trace (str "Transforming: " (fo lexical-entry)))
           (log/trace (str "transform: input :" lexical-entry))
           (log/trace (str "transforming lexical entry: " lexical-entry))
           (let [result (reduce #(if (or (fail? %1) (fail? %2))
@@ -784,8 +781,6 @@ storing a deserialized form of each lexical entry avoids the need to serialize e
    (fn [k vals]
      (log/debug (str "intransitivize: key: " k))
      (mapcat (fn [val]
-               (if (= :verb (get-in val [:synsem :cat])) 
-                 (log/debug (str "subcat for: '" (fo val) "' " (strip-refs (get-in val [:synsem :subcat])))))
                ;; if: 1. the val's :cat is :verb
                ;;     2. :obj is specified.
                ;;     3. there is no :subcat :2 value specified in the input
@@ -798,7 +793,6 @@ storing a deserialized form of each lexical entry avoids the need to serialize e
                           (not (= '() (get-in val [:synsem :subcat :2]))))
 
                      (do
-                       (log/debug (str "val: type 1:" (fo val)))
                        (list (unifyc val 
                                      transitive) ;; Make a 2-member list. member 1 is the transitive version..
 
@@ -822,13 +816,12 @@ storing a deserialized form of each lexical entry avoids the need to serialize e
                      (and (= (get-in val [:synsem :cat])
                              :verb)
                           (= :none (get-in val [:synsem :subcat :2] :none)))
-                     (do (log/debug (str "val: type 3:" (fo val) " => " (strip-refs (unifyc val intransitive))))
-                         (list (unifyc val intransitive)))
+                     (list (unifyc val intransitive))
                               
                      ;; else just return vals:
                      true
                      (do (if (= :verb (get-in val [:synsem :cat]))
-                           (log/debug (str "no modifications apply for val: " (fo val) " ; cat: " 
+                           (log/debug (str "no modifications apply for val: " val " ; cat: " 
                                           (get-in val [:synsem :cat]) "; subcat: "
                                           (get-in val [:synsem :subcat]))))
                          (list val))))

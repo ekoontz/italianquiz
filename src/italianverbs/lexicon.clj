@@ -9,7 +9,6 @@
    [italianverbs.lexiconfn :refer (apply-multi-rules cache-serialization sem-impl transform)]
    ;; TODO: i.l.a_essere,i.l.esso_noi,i.l.notizie_potere,i.l.qualche_volte_volere are going away:
    ;; instead use i.l.italiano and i.l.english.
-   [italianverbs.morphology :refer (fo)]
    [italianverbs.pos :refer :all]
    [dag-unify.core :as unify]
    [dag-unify.core :refer :all]))

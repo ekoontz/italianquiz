@@ -11,7 +11,6 @@
 
    [italianverbs.forest :as forest]
    [italianverbs.html :refer (tablize)]
-   [italianverbs.morphology :refer [fo fo-ps remove-parens]]
    [italianverbs.ug :refer (head-principle)]))
 
 (declare lookup)
@@ -72,9 +71,9 @@
           semantics (strip-refs (get-in expression [:synsem :sem]))
           results (merge
                    {:spec spec
-                    (keyword lang) (fo expression)
+                    (keyword lang) ((:fo model) expression)
                     :semantics semantics})]
-      (log/info (str "generated expression: " (fo expression) " with pred: " (get-in expression [:synsem :sem :pred])))
+      (log/info (str "generated expression: " ((:fo model) expression) " with pred: " (get-in expression [:synsem :sem :pred])))
       (log/debug (str "semantics of expression: " semantics))
 
       (if (not (= "true" (get-in request [:params :debug])))
