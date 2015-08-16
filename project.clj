@@ -1,6 +1,7 @@
 (defproject italianverbs "1.0.0-SNAPSHOT"
   :description "Italian language learning app"
-  :dependencies [[clj-time "0.7.0"]
+  :dependencies [[babel "0.1.0-SNAPSHOT"]
+                 [clj-time "0.7.0"]
                  [clojail "1.0.6"]
                  [clojure.jdbc "0.4.0"]
                  [clojurewerkz/mailer "1.2.0"]

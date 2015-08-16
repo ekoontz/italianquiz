@@ -2,14 +2,14 @@
 (ns italianverbs.morphology
   (:refer-clojure :exclude [get get-in merge resolve]))
 
+(require '[babel.english.morphology :as english])
+(require '[babel.italiano.morphology :as italiano])
 (require '[clojure.core :as core])
 (require '[clojure.string :as string])
 (require '[clojure.tools.logging :as log])
-(require '[italianverbs.morphology.english :as english])
-(require '[italianverbs.morphology.espanol :as espanol])
-(require '[italianverbs.morphology.italiano :as italiano])
-(require '[italianverbs.stringutils :refer :all])
 (require '[dag-unify.core :refer :all])
+(require '[italianverbs.morphology.espanol :as espanol])
+(require '[babel.stringutils :refer :all])
 
 (defn phrase-is-finished? [phrase]
   (cond
