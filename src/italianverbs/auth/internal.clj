@@ -13,7 +13,7 @@
 (require '[formative.core :as f])
 (require '[hiccup.core :refer (html)])
 (require '[italianverbs.html :refer [page]])
-(require '[italianverbs.korma :as db])
+(require '[babel.korma :as db])
 (require '[italianverbs.menubar :refer [menubar menuitem]])
 (require '[ring.util.response :as resp])
 

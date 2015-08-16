@@ -20,7 +20,7 @@
    [italianverbs.game :refer [tenses-of-game-as-human-readable verbs-of-game-as-human-readable]]
    [italianverbs.html :as html :refer [banner page rows2table]]
    [italianverbs.menubar :refer [menubar]]
-   [italianverbs.korma :as db]
+   [babel.korma :as db]
    [italianverbs.user :refer [do-if do-if-authenticated do-if-teacher login-form menubar-info-for-user
                               username2userid]]
    [korma.core :as k]))

@@ -12,7 +12,7 @@
    [italianverbs.authentication :as authentication]
    [italianverbs.config :refer [time-format]]
    [italianverbs.html :as html :refer [banner page rows2table]]
-   [italianverbs.korma :as db]
+   [babel.korma :as db]
    [italianverbs.user :refer [do-if-teacher username2userid]]
    [korma.core :as k]))
 

@@ -3,7 +3,7 @@
             [clojure.tools.logging :as log]
             [hiccup.core :as hc]
             [italianverbs.html :as html]
-            [italianverbs.korma :as db]
+            [babel.korma :as db]
             [korma.core :as k]))
 
 (defn insert-answers [responses test-submit-id]

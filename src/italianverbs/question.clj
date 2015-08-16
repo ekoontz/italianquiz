@@ -7,7 +7,7 @@
    [formative.core :as f]
    [formative.parse :as fp]
    [italianverbs.html :as html]
-   [italianverbs.korma :as db]
+   [babel.korma :as db]
    [dag-unify.core :as unify]))
 
 (defn new [params]

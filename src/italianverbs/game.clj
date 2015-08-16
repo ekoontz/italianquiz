@@ -21,7 +21,7 @@
                                 tenses-human-readable
                                 time-format]]
    [italianverbs.html :as html :refer [banner page rows2table]]
-   [italianverbs.korma :as db]
+   [babel.korma :as db]
    [italianverbs.menubar :refer [menubar]]
    [italianverbs.user :refer [do-if do-if-admin do-if-authenticated do-if-teacher has-teacher-role
                               login-form menubar-info-for-user username2userid]]

@@ -3,7 +3,6 @@
    [hiccup core page]
    [ring.util.codec :as codec])
   (:require
-   [cemerick.friend :as friend]
    [clj-time.coerce :as c]
    [clj-time.core :as t]
    [clj-time.format :as f]
@@ -13,8 +12,6 @@
    [environ.core :refer [env]]
    [hiccup.element :as e]
    [hiccup.page :as h]
-   [italianverbs.menubar :as menubar]
-   [italianverbs.session :as session]
    [dag-unify.core :as fs]))
 
 (def menubar-enabled true)
@@ -785,18 +782,6 @@
       content
       ))))
 
-(defn page [title & [content request resources]]
-  (let [resources (resources request)]
-    (page-body 
-     (html
-      (if (and request (:query-params request) (get (:query-params request) "result"))
-        [:div {:class "fadeout"}
-         (get (:query-params request) "result")])
-      (if menubar-enabled (:menubar resources))
-      [:div#content content]
-      )
-     request title resources)))
-
 (declare tr)
 (def short-format
   (f/formatter "MMM dd, yyyy HH:mm"))
@@ -950,4 +935,16 @@ in HTML. If :cols is supplied, use it as the vector of column names as keywords.
             (:content (first segments)))
           (if (not (empty? (rest segments))) " : ")
           (banner (rest segments)))))
+
+(defn page [title & [content request resources]]
+  (let [resources (resources request)]
+    (page-body
+     (html
+      (if (and request (:query-params request) (get (:query-params request) "result"))
+        [:div {:class "fadeout"}
+         (get (:query-params request) "result")])
+      (if menubar-enabled (:menubar resources))
+      [:div#content content]
+      )
+     request title resources)))
 

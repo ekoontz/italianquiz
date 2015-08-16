@@ -16,7 +16,6 @@
                  [formative "0.8.8"]
                  [friend-oauth2 "0.1.3"]
                  [hiccup "1.0.5"]
-                 [italiano "0.1.0-SNAPSHOT"]
                  [javax.servlet/servlet-api "2.5"]
                  [korma "0.4.1"]
                  [log4j/log4j "1.2.16" :exclusions [javax.mail/mail

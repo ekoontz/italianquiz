@@ -10,7 +10,7 @@
    [formative.core :as f]
 
    [italianverbs.authentication :as authentication]
-   [italianverbs.borges.reader :refer :all]
+   [babel.reader :refer :all]
    [italianverbs.config :refer [language-dropdown sqlname-from-match
                                 time-format]]
    [italianverbs.html :as html :refer [banner page]]

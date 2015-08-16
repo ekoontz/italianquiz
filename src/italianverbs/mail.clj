@@ -12,7 +12,7 @@
 (require '[clj-time.format :as f])
 (require 'digest)
 
-(require '[italianverbs.korma :as db])
+(require '[babel.korma :as db])
 
 (def api-key (env :postmark-api-key))
 

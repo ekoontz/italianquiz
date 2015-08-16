@@ -6,12 +6,11 @@
    [clojure.tools.logging :as log]
    [compojure.core :as compojure :refer [GET PUT POST DELETE ANY]]
    [italianverbs.authentication :as authentication]
-   [italianverbs.borges.reader :refer [generate-question-and-correct-set]]
+   [babel.reader :refer [generate-question-and-correct-set]]
    [italianverbs.config :refer [time-format]]
    [italianverbs.editor :refer [json-read-str]]
    [italianverbs.html :refer [page]]
    [italianverbs.menubar :refer [menubar]]
-   [italianverbs.morphology :refer (remove-parens)]
    [dag-unify.core :refer (get-in unify)]
    [italianverbs.user :refer [menubar-info-for-user session2userid username2userid]]
    [korma.core :as k]))
@@ -459,6 +458,9 @@
   (if (not (empty? seq))
     (cons (apply the-fn (list (first seq)))
           (map-realize the-fn (rest seq)))))
+
+(defn remove-parens [str]
+  (string/replace str #"\(.*\)" ""))
 
 (defn html-form [question]
   (do

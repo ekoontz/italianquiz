@@ -3,7 +3,7 @@
   (:require
    [clojure.string :as string]
    [clojure.tools.logging :as log]
-   [italianverbs.korma :as db]
+   [babel.korma :as db]
    [italianverbs.morphology :as morph]
    [italianverbs.morphology :refer (normalize-whitespace)]
    [italianverbs.verb :as verb]))

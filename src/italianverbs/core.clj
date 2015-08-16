@@ -24,7 +24,6 @@
    [italianverbs.studenttest :as studenttest]
    [italianverbs.tour :as tour]
    [italianverbs.user :as user]
-   [italianverbs.verb :as verb]
 ;   [italianverbs.workbook :as workbook]
 
    [ring.adapter.jetty :as jetty]
@@ -61,10 +60,6 @@
   (context "/game" []
            game/routes)
 
-  ;; TODO: disable
-  (context "/gen" []
-           verb/routes)
-
   (context "/me" []
            me/routes)
 
@@ -83,11 +78,6 @@
 
   (GET "/about" request
        about/routes)
-
-  (GET "/verb" request
-       {:status 200
-        :headers {"Content-Type" "text/plain"}
-        :body "verb"})
 
   (route/resources "/webjars" {:root "META-INF/resources/webjars/foundation/4.0.4/"})
   (route/resources "/")

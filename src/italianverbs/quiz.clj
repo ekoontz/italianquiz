@@ -7,17 +7,17 @@
             [clojure.tools.logging :as log]
             [hiccup.core :refer :all]
             [hiccup.page :refer :all]
-            [italianverbs.english :as en]
-            [italianverbs.italiano :as it]
+            [babel.english :as en]
+            [babel.italiano :as it]
             [italianverbs.html :as html]
             [italianverbs.lev :as lev]
-            [italianverbs.lexiconfn :as lexfn]
-            [italianverbs.morphology :refer (finalize fo)]
+            [babel.lexiconfn :as lexfn]
+            [babel.morphology :refer (finalize fo)]
             [italianverbs.session :as session]
             [dag-unify.core :refer (lazy-shuffle)]
             [italianverbs.xml :as xml]
             [korma.core :as k]
-            [italianverbs.korma :as db]
+            [babel.korma :as db]
             ))
 
 (def production false)

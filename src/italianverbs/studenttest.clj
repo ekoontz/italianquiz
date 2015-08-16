@@ -12,8 +12,7 @@
    [italianverbs.authentication :refer [get-user-id]]
    [italianverbs.user :refer [haz-admin? do-if-admin do-if-authenticated]]
    [italianverbs.html :as html]
-   [italianverbs.korma :as db]
-   [italianverbs.morphology :as morph]
+   [babel.korma :as db]
    [italianverbs.question :as question]
    [dag-unify.core :as unify]
    [korma.core :as k]))

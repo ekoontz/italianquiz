@@ -6,13 +6,13 @@
    [clojure.set :refer (union)]
    [clojure.string :as string]
    [clojure.tools.logging :as log]
-   [italianverbs.cache :as cache]
-   [italianverbs.forest :as forest] ;; this allows us to use newly-defined functions from the forest namespace.
-   [italianverbs.english :as en]
-   [italianverbs.italiano :as it]
-   [italianverbs.over :refer (overc overh)]
-   [italianverbs.parse :refer (parse)]
-   [italianverbs.ug :refer (head-principle)]
+   [babel.cache :as cache]
+   [babel.forest :as forest] ;; this allows us to use newly-defined functions from the forest namespace.
+   [babel.english :as en]
+   [babel.italiano :as it]
+   [babel.over :refer (overc overh)]
+   [babel.parse :refer (parse)]
+   [babel.ug :refer (head-principle)]
    [dag-unify.core :as unify]
    [dag-unify.core :refer (fail? get-in lazy-shuffle unifyc)]))
 
