@@ -225,6 +225,24 @@
                                      :sem {:tense :conditional}}})
                    (unifyc c10
                            root-is-head-root
+                           {:rule "s-preterito-phrasal"
+                            :head {:phrasal true}
+                            :synsem {:aux false
+                                     :infl :preterito
+                                     :cat :verb
+                                     :sem {:aspect :perfect
+                                           :tense :past}}})
+                   (unifyc c10
+                           root-is-head
+                           {:rule "s-preterito-nonphrasal"
+                            :head {:phrasal false}
+                            :synsem {:aux false
+                                     :infl :preterito
+                                     :cat :verb
+                                     :sem {:aspect :perfect
+                                           :tense :past}}})
+                   (unifyc c10
+                           root-is-head-root
                            {:rule "s-imperfetto-phrasal"
                             :head {:phrasal true}
                             :synsem {:aux false

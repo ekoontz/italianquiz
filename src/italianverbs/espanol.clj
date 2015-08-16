@@ -128,6 +128,7 @@
                        (= (:rule %) "s-present-nonphrasal")
                        (= (:rule %) "s-future-nonphrasal")
                        (= (:rule %) "s-imperfetto-nonphrasal")
+                       (= (:rule %) "s-preterito-nonphrasal")
                        (= (:rule %) "s-aux")
                        (= (:rule %) "vp-aux"))
                   grammar)
