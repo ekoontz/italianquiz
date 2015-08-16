@@ -367,14 +367,14 @@
         (str stem "eras")
 
         (and (= person :2nd) (= number :sing) ar-type (= usted true))
-        (str stem "erá")
+        (str stem "ará")
         (and (= person :2nd) (= number :sing) ir-type (= usted true))
         (str stem "irá")
         (and (= person :2nd) (= number :sing) er-type (= usted true))
         (str stem "erá")
 
         (and (= person :3rd) (= number :sing) ar-type)
-        (str stem "erá")
+        (str stem "ará")
         (and (= person :3rd) (= number :sing) ir-type)
         (str stem "irá")
         (and (= person :3rd) (= number :sing) er-type)
