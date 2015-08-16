@@ -12,11 +12,9 @@
 (require '[italiano.morphology :as morph :refer [fo]])
 (require '[italiano.pos :refer [intransitivize transitivize]])
 
-(require '[italianverbs.borges.writer :refer [fill-verb]])
 (require '[italianverbs.cache :refer (build-lex-sch-cache create-index over spec-to-phrases)])
 (require '[italianverbs.forest :as forest])
 (require '[italianverbs.lexiconfn :refer (compile-lex infinitives map-function-on-map-vals unify)])
-(require '[italianverbs.parse :as parse])
 (require '[italianverbs.ug :refer [head-principle]])
 
 (def grammar gram/grammar)
@@ -48,9 +46,6 @@
   (morph/analyze token #(get @lexicon %)))
 
 (def it lookup) ;; abbreviation for the above
-
-(defn parse [string]
-  (parse/parse string lexicon lookup grammar))
 
 (def index nil)
 ;; TODO: trying to print index takes forever and blows up emacs buffer:
@@ -258,38 +253,3 @@
                             (list lexeme)))
                         lexemes))
               (vals @lexicon)))))
-
-(declare body)
-(declare headers)
-
-(defn fill-per-verb [ & [count-per-verb]]
-  (let [italian-verbs
-        (sort (keys (infinitives @lexicon)))
-        count-per-verb (if count-per-verb count-per-verb 10)]
-    (map (fn [verb]
-           (fill-verb verb count-per-verb))
-         italian-verbs)))
-
-;; HOWTO: fix and add expressions : (TODO: turn into test in test/italiano)
-;; 1. (if necessary) truncate bad expressions in main table (use some kind of ILIKE statement)
-;; 2. truncate expression_import: (truncate "expression_import")
-;; 3. generate English -> Italian expressions in expression_import temporary table
-;;    (fill-verbs-in-list ["mentire"] "expression_import" 5)
-(def do-insert "
-INSERT INTO expression (language,model,surface,structure,serialized)
-     SELECT language,model,surface,structure,serialized
-       FROM expression_import;
-")
-
-(defn fill-verbs-in-list [verbs table count-per-verb]
-  (pmap #(fill-verb % count-per-verb :top "expression_import")
-        verbs))
-
-;; then in target DB (e.g. dev or production):
-;; TRUNCATE expression_import;
-(def insert-into
-"
-INSERT INTO expression (language,model,surface,structure,serialized)
-   SELECT language,model,surface,structure,serialized
-     FROM expression_import
-")
