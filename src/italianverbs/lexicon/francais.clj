@@ -269,14 +269,11 @@
   "regarder" {:synsem {:cat :verb
                        :sem {:pred :look/watch??}}}
   
-  ;;ELIMINATE NECESITAR BECAUSE AVOIR BESOIN DE IS A SPECIAL EXPRESSION
-  "necesitar" {:synsem {:cat :verb
-                        :sem {:pred :??}}}
   "remarquer" {:synsem {:cat :verb
-                                       :sem {:pred :note??}}}
+                        :sem {:pred :note??}}}
+
   "observer" {:synsem {:cat :verb
-                       :sem {:pred :observe??}}}
-  
+                       :sem {:pred :observe}}}
   
   "oublier" {:synsem {:cat :verb
                       :sem {:pred :forget??}}}
