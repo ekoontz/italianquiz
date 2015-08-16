@@ -11,6 +11,39 @@
 (declare get-string)
 (declare plural-en)
 
+(defn fo [input]
+  (cond 
+
+   (= input :fail)
+   (str input)
+
+   (= (type input) clojure.lang.LazySeq)
+   (str "['" (string/join "','" (map fo input)) "']")
+
+
+   (string? input)
+   input
+
+   (:english input)
+   (string/trim (str (get-string (:english input))))
+   
+   (and (map? input)
+        (get-in input [:a])
+        (get-in input [:b]))
+   (str (string/join " " 
+                     (list (fo (get-in input [:a]))
+                           (fo (get-in input [:b])))))
+                     
+   (or (seq? input)
+       (vector? input))
+   (str "(" (string/join " , " 
+                         (remove #(= % "")
+                                 (map #(let [f (fo %)] (if (= f "") "" (str "" f ""))) input)))
+        ")")
+
+   true
+   ""))
+
 (defn get-string-1 [word]
   (log/debug (str "get-string-1: " word))
   (cond
