@@ -1,6 +1,6 @@
 (ns italianverbs.pos.italiano)
 
-(require '[italianverbs.lexiconfn :as lexiconfn :refer (map-function-on-map-vals)])
+(require '[italianverbs.lexiconfn :as lexiconfn])
 (require '[italianverbs.pos :as pos])
 (require '[dag-unify.core :refer (unifyc)])
 

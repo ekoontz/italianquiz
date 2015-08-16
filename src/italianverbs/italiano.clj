@@ -4,10 +4,12 @@
 (require '[clojure.string :as string])
 (require '[clojure.tools.logging :as log])
 (require '[compojure.core :as compojure :refer [GET PUT POST DELETE ANY]])
+(require '[dag-unify.core :refer (fail? get-in strip-refs)])
+(require '[dag-unify.core :as unify])
 (require '[hiccup.core :refer (html)])
+
 (require '[italianverbs.borges.writer :refer [populate truncate fill-by-spec fill-verb]])
 (require '[italianverbs.cache :refer (build-lex-sch-cache create-index over spec-to-phrases)])
-(require '[italianverbs.english :as en])
 (require '[italianverbs.forest :as forest])
 (require '[italianverbs.grammar.italiano :as gram])
 (require '[italianverbs.html :as html])
@@ -17,8 +19,6 @@
 (require '[italianverbs.parse :as parse])
 (require '[italianverbs.pos.italiano :refer [intransitivize transitivize]])
 (require '[italianverbs.ug :refer :all])
-(require '[dag-unify.core :refer (fail? get-in strip-refs)])
-(require '[dag-unify.core :as unify])
 (require '[italianverbs.user :refer [do-if-admin]])
 
 (def get-string morph/get-string)
