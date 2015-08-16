@@ -142,13 +142,13 @@
               true
               spec)
 
-        debug (log/error (str "populate spec(2): " spec))
+        debug (log/debug (str "populate spec(2): " spec))
 
         ;; subcat is empty, so that this is a complete expression with no missing arguments.
         ;; e.g. "she sleeps" rather than "sleeps".
         spec (unify spec {:synsem {:subcat '()}}) 
 
-        debug (log/error (str "populate spec(3): " spec))
+        debug (log/debug (str "populate spec(3): " spec))
 
         table (if table table "expression")]
     (dotimes [n num]
@@ -169,7 +169,7 @@
 
             ]
 
-        (log/info (str table " => '"
+        (log/info (str target-language ": '"
                         target-sentence-surface
                         "'"))
         (insert-expression target-sentence ;; underlying structure
@@ -178,7 +178,7 @@
                            target-language
                            (:name target-language-model)) ;; name, like 'small','medium', etc.
         
-        (log/info (str table " => '"
+        (log/info (str source-language ": '"
                        source-sentence-surface
                         "'"))
         (insert-expression source-sentence
