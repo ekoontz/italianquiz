@@ -2,13 +2,13 @@
   (:refer-clojure :exclude [get-in lookup merge resolve])
   (:require
    [clojure.test :refer :all]
+   [italiano.morphology :refer [fo]]
    [italianverbs.cache :refer (build-lex-sch-cache create-index over spec-to-phrases)]
    [italianverbs.engine :as engine]
    [italianverbs.forest :as forest]
 
    ;; TODO: change to: :refer :all rather than :refer-ing particular things.
    [italianverbs.italiano :as it :refer :all]
-   [italianverbs.morphology.italiano :refer [fo]]
 
    [italianverbs.lexiconfn :as lexiconfn]
    [italianverbs.over :refer (overc overh)]
