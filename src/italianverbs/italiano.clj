@@ -6,25 +6,18 @@
 (require '[compojure.core :as compojure :refer [GET PUT POST DELETE ANY]])
 (require '[dag-unify.core :refer (fail? get-in strip-refs)])
 (require '[dag-unify.core :as unify])
-(require '[hiccup.core :refer (html)])
-
 (require '[italiano.grammar :as gram])
 (require '[italiano.lexicon :as lex])
 (require '[italiano.morphology :as morph :refer [fo]])
+(require '[italiano.pos :refer [intransitivize transitivize]])
 
-(require '[italianverbs.borges.writer :refer [populate truncate fill-by-spec fill-verb]])
+(require '[italianverbs.borges.writer :refer [fill-verb]])
 (require '[italianverbs.cache :refer (build-lex-sch-cache create-index over spec-to-phrases)])
 (require '[italianverbs.forest :as forest])
-
-(require '[italianverbs.html :as html])
 (require '[italianverbs.lexiconfn :refer (compile-lex infinitives map-function-on-map-vals unify)])
-
 (require '[italianverbs.parse :as parse])
-(require '[italianverbs.pos.italiano :refer [intransitivize transitivize]])
 (require '[italianverbs.ug :refer :all])
-(require '[italianverbs.user :refer [do-if-admin]])
 
-(def get-string morph/get-string)
 (def grammar gram/grammar)
 (def lexicon-source lex/lexicon-source)
 
@@ -267,29 +260,6 @@
 
 (declare body)
 (declare headers)
-
-(def headers {"Content-Type" "text/html;charset=utf-8"})
-(def language-name "Italiano")
-
-(def routes
-  (compojure/routes
-   (GET "/" request
-        (do-if-admin {:body (body language-name language-name request)
-                      :status 200
-                      :headers headers}))))
-
-(defn body [title content request]
-  (html/page
-   title
-   (html
-    [:div.major
-     [:h2 title]
-
-     [:div.content
-      content
-      ]
-     ])
-   request))
 
 (defn fill-per-verb [ & [count-per-verb]]
   (let [italian-verbs
