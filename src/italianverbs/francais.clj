@@ -35,7 +35,6 @@
                  (filter #(or (not (= :verb (get-in % [:synsem :cat])))
                               (not (= :none (get-in % [:synsem :infl] :none))))
                          vals))))))
-
 (defn lookup [token]
   "return the subset of lexemes that match this token from the lexicon."
   (analyze token #(get @lexicon %)))
@@ -115,6 +114,7 @@
        :enrich enrich
        :grammar grammar
        :lexicon lexicon
+       :morph fo
        :index (create-index grammar (flatten (vals lexicon)) head-principle)})))
 
 (def medium

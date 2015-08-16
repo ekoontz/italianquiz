@@ -8,7 +8,7 @@
 (require '[italianverbs.grammar.espanol :as gram])
 (require '[italianverbs.lexicon.espanol :as lex])
 (require '[italianverbs.lexiconfn :refer (compile-lex map-function-on-map-vals unify)])
-(require '[italianverbs.morphology.espanol :as morph])
+(require '[italianverbs.morphology.espanol :as morph :refer [fo]])
 (require '[italianverbs.parse :as parse])
 (require '[italianverbs.pos.espanol :refer :all])
 (require '[italianverbs.ug :refer :all])
@@ -147,6 +147,7 @@
        :enrich enrich
        :grammar grammar
        :lexicon lexicon
+       :morph fo
        :index (create-index grammar (flatten (vals lexicon)) head-principle)})))
 
 (def medium

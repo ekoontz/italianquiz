@@ -107,6 +107,7 @@
           ]
       {:name "small"
        :language "en"
+       :morph fo
        :grammar grammar
        :lexicon lexicon
        :for {:es ;; a lexicon specific to when we want to use Español as a target.
