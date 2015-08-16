@@ -22,8 +22,8 @@
    (string? input)
    input
 
-   (get-in input [:français])
-   (string/trim (str (get-string (get-in input [:français]))))
+   (get-in input [:espanol])
+   (string/trim (str (get-string (get-in input [:espanol]))))
    
    (and (map? input)
         (get-in input [:a])
