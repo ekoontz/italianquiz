@@ -4,7 +4,6 @@
 (require '[clojure.string :as string])
 (require '[clojure.string :refer (trim)])
 (require '[italianverbs.italiano :as it])
-(require '[italianverbs.morphology :refer (fo)])
 (require '[italianverbs.morphology.italiano :refer :all])
 (require '[dag-unify.core :refer :all])
 

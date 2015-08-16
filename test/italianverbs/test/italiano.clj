@@ -8,9 +8,9 @@
 
    ;; TODO: change to: :refer :all rather than :refer-ing particular things.
    [italianverbs.italiano :as it :refer :all]
+   [italianverbs.morphology.italiano :refer [fo]]
 
    [italianverbs.lexiconfn :as lexiconfn]
-   [italianverbs.morphology :refer (fo)]
    [italianverbs.over :refer (overc overh)]
    [italianverbs.parse :refer (toks)]
    [italianverbs.ug :refer :all]
