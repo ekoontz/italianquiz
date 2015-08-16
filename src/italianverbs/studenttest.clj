@@ -410,7 +410,7 @@
     (let [verb (first (shuffle verbs))]
       (log/info " gen-and-add verb: " verb)
       ;; TODO: gen/ has gone away; use engine/ instead.
-      (let [sentence (morph/finalize "stub")];; (gen/generate-sentence (first (shuffle verbs))))]
+      (let [sentence "stub"];; (gen/generate-sentence (first (shuffle verbs))))]
         (log/info " gen-and-add sentence: " sentence)
         (question/new {"testid" test
                        "italiano" (:italian sentence)
