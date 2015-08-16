@@ -14,6 +14,7 @@
    [italianverbs.italiano :as it :refer [it]]
    [italianverbs.lexiconfn :refer [infinitives]]
    [italianverbs.morphology :refer :all]
+   [italianverbs.morphology.english :as enm]
    [italianverbs.morphology.espanol :as esm]
    [dag-unify.core :refer [get-in serialize strip-refs unify]]
    ))
@@ -27,8 +28,8 @@
 (def matching-head-lexemes (it/matching-head-lexemes spec))
 
 (def spanish-sentence
-  (fo (engine/generate {:synsem {:infl :present 
-                                 :sem {:aspect :progressive}}} @es/small)))
+  (esm/fo (engine/generate {:synsem {:infl :present 
+                                     :sem {:aspect :progressive}}} @es/small)))
 
 (deftest spanish-working
   (is (not (nil? spanish-sentence)))
@@ -42,7 +43,7 @@
 (deftest spanish-subject-agreement
   (let [vosotros-comeis (let [example (engine/generate {:synsem {:sem {:subj {:gender :masc :pred :voi} :tense :present :pred :mangiare}}} @es/small)] 
                           {:sem (strip-refs (get-in example [:synsem :sem :subj :gender] :unspecified)) 
-                           :surface (fo example)})]
+                           :surface (esm/fo example)})]
     (is 
      (or 
       (= (:surface vosotros-comeis) "ustedes comen")
@@ -68,7 +69,7 @@
         (en/generate {:synsem {:subcat {:1 :top} :sem {:obj {:pred :io} :tense :present :pred :wash}}} 
                      en/small-plus-vp-pronoun)
         ]
-    (is (= (fo expression)
+    (is (= (enm/fo expression)
            "wash myself"))))
 
 ;; test does not work yet due to problem with English generation
