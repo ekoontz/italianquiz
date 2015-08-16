@@ -2,14 +2,11 @@
   (:refer-clojure :exclude [get get-in merge resolve find parents])
   (:require
    [clojure.core :as core] ;; This allows us to use core's get-in by doing "(core/get-in ..)"
-
    [clojure.set :refer :all]
    [clojure.string :as string]
-
    [clojure.tools.logging :as log]
-
-   [italianverbs.lexiconfn :refer :all]
-   [dag-unify.core :refer :all :exclude [unify]]))
+   [dag-unify.core :refer [fail? fail-path get-in merge strip-refs unifyc]]
+   [italianverbs.lexiconfn :refer [sem-impl]]))
 
 ;; TODO: need better debugging throughout this file to diagnose generation failures.
 
@@ -69,7 +66,6 @@
   (log/trace (str "over-each-head-child: head children type: " (type children)))
   (if (not (empty? children))
     (let [each-child (first children)]
-      (log/trace (str "over-each-head-child: each-parent?: " (label-of (first children))))
       (lazy-cat
        (overh parent each-child)
        (over-each-head-child parent (rest children))))
@@ -82,7 +78,6 @@
   (log/trace (str "over-each-comp-child: comp children type: " (type children)))
   (if (not (empty? children))
     (let [each-child (first children)]
-      (log/trace (str "over-each-comp-child: each-parent?: " (label-of (first children))))
       (lazy-cat
        (overc parent each-child)
        (over-each-comp-child parent (rest children))))

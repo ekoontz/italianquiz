@@ -4,19 +4,13 @@
 
    ;; TODO: comment is misleading in that we never call core/get-in from this file.
    [clojure.core :as core] ;; This allows us to use core's get-in by doing "(core/get-in ..)"
-
    [clojure.set :refer :all]
    [clojure.string :as string]
-
    [clojure.tools.logging :as log]
+   [dag-unify.core :refer :all :exclude [unify]]
 
-   [italianverbs.lexiconfn :refer :all]
-   [italianverbs.morphology :refer :all]
-   [italianverbs.morphology.english :as english]
-   [italianverbs.morphology.italiano :as italiano]
    [italianverbs.over :exclude [overc overh]]
-   [italianverbs.over :as over]
-   [dag-unify.core :refer :all :exclude [unify]]))
+   [italianverbs.over :as over]))
 
 ;; For now, this cache is just a stub; no actual caching is done; it simply calls 
 ;; the over/ equivalents of each of the defined functions.
@@ -96,43 +90,6 @@
        (spec-to-phrases (rest specs) all-phrases)))
     {}))
 
-;; TODO: remove: callers should use over/over instead
-(defn over [parents child1 & [child2]]
-  (over/over parents child1 child2))
-
-;; TODO: remove: callers should use over/overh instead
-(defn overh [parent head]
-  (if (seq? parent)
-    (mapcat (fn [each-parent]
-              (overh each-parent head))
-            parent)
-    (do
-      (log/trace (str "overh head: " (show-spec (get-in parent '(:head :synsem)))))
-      (log/trace (str "overh size of head candidates: " (.size head)))
-
-      (let [result (over/overh parent head)]
-        (log/trace (str "survivor type is: " result))
-        (if (seq? result) 
-          (do (log/trace (str "overh size of survivors: " (.size result))))
-          (if (not (empty? result))
-            (log/trace (str "survivors are nonempty."))
-            (log/trace (str "survivors are empty."))))
-        result))))
-
-;; TODO: remove: callers should use over/overc instead
-(defn overc [parent comp]
-  (if (not (seq? comp))
-    (do (log/trace (str "comp is not a seq; returning over/overc directly."))
-        (over/overc parent comp))
-    (do
-      (log/trace (str "overc comp: " (show-spec (get-in parent '(:comp :synsem)))))
-      (if (not (nil? comp))
-        (log/trace (str "overc size of comp: " (.size comp))))
-      (let [result (over/overc parent comp)]
-        (if (not (nil? result))
-          (log/trace (str "overc size of result: " (.size result))))
-        result))))
-
 ;; TODO: spec is not used yet; add support for it.
 (defn get-lex [schema head-or-comp cache spec]
   "return the subset of the whole lexicon that can be added either as a head (head-or-comp=:head) or as a comp (head-or-comp=:comp)."
@@ -205,7 +162,7 @@
 (defn overc-with-cache-1 [parent lex]
   (if (not (empty? lex))
     (do
-      (lazy-cat (overc parent (first lex))
+      (lazy-cat (over/overc parent (first lex))
                 (overc-with-cache-1 parent (rest lex))))))
 
 (defn get-subset-from-cache [cache use-spec]

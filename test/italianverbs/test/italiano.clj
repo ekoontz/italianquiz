@@ -3,7 +3,7 @@
   (:require
    [clojure.test :refer :all]
    [italiano.morphology :refer [fo]]
-   [italianverbs.cache :refer (build-lex-sch-cache create-index over spec-to-phrases)]
+   [italianverbs.cache :refer (build-lex-sch-cache create-index spec-to-phrases)]
    [italianverbs.engine :as engine]
    [italianverbs.forest :as forest]
 
@@ -11,7 +11,7 @@
    [italianverbs.italiano :as it :refer :all]
 
    [italianverbs.lexiconfn :as lexiconfn]
-   [italianverbs.over :refer (overc overh)]
+   [italianverbs.over :refer (over overc overh)]
    [italianverbs.parse :refer (toks)]
    [italianverbs.ug :refer :all]
    [dag-unify.core :refer :all]

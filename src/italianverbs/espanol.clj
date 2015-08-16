@@ -3,7 +3,7 @@
 
 (require '[clojure.string :as string])
 (require '[clojure.tools.logging :as log])
-(require '[italianverbs.cache :refer (build-lex-sch-cache create-index over spec-to-phrases)])
+(require '[italianverbs.cache :refer (build-lex-sch-cache create-index spec-to-phrases)])
 (require '[italianverbs.forest :as forest])
 (require '[italianverbs.grammar.espanol :as gram])
 (require '[italianverbs.lexicon.espanol :as lex])
@@ -15,13 +15,6 @@
 (require '[dag-unify.core :refer (fail? get-in strip-refs)])
 (require '[dag-unify.core :as unify])
 (require '[italianverbs.user :refer [do-if-admin]])
-
-;; TODO: refactor these to a common web interface
-(require '[compojure.core :as compojure :refer [GET PUT POST DELETE ANY]])
-(require '[hiccup.core :refer (html)])
-(require '[italianverbs.cache :refer (build-lex-sch-cache create-index over spec-to-phrases)])
-(require '[italianverbs.forest :as forest])
-(require '[italianverbs.html :as html])
 
 (def get-string morph/get-string)
 (def grammar gram/grammar)
@@ -228,30 +221,3 @@
                             (list lexeme)))
                         lexemes))
               (vals @lexicon)))))
-
-(declare body)
-(declare headers)
-
-(def headers {"Content-Type" "text/html;charset=utf-8"})
-(def language-name "Español")
-
-(def routes
-  (compojure/routes
-   (GET "/" request
-        (do-if-admin {:body (body language-name language-name request)
-                      :status 200
-                      :headers headers}))))
-
-(defn body [title content request]
-  (html/page
-   title
-   (html
-    [:div.major
-     [:h2 title]
-
-     [:div.content
-      content
-      ]
-     ])
-   request))
-

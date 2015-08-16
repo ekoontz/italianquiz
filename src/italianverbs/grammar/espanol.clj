@@ -2,7 +2,7 @@
   (:refer-clojure :exclude [get-in merge resolve])
   (:require 
    [clojure.tools.logging :as log]
-   [italianverbs.cache :refer (build-lex-sch-cache create-index over spec-to-phrases)]
+   [italianverbs.cache :refer (build-lex-sch-cache create-index spec-to-phrases)]
    [italianverbs.parse :as parse]
    [italianverbs.ug :refer :all]
    [dag-unify.core :refer (get-in unifyc)]))

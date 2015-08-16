@@ -12,9 +12,10 @@
 (require '[italiano.morphology :as morph :refer [fo]])
 (require '[italiano.pos :refer [intransitivize transitivize]])
 
-(require '[italianverbs.cache :refer (build-lex-sch-cache create-index over spec-to-phrases)])
+(require '[italianverbs.cache :refer (create-index)])
 (require '[italianverbs.forest :as forest])
 (require '[italianverbs.lexiconfn :refer (compile-lex infinitives map-function-on-map-vals unify)])
+(require '[italianverbs.parse :as parse])
 (require '[italianverbs.ug :refer [head-principle]])
 
 (def grammar gram/grammar)
@@ -40,12 +41,14 @@
                             (filter #(or (not (= :verb (get-in % [:synsem :cat])))
                                          (not (= :none (get-in % [:synsem :infl] :none))))
                                     vals))))))
-
 (defn lookup [token]
   "return the subset of lexemes that match this token from the lexicon."
   (morph/analyze token #(get @lexicon %)))
 
 (def it lookup) ;; abbreviation for the above
+
+(defn parse [string]
+  (parse/parse string lexicon lookup grammar))
 
 (def index nil)
 ;; TODO: trying to print index takes forever and blows up emacs buffer:

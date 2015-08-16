@@ -2,14 +2,14 @@
   (:refer-clojure :exclude [get get-in lookup merge resolve])
   (:require
    [clojure.test :refer :all]
-   [italianverbs.cache :refer (build-lex-sch-cache create-index over spec-to-phrases)]
+   [italianverbs.cache :refer (build-lex-sch-cache create-index spec-to-phrases)]
    [italianverbs.engine :as engine]
    [italianverbs.forest :as forest]
    [italianverbs.espanol :as es]
    [italianverbs.grammar.espanol :as gram]
    [italianverbs.lexicon.espanol :as lex]
    [italianverbs.morphology.espanol :refer [fo]]
-   [italianverbs.over :refer (overc overh)]
+   [italianverbs.over :refer (over overc overh)]
    [italianverbs.ug :refer :all]
    [dag-unify.core :refer :all]
    ))

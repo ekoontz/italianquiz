@@ -10,7 +10,7 @@
    [clojure.test :refer :all]
    [clojure.tools.logging :as log]
    [italianverbs.benchmark :refer :all]
-   [italianverbs.cache :refer (build-lex-sch-cache over spec-to-phrases get-comp-phrases-of)]
+   [italianverbs.cache :refer (build-lex-sch-cache spec-to-phrases get-comp-phrases-of)]
    [italianverbs.forest :as forest]
    [italianverbs.over :refer (overc overh)]
    [italianverbs.ug :refer (head-principle)]

@@ -6,13 +6,14 @@
 
 (require '[hiccup.core :refer (html)])
 
-(require '[italianverbs.cache :refer (build-lex-sch-cache create-index over spec-to-phrases)])
+(require '[italianverbs.cache :refer (build-lex-sch-cache create-index spec-to-phrases)])
 (require '[italianverbs.forest :as forest])
 (require '[italianverbs.grammar.english :as gram])
 (require '[italianverbs.html :as html])
 (require '[italianverbs.lexicon.english :as lex])
 (require '[italianverbs.lexiconfn :refer (compile-lex map-function-on-map-vals unify)])
 (require '[italianverbs.morphology.english :as morph])
+(require '[italianverbs.over :refer [over]])
 (require '[italianverbs.parse :as parse])
 (require '[italianverbs.pos.english :as epos :refer (intransitivize transitive transitivize verb-subjective)])
 (require '[italianverbs.ug :refer :all])
