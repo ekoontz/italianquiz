@@ -8,14 +8,17 @@
 (require '[dag-unify.core :as unify])
 (require '[hiccup.core :refer (html)])
 
+(require '[italiano.grammar :as gram])
+(require '[italiano.lexicon :as lex])
+(require '[italiano.morphology :as morph :refer [fo]])
+
 (require '[italianverbs.borges.writer :refer [populate truncate fill-by-spec fill-verb]])
 (require '[italianverbs.cache :refer (build-lex-sch-cache create-index over spec-to-phrases)])
 (require '[italianverbs.forest :as forest])
-(require '[italianverbs.grammar.italiano :as gram])
+
 (require '[italianverbs.html :as html])
-(require '[italianverbs.lexicon.italiano :as lex])
 (require '[italianverbs.lexiconfn :refer (compile-lex infinitives map-function-on-map-vals unify)])
-(require '[italianverbs.morphology.italiano :as morph :refer [fo]])
+
 (require '[italianverbs.parse :as parse])
 (require '[italianverbs.pos.italiano :refer [intransitivize transitivize]])
 (require '[italianverbs.ug :refer :all])
