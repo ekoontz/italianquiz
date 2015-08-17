@@ -207,7 +207,9 @@
 
 ;; TODO: remove need for this
 (def tenses-as-editables-french
-  [{:label "future"
+  [{:label "conditional"
+    :value (json/write-str {:synsem {:sem {:tense :conditional}}})}
+   {:label "future"
     :value (json/write-str {:synsem {:sem {:tense :futuro}}})}
    {:label "present"
     :value (json/write-str {:synsem {:sem {:tense :present}}})}])
