@@ -50,7 +50,7 @@
      LEFT JOIN session
             ON (session.user_id = users.id)
       GROUP BY email,name
-      ORDER BY last_login,name" [time-format time-format]] :results)
+      ORDER BY email" [time-format time-format]] :results)
      {:cols [:email :name :joined :last_login :roles]}
 
      )
