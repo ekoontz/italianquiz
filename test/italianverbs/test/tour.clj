@@ -39,4 +39,4 @@
             :cat :verb}})
 
 (deftest enrich-test
-  (let [took-time (time (generate (it/enrich killer-spec) it/small))]))
+  (let [took-time (time (it/generate (it/enrich killer-spec) it/small))]))
