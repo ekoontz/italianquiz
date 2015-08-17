@@ -351,7 +351,7 @@
 
         (= language "fr")
         [:div.accents
-         [:button.accented {:onclick (str "add_a_circumflex();")} "&acirc;"]
+         [:button.accented {:onclick (str "add_c_cedilla();")} "&ccedil;"]
          [:button.accented {:onclick (str "add_e_acute();")} "&eacute;"]]
         true
         ""))

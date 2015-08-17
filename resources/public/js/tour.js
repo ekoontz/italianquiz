@@ -321,13 +321,16 @@ function add_a_acute(game_id) {
     update_user_input(game_id);
     $("#gameinput").focus();
 }
-
 function add_a_grave(game_id) {
     $("#gameinput").val($("#gameinput").val() + "à");
     update_user_input(game_id);
     $("#gameinput").focus();
 }
-
+function add_c_cedilla(game_id) {
+    $("#gameinput").val($("#gameinput").val() + "ç");
+    update_user_input(game_id);
+    $("#gameinput").focus();
+}
 function add_e_acute(game_id) {
     $("#gameinput").val($("#gameinput").val() + "é");
     update_user_input(game_id);
