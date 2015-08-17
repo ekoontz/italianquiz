@@ -31,10 +31,47 @@
                          (about request)
                          request
                          resources)}))
-(defn about [request]
+
+(defn under-a-city [city search-term]
   (let [truncate-game-name 50]
-    [:div.major {:style "height: 500px"} [:h2 "Welcome to Verbcoach."]
+    [:td
+     [:ul
+      (let [results
+            (k/exec-raw
+           ["SELECT id,name FROM game 
+                                 WHERE ((name ILIKE ?)
+                                    OR  (city ILIKE ?)
+                                    OR  (? = ''))
+                                   AND (game.active = true)
+                                   AND (city=?)
+                                     " [(str "%" search-term "%")
+                                        (str "%" search-term "%")
+                                        search-term
+                                        city]] :results)]
+        (map (fn [result]
+               (let [name (:name result)]
+                 [:li
+                  [:a {:title name
+                       :href (str "/tour/" (:id result))}
+                   (str
+                    (subs name 0 (min truncate-game-name (.length name)))
+                    (cond (> (.length name) truncate-game-name)
+                          "..."
+                             (= (.length name) 0)
+                             "(unnamed game)"
+                             true
+                             ""))]]))
+             results))
+      ]]))
+
+(defn about [request]
+  (let [truncate-game-name 50
+        search-term "tut"]
+    [:div.major
+     [:h2 "Welcome to Verbcoach."]
      [:div.intro "The best place on the web to learn how to conjugate verbs."]
+
+     ;; TODO move away from tabular layout; use <div>s instead.
      [:div.flags
       [:table
        [:tr
@@ -62,104 +99,17 @@
         ]
 
        [:tr
-        [:td "Italiano"]
-        [:td "Español"]
-        [:td "Español"]
-        [:td "Français"]
-        ]
-    
-       [:tr
-        [:td "Firenze"]
-        [:td "México D.F."]
-        [:td "Barcelona"]
-        [:td "Paris"]
+        [:th "Italiano - Firenze"]
+        [:th "Español - México D.F."]
+        [:th "Español - Barcelona"]
+        [:th "Français - Paris"]
         ]
 
        [:tr       
-        [:td
-         [:ul
-          (let [results
-                (k/exec-raw
-                 ["SELECT id,name FROM game WHERE city=? LIMIT 5" ["Firenze"]] :results)]
-            (map (fn [result]
-                   (let [name (:name result)]
-                     [:li
-                     [:a {:title name
-                          :href (str "/tour/" (:id result))}
-                      (str
-                       (subs name 0 (min truncate-game-name (.length name)))
-                       (cond (> (.length name) truncate-game-name)
-                             "..."
-                             (= (.length name) 0)
-                             "(unnamed game)"
-                             true
-                            ""))]]))
-                 results))
-          ]]
-        
-        [:td
-         [:ul
-          (let [results
-                (k/exec-raw
-                 ["SELECT id,name FROM game WHERE city=? LIMIT 5" ["México D.F."]] :results)]
-            (map (fn [result]
-                   (let [name (:name result)]
-                     [:li
-                      [:a {:title name
-                           :href (str "/tour/" (:id result))}
-                       (str
-                       (subs name 0 (min truncate-game-name (.length name)))
-                       (cond (> (.length name) truncate-game-name)
-                             "..."
-                             (= (.length name) 0)
-                             "(unnamed game)"
-                             true
-                             ""))]]))
-                 results))
-          ]]
-        
-
-        [:td
-         [:ul
-          (let [results
-                (k/exec-raw
-                 ["SELECT id,name FROM game WHERE city=? LIMIT 5" ["Barcelona"]] :results)]
-            (map (fn [result]
-                   (let [name (:name result)]
-                     [:li
-                      [:a {:title name
-                           :href (str "/tour/" (:id result))}
-                       (str
-                        (subs name 0 (min 20 (.length name)))
-                        (cond (> (.length name) 20)
-                              "..."
-                              (= (.length name) 0)
-                              "(unnamed game)"
-                              true
-                              ""))]]))
-                 results))
-          ]]
-        
-        [:td
-         [:ul
-          (let [results
-                (k/exec-raw
-                 ["SELECT id,name FROM game WHERE city=? LIMIT 5" ["Paris"]] :results)]
-            (map (fn [result]
-                   (let [name (:name result)]
-                     [:li
-                      [:a {:title name
-                           :href (str "/tour/" (:id result))}
-                       (str
-                        (subs name 0 (min truncate-game-name (.length name)))
-                        (cond (> (.length name) truncate-game-name)
-                              "..."
-                              (= (.length name) 0)
-                              "(unnamed game)"
-                              true
-                              ""))]]))
-                 results))
-          ]]
+        (under-a-city "Firenze" "tut")
+        (under-a-city "México D.F." "v")
+        (under-a-city "Barcelona" "v")
+        (under-a-city "Paris" "fr")
         ]
        ]]]))
 
