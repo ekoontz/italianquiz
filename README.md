@@ -14,7 +14,7 @@ Phrase Structure Grammar</a> [Pollard and Sag 1994].
 
 ## Getting Started
 
-WARNING: these instructions are out of date.
+```WARNING: these instructions are out of date.```
 
     eugenekontzspro:italianquiz ekoontz$ brew install leiningen
     eugenekontzspro:italianquiz ekoontz$ lein repl
