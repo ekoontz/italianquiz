@@ -3,11 +3,6 @@
   (:require
    [clojure.data.json :as json]
    [clojure.test :refer :all]
-   [italianverbs.engine :refer [generate]]
-   [italianverbs.english :as en]
-   [italianverbs.italiano :as it]
-   [italianverbs.borges.reader :refer [generate-using-db generate-question-and-correct-set]]
-   [italianverbs.borges.writer :refer [fill populate]]
    [italianverbs.tour :refer :all]
    [dag-unify.core :refer (fail? get-in strip-refs unify)]
    [korma.core :as db]))
