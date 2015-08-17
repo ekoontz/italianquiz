@@ -348,6 +348,11 @@
                [:button.accented {:onclick (str "add_i_acute();")} "&iacute;"]
                [:button.accented {:onclick (str "add_n_tilde();")} "&ntilde;"]
                [:button.accented {:onclick (str "add_u_acute();")} "&uacute;"]])
+
+        (= language "fr")
+        [:div.accents
+         [:button.accented {:onclick (str "add_a_circumflex();")} "&acirc;"]
+         [:button.accented {:onclick (str "add_e_acute();")} "&eacute;"]]
         true
         ""))
 
