@@ -4,7 +4,8 @@
   (:require
    [cemerick.friend :as friend]
    [clojure.string :as string]
-   [compojure.core :refer [GET]]
+   [clojure.tools.logging :as log]
+   [compojure.core :as compojure :refer [GET POST]]
    [environ.core :refer [env]]
    [italianverbs.menubar :refer [menubar]]
    [italianverbs.session :as session]
@@ -24,13 +25,17 @@
    :show-login-form (login-form request)})
 
 (def routes 
-  (GET "/about" request
-       {:status 200
-        :headers {"Content-Type" "text/html;charset=utf-8"}
-        :body (html/page "Welcome to Verbcoach"
-                         (about request)
-                         request
-                         resources)}))
+  (compojure/routes
+   (GET "/about" request
+        {:status 200
+         :headers {"Content-Type" "text/html;charset=utf-8"}
+         :body (html/page "Welcome to Verbcoach"
+                          (about request)
+                          request
+                          resources)})
+   (POST "/about" request
+         {:status 302
+          :headers {"Location" "/about"}})))
 
 (defn under-a-city [city search-term]
   (let [truncate-game-name 50]
@@ -123,5 +128,19 @@
         (under-a-city "Barcelona" search-term)
         (under-a-city "Paris" search-term)
         ]
-       ]]]))
+       ]
+      ]
+
+     [:div.search_form
+
+      [:form {:method "get"}
+       [:input {:name "search" :size "50" :value search-term}
+        ]
+
+       ]
+      ]
+     ]
+    )
+
+  )
 
