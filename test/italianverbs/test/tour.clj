@@ -1,10 +1,11 @@
 (ns italianverbs.test.tour
   (:refer-clojure :exclude [get-in])
   (:require
+   [babel.italiano :as it]
+   [dag-unify.core :refer (fail? get-in strip-refs unify)]
    [clojure.data.json :as json]
    [clojure.test :refer :all]
    [italianverbs.tour :refer :all]
-   [dag-unify.core :refer (fail? get-in strip-refs unify)]
    [korma.core :as db]))
 
 ;; TODO: need a shim to return fixtures (simulated database results)
