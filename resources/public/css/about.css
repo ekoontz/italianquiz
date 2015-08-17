@@ -3,15 +3,18 @@
     float:left;
     margin-left:5%;
     width:90%;
+    font-size:150%;
 }
 
 .flags table {
+    border-collapse: collapse;
     width:100%;
     text-align:left;
 }
 
 .flags th {
     width:25%;
+    text-align:center;
 }
 
 .flags td,th {
@@ -28,8 +31,11 @@
 }
 
 .flag img {
-    width:100px;
-    height:66px;
+    /* keep the ratio of 10/6. */
+    width:150px;
+    height:90px;
+    /* depends on the above, though the arithmetical relation is not known to me. */
+    margin-left:35px;
 }
 
 .smallflag img {
