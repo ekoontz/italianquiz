@@ -1,12 +1,26 @@
 .flags {
+    margin-top:0.5em;
     float:left;
-    margin-left:20%;
-    width:60%;
+    margin-left:5%;
+    width:90%;
+}
+
+.flags table {
+    width:100%;
+    text-align:left;
+}
+
+.flags th {
+    width:25%;
+}
+
+.flags td,th {
+    border:0px dashed green;
+    text-align:left;
 }
 
 .flag {
     font-weight:normal;
-    margin:1em;
     border:0px solid black;
     width:auto;
     height:auto;
@@ -23,12 +37,10 @@
     height:49.500px;
 }
 
-.flags td {
-    text-align:center;
-}
-
 .flags ul {
+    padding:0;
     list-style-type: square;
+    list-style-position:outside;
 }
 
 .flags li {
