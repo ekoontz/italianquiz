@@ -38,18 +38,30 @@
      [:ul
       (let [results
             (k/exec-raw
-           ["SELECT id,name FROM game 
-                                 WHERE ((name ILIKE ?)
-                                    OR  (city ILIKE ?)
-                                    OR  (? = ''))
-                                   AND (game.active = true)
-                                   AND (city=?)
-                                     " [(str "%" search-term "%")
-                                        (str "%" search-term "%")
-                                        search-term
-                                        city]] :results)]
+           ["SELECT game.id,game.name,
+                    teacher.given_name || ' ' || teacher.family_name AS teacher_name,
+                    teacher.email AS teacher_email
+               FROM game
+         INNER JOIN vc_user AS teacher
+                 ON game.created_by = teacher.id
+              WHERE ((name ILIKE ?)
+                     OR (city ILIKE ?)
+                     OR  (teacher.given_name ILIKE ?)
+                     OR  (teacher.email ILIKE ?)
+                     OR  (? = ''))
+                AND (game.active = true)
+                AND (city=?)"
+            [(str "%" search-term "%")
+             (str "%" search-term "%")
+             (str "%" search-term "%")
+             (str "%" search-term "%")
+             search-term
+             city]] :results)]
         (map (fn [result]
-               (let [name (:name result)]
+               (let [name (str (:name result) " : " 
+                               (if (:teacher_name result)
+                                 (:teacher_name result)
+                                 (:teacher_email result)))]
                  [:li
                   [:a {:title name
                        :href (str "/tour/" (:id result))}
@@ -66,7 +78,7 @@
 
 (defn about [request]
   (let [truncate-game-name 50
-        search-term "tut"]
+        search-term (:search (:params request))]
     [:div.major
      [:h2 "Welcome to Verbcoach."]
      [:div.intro "The best place on the web to learn how to conjugate verbs."]
@@ -106,10 +118,10 @@
         ]
 
        [:tr       
-        (under-a-city "Firenze" "tut")
-        (under-a-city "México D.F." "v")
-        (under-a-city "Barcelona" "v")
-        (under-a-city "Paris" "fr")
+        (under-a-city "Firenze" search-term)
+        (under-a-city "México D.F." search-term)
+        (under-a-city "Barcelona" search-term)
+        (under-a-city "Paris" search-term)
         ]
        ]]]))
 
