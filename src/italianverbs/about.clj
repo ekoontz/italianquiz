@@ -58,9 +58,12 @@
          (if (= search-term "")
            []
            (k/exec-raw
-            ["SELECT teacher.given_name || ' ' || teacher.family_name AS teacher_name
+            ["SELECT teacher.given_name || ' ' || teacher.family_name AS teacher
                 FROM vc_user AS teacher
-                WHERE (teacher.family_name ILIKE ?)"
+          INNER JOIN vc_user_role
+                  ON (vc_user_role.user_id = teacher.id)
+                 AND (vc_user_role.role = 'teacher')
+               WHERE (teacher.family_name ILIKE ?)"
              [(str "%" search-term "%")]] :results))]
      [:div {:style "float:left"}
       [:div.search_form
@@ -68,12 +71,13 @@
         [:input {:name "search" :size "50" :value search-term}
          ]
         [:button {:onclick "submit()"} "Search"]
-     
         ]
        ]
 
       [:div.rows2table
-       (html/rows2table results)]])])
+       (html/rows2table results
+                        {:col-fns {:teacher (fn [teacher]
+                                              (html (:teacher teacher)))}})]])])
 
 (declare under-a-city)
 
