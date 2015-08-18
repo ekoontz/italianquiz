@@ -294,8 +294,7 @@
                   :headers {"Location" "/?message=Unauthorized: you+are+not+an+admin"}}))))
 
 (defn do-if-teacher [what-to-do & [else]]
-  (do-if (or (has-admin-role)
-             (has-teacher-role))
+  (do-if (has-teacher-role)
          (do (log/debug (str "Authorized attempt to access a teacher-only function."))
              what-to-do)
          (if else else
