@@ -132,10 +132,12 @@
       ]
 
      [:div.search_form
-
+      [:h4 "Search for a game or a teacher:"
+       ]
       [:form {:method "get"}
        [:input {:name "search" :size "50" :value search-term}
         ]
+       [:button {:onclick "submit()"} "Search"]
 
        ]
       ]
