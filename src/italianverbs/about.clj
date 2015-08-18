@@ -28,20 +28,26 @@
 (def routes 
   (compojure/routes
    (GET "/about" request
-        (do-if-authenticated
-         {:status 200
-          :headers {"Content-type" "text/html;charset=utf-8"}
-          :body (html/page "Welcome to Verbcoach"
-                           (check-for-teacher request)
-                           request
-                           resources)}
-         {:status 200
-          :headers {"Content-type" "text/html;charset=utf-8"}
-          :body (html/page "Welcome to Verbcoach"
+        (do-if-teacher
+         {:status 302
+          :headers {"Location" "/class"}}
+
+         ;; otherwise, not a teacher:
+         (do-if-authenticated
+          {:status 200
+           :headers {"Content-type" "text/html;charset=utf-8"}
+           :body (html/page "Welcome to Verbcoach"
+                            (check-for-teacher request)
+                            request
+                            resources)}
+
+          {:status 200
+           :headers {"Content-type" "text/html;charset=utf-8"}
+           :body (html/page "Welcome to Verbcoach"
                            (html [:h3 "Please login to choose your teacher."])
                            request
-                           resources)}))
-          
+                           resources)})))
+        
 
          
    (POST "/about" request
@@ -54,6 +60,8 @@
    [:h3 "Please find your teacher."]
    
    (let [search-term (:search (:params request))
+;;         debug (log/error (str "REQUEST INFO " request))
+;;         debug (log/error (str "HELLO?:?? " request))         
          results
          (if (= search-term "")
            []
