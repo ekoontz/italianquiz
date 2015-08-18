@@ -937,7 +937,7 @@ in HTML. If :cols is supplied, use it as the vector of column names as keywords.
           (banner (rest segments)))))
 
 (defn page [title & [content request resources]]
-  (let [resources (resources request)]
+  (let [resources (if (not (nil? resources)) (resources request))]
     (page-body
      (html
       (if (and request (:query-params request) (get (:query-params request) "result"))
