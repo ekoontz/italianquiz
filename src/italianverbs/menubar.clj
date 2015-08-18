@@ -60,7 +60,7 @@
                  :text "Edit Games"
                  :url-for-this-item "/editor"})
 
-      (menuitem {:show? authenticated?
+      (menuitem {:show? haz-teacher?
                  :selected?
                  (or (and (not (nil? current-url))
                           (re-find #"^/game" current-url))
@@ -77,7 +77,7 @@
                      (= current-url "/class")
                      (and (not (nil? current-url))
                           (re-find #"^/class" current-url)))
-                 :show? authenticated?
+                 :show? haz-teacher?
                  :current-url current-url 
                  :text "My Classes"
                  :url-for-this-item "/class"})
