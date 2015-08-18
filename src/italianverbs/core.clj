@@ -22,6 +22,7 @@
    [italianverbs.me :as me]
    [italianverbs.student :as student]
    [italianverbs.studenttest :as studenttest]
+   [italianverbs.teacher :as teacher]
    [italianverbs.tour :as tour]
    [italianverbs.user :as user]
 ;   [italianverbs.workbook :as workbook]
@@ -69,6 +70,9 @@
     ;; TODO: disable
   (context "/test" []
            studenttest/routes)
+
+  (context "/teacher" []
+           teacher/routes)
 
   (context "/tour" []
            tour/routes)
