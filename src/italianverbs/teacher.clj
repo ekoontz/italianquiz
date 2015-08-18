@@ -77,7 +77,7 @@
        [:h2 
         (banner (concat
                  [{
-                   :content teacher}]
+                   :content (str teacher "'s classes")}]
                  ) ;; concat
                ) ;; banner
         ] ;; :h2]
