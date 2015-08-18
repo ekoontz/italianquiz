@@ -60,13 +60,13 @@
    [:h3 "Please find your teacher."]
    
    (let [search-term (:search (:params request))
-;;         debug (log/error (str "REQUEST INFO " request))
-;;         debug (log/error (str "HELLO?:?? " request))         
          results
          (if (= search-term "")
            []
+           ;; doing 'DISTINCT' in case there are are duplicate (role,teacher) pairs -
+           ;; e.g.: a single user has 2 'teacher' rows in vc_user_role.
            (k/exec-raw
-            ["SELECT teacher.given_name || ' ' || teacher.family_name AS teacher,
+            ["SELECT DISTINCT teacher.given_name || ' ' || teacher.family_name AS teacher,
                      teacher.id
                 FROM vc_user AS teacher
           INNER JOIN vc_user_role
