@@ -52,15 +52,19 @@
 
 (defn class-table [teacher-id]
   (html
-   (let [results (k/exec-raw ["SELECT id,name AS class
+   (let [results (k/exec-raw ["SELECT 'enroll',id,name AS class
                                  FROM class
                                 WHERE teacher=?"
                               [(Integer. teacher-id)]] :results)]
      [:div.rows2table
       (html/rows2table results
 
-                       {:cols [:class]
-                        :col-fns {:class (fn [class]
+                       {:cols [:enroll :class]
+                        :col-fns {:enroll (fn [class]
+                                            [:form {:action (str "/class/enroll/" (:id class))
+                                                    :method "post"}
+                                             [:button {:onclick "submit()"} "Enroll"]])
+                                  :class (fn [class]
                                            (html [:a {:href (str "/class/" (:id class))}
                                                   (:class class)]))}}
                        )])))
