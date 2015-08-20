@@ -44,7 +44,7 @@
           {:status 200
            :headers {"Content-type" "text/html;charset=utf-8"}
            :body (html/page "Welcome to Verbcoach"
-                           (html [:h3 "Please login to choose your teacher."])
+                           (html [:h2 "Please login to choose your teacher."])
                            request
                            resources)})))
         
@@ -54,41 +54,51 @@
          {:status 302
           :headers {"Location" "/about"}})))
 
+(declare search-for-teacher)
+
 (defn check-for-teacher [request]
-  [:div.major
-   [:h2 "Welcome to Verbcoach."]
-   [:h3 "Please find your teacher."]
+  (let [search-term (:search (:params request))
+        results (search-for-teacher search-term)]
+    [:div.major
+     [:h2 "Welcome to Verbcoach."]
+     [:h3 "Please find your teacher."]
    
-   (let [search-term (:search (:params request))
-         results
-         (if (= search-term "")
-           []
-           ;; doing 'DISTINCT' in case there are are duplicate (role,teacher) pairs -
-           ;; e.g.: a single user has 2 'teacher' rows in vc_user_role.
-           (k/exec-raw
-            ["SELECT DISTINCT teacher.given_name || ' ' || teacher.family_name AS teacher,
-                     teacher.id
-                FROM vc_user AS teacher
-          INNER JOIN vc_user_role
-                  ON (vc_user_role.user_id = teacher.id)
-                 AND (vc_user_role.role = 'teacher')
-               WHERE (teacher.family_name ILIKE ?) AND (? != '')"
-             [(str "%" search-term "%") search-term]] :results))]
      [:div {:style "float:left"}
       [:div.search_form
        [:form {:method "get"}
-        [:input {:name "search" :size "50" :value search-term}
+        [:input {:name "search" :size "30" :value search-term}
          ]
         [:button {:onclick "submit()"} "Search"]
         ]
        ]
-
-      [:div.rows2table
-       (html/rows2table results
+      [:div.rows2table (html/rows2table
+                        results
                         {:cols [:teacher]
-                         :col-fns {:teacher (fn [teacher]
-                                              (html [:a {:href (str "/teacher/" (:id teacher))}
-                                                     (:teacher teacher)]))}})]])])
+                         :col-fns {:teacher
+                                   (fn [teacher]
+                                     (html [:a {:href (str "/teacher/" (:id teacher))}
+                                            (:teacher teacher)]))}})]]]))
+(defn search-for-teacher [search-term]
+  (if (= search-term "")
+    []
+    ;; The "? != ''" is important because it prevents an empty search from returning all results.
+    (k/exec-raw
+     ["SELECT teacher.given_name || ' ' || teacher.family_name AS teacher,
+              teacher.id
+         FROM vc_user AS teacher
+   INNER JOIN vc_user_role
+           ON (vc_user_role.user_id = teacher.id)
+          AND (vc_user_role.role = 'teacher')
+        WHERE (? != '')
+          AND ((teacher.family_name ILIKE ?)
+            OR (teacher.given_name ILIKE ?)
+            OR (teacher.email ILIKE ?))
+     ORDER BY teacher.family_name,teacher.given_name,teacher.email
+"
+      [search-term
+       (str "%" search-term "%")
+       (str "%" search-term "%")
+       (str "%" search-term "%")]] :results)))
 
 (declare under-a-city)
 
