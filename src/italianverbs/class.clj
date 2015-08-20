@@ -21,7 +21,9 @@
    [italianverbs.html :as html :refer [banner page rows2table]]
    [italianverbs.menubar :refer [menubar]]
    [babel.korma :as db]
-   [italianverbs.user :refer [do-if do-if-authenticated do-if-teacher login-form menubar-info-for-user
+   [italianverbs.user :refer [do-if do-if-authenticated do-if-teacher
+                              do-if-not-teacher
+                              login-form menubar-info-for-user
                               username2userid]]
    [korma.core :as k]))
 
@@ -52,6 +54,7 @@
           (page "My Classes"
                 (let [userid (username2userid (authentication/current request))]
                   [:div#classes {:class "major"}
+
                    (do-if-teacher
                     [:div {:class "classlist"}
                      [:h2 (banner [{:content "My Classes"}])]
@@ -81,14 +84,14 @@
                         :fields [{:name :name :size 50 :label "Name"}
                                  (language-radio-buttons)]})
                       ]]
-                    ""
-                    )
+                    "")
 
-                   [:div {:class "classlist"}
-                    [:h3 "Classes I'm enrolled in"]
-
-                    (let [results (k/exec-raw
-                                   ["SELECT class.id AS class_id,'leave',class.name AS class,
+                   (do-if-not-teacher
+                    [:div.new
+                     [:div {:class "classlist"}
+                      [:h3 "Classes I'm enrolled in"]
+                      (let [results (k/exec-raw
+                                     ["SELECT class.id AS class_id,'leave',class.name AS class,
                                               trim(teacher.given_name || ' ' || teacher.family_name) AS teacher,
                                               teacher.email AS email,
                                               class.language
@@ -99,30 +102,28 @@
                                            IN (SELECT class 
                                                  FROM student_in_class 
                                                 WHERE student=?)"
-                                    [userid]] :results)]
-                      (rows2table results
-                                  {:col-fns {:language (fn [class]
-                                                         (short-language-name-to-long (:language class)))
-                                             :class (fn [class]
-                                                      [:a {:href (str "/class/" (:class_id class))}
-                                                       (:class class)])
-                                             :teacher (fn [class]
-                                                        (if (or (nil? (:teacher class))
-                                                                (= "" (:teacher class)))
-                                                          "(unnamed teacher)"
-                                                          (:teacher class)))
-                                             :leave (fn [class]
-                                                      [:form {:action (str "/class/disenroll/" (:class_id class))
-                                                              :method "post"}
-                                                       [:button {:onclick "submit()"} "Leave"]])}
-                                   :th-styles {:leave "text-align:center;width:3em"}
-                                   :cols [:leave :class :language :teacher :email]}))]
-                   
-                     [:div.new
+                                      [userid]] :results)]
+                        (rows2table results
+                                    {:col-fns {:language (fn [class]
+                                                           (short-language-name-to-long (:language class)))
+                                               :class (fn [class]
+                                                        [:a {:href (str "/class/" (:class_id class))}
+                                                         (:class class)])
+                                               :teacher (fn [class]
+                                                          (if (or (nil? (:teacher class))
+                                                                  (= "" (:teacher class)))
+                                                            "(unnamed teacher)"
+                                                            (:teacher class)))
+                                               :leave (fn [class]
+                                                        [:form {:action (str "/class/disenroll/" (:class_id class))
+                                                                :method "post"}
+                                                         [:button {:onclick "submit()"} "Leave"]])}
+                                     :th-styles {:leave "text-align:center;width:3em"}
+                                     :cols [:leave :class :language :teacher :email]}))]
+                     [:div
                       [:h3 "Enroll in a new class:"]
                       [:form {:action "/class/join"
-                              :method "post"}
-                       ]
+                              :method "post"}]
                       (let [results (k/exec-raw
                                      ["SELECT class.id AS class_id,'enroll',class.name AS class,
                                               trim(teacher.given_name || ' ' || teacher.family_name) AS teacher,
@@ -155,9 +156,16 @@
                                                :enroll (fn [class]
                                                          [:form {:action (str "/class/enroll/" (:class_id class))
                                                                  :method "post"}
-                                                          [:button {:onclick "submit()"} "Enroll"]])}}))
+                                                          [:button {:onclick "submit()"} "Enroll"]])}}
+                                    )
+                        )
+                      ]]
 
-                      ]])
+                    "" ;; <- this empty string is the 'else' of the (do-if-not-teacher) above.
+
+                    )
+                   ]
+                  )
                 request
                 resources)}
          ;; else, not authenticated
@@ -208,7 +216,7 @@ INSERT INTO class (name,teacher,language)
                                        WHERE class.id=?"
                                      [time-format class]] :results))
                         teacher-of-class? (= userid (:teacher_user_id class-map))]
-                   [:div {:class "major"}
+                   [:div {:class "major" :foo 42}
                     [:h2 (banner [{:href "/class"
                                    :content "My Classes"}
                                   {:href nil
@@ -299,7 +307,7 @@ INSERT INTO class (name,teacher,language)
                                           ON teacher.id = class.teacher
                                        WHERE class.id=?"
                                              [time-format class]] :results))]
-                            [:div#students {:class "major"}
+                            [:div#students {:class "major" :foo 43}
                              [:h2 (banner [{:href "/class"
                                             :content "My Classes"}
                                            {:href (str "/class/" (:id class-map))
@@ -358,6 +366,10 @@ INSERT INTO class (name,teacher,language)
                                                                           (:created game)]))
                                                }}
                                              )])
+
+                              [:div {:style "float:left;width:100%;margin:0.5em;"}
+                               [:a {:href "/game#new"} "Create a new game"]
+                               ]
 
                               ]])
 

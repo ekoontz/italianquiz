@@ -302,6 +302,15 @@
                  {:status 302
                   :headers {"Location" "/?message=Unauthorized: you+are+not+a+teacher"}}))))
 
+(defn do-if-not-teacher [what-to-do & [else]]
+  (do-if (not (has-teacher-role))
+         (do (log/debug (str "Authorized attempt to access a non-teacher-only function."))
+             what-to-do)
+         (if else else
+             (do (log/warn (str "Unauthorized attempt to access a non-teacher-only function."))
+                 {:status 302
+                  :headers {"Location" "/?message=Unauthorized: you+are+a+teacher"}}))))
+
 (defn menubar-info-for-user [request]
   {:session (session/request-to-session request)
    :uri (if request (get request :uri))
