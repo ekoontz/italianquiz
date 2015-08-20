@@ -244,7 +244,7 @@ INSERT INTO class (name,teacher,language)
                            "")
 
                     ;; TODO: see games.clj for showing play vs. resume
-                    (do-if (or true student-of-class?)
+                    (do-if student-of-class?
                            (html
                             [:h3 "Games you can play in this class"]
                             (let [games
