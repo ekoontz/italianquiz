@@ -7,17 +7,20 @@
    [clojure.tools.logging :as log]
    [compojure.core :as compojure :refer [GET POST]]
    [environ.core :refer [env]]
+   [italianverbs.authentication :as authentication]
    [italianverbs.menubar :refer [menubar]]
    [italianverbs.session :as session]
    [italianverbs.user :refer [do-if do-if-authenticated do-if-teacher haz-admin?
                               haz-auth? has-admin-role has-teacher-role
                               login-form
                               menubar-info-for-user
+                              username2userid
                               ]]
    [italianverbs.html :as html]
    [korma.core :as k]))
 
 (declare about)
+(declare check-for-classes)
 (declare check-for-teacher)
 
 (defn resources [request]
@@ -34,17 +37,12 @@
 
          ;; otherwise, not a teacher:
          (do-if-authenticated
-          {:status 200
-           :headers {"Content-type" "text/html;charset=utf-8"}
-           :body (html/page "Welcome to Verbcoach"
-                            (check-for-teacher request)
-                            request
-                            resources)}
+          (check-for-classes request)
 
           {:status 200
            :headers {"Content-type" "text/html;charset=utf-8"}
            :body (html/page "Welcome to Verbcoach"
-                           (html [:h2 "Please login to choose your teacher."])
+                           (html [:div.major [:h2 "Please login to choose your teacher."]])
                            request
                            resources)})))
         
@@ -55,6 +53,27 @@
           :headers {"Location" "/about"}})))
 
 (declare search-for-teacher)
+
+
+(defn check-for-classes [request]
+  ;; if student has classes already, go directly to those.
+  (let [user-id (username2userid (authentication/current request))
+        classes (:num_classes
+                 (first
+                  (k/exec-raw
+                   ["SELECT count(*) AS num_classes
+                     FROM student_in_class
+                    WHERE (student=?)"
+                    [user-id]] :results)))]
+    (if (> classes 0)
+      {:status 302
+       :headers {"Location" "/class"}}
+      {:status 200
+       :headers {"Content-type" "text/html;charset=utf-8"}
+       :body (html/page "Welcome to Verbcoach"
+                        (check-for-teacher request)
+                        request
+                        resources)})))
 
 (defn check-for-teacher [request]
   (let [search-term (:search (:params request))
