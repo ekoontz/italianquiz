@@ -42,7 +42,9 @@
           {:status 200
            :headers {"Content-type" "text/html;charset=utf-8"}
            :body (html/page "Welcome to Verbcoach"
-                           (html [:div.major [:h2 "Please login to choose your teacher."]])
+                            (html [:div.major
+                                   [:h2 "Welcome to Verbcoach."]
+                                   [:h3 "Please login to continue."]])
                            request
                            resources)})))
         
