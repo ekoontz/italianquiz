@@ -24,6 +24,7 @@
    [babel.korma :as db]
    [italianverbs.menubar :refer [menubar]]
    [italianverbs.user :refer [do-if do-if-admin do-if-authenticated do-if-teacher has-teacher-role
+                              do-if-not-teacher
                               login-form menubar-info-for-user username2userid]]
    [dag-unify.core :refer [unify]]
    [korma.core :as k]))
@@ -56,6 +57,8 @@
 
 (declare tenses-of-game-as-human-readable)
 (declare verbs-of-game-as-human-readable)
+(declare games-i-am-playing)
+
 
 (def routes
   (compojure/routes
@@ -67,33 +70,12 @@
                   [:div {:class "major"}
                    [:h2 "My Games"]
                    
-                   ;; move to bottom if user is a teacher.
-                   [:div {:class "gamelist"}
-                    [:h3 "Games I'm playing"]
-                    (let [results (k/exec-raw
-                                   ["SELECT 'resume' AS resume,game.id AS id,game.name AS game,city,
-                                           last_move AS position,game.target AS language
-                                      FROM student_in_game
-                                INNER JOIN game
-                                        ON (game.id = student_in_game.game)
-                                     WHERE student=?"
-                                    [user-id]] :results)]
-                      [:div.rows2table
-                       (rows2table results
-                                   {:col-fns {:game (fn [game]
-                                                      (html [:a {:href (str "/game/" (:id game))}
-                                                             (str (:game game))]))
-                                              :language (fn [game-in-class]
-                                                          (short-language-name-to-long (:language game-in-class)))
-                                              :resume (fn [game]
-                                                        (html [:button {:onclick (str "document.location='/tour/"
-                                                                                      (:id game) "';")}
-                                                               "Resume"]))}
-                                    :th-styles {:resume "visibility:hidden"}
-                                    :cols [:resume :game :city :position :language]})])]
-                   
-                   (do-if-teacher
+                   ;; do at bottom if user is a teacher.
+                   (do-if-not-teacher
+                    (games-i-am-playing user-id)
+                    "")
 
+                   (do-if-teacher
                     [:div {:class "gamelist"}
                      [:h3 "Games in classes I'm teaching"]
                      (let [results (k/exec-raw
@@ -186,7 +168,14 @@
                        [:button {:name "submit_new_game" :disabled true :onclick "submit();"} "New Game"]
                        ]]] "")
 
+
+                   (do-if-teacher
+                    (games-i-am-playing user-id)
+                    "")
+
                    ]
+
+
                   )
                 request
                 resources)
@@ -348,6 +337,31 @@ INSERT INTO game
                                           "?message=Created game.")}}
               )
           ))))
+
+(defn games-i-am-playing [user-id]
+  [:div {:class "gamelist"}
+   [:h3 "Games I'm playing"]
+   (let [results (k/exec-raw
+                  ["SELECT 'resume' AS resume,game.id AS id,game.name AS game,city,
+                                           last_move AS position,game.target AS language
+                                      FROM student_in_game
+                                INNER JOIN game
+                                        ON (game.id = student_in_game.game)
+                                     WHERE student=?"
+                   [user-id]] :results)]
+     [:div.rows2table
+      (rows2table results
+                  {:col-fns {:game (fn [game]
+                                     (html [:a {:href (str "/game/" (:id game))}
+                                            (str (:game game))]))
+                             :language (fn [game-in-class]
+                                         (short-language-name-to-long (:language game-in-class)))
+                             :resume (fn [game]
+                                       (html [:button {:onclick (str "document.location='/tour/"
+                                                                     (:id game) "';")}
+                                              "Resume"]))}
+                   :th-styles {:resume "visibility:hidden"}
+                   :cols [:resume :game :city :position :language]})])])
 
 (defn insert-game [name source target source-set target-set user-id]
   "Create a game with a name, a source and target language and two
