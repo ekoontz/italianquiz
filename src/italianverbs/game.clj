@@ -618,9 +618,9 @@ ms: " params))))
         email (:email owner-info)
         refine (if refine (json-read-str refine) nil)]
     (html
-
        [:div {:style "float:left;width:100%;margin-top:1em"}
-
+        [:button {:onclick (str "document.location='/tour/"
+                                game-id "';")} "Play"]
         [:div {:style "border:0px dashed green;float:right;width:50%;"}
          (if show-as-owner?
            (game-editor-form game nil nil)
@@ -765,7 +765,7 @@ ms: " params))))
             (map (fn [x] x) lexemes))))]
 
     (if (empty? lexemes-for-this-game)
-      (html [:i "Choose some verbs and tenses for this game."])
+      (html [:i "No verbs and tenses chosen yet for this game."])
 
       (html
 
