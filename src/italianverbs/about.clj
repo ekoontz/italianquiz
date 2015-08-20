@@ -62,22 +62,18 @@
     [:div.major
      [:h2 "Welcome to Verbcoach."]
      [:h3 "Please find your teacher."]
-   
      [:div {:style "float:left"}
       [:div.search_form
        [:form {:method "get"}
-        [:input {:name "search" :size "30" :value search-term}
-         ]
-        [:button {:onclick "submit()"} "Search"]
-        ]
-       ]
+        [:input {:name "search" :size "30" :value search-term}]
+        [:button {:onclick "submit()"} "Search"]]]
       [:div.rows2table (html/rows2table
                         results
                         {:cols [:teacher]
                          :col-fns {:teacher
                                    (fn [teacher]
-                                     (html [:a {:href (str "/teacher/" (:id teacher))}
-                                            (:teacher teacher)]))}})]]]))
+                                     [:a {:href (str "/teacher/" (:id teacher))}
+                                      (:teacher teacher)])}})]]]))
 (defn search-for-teacher [search-term]
   (if (= search-term "")
     []

@@ -166,7 +166,7 @@
                     )
 
                    (do-if-teacher
-                    [:div {:class "gamelist"}
+                    [:div#new {:class "gamelist"}
                      [:h3 "Create a new game"]
                      [:div.new {:style "display:block"}
                       [:form {:method "post"
