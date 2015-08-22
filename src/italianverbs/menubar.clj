@@ -28,7 +28,7 @@
                      (= current-url "/auth/login")
                      (and (not (nil? current-url))
                           (re-find #"^/about" current-url)))
-                 :show? true
+                 :show? false
                  :current-url current-url 
                  :text "About" 
                  :url-for-this-item "/about"
