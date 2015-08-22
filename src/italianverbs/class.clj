@@ -87,6 +87,21 @@
                     "")
 
                    (do-if-not-teacher
+                    (let [current-classes
+                          (k/exec-raw
+                           ["SELECT class.id AS class_id,'leave',class.name AS class,
+                                              trim(teacher.given_name || ' ' || teacher.family_name) AS teacher,
+                                              teacher.email AS email,
+                                              class.language
+                                         FROM class
+                                    LEFT JOIN vc_user AS teacher 
+                                           ON (teacher.id = class.teacher)
+                                        WHERE class.id 
+                                           IN (SELECT class 
+                                                 FROM student_in_class 
+                                                WHERE student=?)"
+                            [user-id]] :results)]
+                    
                     [:div
                      [:div {:class "classlist"}
                       [:h3 "Classes I'm enrolled in"]
@@ -157,10 +172,15 @@
 
                         (rows2table results
                                     {:cols [:enroll :class :language :teacher :email]
-                                     :if-empty-show-this-instead [:div
-                                                                  "First, please "
-                                                                  [:a {:href "/about"} "find your teacher"] " to see classes that you can join."
-                                                                  ]
+                                     :if-empty-show-this-instead
+                                     (if (empty? current-classes)
+                                     [:div
+                                      "First, please "
+                                      [:a {:href "/about"} "find your teacher"] " to see classes that you can join."
+                                      ]
+                                     [:div
+                                      "There are no more classes to join."])
+
                                      :th-styles {:enroll "text-align:center;width:3em"}
                                      :col-fns {:language (fn [class]
                                                            (short-language-name-to-long (:language class)))
@@ -181,7 +201,7 @@
                                                           [:button {:onclick "submit()"} "Enroll"]])}}
                                     )
                         )
-                      ]]
+                      ]])
 
                     "" ;; <- this empty string is the 'else' of the (do-if-not-teacher) above.
 
