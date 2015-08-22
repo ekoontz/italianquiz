@@ -218,7 +218,7 @@ INSERT INTO class (name,teacher,language)
                         teacher-of-class? (= userid (:teacher_user_id class-map))]
                    [:div {:class "major" :foo 42}
                     [:h2 (banner [{:href "/class"
-                                   :content "My Classes"}
+                                   :content "Classes"}
                                   {:href nil
                                    :content (:name class-map)}])]
                     [:div
@@ -309,7 +309,7 @@ INSERT INTO class (name,teacher,language)
                                              [time-format class]] :results))]
                             [:div#students {:class "major" :foo 43}
                              [:h2 (banner [{:href "/class"
-                                            :content "My Classes"}
+                                            :content "Classes"}
                                            {:href (str "/class/" (:id class-map))
                                             :content (:name class-map)}
                                            {:href nil
