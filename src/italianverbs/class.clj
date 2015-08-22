@@ -203,14 +203,14 @@
                         )
                       ] ;; </enroll>
 
-                     [:div
-                      [:h3 "Not the right teacher?"]
-                      [:div {:style "float:left"}
-                       [:a {:href "/about"} "Find your teacher."]
-                       ]
-
-
-                      ]
+                     
+                     (if (not (empty? current-classes))
+                       [:div
+                        [:h3 "Not the right teacher?"]
+                        [:div {:style "float:left"}
+                         "Please leave your current classes in order to find your teacher."
+                         ]
+                        ])
 
                      ] ;; </currently-enrolled-and-enrollable>
                     )
