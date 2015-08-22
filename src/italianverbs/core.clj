@@ -17,7 +17,6 @@
    [italianverbs.auth.internal :as internal-auth]
    [italianverbs.class :as class]
    [italianverbs.editor :as editor]
-   [italianverbs.findteacher :as findteacher]
    [italianverbs.game :as game]
    [italianverbs.html :as html]
    [italianverbs.me :as me]
