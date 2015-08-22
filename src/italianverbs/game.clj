@@ -24,6 +24,7 @@
    [babel.korma :as db]
    [italianverbs.menubar :refer [menubar]]
    [italianverbs.user :refer [do-if do-if-admin do-if-authenticated do-if-teacher has-teacher-role
+                              do-if-teacher-or-admin
                               do-if-not-teacher
                               login-form menubar-info-for-user username2userid]]
    [dag-unify.core :refer [unify]]
@@ -155,8 +156,7 @@
                               :enctype "multipart/form-data"
                               :action "/game/new"}
                        ;; TODO: don't disable button unless and until input is something besides whitespace.
-                       [:input {:onclick "submit_new_game.disabled = false;"
-                                :name "name" :size "50" :placeholder (str "Enter the name of a new game.")} ]
+
                        [:div {:style "float:left;width:99%;padding:0.5em"}
                         [:table.language_radio
                          [:tr
@@ -165,8 +165,28 @@
                                   [:input {:type "radio" :label (:label option) :name "language" :value (:value option)}
                                    (:label option)]])
                                (:options (language-radio-buttons)))]]]
+
+
+                       [:div {:style "float:left;width:99%;padding:0.5em"}
+                        [:table.language_radio
+                         [:tr
+                          (map (fn [option]
+                                 [:td
+                                  [:input {:type "radio" :label (:label option) :name "city" :value (:value option)}
+                                   (:label option)]])
+                               (:options (language-radio-buttons)))]]]
+
+
+                       
+                       [:input {:onclick "submit_new_game.disabled = false;"
+                                :name "name" :size "50" :placeholder (str "Enter the name of a new game.")} ]
+
                        [:button {:name "submit_new_game" :disabled true :onclick "submit();"} "New Game"]
-                       ]]] "")
+                       ]
+                      ]
+                     ]
+
+                    "")
 
 
                    (do-if-teacher
@@ -258,7 +278,7 @@ INSERT INTO game
    (GET "/:game/:verb/:tense" request
         ;; Return translation pairs for this game's target and source language such that
         ;; the target member of the pair has the given verb and tense.
-        (do-if-teacher
+        (do-if-teacher-or-admin
          (let [game-id (Integer. (:game (:route-params request)))
                nth-verb (Integer. (:verb (:route-params request)))
                nth-grammar-spec (Integer. (:tense (:route-params request)))
