@@ -68,7 +68,7 @@
                      (and (not (nil? current-url))
                           (re-find #"^/game" current-url)))
                  :current-url current-url 
-                 :text "My Games"
+                 :text "Games"
                  :url-for-this-item "/game"})
 
       (menuitem {:selected?
@@ -79,7 +79,7 @@
                           (re-find #"^/class" current-url)))
                  :show? haz-teacher?
                  :current-url current-url 
-                 :text "My Classes"
+                 :text "Classes"
                  :url-for-this-item "/class"})
 
       (menuitem {:selected?
