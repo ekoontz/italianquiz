@@ -340,14 +340,16 @@ INSERT INTO class (name,teacher,language)
                                  LEFT JOIN vc_user AS game_creator
                                         ON (game.created_by = game_creator.id)
                                      WHERE game.target = ?
+                                       AND game.created_by = ?
                                        AND game.id
                                     NOT IN (SELECT game
                                               FROM game_in_class
                                              WHERE class = ?)"
-                                            [time-format (:language class-map) class]] :results)]
+                                            [time-format (:language class-map) userid class]] :results)]
                                 [:div.rows2table
                                  (rows2table games
-                                             {:cols [:add :game :city :created :creator :creator_email]
+                                             {:if-empty-show-this-instead [:div [:i "There are no games that you can add to this class."]]
+                                              :cols [:add :game :city :created :creator :creator_email]
                                               :td-styles
                                               {:add "text-align:center"}
                                               :th-styles
