@@ -88,6 +88,7 @@
     [:div.major
      [:h2 "Welcome to Verbcoach."]
      [:h3 "Please find your teacher."]
+     [:h4 "Search by name or email address."]
      [:div {:style "float:left"}
       [:div.search_form
        [:form {:method "get"}
@@ -96,6 +97,7 @@
       [:div.rows2table (html/rows2table
                         results
                         {:cols [:teacher :email]
+                         :if-empty-show-this-instead ""
                          :col-fns {:teacher
                                    (fn [teacher]
                                      [:a {:href (str "/teacher/" (:id teacher))}

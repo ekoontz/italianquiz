@@ -136,7 +136,7 @@
                                      :th-styles {:leave "text-align:center;width:3em"}
                                      :cols [:leave :class :language :teacher :email]}))]
                      [:div ;; <enroll>
-                      [:h3 "Enroll in a new class:"]
+                      [:h3 "Enroll in a new class"]
                       [:form {:action "/class/join"
                               :method "post"}]
                       (let [enrollable-classes (k/exec-raw
