@@ -102,7 +102,7 @@
                                                 WHERE student=?)"
                             [user-id]] :results)]
                     
-                    [:div
+                    [:div ;; <currently-enrolled-and-enrollable>
                      [:div {:class "classlist"}
                       [:h3 "Classes I'm enrolled in"]
                       (let [results (k/exec-raw
@@ -135,11 +135,11 @@
                                                          [:button {:onclick "submit()"} "Leave"]])}
                                      :th-styles {:leave "text-align:center;width:3em"}
                                      :cols [:leave :class :language :teacher :email]}))]
-                     [:div
+                     [:div ;; <enroll>
                       [:h3 "Enroll in a new class:"]
                       [:form {:action "/class/join"
                               :method "post"}]
-                      (let [results (k/exec-raw
+                      (let [enrollable-classes (k/exec-raw
 
                                      ;; Show only classes for which both of the following are true:
                                      ;;
@@ -170,7 +170,7 @@
                                       
                                       [user-id user-id]] :results)]
 
-                        (rows2table results
+                        (rows2table enrollable-classes
                                     {:cols [:enroll :class :language :teacher :email]
                                      :if-empty-show-this-instead
                                      (if (empty? current-classes)
@@ -201,11 +201,27 @@
                                                           [:button {:onclick "submit()"} "Enroll"]])}}
                                     )
                         )
-                      ]])
+                      ] ;; </enroll>
 
-                    "" ;; <- this empty string is the 'else' of the (do-if-not-teacher) above.
+                     [:div
+                      [:h3 "Not the right teacher?"]
+                      [:div {:style "float:left"}
+                       [:a {:href "/about"} "Find your teacher."]
+                       ]
+
+
+                      ]
+
+                     ] ;; </currently-enrolled-and-enrollable>
+                    )
+
+                    "" ;; <- this empty string is the 'else' of the (do-if-not-teacher) above: i.e. show this (emptystring)
+                    ;; if user *is* a teacher.
 
                     )
+
+
+                   
                    ]
                   )
                 request
