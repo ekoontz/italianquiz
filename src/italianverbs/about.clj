@@ -44,6 +44,11 @@
            :body (html/page "Welcome to Verbcoach"
                             (html [:div.major
                                    [:h2 "Welcome to Verbcoach."]
+
+                                   [:div.intro {:style "font-size:+150%;background:lightgreen  "}
+
+                                    "The best place on the web to learn how to conjugate verbs."]
+                                   
                                    [:h3 "Please login to continue."]])
                            request
                            resources)})))

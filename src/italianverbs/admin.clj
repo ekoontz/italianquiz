@@ -35,6 +35,27 @@
    [:h2 "Admin"]
 
    [:div.onecolumn
+    [:h3 "Classes"]
+    (rows2table
+     (k/exec-raw
+      ["SELECT class.name AS class, 
+           teacher.given_name || ' ' || teacher.family_name AS teacher,
+               teacher.email,
+* FROM class
+INNER JOIN vc_user AS teacher ON (teacher.id = class.teacher)
+      ORDER BY class.created DESC;
+
+"
+       []] :results)
+
+     {
+      }
+
+
+     )
+    ]
+   
+   [:div.onecolumn
     [:h3 "Games"]
     (rows2table
      (k/exec-raw
