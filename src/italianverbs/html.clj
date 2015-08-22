@@ -876,13 +876,16 @@
 (defn rows2table [rows & [{cols :cols
                            col-fns :col-fns
                            td-styles :td-styles
+                           if-empty-show-this-instead :if-empty-show-this-instead
                            th-styles :th-styles}]]
   "Take a vector of maps, each of which is a row from a db table, and render it 
 in HTML. If :cols is supplied, use it as the vector of column names as keywords.
 "
   [:div.rows2table
    (if (empty? rows)
-     [:div [:i "None."]]
+     (if if-empty-show-this-instead
+       if-empty-show-this-instead
+       [:div [:i "None."]])
 
      ;; else
      [:table {:class "striped padded"}
