@@ -1,5 +1,17 @@
+div.onecolumn {
+    float:left;
+    width:88%;
+    margin-right:2px;
+}
+
 div.twocolumn {
     float:left;
     width:48%;
+    margin-right:2px;
+}
+
+div.threecolumn {
+    float:left;
+    width:32%;
     margin-right:2px;
 }

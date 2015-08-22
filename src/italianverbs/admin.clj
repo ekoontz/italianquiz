@@ -34,7 +34,24 @@
   [:div#admin {:class "major"}
    [:h2 "Admin"]
 
-   [:div.twocolumn
+   [:div.onecolumn
+    [:h3 "Games"]
+    (rows2table
+     (k/exec-raw
+      ["SELECT *
+          FROM game
+            AS users" []] :results)
+     {:cols [:id :name :city :created_by :target :active]}
+                                        ;     {:cols [:email :name :joined :last_login :roles]}
+
+     )
+    
+
+    ]
+
+
+   
+   [:div.onecolumn
     [:h3 "Users"]
     (rows2table
      (k/exec-raw
@@ -54,11 +71,9 @@
      {:cols [:email :name :joined :last_login :roles]}
 
      )
-    
-
     ]
 
-   [:div.twocolumn
+   [:div.onecolumn
     [:h3 "Sessions"]
     (rows2table
      (k/exec-raw
