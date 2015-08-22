@@ -11,7 +11,7 @@
    [italianverbs.menubar :refer [menubar]]
    [italianverbs.session :as session]
    [italianverbs.user :refer [do-if do-if-authenticated do-if-teacher haz-admin?
-                              haz-auth? has-admin-role has-teacher-role
+                              haz-auth? has-admin-role? has-teacher-role?
                               login-form
                               menubar-info-for-user
                               username2userid

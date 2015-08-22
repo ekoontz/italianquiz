@@ -16,7 +16,7 @@
    [italianverbs.html :as html :refer [banner page]]
    [dag-unify.core :refer [get-in strip-refs unify]]
    [italianverbs.user :refer [do-if do-if-admin do-if-teacher
-                              has-teacher-role username2userid]]
+                              has-teacher-role? username2userid]]
    [hiccup.core :refer (html)]
    [korma.core :as k]))
 

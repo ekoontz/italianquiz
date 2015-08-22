@@ -23,9 +23,11 @@
    [italianverbs.html :as html :refer [banner page rows2table]]
    [babel.korma :as db]
    [italianverbs.menubar :refer [menubar]]
-   [italianverbs.user :refer [do-if do-if-admin do-if-authenticated do-if-teacher has-teacher-role
+   [italianverbs.user :refer [do-if do-if-admin do-if-authenticated do-if-teacher
                               do-if-teacher-or-admin
                               do-if-not-teacher
+                              has-admin-role?
+                              has-teacher-role?
                               login-form menubar-info-for-user username2userid]]
    [dag-unify.core :refer [unify]]
    [korma.core :as k]))
@@ -66,10 +68,10 @@
    (GET "/" request
         (do-if-authenticated
          {:body
-          (page "My Games"
+          (page "Games"
                 (let [user-id (username2userid (authentication/current request))]
                   [:div {:class "major"}
-                   [:h2 "My Games"]
+                   [:h2 "Games"]
                    
                    ;; do at bottom if user is a teacher.
                    (do-if-not-teacher
@@ -247,7 +249,8 @@ INSERT INTO game
            (do-if
             (do
               (log/debug (str "Delete game: " game-id ": can user: '" user "' delete this game?"))
-              (is-owner-of? (Integer. game-id) user))
+              (or (is-owner-of? (Integer. game-id) user)
+                  (has-admin-role?)))
             (do
               (let [message (delete-game (:game-to-delete (:route-params request)))]
                 {:status 302
@@ -263,7 +266,8 @@ INSERT INTO game
            (do-if
             (do
               (log/debug (str "Edit game: " game-id ": can user: '" user "' edit this game?"))
-              (is-owner-of? (Integer. game-id) user))
+              (or (is-owner-of? (Integer. game-id) user)
+                  (has-admin-role?)))
             (do
               (log/info (str "User:" user " is authorized to update this game."))
               (update-game (:game-to-edit (:route-params request))
@@ -322,10 +326,11 @@ INSERT INTO game
           {:body
            (page (str "Game: " (:name game))
                  (body (:name game) (show-game (:game (:route-params request))
-                                               {:show-as-owner? (or false (is-owner-of?
-                                                                          (Integer. game-id)
-                                                                          (authentication/current request)))
-                                                :show-as-teacher? (has-teacher-role)
+                                               {:show-as-owner? (or (has-admin-role?)
+                                                                    (is-owner-of?
+                                                                     (Integer. game-id)
+                                                                     (authentication/current request)))
+                                                :show-as-teacher? (has-teacher-role?)
                                                 :refine (:refine (:params request))})
                        request)
                  request resources)

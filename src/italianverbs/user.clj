@@ -244,7 +244,7 @@
       (log/debug (str "ARE YOU ADMIN? " result))
       result)))
 
-(defn has-admin-role [ & [request]]
+(defn has-admin-role? [ & [request]]
   (let [authentication (friend/current-authentication)]
     (log/debug (str "haz-admin: current authentication:" (if (nil? authentication) " none " authentication)))
     (if (= (:allow-internal-authentication env) "true")
@@ -256,8 +256,7 @@
          (let [username (authentication/current request)]
            (some #(= % :admin) (roles-of-email username))))))
 
-;; TODO: rename to has-teacher-role?
-(defn has-teacher-role [ & [request]]
+(defn has-teacher-role? [ & [request]]
   (let [authentication (friend/current-authentication)]
     (log/debug (str "haz-admin: current authentication:" (if (nil? authentication) " none " authentication)))
     (if (= (:allow-internal-authentication env) "true")
@@ -285,7 +284,7 @@
         :headers {"Location" "/?denied:+not+authenticated"}})))
 
 (defn do-if-admin [what-to-do & [else]]
-  (do-if (has-admin-role)
+  (do-if (has-admin-role?)
          (do (log/debug (str "Authorized attempt to access an admin-only function."))
              what-to-do)
          (if else else
@@ -294,7 +293,7 @@
                   :headers {"Location" "/?message=Unauthorized: you+are+not+an+admin"}}))))
 
 (defn do-if-teacher [what-to-do & [else]]
-  (do-if (has-teacher-role)
+  (do-if (has-teacher-role?)
          (do (log/debug (str "Authorized attempt to access a teacher-only function."))
              what-to-do)
          (if else else
@@ -303,7 +302,7 @@
                   :headers {"Location" "/?message=Unauthorized: you+are+not+a+teacher"}}))))
 
 (defn do-if-teacher-or-admin [what-to-do & [else]]
-  (do-if (or (has-admin-role) (has-teacher-role))
+  (do-if (or (has-admin-role?) (has-teacher-role?))
          (do (log/debug (str "Authorized attempt to access a teacher-and-admin-only function."))
              what-to-do)
          (if else else
@@ -312,7 +311,7 @@
                   :headers {"Location" "/?message=Unauthorized: you+are+not+a+teacher+or-admin"}}))))
 
 (defn do-if-not-teacher [what-to-do & [else]]
-  (do-if (not (has-teacher-role))
+  (do-if (not (has-teacher-role?))
          (do (log/debug (str "Authorized attempt to access a non-teacher-only function."))
              what-to-do)
          (if else else
@@ -326,4 +325,4 @@
    :request request
    :authenticated? (not (nil? (friend/current-authentication)))
    :haz-admin? (haz-admin? request)
-   :haz-teacher? (has-teacher-role request)})
+   :haz-teacher? (has-teacher-role? request)})
