@@ -1,6 +1,6 @@
 (ns italianverbs.admin
   (:require
-   [italianverbs.config :refer [time-format]]
+   [italianverbs.config :refer [short-language-name-to-long time-format]]
    [compojure.core :as compojure :refer [GET PUT POST DELETE ANY]]
    [italianverbs.html :refer [page rows2table]]
    [italianverbs.menubar :refer [menubar]]
@@ -38,11 +38,24 @@
     [:h3 "Games"]
     (rows2table
      (k/exec-raw
-      ["SELECT *
-          FROM game
-            AS users" []] :results)
-     {:cols [:id :name :city :created_by :target :active]}
-                                        ;     {:cols [:email :name :joined :last_login :roles]}
+      ["SELECT game.name AS game,game.id AS id,
+               creator.email AS created_by,game.target AS language,
+               city,active,to_char(game.created_on,?) AS created_on
+          FROM game 
+     LEFT JOIN vc_user AS creator 
+            ON (creator.id = game.created_by)
+      ORDER BY game.created_on DESC;
+" [time-format]] :results)
+     {:cols [:game :created_by :language :city :created_on :active]
+      :td-styles {:created_on "white-space:nowrap;"}
+      :col-fns {:game (fn [row]
+                        [:a {:href (str "/game/" (:id row))}
+                         (:game row)])
+                :language (fn [row]
+                            (short-language-name-to-long (:language row)))
+                }
+      }
+
 
      )
     
