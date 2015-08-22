@@ -90,7 +90,7 @@
         [:button {:onclick "submit()"} "Search"]]]
       [:div.rows2table (html/rows2table
                         results
-                        {:cols [:teacher]
+                        {:cols [:teacher :email]
                          :col-fns {:teacher
                                    (fn [teacher]
                                      [:a {:href (str "/teacher/" (:id teacher))}
@@ -101,7 +101,7 @@
     ;; The "? != ''" is important because it prevents an empty search from returning all results.
     (k/exec-raw
      ["SELECT teacher.given_name || ' ' || teacher.family_name AS teacher,
-              teacher.id
+              teacher.id,teacher.email
          FROM vc_user AS teacher
    INNER JOIN vc_user_role
            ON (vc_user_role.user_id = teacher.id)
