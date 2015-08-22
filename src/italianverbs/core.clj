@@ -17,6 +17,7 @@
    [italianverbs.auth.internal :as internal-auth]
    [italianverbs.class :as class]
    [italianverbs.editor :as editor]
+   [italianverbs.findteacher :as findteacher]
    [italianverbs.game :as game]
    [italianverbs.html :as html]
    [italianverbs.me :as me]
@@ -45,6 +46,9 @@
   ;; TODO: redirect to /games
   (GET "/" request
        (resp/redirect "/about"))
+
+  (GET "/about" request
+       about/routes)
 
   (context "/admin" []
            admin/routes)
@@ -79,9 +83,6 @@
 
   (context "/user" []
            user/routes)
-
-  (GET "/about" request
-       about/routes)
 
   (route/resources "/webjars" {:root "META-INF/resources/webjars/foundation/4.0.4/"})
   (route/resources "/")
