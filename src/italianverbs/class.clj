@@ -52,7 +52,7 @@
          {:headers html-headers
           :body
           (page "My Classes"
-                (let [userid (username2userid (authentication/current request))]
+                (let [user-id (username2userid (authentication/current request))]
                   [:div#classes {:class "major"}
 
                    (do-if-teacher
@@ -66,7 +66,7 @@
                                              to_char(class.created,?) AS created
                                         FROM class
                                        WHERE teacher=?"
-                                     [time-format userid]] :results)]
+                                     [time-format user-id]] :results)]
                        (rows2table results {:cols [:class :language :created]
                                             :col-fns
                                             {:language (fn [class]
@@ -87,7 +87,7 @@
                     "")
 
                    (do-if-not-teacher
-                    [:div.new
+                    [:div
                      [:div {:class "classlist"}
                       [:h3 "Classes I'm enrolled in"]
                       (let [results (k/exec-raw
@@ -102,7 +102,7 @@
                                            IN (SELECT class 
                                                  FROM student_in_class 
                                                 WHERE student=?)"
-                                      [userid]] :results)]
+                                      [user-id]] :results)]
                         (rows2table results
                                     {:col-fns {:language (fn [class]
                                                            (short-language-name-to-long (:language class)))
@@ -125,20 +125,42 @@
                       [:form {:action "/class/join"
                               :method "post"}]
                       (let [results (k/exec-raw
+
+                                     ;; Show only classes for which both of the following are true:
+                                     ;;
+                                     ;; 1. classes which the student is not already enrolled
+                                     ;; 2. classes for which teacher the student is enrolled in a class with.
+                                     ;;
                                      ["SELECT class.id AS class_id,'enroll',class.name AS class,
                                               trim(teacher.given_name || ' ' || teacher.family_name) AS teacher,
                                               teacher.email AS email,
                                               class.language
                                          FROM class
-                                    LEFT JOIN vc_user AS teacher 
+                                   INNER JOIN vc_user AS teacher 
                                            ON (teacher.id = class.teacher)
-                                        WHERE class.id 
-                                       NOT IN (SELECT class 
-                                                 FROM student_in_class 
-                                                WHERE student=?)"
-                                      [userid]] :results)]
+
+                                        WHERE class.id NOT IN (
+                                                SELECT class 
+                                                  FROM student_in_class 
+                                                 WHERE student=?)
+
+                                          AND teacher.id IN (
+                                                     SELECT teacher.id
+                                                       FROM vc_user AS teacher 
+                                                 INNER JOIN class 
+                                                         ON (class.teacher = teacher.id)
+                                                 INNER JOIN student_in_class 
+                                                         ON student_in_class.class = class.id
+                                                        AND student_in_class.student = ?)"
+                                      
+                                      [user-id user-id]] :results)]
+
                         (rows2table results
                                     {:cols [:enroll :class :language :teacher :email]
+                                     :if-empty-show-this-instead [:div
+                                                                  "First, please "
+                                                                  [:a {:href "/about"} "find your teacher"] " to see classes that you can join."
+                                                                  ]
                                      :th-styles {:enroll "text-align:center;width:3em"}
                                      :col-fns {:language (fn [class]
                                                            (short-language-name-to-long (:language class)))
@@ -174,7 +196,7 @@
 
    (POST "/new" request
          (do-if-teacher
-          (let [userid (username2userid (authentication/current request))
+          (let [user-id (username2userid (authentication/current request))
                 params (:params request)]
             (log/info (str "creating new class with params: " (:params request)))
             (let [new-game-id
@@ -183,7 +205,7 @@
 INSERT INTO class (name,teacher,language)
      VALUES (?,?,?) RETURNING id"
                          [(:name params)
-                          userid
+                          user-id
                           (:lang params)  ]] :results )))]
               {:status 302 :headers {"Location"
                                      (str "/class/" new-game-id 
@@ -194,12 +216,12 @@ INSERT INTO class (name,teacher,language)
           :body
           (let [class (Integer. (:class (:route-params request)))]
             (page "Class"
-                  (let [userid (username2userid (authentication/current request))
+                  (let [user-id (username2userid (authentication/current request))
                         student-of-class?
                         (not (nil? (first
                                     (k/exec-raw
                                      ["SELECT 1 FROM student_in_class WHERE student=? and class=?"
-                                      [userid class]
+                                      [user-id class]
                                       ] :results))))
                         class-map (first
                                    (k/exec-raw
@@ -215,7 +237,7 @@ INSERT INTO class (name,teacher,language)
                                           ON teacher.id = class.teacher
                                        WHERE class.id=?"
                                      [time-format class]] :results))
-                        teacher-of-class? (= userid (:teacher_user_id class-map))]
+                        teacher-of-class? (= user-id (:teacher_user_id class-map))]
                    [:div {:class "major" :foo 42}
                     [:h2 (banner [{:href "/class"
                                    :content "Classes"}
@@ -293,7 +315,7 @@ INSERT INTO class (name,teacher,language)
                   :body
                   (let [class (Integer. (:class (:route-params request)))]
                     (page "Add a game to this class"
-                          (let [userid (username2userid (authentication/current request))
+                          (let [user-id (username2userid (authentication/current request))
                                 class-map (first
                                            (k/exec-raw
                                             ["SELECT class.id,
@@ -345,7 +367,7 @@ INSERT INTO class (name,teacher,language)
                                     NOT IN (SELECT game
                                               FROM game_in_class
                                              WHERE class = ?)"
-                                            [time-format (:language class-map) userid class]] :results)]
+                                            [time-format (:language class-map) user-id class]] :results)]
                                 [:div.rows2table
                                  (rows2table games
                                              {:if-empty-show-this-instead [:div [:i "There are no games that you can add to this class."]]
