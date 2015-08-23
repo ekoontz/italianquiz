@@ -87,8 +87,7 @@
                         :submit-label "Create"
                         :validations [[:required [:lang :name]]]
                         :fields [{:name :name :size 50 :label "Name"
-                                  :placeholder "Type the name of the class (e.g. 'Ital 1 p6')"}
-                                 ]})]
+                                  :placeholder "Type the name of the class (e.g. 'Italian 1')"}]})]])
 
                    (do-if-not-teacher
                     (let [current-classes
