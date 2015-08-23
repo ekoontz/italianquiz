@@ -215,6 +215,12 @@ div.dangerzone {
     margin-top:5em;
 }
 
+div.dangerzone h4 {
+    width:100%;
+    float:left;
+}
+
+
 div.new {
     float:left;
     width:100%;
