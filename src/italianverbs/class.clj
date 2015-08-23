@@ -41,7 +41,7 @@
 (defn resources [request]
   {:onload "class_onload();"
    :css ["/css/class.css"]
-   :jss ["/js/class/class.js"]
+   :jss ["/js/class.js"]
    :show-login-form (login-form request)
    :menubar (menubar (menubar-info-for-user request))})
    
@@ -84,9 +84,13 @@
                        {:action "/class/new"
                         :enctype "multipart/form-data"
                         :method "post"
+                        :id "create_new_class"
+                        :onsubmit "return validate_new_class('create_new_class');"
                         :submit-label "Create"
-                        :validations [[:required [:lang :name]]]
-                        :fields [{:name :name :size 50 :label "Name"
+                        :fields [(language-radio-buttons)
+                                 {:name :name
+                                  :size 50
+                                  :label "Name"
                                   :placeholder "Type the name of the class (e.g. 'Italian 1')"}]})]])
 
                    (do-if-not-teacher
