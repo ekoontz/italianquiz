@@ -38,17 +38,29 @@
     [:h3 "Classes"]
     (rows2table
      (k/exec-raw
-      ["SELECT class.name AS class, 
+      ["SELECT class.id,class.name AS class, 
            teacher.given_name || ' ' || teacher.family_name AS teacher,
-               teacher.email,
-* FROM class
-INNER JOIN vc_user AS teacher ON (teacher.id = class.teacher)
+           teacher.email,class.language,class.created,game_counts.count AS games
+          FROM class
+    INNER JOIN vc_user AS teacher ON (teacher.id = class.teacher)
+    INNER JOIN (SELECT class.id AS class,count(game_in_class.game) 
+                  FROM class 
+            INNER JOIN game_in_class 
+               ON (class.id = game_in_class.class) 
+            GROUP BY class.id) AS game_counts 
+            ON (game_counts.class = class.id)
       ORDER BY class.created DESC;
-
 "
        []] :results)
 
-     {
+     {:cols [:class :teacher :email :language :games :created]
+      :col-fns {:class (fn [row]
+                          [:a {:href (str "/class/" (:id row))}
+                           (:class row)])
+                :th-styles {:games "text-align: right;background:blue"}
+                :language (fn [row]
+                            (short-language-name-to-long (:language row)))
+                }
       }
 
 
