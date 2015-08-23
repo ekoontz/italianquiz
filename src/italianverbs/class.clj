@@ -51,7 +51,7 @@
         (do-if-authenticated
          {:headers html-headers
           :body
-          (page "My Classes"
+          (page "Classes"
                 (let [user-id (username2userid (authentication/current request))]
                   [:div#classes {:class "major"}
 
