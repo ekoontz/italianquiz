@@ -73,18 +73,22 @@
                                                          (short-language-name-to-long (:language class)))
                                              :class (fn [game-in-class]
                                                       [:a {:href (str "/class/" (:class_id game-in-class))}
-                                                       (:class game-in-class)])}}))
+                                                       (if (and (:class game-in-class)
+                                                                (not (empty? (:class game-in-class))))
+                                                         (:class game-in-class)
+                                                         "(untitled class)")
+                                                         ])}}))
                      [:div.new
-                       [:h3 "Create a new class:"]
-                      
+                      [:h3 "Create a new class:"]
                       (f/render-form
                        {:action "/class/new"
                         :enctype "multipart/form-data"
                         :method "post"
-                        :fields [{:name :name :size 50 :label "Name"}
-                                 (language-radio-buttons)]})
-                      ]]
-                    "")
+                        :submit-label "Create"
+                        :validations [[:required [:lang :name]]]
+                        :fields [{:name :name :size 50 :label "Name"
+                                  :placeholder "Type the name of the class (e.g. 'Ital 1 p6')"}
+                                 ]})]
 
                    (do-if-not-teacher
                     (let [current-classes
