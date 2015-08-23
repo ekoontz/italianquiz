@@ -8,7 +8,10 @@
    [formative.core :as f]
    [hiccup.core :refer (html)]
    [italianverbs.authentication :as authentication]
-   [italianverbs.config :refer [describe-spec json-read-str
+   [italianverbs.config :refer [describe-spec
+                                default-city-for-language
+                                default-source-language
+                                json-read-str
                                 language-dropdown
                                 language-radio-buttons
                                 language-to-spec-path
@@ -344,17 +347,32 @@ INSERT INTO game
                                      (log/debug (str "guess was: " result))
                                      result)))
 
+                city (if (:city params)
+                       (:city params)
+                       (default-city-for-language language))
+                
                 user (authentication/current request)
                 user-id (username2userid user)
-                ;; Defaults: source language=English.
-                game (insert-game (:name params) "en" language
+
+                (log/debug (str "Inserting game: " (:id game) " with params: " params))
+                
+                target-language language
+                game (insert-game (:name params) default-source-language target-language
                                   (:source_groupings params)
                                   (:target_groupings params)
-                                  user-id)]
-              {:status 302 :headers {"Location" 
-                                     (str "/game/" (:id game)
-                                          "?message=Created game.")}}
-              )
+                                  user-id)
+                params (merge params
+                              {:city city})
+                ]
+            (log/debug (str "Updating game: " (:id game) " post-insert with params: " params))
+            (update-game (:id game) (merge params
+                                           {:source default-source-language
+                                            :target language
+                                            :city city}))
+            {:status 302 :headers {"Location" 
+                                   (str "/game/" (:id game)
+                                        "?message=Created game.")}}
+            )
           ))))
 
 (defn games-i-am-playing [user-id]

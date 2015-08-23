@@ -435,7 +435,7 @@ INSERT INTO class (name,teacher,language)
                                              )])
 
                               [:div {:style "float:left;width:100%;margin:0.5em;"}
-                               [:a {:href "/game#new"} "Create a new game"]
+                               [:a {:href (str "/game?class=" class "#new")} "Create a new game for this class"]
                                ]
 
                               ]])

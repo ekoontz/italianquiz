@@ -221,3 +221,13 @@
         (= lang "fr") :français
         (= lang "it") :italiano
         true (str "unknown lang: " lang)))
+
+(defn default-city-for-language [lang]
+  (cond (= lang "es") "Barcelona"
+        (= lang "fr") "Paris"
+        (= lang "it") "Firenze"
+        true (str "unknown lang: " lang)))
+
+(def default-source-language "en")
+
+  
