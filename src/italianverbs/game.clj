@@ -167,18 +167,6 @@
                                   [:input {:type "radio" :label (:label option) :name "language" :value (:value option)}
                                    (:label option)]])
                                (:options (language-radio-buttons)))]]]
-
-
-                       [:div {:style "float:left;width:99%;padding:0.5em"}
-                        [:table.language_radio
-                         [:tr
-                          (map (fn [option]
-                                 [:td
-                                  [:input {:type "radio" :label (:label option) :name "city" :value (:value option)}
-                                   (:label option)]])
-                               (:options (language-radio-buttons)))]]]
-
-
                        
                        [:input {:onclick "submit_new_game.disabled = false;"
                                 :name "name" :size "50" :placeholder (str "Enter the name of a new game.")} ]
