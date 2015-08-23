@@ -926,6 +926,12 @@ ms: " params))))
         [:td (:created_by game)]
         ]]]]
      
+     [:div
+      [:button#toggleverbs
+       {:onclick "checkAllVerbs(this);"}
+       "Check all verbs"
+       ]]
+     
      (f/render-form
       {:action (str "/game/" game-id "/edit")
        :enctype "multipart/form-data"
@@ -968,6 +974,7 @@ ms: " params))))
                 [{:name :target_lex
                   :label "Verbs"
                   :disabled "disabled"
+                  :id "verbcheckboxes"
                   :type :checkboxes
                   :cols 10
                   :options (map (fn [lexeme]
