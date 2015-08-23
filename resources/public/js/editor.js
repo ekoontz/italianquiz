@@ -45,32 +45,28 @@ function counts_per_verb_and_tense(dom_id,game_id,verb,tense) {
     });
 }
 
-function checkAllVerbs(toggle_button) {
+function checkAllVerbs(toggle) {
     var cbs = $("#row-verbcheckboxes").find(':input');
     for(var i=0; i < cbs.length; i++) {
 	if(cbs[i].type == 'checkbox') {
 	    cbs[i].checked = true;
 	}
     }
-    toggle_button.onclick = function() {
-	uncheckAllVerbs(toggle_button);
+    toggle.onclick = function() {
+	uncheckAllVerbs(toggle);
     };
-    $("#toggleverbs").html("Uncheck all verbs");
-
 }
 
-function uncheckAllVerbs(toggle_button) {
+function uncheckAllVerbs(toggle) {
     var cbs = $("#row-verbcheckboxes").find(':input');
     for(var i=0; i < cbs.length; i++) {
 	if(cbs[i].type == 'checkbox') {
 	    cbs[i].checked = false;
 	}
     }
-    toggle_button.onclick = function() {
-	checkAllVerbs(toggle_button);
+    toggle.onclick = function() {
+	checkAllVerbs(toggle);
     };
-    $("#toggleverbs").html("Check all verbs");
-
 }
 
 

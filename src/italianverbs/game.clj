@@ -444,7 +444,7 @@ INSERT INTO game
        [:h2 
         (banner (concat 
                  [{:href "/game" 
-                   :content "My Games"}]
+                   :content "Games"}]
                  (if game
                    [{:href (if (:refine (:params request))
                              (str "/game/" game-id))
@@ -926,12 +926,6 @@ ms: " params))))
         [:td (:created_by game)]
         ]]]]
      
-     [:div
-      [:button#toggleverbs
-       {:onclick "checkAllVerbs(this);"}
-       "Check all verbs"
-       ]]
-     
      (f/render-form
       {:action (str "/game/" game-id "/edit")
        :enctype "multipart/form-data"
@@ -971,6 +965,12 @@ ms: " params))))
                                       {})))
                                  ["Firenze"]))}]
 
+                [{:name :checkallverbs
+                  :type :checkbox
+                  :id "toggleverbs"
+                  :label "Check All Verbs"
+                  :onclick "checkAllVerbs(this);"}]
+
                 [{:name :target_lex
                   :label "Verbs"
                   :disabled "disabled"
@@ -990,6 +990,7 @@ ms: " params))))
                                                       ORDER BY surface ASC")
                                                   [language-short-name]]
                                                   :results)))}]
+
                 [{:name :target_tenses
                   :label "Tenses"
                   :type :checkboxes
