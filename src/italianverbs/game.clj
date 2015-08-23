@@ -155,7 +155,9 @@
                      [:h3 "Create a new game"]
                      [:div.new {:style "display:block"}
                       [:form {:method "post"
+                              :id "new_game_form"
                               :enctype "multipart/form-data"
+                              :onsubmit "return validateNewGame('new_game_form');"
                               :action "/game/new"}
                        ;; TODO: don't disable button unless and until input is something besides whitespace.
 
@@ -168,10 +170,14 @@
                                    (:label option)]])
                                (:options (language-radio-buttons)))]]]
                        
-                       [:input {:onclick "submit_new_game.disabled = false;"
-                                :name "name" :size "50" :placeholder (str "Enter the name of a new game.")} ]
+                       [:input {:name "name" :size "50" :placeholder (str "Enter the name of a new game.")} ]
 
-                       [:button {:name "submit_new_game" :disabled true :onclick "submit();"} "New Game"]
+                       [:div.input-shell
+                        [:input {:class "btn btn-primary"
+                                 :name "submit"
+                                 :type "submit"
+                                 :value "Create"}]
+                        ]
                        ]
                       ]
                      ]

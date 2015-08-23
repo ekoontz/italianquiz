@@ -69,5 +69,22 @@ function uncheckAllVerbs(toggle) {
     };
 }
 
+function validateNewGame(form_id) {
+    var mandatory_items = {};
+    $("#" + form_id).serializeArray().forEach(function(item) {
+	if (item.value != "") {
+	    mandatory_items[item.name] = true;
+	}});
+
+    if (mandatory_items['name'] == undefined) {
+	alert("Please name your game.");
+	return false;
+    }
+    if (mandatory_items['language'] == undefined) {
+	alert("Please choose a language for your game.");
+	return false;
+    }
+    return true;
+}
 
 
