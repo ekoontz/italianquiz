@@ -354,7 +354,7 @@ INSERT INTO game
                 user (authentication/current request)
                 user-id (username2userid user)
 
-                debug (log/debug (str "Inserting game: " (:id game) " with params: " params))
+                debug (log/debug (str "Inserting new game with params: " params))
                 
                 target-language language
                 game (insert-game (:name params) default-source-language target-language
