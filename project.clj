@@ -29,7 +29,6 @@
                  [org.clojure/math.numeric-tower "0.0.4"]
                  [org.clojure/tools.logging "0.2.6"]
                  [org.postgresql/postgresql "9.4-1201-jsonb-jdbc41-SNAPSHOT"]
-                 [org.webjars/foundation "4.0.4"]
                  [postmark "1.1.0" :exclusions [org.clojure/clojure]]
                  [ring/ring-jetty-adapter "1.1.0"]
                  [ring/ring-devel "1.1.0"]

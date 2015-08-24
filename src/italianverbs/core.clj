@@ -83,7 +83,6 @@
   (context "/user" []
            user/routes)
 
-  (route/resources "/webjars" {:root "META-INF/resources/webjars/foundation/4.0.4/"})
   (route/resources "/")
 
   ;; TODO: how to show info about the request (e.g. request path and error code).
