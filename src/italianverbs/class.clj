@@ -77,7 +77,10 @@
                                                                 (not (empty? (:class game-in-class))))
                                                          (:class game-in-class)
                                                          "(untitled class)")
-                                                         ])}}))
+                                                       ])}}))]
+                    "") ;; if not a teacher, show emptystring.
+
+                   (do-if-teacher
                      [:div.new
                       [:h3 "Create a new class:"]
                       (f/render-form
@@ -91,7 +94,9 @@
                                  {:name :name
                                   :size 50
                                   :label "Name"
-                                  :placeholder "Type the name of the class (e.g. 'Italian 1')"}]})]])
+                                  :placeholder "Type the name of the class (e.g. 'Italian 1')"}]})]
+                    "" ;; if not a teacher show emptystring
+                    )
 
                    (do-if-not-teacher
                     (let [current-classes
