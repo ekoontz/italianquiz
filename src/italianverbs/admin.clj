@@ -40,7 +40,7 @@
      (k/exec-raw
       ["SELECT class.id,class.name AS class, 
            teacher.given_name || ' ' || teacher.family_name AS teacher,
-           teacher.email,class.language,class.created,game_counts.count AS games
+           teacher.email,class.language,to_char(class.created,?) AS created,game_counts.count AS games
           FROM class
     INNER JOIN vc_user AS teacher ON (teacher.id = class.teacher)
     INNER JOIN (SELECT class.id AS class,count(game_in_class.game) 
@@ -51,13 +51,13 @@
             ON (game_counts.class = class.id)
       ORDER BY class.created DESC;
 "
-       []] :results)
+       [time-format]] :results)
 
      {:cols [:class :teacher :email :language :games :created]
       :col-fns {:class (fn [row]
                           [:a {:href (str "/class/" (:id row))}
                            (:class row)])
-                :th-styles {:games "text-align: right;background:blue"}
+                :th-styles {:games "text-align:right;"}
                 :language (fn [row]
                             (short-language-name-to-long (:language row)))
                 }
