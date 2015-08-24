@@ -42,6 +42,7 @@
 (declare onload)
 (declare insert-game)
 (declare is-owner-of?)
+(declare new-game-form)
 (declare show-students)
 (declare show-game)
 (declare show-games)
@@ -64,7 +65,6 @@
 (declare tenses-of-game-as-human-readable)
 (declare verbs-of-game-as-human-readable)
 (declare games-i-am-playing)
-
 
 (def routes
   (compojure/routes
@@ -154,39 +154,8 @@
                     )
 
                    (do-if-teacher
-                    [:div#new {:class "gamelist"}
-                     [:h3 "Create a new game"]
-                     [:div.new {:style "display:block"}
-                      [:form {:method "post"
-                              :id "new_game_form"
-                              :enctype "multipart/form-data"
-                              :onsubmit "return validateNewGame('new_game_form');"
-                              :action "/game/new"}
-                       ;; TODO: don't disable button unless and until input is something besides whitespace.
-
-                       [:div {:style "float:left;width:99%;padding:0.5em"}
-                        [:table.language_radio
-                         [:tr
-                          (map (fn [option]
-                                 [:td
-                                  [:input {:type "radio" :label (:label option) :name "language" :value (:value option)}
-                                   (:label option)]])
-                               (:options (language-radio-buttons)))]]]
-                       
-                       [:input {:name "name" :size "50" :placeholder (str "Enter the name of a new game.")} ]
-
-                       [:div.input-shell
-                        [:input {:class "btn btn-primary"
-                                 :name "submit"
-                                 :type "submit"
-                                 :value "Create"}]
-                        ]
-                       ]
-                      ]
-                     ]
-
+                    (new-game-form)
                     "")
-
 
                    (do-if-teacher
                     (games-i-am-playing user-id)
@@ -363,17 +332,59 @@ INSERT INTO game
                                   user-id)
                 params (merge params
                               {:city city})
+                class (if (:class params)
+                        (Integer. (:class params)))
                 ]
             (log/debug (str "Updating game: " (:id game) " post-insert with params: " params))
             (update-game (:id game) (merge params
                                            {:source default-source-language
                                             :target language
                                             :city city}))
-            {:status 302 :headers {"Location" 
-                                   (str "/game/" (:id game)
-                                        "?message=Created game.")}}
-            )
-          ))))
+            (let [game (:id game)]
+              (if class
+                (do
+                  (k/exec-raw ["INSERT INTO game_in_class (game,class) 
+                                     SELECT ?,?
+                                      WHERE 
+                                 NOT EXISTS (SELECT game,class 
+                                               FROM game_in_class 
+                                              WHERE game = ? AND class=?)" [game class game class]])
+                  {:status 302
+                   :headers {"Location" (str "/class/" class "?message=Added game.")}})
+                {:status 302 :headers {"Location" 
+                                       (str "/game/" (:id game)
+                                            "?message=Created game.")}})))))))
+(defn new-game-form [ & [ {class :class
+                           header :header
+                           target-language :target-language}]]
+  (let [header (if header header "Create a new game")]
+    [:div#new {:class "gamelist"}
+     [:h3 header]
+     [:div.new {:style "display:block"}
+      [:form {:method "post"
+              :id "new_game_form"
+              :enctype "multipart/form-data"
+              :onsubmit "return validateNewGame('new_game_form');"
+              :action "/game/new"}
+       (if target-language
+         [:input {:type :hidden :name "language" :value target-language}]
+         ;; if no target-language yet, we need to show the radio buttons to choose one.
+         [:div {:style "float:left;width:99%;padding:0.5em"}
+          [:table.language_radio
+           [:tr
+            (map (fn [option]
+                   [:td
+                    [:input {:type "radio" :label (:label option) :name "language" :value (:value option)}
+                     (:label option)]])
+               (:options (language-radio-buttons)))]]])
+       (if class [:input {:type :hidden :name "class" :value class}])
+       [:input {:name "name" :size "50" :placeholder (str "Enter the name of a new game.")} ]
+       [:div.input-shell
+        [:input {:class "btn btn-primary"
+                 :name "submit"
+                 :type "submit"
+                 :value "Create"}]]
+       ]]]))
 
 (defn games-i-am-playing [user-id]
   [:div {:class "gamelist"}

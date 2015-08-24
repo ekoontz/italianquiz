@@ -17,7 +17,7 @@
    [italianverbs.about :as about]
    [italianverbs.authentication :as authentication]
    [italianverbs.config :refer [language-radio-buttons short-language-name-to-long time-format]]
-   [italianverbs.game :refer [tenses-of-game-as-human-readable verbs-of-game-as-human-readable]]
+   [italianverbs.game :refer [new-game-form tenses-of-game-as-human-readable verbs-of-game-as-human-readable]]
    [italianverbs.html :as html :refer [banner page rows2table]]
    [italianverbs.menubar :refer [menubar]]
    [babel.korma :as db]
@@ -27,12 +27,13 @@
                               username2userid]]
    [korma.core :as k]))
 
+(declare add-existing-game-to-this-class)
 (declare delete-class)
 (declare headers)
 (declare is-teacher-of-class?)
 (declare table)
 (declare tr)
-(declare show-games)
+(declare show-games-for-class)
 (declare show-students)
 (declare show-classes)
 
@@ -151,14 +152,14 @@
                       [:h3 "Enroll in a new class"]
                       [:form {:action "/class/join"
                               :method "post"}]
-                      (let [enrollable-classes (k/exec-raw
-
-                                     ;; Show only classes for which both of the following are true:
-                                     ;;
-                                     ;; 1. classes which the student is not already enrolled
-                                     ;; 2. classes for which teacher the student is enrolled in a class with.
-                                     ;;
-                                     ["SELECT class.id AS class_id,'enroll',class.name AS class,
+                      (let [enrollable-classes
+                            (k/exec-raw
+                             ;; Show only classes for which both of the following are true:
+                             ;;
+                             ;; 1. classes which the student is not already enrolled
+                             ;; 2. classes for which teacher the student is enrolled in a class with.
+                             ;;
+                             ["SELECT class.id AS class_id,'enroll',class.name AS class,
                                               trim(teacher.given_name || ' ' || teacher.family_name) AS teacher,
                                               teacher.email AS email,
                                               class.language
@@ -179,8 +180,7 @@
                                                  INNER JOIN student_in_class 
                                                          ON student_in_class.class = class.id
                                                         AND student_in_class.student = ?)"
-                                      
-                                      [user-id user-id]] :results)]
+                              [user-id user-id]] :results)]
 
                         (rows2table enrollable-classes
                                     {:cols [:enroll :class :language :teacher :email]
@@ -286,7 +286,7 @@ INSERT INTO class (name,teacher,language)
                                        WHERE class.id=?"
                                      [time-format class]] :results))
                         teacher-of-class? (= user-id (:teacher_user_id class-map))]
-                   [:div {:class "major" :foo 42}
+                   [:div {:class "major"}
                     [:h2 (banner [{:href "/class"
                                    :content "Classes"}
                                   {:href nil
@@ -310,7 +310,7 @@ INSERT INTO class (name,teacher,language)
                            "")
 
                     (do-if (or teacher-of-class? (has-admin-role?))
-                           (show-games class)
+                           (show-games-for-class class user-id)
                            "")
 
                     ;; TODO: see games.clj for showing play vs. resume
@@ -379,7 +379,7 @@ INSERT INTO class (name,teacher,language)
                                           ON teacher.id = class.teacher
                                        WHERE class.id=?"
                                              [time-format class]] :results))]
-                            [:div#students {:class "major" :foo 43}
+                            [:div.major
                              [:h2 (banner [{:href "/class"
                                             :content "Classes"}
                                            {:href (str "/class/" (:id class-map))
@@ -400,51 +400,7 @@ INSERT INTO class (name,teacher,language)
                                 ]
                                ]
 
-                              [:h3 "Choose a game to add to this class"]
-
-                              ;; This query shows all games that are *not* in this game.
-                              (let [games (k/exec-raw
-                                           ["SELECT 'Add',game.id,game.name AS game,city,
-                                           to_char(game.created_on,?) AS created,
-                                           trim(game_creator.given_name || ' ' || game_creator.family_name) AS creator,
-                                           game_creator.email AS creator_email
-                                      FROM game
-                                 LEFT JOIN vc_user AS game_creator
-                                        ON (game.created_by = game_creator.id)
-                                     WHERE game.target = ?
-                                       AND game.created_by = ?
-                                       AND game.id
-                                    NOT IN (SELECT game
-                                              FROM game_in_class
-                                             WHERE class = ?)"
-                                            [time-format (:language class-map) user-id class]] :results)]
-                                [:div.rows2table
-                                 (rows2table games
-                                             {:if-empty-show-this-instead
-                                              [:div [:i "You have no existing games that you can add to this class."]]
-                                              :cols [:add :game :city :created :creator :creator_email]
-                                              :td-styles
-                                              {:add "text-align:center"}
-                                              :th-styles
-                                              {:add "text-align:center;width:3em"}
-                                              :col-fns
-                                              {:add (fn [game] (html
-                                                       [:form {:action (str "/class/" class
-                                                                            "/game/" (:id game) "/add")
-                                                               :method "post"}
-                                                        [:button {:onclick "submit()"} "Add"]]))
-                                               :game (fn [game] (html [:a {:href (str "/game/" (:id game))}
-                                                                       (if (or (nil? (:game game))
-                                                                               (not (= "" (string/trim (:game game)))))
-                                                                         (:game game) "(untitled)")]))
-                                               :created (fn [game] (html [:a {:href (str "/game/" (:id game))}
-                                                                          (:created game)]))
-                                               }}
-                                             )])
-
-                              [:div {:style "float:left;width:100%;margin:0.5em;"}
-                               [:a {:href (str "/game?class=" class "#new")} "Create a new game for this class"]
-                               ]
+                              (add-existing-game-to-this-class class-id user-id)
 
                               ]])
 
@@ -470,7 +426,7 @@ INSERT INTO class (name,teacher,language)
                                             FROM game_in_class 
                                            WHERE game = ? AND class=?)" [game class game class]])
                  {:status 302
-                  :headers {"Location" (str "/class/" class "?message=Added game.")}}))))
+                  :headers {"Location" (str "/class/" class "?message=Added game.#games")}}))))
 
       (POST "/disenroll/:class" request
             (do-if-authenticated
@@ -505,7 +461,7 @@ INSERT INTO class (name,teacher,language)
                            game (Integer. (:game (:route-params request)))]
                        (k/exec-raw ["DELETE FROM game_in_class WHERE game=? AND class=?" [game class]])
                        {:status 302
-                        :headers {"Location" (str "/class/" class "?message=Removed game.")}}))))
+                        :headers {"Location" (str "/class/" class "?message=Removed game.#games")}}))))
       
       (POST "/:class-to-delete/delete" request
             (let [class-id (Integer. (:class-to-delete (:route-params request)))
@@ -525,7 +481,6 @@ INSERT INTO class (name,teacher,language)
       )
   )
 
-
 (defn show-students [class]
   (html
    [:h3 "Students"]
@@ -540,6 +495,7 @@ INSERT INTO class (name,teacher,language)
      [:div.rows2table
       (rows2table students
                   {:cols [:name :picture :email :enrolled]
+                   :if-empty-show-this-instead "No students in this class yet."
                    :col-fns
                    {:picture (fn [picture] (html [:img {:width "50px" :src (:picture picture)}]))
                     :name (fn [student]
@@ -549,10 +505,12 @@ INSERT INTO class (name,teacher,language)
     [:a {:href (str "/class/" class "/student/add")}
      "Add a new student"]]))
 
-(defn show-games [class]
+(defn show-games-for-class [class user-id]
   (html
    [:h3 "Games"]
-   (let [games (k/exec-raw
+   (let [class-map (first (k/exec-raw ["SELECT * FROM class WHERE id=?"
+                                       [class]] :results))
+         games (k/exec-raw
                 ["SELECT 'remove',game.id,game.name AS game,game.city,
                                            trim(owner.given_name || ' ' || owner.family_name) AS created_by,
                                            owner.id AS owner_id,
@@ -565,31 +523,35 @@ INSERT INTO class (name,teacher,language)
                                         ON (owner.id = game.created_by)
                                   ORDER BY game_in_class.added DESC"
                  [time-format class]] :results)]
-     [:div.rows2table
-      (rows2table games
-                  {:cols [:remove :game :city :created_by :added]
-                   :td-styles
-                   {:remove "text-align:center"}
-                   :th-styles
-                   {:remove "text-align:center;width:3em"}
-                   :col-fns
-                   ;; TODO: add some javascript confirmation "are you sure?" stuff rather
-                   ;; than simply removing the game from the class.
-                   {:remove (fn [game]
-                              (html [:form {:action (str "/class/" class
-                                                         "/game/" (:id game) "/delete")
-                                            :method "post"}
-                                     [:button {:onclick "submit()"} "Remove"]]))
-                    :created_by (fn [game] (html [:a {:href (str "/teacher/" (:owner_id game))}
+     [:div#games
+      [:div.rows2table
+       (rows2table games
+                   {:cols [:remove :game :city :created_by :added]
+                    :td-styles {:remove "text-align:center"}
+                    :if-empty-show-this-instead "No games for this class yet."
+                    :th-styles {:remove "text-align:center;width:3em"}
+                    :col-fns
+                    ;; TODO: add some javascript confirmation "are you sure?" stuff rather
+                    ;; than simply removing the game from the class.
+                    {:remove (fn [game]
+                               (html [:form {:action (str "/class/" class
+                                                          "/game/" (:id game) "/delete")
+                                             :method "post"}
+                                      [:button {:onclick "submit()"} "Remove"]]))
+                     :created_by (fn [game] (html [:a {:href (str "/teacher/" (:owner_id game))}
                                                   (:created_by game)]))
-                    :game (fn [game] (html [:a {:href (str "/game/" (:id game))}
-                                            (if (or (nil? (:game game))
-                                                    (not (= "" (string/trim (:game game)))))
-                                              (:game game) "(untitled)")]))}}
-                  )])
-   [:div.add 
-    [:a {:href (str "/class/" class "/game/add")}
-     "Add a game to this class"]]))
+                     :game (fn [game] (html [:a {:href (str "/game/" (:id game))}
+                                             (if (or (nil? (:game game))
+                                                     (not (= "" (string/trim (:game game)))))
+                                               (:game game) "(untitled)")]))}}
+                   )]
+
+      (add-existing-game-to-this-class class user-id)
+      
+      (new-game-form {:header "Create a new game for this class"
+                      :class class
+                      :target-language (:language class-map)
+                      })])))
 
 (defn is-teacher-of-class? [class-id user]
   "return true iff user (identified by their email) is the teacher of the class whose is class-id"
@@ -621,3 +583,49 @@ INSERT INTO class (name,teacher,language)
     (let [error-message (str "Error: no class to delete: class-id was null.")]
       (log/error error-message)
       error-message)))
+
+(defn add-existing-game-to-this-class [class user-id]
+  ;; This query shows all games that are *not* in this game.
+  (let [class-map (first (k/exec-raw ["SELECT * FROM class WHERE id=?"
+                                       [class]] :results))
+        games (k/exec-raw
+               ["SELECT 'Add',game.id,game.name AS game,city,
+                                           to_char(game.created_on,?) AS created,
+                                           trim(game_creator.given_name || ' ' || game_creator.family_name) AS creator,
+                                           game_creator.email AS creator_email
+                                      FROM game
+                                 LEFT JOIN vc_user AS game_creator
+                                        ON (game.created_by = game_creator.id)
+                                     WHERE game.target = ?
+                                       AND game.created_by = ?
+                                       AND game.id
+                                    NOT IN (SELECT game
+                                              FROM game_in_class
+                                             WHERE class = ?)"
+                                            [time-format (:language class-map) user-id class]] :results)]
+    [:div
+     [:h3 "Choose an existing game to add to this class"]
+     [:div.rows2table
+      (rows2table games
+                  {:if-empty-show-this-instead
+                   [:div [:i "You have no existing games that you can add to this class."]]
+                   :cols [:add :game :city :created :creator :creator_email]
+                   :td-styles
+                   {:add "text-align:center"}
+                   :th-styles
+                   {:add "text-align:center;width:3em"}
+                   :col-fns
+                   {:add (fn [game] (html
+                                     [:form {:action (str "/class/" class
+                                                          "/game/" (:id game) "/add")
+                                             :method "post"}
+                                      [:button {:onclick "submit()"} "Add"]]))
+                    :game (fn [game] (html [:a {:href (str "/game/" (:id game))}
+                                            (if (or (nil? (:game game))
+                                                    (not (= "" (string/trim (:game game)))))
+                                             (:game game) "(untitled)")]))
+                    :created (fn [game] (html [:a {:href (str "/game/" (:id game))}
+                                               (:created game)]))
+                    }}
+                  )]
+     ]))
