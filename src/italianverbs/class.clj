@@ -609,7 +609,7 @@ INSERT INTO class (name,teacher,language)
      [:div.rows2table
       (rows2table games
                   {:if-empty-show-this-instead
-                   [:div [:i "You have no existing games that you can add to this class."]]
+                   [:div "You have no existing games that you can add to this class."]
                    :cols [:add :game :city :created :creator :creator_email]
                    :td-styles
                    {:add "text-align:center"}
