@@ -116,6 +116,7 @@
                             [user-id]] :results)]
                     
                     [:div ;; <currently-enrolled-and-enrollable>
+                     [:h2 (banner [{:content "My Classes"}])]
                      [:div {:class "classlist"}
                       [:h3 "Classes I'm enrolled in"]
                       (let [results (k/exec-raw
