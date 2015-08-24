@@ -22,7 +22,7 @@
    [italianverbs.menubar :refer [menubar]]
    [babel.korma :as db]
    [italianverbs.user :refer [do-if do-if-authenticated do-if-teacher
-                              do-if-not-teacher
+                              do-if-not-teacher has-admin-role?
                               login-form menubar-info-for-user
                               username2userid]]
    [korma.core :as k]))
@@ -300,11 +300,11 @@ INSERT INTO class (name,teacher,language)
                        ]
                       ]]
 
-                    (do-if teacher-of-class?
+                    (do-if (or teacher-of-class? (has-admin-role?))
                            (show-students class)
                            "")
 
-                    (do-if teacher-of-class?
+                    (do-if (or teacher-of-class? (has-admin-role?))
                            (show-games class)
                            "")
 
@@ -322,10 +322,11 @@ INSERT INTO class (name,teacher,language)
                                     [class]] :results)]
                               [:div.rows2table
                                (rows2table games
-                                           {:col-fns {:play (fn [game]
-                                                              (html [:button {:onclick (str "document.location='/tour/"
-                                                                                            (:id game) "';")}
-                                                                     "Play"]))}
+                                           {:col-fns
+                                            {:play (fn [game]
+                                                     (html [:button {:onclick (str "document.location='/tour/"
+                                                                                   (:id game) "';")}
+                                                            "Play"]))}
                                             :th-styles
                                             {:play "text-align:center;width:3em"}
                                             :cols [:play :game :city]})]))
