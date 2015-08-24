@@ -132,7 +132,7 @@
      LEFT JOIN vc_user AS users 
             ON users.id = session.user_id
       ORDER BY session.created DESC" [time-format]] :results)
-     {:cols [:created :email :user :access_token :ring_session]}
+     {:cols [:email :user :access_token :created :ring_session]}
      )]
    ])
 
