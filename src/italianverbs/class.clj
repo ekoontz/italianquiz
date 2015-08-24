@@ -359,7 +359,8 @@ INSERT INTO class (name,teacher,language)
         request
         (let [class-id (Integer. (:class (:route-params request)))
               user (username2userid (authentication/current request))]
-          (do-if (is-teacher-of-class? class-id user)
+          (do-if (or (is-teacher-of-class? class-id user)
+                     (has-admin-role?))
                  {:headers html-headers
                   :body
                   (let [class (Integer. (:class (:route-params request)))]
@@ -419,7 +420,8 @@ INSERT INTO class (name,teacher,language)
                                             [time-format (:language class-map) user-id class]] :results)]
                                 [:div.rows2table
                                  (rows2table games
-                                             {:if-empty-show-this-instead [:div [:i "There are no games that you can add to this class."]]
+                                             {:if-empty-show-this-instead
+                                              [:div [:i "You have no existing games that you can add to this class."]]
                                               :cols [:add :game :city :created :creator :creator_email]
                                               :td-styles
                                               {:add "text-align:center"}
