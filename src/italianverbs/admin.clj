@@ -54,16 +54,15 @@
        [time-format]] :results)
 
      {:cols [:class :teacher :email :language :games :created]
-      :col-fns {:class (fn [row]
-                          [:a {:href (str "/class/" (:id row))}
-                           (:class row)])
-                :th-styles {:games "text-align:right;"}
-                :language (fn [row]
+      :col-fns {:language (fn [row]
                             (short-language-name-to-long (:language row)))
-                }
-      }
-
-
+                :class (fn [row]
+                          [:a {:href (str "/class/" (:id row))}
+                           (:class row)])}
+      :td-styles {:games "text-align:right;"}
+      :th-styles {:games "text-align:right;"}
+      :language (fn [row]
+                  (short-language-name-to-long (:language row)))}
      )
     ]
    
