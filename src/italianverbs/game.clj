@@ -653,7 +653,10 @@ ms: " params))))
                                LEFT JOIN vc_user
                                       ON (vc_user.id = game.created_by)
                                    WHERE game.id=?"
-                                 [time-format game-id]] :results))
+                                 [time-format game-id]] :results))]
+    (if (nil? game)
+      ""
+      (let [
         created-on (:created_on game)
         owner-info (first (k/exec-raw ["SELECT vc_user.email,
                                            trim(vc_user.given_name || ' ' || vc_user.family_name) AS owner
@@ -728,7 +731,7 @@ ms: " params))))
          ;; (populate 50 en/small it/small (unify (pick one <target_grammar>) (pick one <target lex>)))
          ;; (populate 50 en/small it/small {:root {:italiano {:italiano "esprimere"}}})
 
-        ]])))
+        ]])))))
 
 (defn source-to-target-mappings [game-id spec]
   (let [show-edit-buttons false
