@@ -545,9 +545,9 @@ INSERT INTO class (name,teacher,language)
                     {:warning (fn [game]
                                 (html
                                  (when (= 0 (:tenses game))
-                                   [:p.warn "You need choose some tenses for this game."])
+                                   [:p.warn "You need to " [:a {:href (str "/game/" (:id game))} "choose some tenses" ] " for this game."])
                                  (when (= 0 (:verbs game))
-                                   [:p.warn "You need choose some verbs for this game."])))
+                                   [:p.warn "You need to " [:a {:href (str "/game/" (:id game))} "choose some verbs" ] " for this game."])))
                      :remove (fn [game]
                                (html [:form {:action (str "/class/" class
                                                           "/game/" (:id game) "/delete")
