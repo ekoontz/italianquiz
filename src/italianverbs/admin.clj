@@ -84,17 +84,33 @@
      (k/exec-raw
       ["SELECT game.name AS game,game.id AS id,
                creator.email AS created_by,game.target AS language,
+               COALESCE(array_length(target_lex,1),0) AS verbs,
+               COALESCE(array_length(target_grammar,1),0) AS tenses,
                city,active,to_char(game.created_on,?) AS created_on
           FROM game 
      LEFT JOIN vc_user AS creator 
             ON (creator.id = game.created_by)
       ORDER BY game.created_on DESC;
 " [time-format]] :results)
-     {:cols [:game :created_by :language :city :created_on :active]
-      :td-styles {:created_on "white-space:nowrap;"}
+     {:cols [:game :created_by :language :verbs
+             :tenses :city :created_on :active]
+      :th-styles {:tenses "text-align:right;"
+                  :verbs "text-align:right;"
+                  }
+      :td-styles {:created_on "white-space:nowrap;"
+                  :tenses "text-align:right;"
+                  :verbs "text-align:right;"
+                  }
+
       :col-fns {:game (fn [row]
                         [:a {:href (str "/game/" (:id row))}
                          (:game row)])
+                :tenses (fn [row]
+                        [:a {:href (str "/game/" (:id row))}
+                         (:tenses row)])
+                :verbs (fn [row]
+                        [:a {:href (str "/game/" (:id row))}
+                         (:verbs row)])
                 :language (fn [row]
                             (short-language-name-to-long (:language row)))
                 }
