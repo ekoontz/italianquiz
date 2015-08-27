@@ -40,27 +40,39 @@
      (k/exec-raw
       ["SELECT class.id,class.name AS class, 
            teacher.given_name || ' ' || teacher.family_name AS teacher,
-           teacher.email,class.language,to_char(class.created,?) AS created,game_counts.count AS games
+           teacher.email,class.language,to_char(class.created,?) AS created,
+           game_counts.count AS games,
+           student_counts.count AS students
           FROM class
     INNER JOIN vc_user AS teacher ON (teacher.id = class.teacher)
     INNER JOIN (SELECT class.id AS class,count(game_in_class.game) 
                   FROM class 
             INNER JOIN game_in_class 
-               ON (class.id = game_in_class.class) 
-            GROUP BY class.id) AS game_counts 
+                    ON (class.id = game_in_class.class) 
+              GROUP BY class.id) AS game_counts 
             ON (game_counts.class = class.id)
+    INNER JOIN (SELECT class.id AS class,count(student_in_class.student)
+                  FROM class
+            INNER JOIN student_in_class 
+                    ON (class.id = student_in_class.class) 
+              GROUP BY class.id) AS student_counts 
+            ON (student_counts.class = class.id)
       ORDER BY class.created DESC;
 "
        [time-format]] :results)
 
-     {:cols [:class :teacher :email :language :games :created]
+     {:cols [:class :teacher :email :language :students :games :created]
       :col-fns {:language (fn [row]
                             (short-language-name-to-long (:language row)))
                 :class (fn [row]
                           [:a {:href (str "/class/" (:id row))}
                            (:class row)])}
-      :td-styles {:games "text-align:right;"}
-      :th-styles {:games "text-align:right;"}
+      :td-styles {:games "text-align:right;"
+                  :students "text-align:right;"
+                  }
+      :th-styles {:games "text-align:right;"
+                  :students "text-align:right;"
+                  }
       :language (fn [row]
                   (short-language-name-to-long (:language row)))}
      )
