@@ -514,7 +514,8 @@ INSERT INTO class (name,teacher,language)
          games (k/exec-raw
                 ["SELECT 'remove',game.id,game.name AS game,game.city,
                                            trim(owner.given_name || ' ' || owner.family_name) AS created_by,
-                                           owner.id AS owner_id,
+                                           COALESCE(array_length(target_lex,1),0) AS verbs,
+                                           COALESCE(array_length(target_grammar,1),0) AS tenses,
                                            to_char(game_in_class.added,?) AS added
                                       FROM game
                                 INNER JOIN game_in_class
@@ -527,10 +528,15 @@ INSERT INTO class (name,teacher,language)
      [:div#games
       [:div.rows2table
        (rows2table games
-                   {:cols [:remove :game :city :created_by :added]
-                    :td-styles {:remove "text-align:center"}
+                   {:cols [:remove :game :city :verbs :tenses :added]
+                    :td-styles {:remove "text-align:center"
+                                :verbs  "text-align:right;"
+                                :tenses  "text-align:right;"
+                                }
                     :if-empty-show-this-instead "No games for this class yet."
-                    :th-styles {:remove "text-align:center;width:3em"}
+                    :th-styles {:remove "text-align:center;width:3em"
+                                :tenses  "text-align:right;"
+                                :verbs  "text-align:right;"}
                     :col-fns
                     ;; TODO: add some javascript confirmation "are you sure?" stuff rather
                     ;; than simply removing the game from the class.
@@ -539,12 +545,16 @@ INSERT INTO class (name,teacher,language)
                                                           "/game/" (:id game) "/delete")
                                              :method "post"}
                                       [:button {:onclick "submit()"} "Remove"]]))
-                     :created_by (fn [game] (html [:a {:href (str "/teacher/" (:owner_id game))}
-                                                  (:created_by game)]))
                      :game (fn [game] (html [:a {:href (str "/game/" (:id game))}
                                              (if (or (nil? (:game game))
                                                      (not (= "" (string/trim (:game game)))))
-                                               (:game game) "(untitled)")]))}}
+                                               (:game game) "(untitled)")]))
+                     :tenses (fn [game] (html [:a {:href (str "/game/" (:id game))}
+                                               (:tenses game)]))
+                     :verbs (fn [game] (html [:a {:href (str "/game/" (:id game))}
+                                              (:verbs game)]))
+                     }
+                    }
                    )]
 
       (add-existing-game-to-this-class class user-id)
