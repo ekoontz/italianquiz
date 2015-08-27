@@ -21,3 +21,8 @@ div.add {
     width:90%;
     float:left;
 }
+
+p.warn {
+    padding:0.25em;
+    background:salmon;
+}

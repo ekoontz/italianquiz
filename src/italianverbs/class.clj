@@ -512,11 +512,12 @@ INSERT INTO class (name,teacher,language)
    (let [class-map (first (k/exec-raw ["SELECT * FROM class WHERE id=?"
                                        [class]] :results))
          games (k/exec-raw
-                ["SELECT 'remove',game.id,game.name AS game,game.city,
+                ["SELECT 'remove',game.id,game.name AS game,
+                                           game.city,
                                            trim(owner.given_name || ' ' || owner.family_name) AS created_by,
                                            COALESCE(array_length(target_lex,1),0) AS verbs,
                                            COALESCE(array_length(target_grammar,1),0) AS tenses,
-                                           to_char(game_in_class.added,?) AS added
+                                           to_char(game_in_class.added,?) AS added,'warning'
                                       FROM game
                                 INNER JOIN game_in_class
                                         ON (game_in_class.game=game.id
@@ -528,19 +529,26 @@ INSERT INTO class (name,teacher,language)
      [:div#games
       [:div.rows2table
        (rows2table games
-                   {:cols [:remove :game :city :verbs :tenses :added]
+                   {:cols [:remove :game :city :verbs :tenses :added :warning]
                     :td-styles {:remove "text-align:center"
                                 :verbs  "text-align:right;"
                                 :tenses  "text-align:right;"
                                 }
                     :if-empty-show-this-instead "No games for this class yet."
                     :th-styles {:remove "text-align:center;width:3em"
-                                :tenses  "text-align:right;"
-                                :verbs  "text-align:right;"}
+                                :tenses  "text-align:right"
+                                :warning "visibility:hidden"
+                                :verbs  "text-align:right"}
                     :col-fns
                     ;; TODO: add some javascript confirmation "are you sure?" stuff rather
                     ;; than simply removing the game from the class.
-                    {:remove (fn [game]
+                    {:warning (fn [game]
+                                (html
+                                 (when (= 0 (:tenses game))
+                                   [:p.warn "You need choose some tenses for this game."])
+                                 (when (= 0 (:verbs game))
+                                   [:p.warn "You need choose some verbs for this game."])))
+                     :remove (fn [game]
                                (html [:form {:action (str "/class/" class
                                                           "/game/" (:id game) "/delete")
                                              :method "post"}
