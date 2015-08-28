@@ -314,6 +314,7 @@ function increment_map_score() {
     $("#scorevalue").html(parseInt($("#scorevalue").html()) + score_increment);
 }
 
+// TODO: promote this to accents.js or similar
 // TODO: convert other similar functions to take a language as a param rather 
 // than in the function name.
 function add_a_acute(game_id) {
@@ -348,6 +349,11 @@ function add_i_acute(game_id) {
 }
 function add_n_tilde(game_id) {
     $("#gameinput").val($("#gameinput").val() + "ñ");
+    update_user_input(game_id);
+    $("#gameinput").focus();
+}
+function add_o_acute(game_id) {
+    $("#gameinput").val($("#gameinput").val() + "ó");
     update_user_input(game_id);
     $("#gameinput").focus();
 }

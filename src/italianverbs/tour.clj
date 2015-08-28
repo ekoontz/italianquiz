@@ -326,6 +326,7 @@
               :headers headers
               :body (write-str {:exception (str e)})})))))
 
+;; TODO: move to config.clj or to javascript.
 (defn accent-characters [language locale]
   (cond (= language "it")
         [:div.accents
@@ -340,6 +341,7 @@
                [:button.accented {:onclick (str "add_e_acute();")} "&eacute;"]
                [:button.accented {:onclick (str "add_i_acute();")} "&iacute;"]
                [:button.accented {:onclick (str "add_n_tilde();")} "&ntilde;"]
+               [:button.accented {:onclick (str "add_o_acute();")} "&oacute;"]
                [:button.accented {:onclick (str "add_u_acute();")} "&uacute;"]]
               :else
               [:div.accents
@@ -347,6 +349,7 @@
                [:button.accented {:onclick (str "add_e_acute();")} "&eacute;"]
                [:button.accented {:onclick (str "add_i_acute();")} "&iacute;"]
                [:button.accented {:onclick (str "add_n_tilde();")} "&ntilde;"]
+               [:button.accented {:onclick (str "add_o_acute();")} "&oacute;"]
                [:button.accented {:onclick (str "add_u_acute();")} "&uacute;"]])
 
         (= language "fr")
