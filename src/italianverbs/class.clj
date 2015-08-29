@@ -456,7 +456,8 @@ INSERT INTO class (name,teacher,language)
       (POST "/:class/game/:game/delete" request
             (let [class-id (Integer. (:class (:route-params request)))
                   user (username2userid (authentication/current request))]
-              (do-if (is-teacher-of-class? class-id user)
+              (do-if (or (is-teacher-of-class? class-id user)
+                         (has-admin-role?))
                      (let [debug (log/debug (str "/:class/game/:game/add with route params:" (:route-params request)))
                            class (Integer. (:class (:route-params request)))
                            game (Integer. (:game (:route-params request)))]
