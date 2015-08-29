@@ -67,12 +67,12 @@
                 :class (fn [row]
                           [:a {:href (str "/class/" (:id row))}
                            (:class row)])}
-      :td-styles {:games "text-align:right;"
+      :td-styles {:class "white-space:nowrap"
+                  :games "text-align:right;"
                   :students "text-align:right;"
-                  }
+                  :created "white-space:nowrap"}
       :th-styles {:games "text-align:right;"
-                  :students "text-align:right;"
-                  }
+                  :students "text-align:right;"}
       :language (fn [row]
                   (short-language-name-to-long (:language row)))}
      )
@@ -95,12 +95,11 @@
      {:cols [:game :created_by :language :verbs
              :tenses :city :created_on :active]
       :th-styles {:tenses "text-align:right;"
-                  :verbs "text-align:right;"
-                  }
-      :td-styles {:created_on "white-space:nowrap;"
+                  :verbs "text-align:right;"}
+      :td-styles {:game "white-space:nowrap"
+                  :created_on "white-space:nowrap;"
                   :tenses "text-align:right;"
-                  :verbs "text-align:right;"
-                  }
+                  :verbs "text-align:right;"}
 
       :col-fns {:game (fn [row]
                         [:a {:href (str "/game/" (:id row))}
@@ -113,53 +112,65 @@
                          (:verbs row)])
                 :language (fn [row]
                             (short-language-name-to-long (:language row)))
-                }
-      }
-
-
-     )
-    
-
-    ]
-
-
+                }})]
    
    [:div.onecolumn
-    [:h3 "Users"]
+    [:h3 "Teachers"]
     (rows2table
      (k/exec-raw
       ["SELECT users.given_name || ' ' || users.family_name AS name,
                users.email,
-               array_sort_unique(array_agg(role)) AS roles,
+               to_char(max(users.created),?) AS joined,
+               to_char(max(session.created),?) AS last_login
+          FROM vc_user
+            AS users
+    INNER JOIN vc_user_role
+            ON (users.id = vc_user_role.user_id)
+           AND (vc_user_role.role = 'teacher')
+     LEFT JOIN session
+            ON (session.user_id = users.id)
+      GROUP BY users.given_name,users.family_name,users.email
+      ORDER BY max(session.created) DESC" [time-format time-format]] :results)
+     {:td-styles {:joined "white-space:nowrap"
+                  :last_login "white-space:nowrap"}
+      :cols [:email :name :joined :last_login]})]
+
+   [:div.onecolumn
+    [:h3 "Students"]
+    (rows2table
+     (k/exec-raw
+      ["SELECT users.given_name || ' ' || users.family_name AS name,
+               users.email,
                to_char(max(users.created),?) AS joined,
                to_char(max(session.created),?) AS last_login
           FROM vc_user
             AS users
      LEFT JOIN vc_user_role
             ON (users.id = vc_user_role.user_id)
+           AND (vc_user_role.role = 'teacher')
      LEFT JOIN session
             ON (session.user_id = users.id)
-      GROUP BY email,name
-      ORDER BY email" [time-format time-format]] :results)
-     {:cols [:email :name :joined :last_login :roles]}
-
-     )
-    ]
-
+         WHERE vc_user_role.role IS NULL
+      GROUP BY users.given_name,users.family_name,users.email
+      ORDER BY max(session.created) DESC" [time-format time-format]] :results)
+     {:td-styles {:joined "white-space:nowrap"
+                  :last_login "white-space:nowrap"}
+      :cols [:email :name :joined :last_login]})]
+   
    [:div.onecolumn
     [:h3 "Sessions"]
     (rows2table
      (k/exec-raw
-      ["SELECT substring(access_token from 0 for 10) || '..' AS access_token,
-       to_char(session.created,?) AS created,
-       substring(ring_session::text from 0 for 10) || '..'  AS ring_session,
+      ["SELECT to_char(session.created,?) AS created,
        users.given_name || ' ' || users.family_name AS user,
        users.email
           FROM session
      LEFT JOIN vc_user AS users 
             ON users.id = session.user_id
+         WHERE (session.created > now() - interval '2 days')
       ORDER BY session.created DESC" [time-format]] :results)
-     {:cols [:email :user :access_token :created :ring_session]}
+     {:td-styles {:created "white-space:nowrap"}
+      :cols [:email :user :created]}
      )]
    ])
 
