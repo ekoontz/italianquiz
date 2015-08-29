@@ -88,12 +88,13 @@
     [:div.major
      [:h2 "Welcome to Verbcoach."]
      [:h3 "Please find your teacher."]
-     [:h4 "Search by name or email address."]
      [:div {:style "float:left"}
       [:div.search_form
        [:form {:method "get"}
         [:input {:name "search" :size "30" :value search-term}]
-        [:button {:onclick "submit()"} "Search"]]]
+        [:button {:onclick "submit()"} "Search"]]
+       [:h4 "Search by name or email address."]
+       ]
       [:div.rows2table (html/rows2table
                         results
                         {:cols [:teacher :email]

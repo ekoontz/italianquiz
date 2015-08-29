@@ -5,6 +5,14 @@
     font-size:200%;
 }
 
+.search_form input {
+    margin:0.25em;
+}
+
+.search_form h4 {
+    float:left;
+    text-align:left;
+}
 
 .flags {
     margin-top:0.5em;
