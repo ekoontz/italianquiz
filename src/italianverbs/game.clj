@@ -228,7 +228,11 @@ INSERT INTO game
   
    (POST "/:game-to-edit/edit" request
          (let [game-id (:game-to-edit (:route-params request))
-               user (authentication/current request)]
+               user (authentication/current request)
+               form-params (html/multipart-to-edn (:multipart-params request))
+               class-id (if (and (:class form-params)
+                                 (not (empty? (:class (:params request)))))
+                          (Integer. (:class form-params)))]
            (do-if
             (do
               (log/debug (str "Edit game: " game-id ": can user: '" user "' edit this game?"))
@@ -239,7 +243,10 @@ INSERT INTO game
               (update-game (:game-to-edit (:route-params request))
                            (html/multipart-to-edn (:multipart-params request)))
               {:status 302
-               :headers {"Location" (str "/game/" game-id "?message=Edited+game:" game-id)}})
+               :headers {"Location" (str "/game/" game-id
+                                         "?"
+                                         (if class-id (str "class=" class-id "&"))
+                                         "message=Edited+game:" game-id)}})
             (do
               (log/warn (str "User:" user " tried to edit game: " game-id " but was denied authorization to do so."))
               {:status 302
@@ -288,23 +295,32 @@ INSERT INTO game
 
    (GET "/:game" request
         (let [game-id (Integer. (:game (:route-params request)))
-              game (first (k/exec-raw ["SELECT * FROM game WHERE id=?" [(Integer. game-id)]] :results))]
+              class-id (if (and (:class (:params request))
+                                (not (empty? (:class (:params request)))))
+                         (Integer. (:class (:params request)))) ;; class-id is optional
+              game (first (k/exec-raw ["SELECT * FROM game WHERE id=?" [(Integer. game-id)]] :results))
+              class (if class-id (first (k/exec-raw ["SELECT * FROM class WHERE id=?" [(Integer. class-id)]] :results)))]
           {:body
-           (page (str "Game: " (:name game))
-                 (body (:name game) (show-game (:game (:route-params request))
-                                               {:show-as-owner? (or (has-admin-role?)
-                                                                    (is-owner-of?
-                                                                     (Integer. game-id)
-                                                                     (authentication/current request)))
-                                                :show-as-teacher? (has-teacher-role?)
-                                                :refine (:refine (:params request))})
-                       request)
+           (page (str
+                  (if class (str "Class: " class))
+                  "Game: " (:name game))
+                 (body (:name game)
+                       (show-game (:game (:route-params request))
+                                  {:show-as-owner? (or (has-admin-role?)
+                                                       (is-owner-of?
+                                                        (Integer. game-id)
+                                                        (authentication/current request)))
+                                   :show-as-teacher? (has-teacher-role?)
+                                   :class class-id
+                                   :refine (:refine (:params request))})
+                       request
+                       class-id)
                  request resources)
            :status 200
            :headers html-headers}))
    
    (POST "/new" request
-         (do-if-teacher
+         (do-if-teacher-or-admin
           (let [params (html/multipart-to-edn (:multipart-params request))
                 language (cond (and (:language params)
                                     (not (= (string/trim (:language params)) "")))
@@ -342,18 +358,17 @@ INSERT INTO game
                                             :city city}))
             (let [game (:id game)]
               (if class
-                (do
-                  (k/exec-raw ["INSERT INTO game_in_class (game,class) 
+                (k/exec-raw ["INSERT INTO game_in_class (game,class) 
                                      SELECT ?,?
                                       WHERE 
                                  NOT EXISTS (SELECT game,class 
                                                FROM game_in_class 
-                                              WHERE game = ? AND class=?)" [game class game class]])
-                  {:status 302
-                   :headers {"Location" (str "/class/" class "?message=Added game.")}})
-                {:status 302 :headers {"Location" 
-                                       (str "/game/" (:id game)
-                                            "?message=Created game.")}})))))))
+                                              WHERE game = ? AND class=?)" [game class game class]]))
+              {:status 302 :headers {"Location" 
+                                     (str "/game/" game
+                                          "?"
+                                          (if class (str "class=" class "&"))
+                                          "message=Created game.")}}))))))
 (defn new-game-form [ & [ {class :class
                            header :header
                            target-language :target-language}]]
@@ -377,7 +392,8 @@ INSERT INTO game
                     [:input {:type "radio" :label (:label option) :name "language" :value (:value option)}
                      (:label option)]])
                (:options (language-radio-buttons)))]]])
-       (if class [:input {:type :hidden :name "class" :value class}])
+       (if class [:input {:type :hidden
+                          :name "class" :value class}])
        [:input {:name "name" :size "50" :placeholder (str "Enter the name of a new game.")} ]
        [:div.input-shell
         [:input {:class "btn btn-primary"
@@ -457,17 +473,25 @@ INSERT INTO game
                                    INNER JOIN games
                                            ON games_to_use.game = games.id")] :results))))
 
-(defn body [title content request]
+(defn body [title content request & [class-id]]
   (let [game-id (:game (:route-params request))
-        game (if game-id (first (k/exec-raw ["SELECT * FROM game WHERE id=?" [(Integer. game-id)]] :results)))]
+        game (if game-id
+               (first
+                (k/exec-raw
+                 ["SELECT * FROM game WHERE id=?" [(Integer. game-id)]] :results)))
+        class (if class-id
+                (first (k/exec-raw ["SELECT * FROM class WHERE id=?" [(Integer. class-id)]] :results)))]
     (html/page
      title
      (html
       [:div {:class "major"}
        [:h2 
-        (banner (concat 
-                 [{:href "/game" 
-                   :content "Games"}]
+        (banner (concat
+                 (if class-id
+                   [{:href (str "/class/" class-id)
+                     :content (:name class)}]
+                   [{:href "/game" 
+                     :content "Games"}])
                  (if game
                    [{:href (if (:refine (:params request))
                              (str "/game/" game-id))
@@ -631,6 +655,7 @@ ms: " params))))
                                  [time-format game-id]] :results)))
 
 (defn show-game [game-id & [ {refine :refine
+                              class :class
                               show-as-teacher? :show-as-teacher?
                               show-as-owner? :show-as-owner?} ]]
   (let [game-id (Integer. game-id)
@@ -668,13 +693,13 @@ ms: " params))))
         owner (:owner owner-info)
         email (:email owner-info)
         refine (if refine (json-read-str refine) nil)]
-    (html
+        (html
        [:div {:style "float:left;width:100%;margin-top:1em"}
         [:button {:onclick (str "document.location='/tour/"
                                 game-id "';")} "Play"]
         [:div {:style "border:0px dashed green;float:right;width:50%;"}
          (if show-as-owner?
-           (game-editor-form game nil nil)
+           (game-editor-form game nil nil nil class)
 
            ;; else, not owner:
            (html
@@ -900,7 +925,7 @@ ms: " params))))
              lexemes-for-this-game)]))))
 
 ;; TODO: has fallen victim to parameter-itis (too many unnamed parameters)
-(defn game-editor-form [game game-to-edit game-to-delete & [editpopup] ]
+(defn game-editor-form [game game-to-edit game-to-delete & [editpopup class] ]
   (let [game-id (:game_id game)
         language (:language game)
         debug (log/trace (str "ALL GAME INFO: " game))
@@ -959,6 +984,7 @@ ms: " params))))
        :fields (concat
 
                 [{:name :name :size 50 :label "Name"}]
+                [{:name :class :size 50 :type :hidden}]
 
                 [{:name :city
                   :label "City"
@@ -1047,6 +1073,7 @@ ms: " params))))
        :values {:name (:name game)
                 :target (:target game)
                 :source (:source game)
+                :class class
                 :city (:city game)
                 :source_groupings source-groups
                 :target_groupings target-groups
